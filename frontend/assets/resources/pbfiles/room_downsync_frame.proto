@@ -1,0 +1,167 @@
+syntax = "proto3";
+option go_package = "."; // "./" corresponds to the "--go_out" value in "protoc" command 
+
+package treasurehunterx;
+
+message Direction {
+  int32 dx = 1;
+  int32 dy = 2;
+}
+
+message Vec2D {
+  double x = 1;
+  double y = 2;
+}
+
+message Polygon2D {
+  Vec2D Anchor = 1;
+  repeated Vec2D Points = 2;
+}
+
+message Vec2DList {
+  repeated Vec2D vec2DList = 1;
+}
+
+message Polygon2DList {
+  repeated Polygon2D polygon2DList = 1;
+}
+
+message BattleColliderInfo {
+  int32 intervalToPing        = 1;
+  int32 willKickIfInactiveFor = 2;
+  int32 boundRoomId           = 3;
+
+  string stageName = 4;
+  map<string, Vec2DList> strToVec2DListMap = 5; 
+  map<string, Polygon2DList> strToPolygon2DListMap = 6; 
+  int32 StageDiscreteW = 7;
+  int32 StageDiscreteH = 8;
+  int32 StageTileW = 9;
+  int32 StageTileH = 10;
+}
+
+message Player {
+  int32 id = 1;
+  double x = 2; 
+  double y = 3; 
+  Direction dir = 4;
+  int32 speed = 5;
+  int32 battleState = 6;
+  int32 lastMoveGmtMillis = 7;
+  int32 score = 10;
+  bool removed = 11;
+  int32 joinIndex = 12;
+}
+
+message PlayerMeta {
+  int32 id = 1;
+  string name = 2;
+  string displayName = 3;
+  string avatar = 4;
+  int32 joinIndex = 5;
+}
+
+message Treasure {
+  int32 id = 1;
+  int32 localIdInBattle = 2;
+  int32 score = 3;
+  double x = 4; 
+  double y = 5;
+  bool removed = 6;
+  int32 type = 7;
+}
+
+message Bullet {
+  int32 localIdInBattle = 1;
+  double linearSpeed = 2;
+  double x = 3;
+  double y = 4;
+  bool removed = 5;
+  Vec2D startAtPoint = 6;
+  Vec2D endAtPoint = 7;
+}
+
+message Trap {
+  int32 id = 1;
+  int32 localIdInBattle = 2;
+  int32 type = 3;
+  double x = 4; 
+  double y = 5;
+  bool removed = 6;
+}
+
+message SpeedShoe {
+  int32 id = 1;
+  int32 localIdInBattle = 2;
+  double x = 3; 
+  double y = 4; 
+  bool removed = 5;
+  int32 type = 6;
+}
+
+message Pumpkin {
+  int32 localIdInBattle = 1;
+  double linearSpeed = 2;
+  double x = 3;
+  double y = 4;
+  bool removed = 5;
+}
+
+message GuardTower {
+  int32 id = 1;
+  int32 localIdInBattle = 2;
+  int32 type = 3;
+  double x = 4;
+  double y = 5;
+  bool removed = 6;
+}
+
+message RoomDownsyncFrame {
+  int32 id = 1;
+  int32 refFrameId = 2;
+  map<int32, Player> players = 3;
+  int64 sentAt = 4;
+  int64 countdownNanos = 5;
+  map<int32, Treasure> treasures = 6; 
+  map<int32, Trap> traps = 7; 
+  map<int32, Bullet> bullets = 8;
+  map<int32, SpeedShoe> speedShoes = 9;
+  map<int32, Pumpkin> pumpkin = 10;
+  map<int32, GuardTower> guardTowers = 11; 
+  map<int32, PlayerMeta> playerMetas = 12;
+}
+
+message InputFrameUpsync {
+  int32 inputFrameId = 1;
+  int32 encodedDir = 6;
+}
+
+message InputFrameDownsync {
+  int32 inputFrameId = 1;
+  repeated uint64 inputList = 2; // Indexed by "joinIndex", we try to compress the "single player input" into 1 word (64-bit for 64-bit Golang runtime) because atomic compare-and-swap only works on 1 word. Although CAS on custom struct is possible in Golang 1.19 https://pkg.go.dev/sync/atomic@go1.19.1#Value.CompareAndSwap, using a single word is still faster whenever possible. 
+  uint64 confirmedList = 3; // Indexed by "joinIndex", same compression concern as above
+}
+
+message HeartbeatUpsync {
+  int64 clientTimestamp = 1;     
+}
+
+message WsReq {
+  int32 msgId = 1;
+  int32 playerId = 2;
+  int32 act = 3;    
+  int32 joinIndex = 4;
+  int32 ackingFrameId = 5;
+  int32 ackingInputFrameId = 6;
+  repeated InputFrameUpsync inputFrameUpsyncBatch = 7; 
+  HeartbeatUpsync hb = 8; 
+}
+
+message WsResp {
+  int32 ret = 1;
+  int32 echoedMsgId = 2;    
+  int32 act = 3; 
+  RoomDownsyncFrame rdf = 4; 
+  repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
+  BattleColliderInfo bciFrame = 6; 
+}

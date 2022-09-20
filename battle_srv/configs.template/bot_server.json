@@ -1,0 +1,7 @@
+{
+  "secondsBeforeSummoning": 10,
+  "protocol": "http",
+  "host": "localhost",
+  "port": 15351, 
+  "symmetricKey": "" 
+}

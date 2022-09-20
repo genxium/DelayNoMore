@@ -1,0 +1,31 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "BottomLeft",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.25,
+  "sample": 12,
+  "speed": 1,
+  "wrapMode": "2",
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "748c55f0-e761-40f6-b13b-e416b3d8a55c"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "6164bac7-9882-43ce-b3d0-9d062d6d0b49"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

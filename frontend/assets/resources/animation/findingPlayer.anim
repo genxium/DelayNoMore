@@ -1,0 +1,55 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "findingPlayer",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.75,
+  "sample": 8,
+  "speed": 1,
+  "wrapMode": "2",
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "7b86de0f-ea49-42c3-bdd0-db8de330e9aa"
+            }
+          },
+          {
+            "frame": 0.125,
+            "value": {
+              "__uuid__": "819073c0-7a15-4679-957b-65a226d8fce4"
+            }
+          },
+          {
+            "frame": 0.25,
+            "value": {
+              "__uuid__": "6ff26f1f-30d1-4e49-b76c-d9bc61eb6ce0"
+            }
+          },
+          {
+            "frame": 0.375,
+            "value": {
+              "__uuid__": "44c52db6-d112-4829-96f2-6fd57a8a0d7f"
+            }
+          },
+          {
+            "frame": 0.5,
+            "value": {
+              "__uuid__": "efd42f06-82ad-4b1b-9134-6f35c26bf10f"
+            }
+          },
+          {
+            "frame": 0.625,
+            "value": {
+              "__uuid__": "19094751-ab4e-40b6-9216-dd7887d80c86"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
