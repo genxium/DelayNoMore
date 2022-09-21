@@ -573,9 +573,8 @@ cc.Class({
             // No need to prompt upon rejoined.
             self.popupSimplePressToGo(i18n.t("gameTip.start"));
           }
-          self.onBattleStarted(rdf.players, rdf.playerMetas);
-          self._applyRoomDownsyncFrameDynamics(rdf);
-          self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"
+
+          self.onBattleStarted(rdf); 
         }
 
         self._dumpToFullFrameCache(rdf); 
@@ -684,9 +683,15 @@ cc.Class({
     this._inputControlEnabled = false;
   },
 
-  onBattleStarted(players, playerMetas) {
+  onBattleStarted(rdf) {
+    // This function is also applicable to "re-joining".
+    const players = rdf.players;
+    const playerMetas = rdf.playerMetas;
     console.log('On battle started!');
     const self = window.mapIns;
+    if (null != rdf.countdownNanos) {
+      self.countdownNanos = rdf.countdownNanos;
+    }
     if (null != self.musicEffectManagerScriptIns) {
       self.musicEffectManagerScriptIns.playBGM();
     }
@@ -697,6 +702,9 @@ cc.Class({
       self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
     }
     self.transitToState(ALL_MAP_STATES.VISUAL);
+
+    self._applyRoomDownsyncFrameDynamics(rdf);
+    self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"
   },
 
   logBattleStats() {
@@ -925,9 +933,6 @@ cc.Class({
 
   _applyRoomDownsyncFrameDynamics(rdf) {
     const self = this;
-    if (null != rdf.countdownNanos) {
-      self.countdownNanos = rdf.countdownNanos;
-    }
 
     for (let playerId in self.playerRichInfoDict) {
       const playerRichInfo = self.playerRichInfoDict[playerId]; 
