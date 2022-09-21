@@ -338,7 +338,7 @@ cc.Class({
     self.lastDownsyncInputFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
     self.lastUpsyncInputFrameId = -1;
-    self.inputFrameUpsyncDelayTolerance = 1;
+    self.inputFrameUpsyncDelayTolerance = 3;
 
     self.recentFrameCache = {};
     self.recentFrameCacheCurrentSize = 0;
@@ -964,6 +964,9 @@ cc.Class({
       playerScriptIns.scheduleNewDirection(decodedInput, true);
       if (invokeUpdateToo) {
         playerScriptIns.update(self.rollbackEstimatedDt);
+        // [WARNING] CocosCreator v2.2.1 uses a singleton "CCDirector" to schedule "tree descendent updates" and "collision detections" in different timers, thus the following manual trigger of collision detection might not produce the same outcome for the "selfPlayer" as the other peers. Moreover, the aforementioned use of different timers is an intrinsic source of error! 
+
+        cc.director._collisionManager.update(self.rollbackEstimatedDt); // Just to avoid unexpected wall penetration, no guarantee on determinism
       }
     }
   }, 

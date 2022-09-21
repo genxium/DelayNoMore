@@ -363,8 +363,6 @@ module.export = cc.Class({
 
   lateUpdate(dt) {
     const self = this;
-    self.activeDirection.dx = self.activeDirection.dx;
-    self.activeDirection.dy = self.activeDirection.dy;
     const now = new Date().getTime();
     self.lastMovedAt = now;
   },
