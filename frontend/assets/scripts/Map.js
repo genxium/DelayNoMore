@@ -127,6 +127,9 @@ cc.Class({
       type: cc.Float,
       default: 1.0/60 
     },
+    rollbackInMainUpdate: {
+      default: true
+    },
   },
     
   _inputFrameIdDebuggable(inputFrameId) {
@@ -158,13 +161,11 @@ cc.Class({
 
   _convertToInputFrameId(renderFrameId, inputDelayFrames) {
     if (renderFrameId < inputDelayFrames) return 0;
-    const inputScaleFrames = 2;
-    return ((renderFrameId - inputDelayFrames) >> inputScaleFrames);
+    return ((renderFrameId - inputDelayFrames) >> this.inputScaleFrames);
   },
 
   _convertToRenderFrameId(inputFrameId, inputDelayFrames) {
-    const inputScaleFrames = 2;
-    return ((inputFrameId << inputScaleFrames) + inputDelayFrames);
+    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames);
   },
 
   _shouldGenerateInputFrameUpsync(renderFrameId) {
@@ -332,8 +333,8 @@ cc.Class({
 
     self.lastRoomDownsyncFrameId = 0;
     self.renderFrameId = 0; // After battle started
-    self.inputDelayFrames = 4;
-    self.inputScaleFrames = 2;
+    self.inputDelayFrames = 8;
+    self.inputScaleFrames = 3;
     self.lastLocalInputFrameId = 0;
     self.lastDownsyncInputFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
@@ -348,6 +349,11 @@ cc.Class({
     self.recentInputCache = {}; // TODO: Use a ringbuf instead
     self.recentInputCacheCurrentSize = 0;
     self.recentInputCacheMaxCount = 1024;
+    self.toRollbackRenderFrameId1 = null;
+    self.toRollbackRenderFrameId2 = null;
+    self.toRollbackInputFrameId1 = null;
+    self.toRollbackInputFrameId2 = null;
+    
     self.transitToState(ALL_MAP_STATES.VISUAL);
 
     self.battleState = ALL_BATTLE_STATES.WAITING;
@@ -624,10 +630,25 @@ cc.Class({
           const renderFrameId1 = self._convertToRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
           if (renderFrameId1 < renderFrameId2) {
             // No need to rollback when "renderFrameId1 == renderFrameId2", because the "delayedInputFrame for renderFrameId2" is not yet executed by now, it just went through "++self.renderFrameId" in "update(dt)" and js-runtime is mostly single-threaded in our programmable range. 
-            console.warn("Mismatched input! inputFrameId1=", inputFrameId1, ", renderFrameId1=", renderFrameId1, ": at least 1 incorrect input predicted for joinIndex=", firstPredictedYetIncorrectInputFrameJoinIndex, ", inputFrameId2 = ", inputFrameId2, ", renderFrameId2=", renderFrameId2);
-            self._rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2);
+            console.warn("Mismatched input detected!: [inputFrameId1:", inputFrameId1, ", inputFrameId2:", inputFrameId2, "), [renderFrameId1:", renderFrameId1, ", renderFrameId2:", renderFrameId2, "). ");
+            if (true == self.rollbackInMainUpdate) {
+              // The actual rollback-and-replay would later be executed in update(dt). 
+              if (null == self.toRollbackRenderFrameId1) {
+                self.toRollbackRenderFrameId1 = renderFrameId1;
+                self.toRollbackRenderFrameId2 = renderFrameId2;
+                self.toRollbackInputFrameId1 = inputFrameId1;
+                self.toRollbackInputFrameId2 = inputFrameId2;
+              } else {
+                // Just extend the ending indices
+                self.toRollbackRenderFrameId2 = renderFrameId2;
+                self.toRollbackInputFrameId2 = inputFrameId2;
+              }
+            } else {
+              self._rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2);
+            }
+
           } else {
-            console.log("Mismatched input yet no rollback needed. inputFrameId1=", inputFrameId1, ", renderFrameId1=", renderFrameId1, ": at least 1 incorrect input predicted for joinIndex=", firstPredictedYetIncorrectInputFrameJoinIndex, ", inputFrameId2 = ", inputFrameId2, ", renderFrameId2=", renderFrameId2);
+            console.log("Mismatched input yet no rollback needed: [inputFrameId1:", inputFrameId1, ", inputFrameId2:", inputFrameId2, "), [renderFrameId1:", renderFrameId1, ", renderFrameId2:", renderFrameId2, "). ");
           }
         }
       };
@@ -776,6 +797,17 @@ cc.Class({
           // TODO: Is the following statement run asynchronously in an implicit manner? Should I explicitly run it asynchronously?
           self._sendInputFrameUpsyncBatch(noDelayInputFrameId);
         }
+        
+        if (true == self.rollbackInMainUpdate) {
+          if (null != self.toRollbackRenderFrameId1) {
+            self._rollbackAndReplay(self.toRollbackInputFrameId1, self.toRollbackRenderFrameId1, self.toRollbackInputFrameId2, self.toRollbackRenderFrameId2);
+            self.toRollbackRenderFrameId1 = null;
+            self.toRollbackRenderFrameId2 = null;
+            self.toRollbackInputFrameId1 = null;
+            self.toRollbackInputFrameId2 = null;
+          }
+        }
+
         const delayedInputFrameId = self._convertToInputFrameId(self.renderFrameId, self.inputDelayFrames); // The "inputFrameId" to use at current "renderFrameId"
         const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
         if (null == delayedInputFrameDownsync) {
@@ -964,10 +996,13 @@ cc.Class({
       playerScriptIns.scheduleNewDirection(decodedInput, true);
       if (invokeUpdateToo) {
         playerScriptIns.update(self.rollbackEstimatedDt);
-        // [WARNING] CocosCreator v2.2.1 uses a singleton "CCDirector" to schedule "tree descendent updates" and "collision detections" in different timers, thus the following manual trigger of collision detection might not produce the same outcome for the "selfPlayer" as the other peers. Moreover, the aforementioned use of different timers is an intrinsic source of error! 
-
-        cc.director._collisionManager.update(self.rollbackEstimatedDt); // Just to avoid unexpected wall penetration, no guarantee on determinism
       }
+    }
+    
+    if (invokeUpdateToo) {
+      // [WARNING] CocosCreator v2.2.1 uses a singleton "CCDirector" to schedule "tree descendent updates" and "collision detections" in different timers, thus the following manual trigger of collision detection might not produce the same outcome for the "selfPlayer" as the other peers. Moreover, the aforementioned use of different timers is an intrinsic source of error! 
+
+      cc.director._collisionManager.update(self.rollbackEstimatedDt); // Just to avoid unexpected wall penetration, no guarantee on determinism
     }
   }, 
   
@@ -979,6 +1014,8 @@ cc.Class({
       console.error("renderFrameId1=", renderFrameId1, "doesn't exist in recentFrameCache ", self._stringifyRecentFrameCache(false), ": COULDN'T ROLLBACK!");
       return;
     }
+
+    let t0 = performance.now(); 
     self._applyRoomDownsyncFrameDynamics(rdf1);
     // DON'T apply inputFrameDownsync dynamics for exactly "renderFrameId2", see the comment around the invocation of "_rollbackAndReplay". 
     for (let renderFrameId = renderFrameId1; renderFrameId < renderFrameId2; ++renderFrameId) {
@@ -987,6 +1024,8 @@ cc.Class({
       self._applyInputFrameDownsyncDynamics(delayedInputFrameDownsync, true);
       // console.log("_rollbackAndReplay, AFTER:", self._stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync));
     } 
+    let t1 = performance.now(); 
+    console.log("Executed rollback-and-replay: [inputFrameId1:", inputFrameId1, ", inputFrameId2:", inputFrameId2, "), [renderFrameId1:", renderFrameId1, ", renderFrameId2:", renderFrameId2, "). It took", t1-t0, "milliseconds");
   },
 
   _initPlayerRichInfoDict(players, playerMetas) {
