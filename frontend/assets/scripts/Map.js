@@ -123,6 +123,10 @@ cc.Class({
       type: cc.TiledMap,
       default: null
     },
+    rollbackEstimatedDt: {
+      type: cc.Float,
+      default: 1.0/60 
+    },
   },
     
   _inputFrameIdDebuggable(inputFrameId) {
@@ -338,13 +342,12 @@ cc.Class({
 
     self.recentFrameCache = {};
     self.recentFrameCacheCurrentSize = 0;
-    self.recentFrameCacheMaxCount = 2048;
+    self.recentFrameCacheMaxCount = 1024;
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
     self.recentInputCache = {}; // TODO: Use a ringbuf instead
     self.recentInputCacheCurrentSize = 0;
     self.recentInputCacheMaxCount = 1024;
-    self.rollbackEstimatedDt = 1.0/60;
     self.transitToState(ALL_MAP_STATES.VISUAL);
 
     self.battleState = ALL_BATTLE_STATES.WAITING;
@@ -588,8 +591,9 @@ cc.Class({
           return;
         }
 
-        let firstPredictedYetIncorrectInputFrameId = -1;
-        let firstPredictedYetIncorrectInputFrameJoinIndex = -1;
+        // console.log("Received inputFrameDownsyncBatch=", batch, ", now correspondingLastLocalInputFrame=", self.recentInputCache[batch[batch.length-1].inputFrameId]); 
+        let firstPredictedYetIncorrectInputFrameId = null;
+        let firstPredictedYetIncorrectInputFrameJoinIndex = null;
         for (let k in batch) {
           const inputFrameDownsync = batch[k]; 
           const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
@@ -597,7 +601,7 @@ cc.Class({
           if (null == localInputFrame) {
             console.warn("handleInputFrameDownsyncBatch: recentInputCache is NOT having inputFrameDownsyncId=", inputFrameDownsyncId, "; now recentInputCache=", self._stringifyRecentInputCache(false));
           } else {
-            if (-1 == firstPredictedYetIncorrectInputFrameId) {
+            if (null == firstPredictedYetIncorrectInputFrameId) {
               for (let i in localInputFrame.inputList) {
                 if (localInputFrame.inputList[i] != inputFrameDownsync.inputList[i]) {
                   firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
@@ -611,19 +615,17 @@ cc.Class({
           // [WARNING] Currently "lastDownsyncInputFrameId" and "lastAllConfirmedInputFrameId" are identical, but they (their definitions) are prone to changes in the future
           self.lastDownsyncInputFrameId = inputFrameDownsyncId; 
           self.lastAllConfirmedInputFrameId = inputFrameDownsyncId; 
-          if (self._inputFrameIdDebuggable(inputFrameDownsyncId)) {
-            console.log("Received inputFrameDownsyncId=", inputFrameDownsyncId); 
-          }
         }
 
-        if (-1 != firstPredictedYetIncorrectInputFrameId) {
+        if (null != firstPredictedYetIncorrectInputFrameId) {
           const renderFrameId2 = self.renderFrameId;
           const inputFrameId2 = self._convertToInputFrameId(renderFrameId2, self.inputDelayFrames);
           const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
           const renderFrameId1 = self._convertToRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
-          if (renderFrameId1 <= renderFrameId2) {
+          if (renderFrameId1 < renderFrameId2) {
+            // No need to rollback when "renderFrameId1 == renderFrameId2", because the "delayedInputFrame for renderFrameId2" is not yet executed by now, it just went through "++self.renderFrameId" in "update(dt)" and js-runtime is mostly single-threaded in our programmable range. 
             console.warn("Mismatched input! inputFrameId1=", inputFrameId1, ", renderFrameId1=", renderFrameId1, ": at least 1 incorrect input predicted for joinIndex=", firstPredictedYetIncorrectInputFrameJoinIndex, ", inputFrameId2 = ", inputFrameId2, ", renderFrameId2=", renderFrameId2);
-            self._rollback(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2);
+            self._rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2);
           } else {
             console.log("Mismatched input yet no rollback needed. inputFrameId1=", inputFrameId1, ", renderFrameId1=", renderFrameId1, ": at least 1 incorrect input predicted for joinIndex=", firstPredictedYetIncorrectInputFrameJoinIndex, ", inputFrameId2 = ", inputFrameId2, ", renderFrameId2=", renderFrameId2);
           }
@@ -774,7 +776,6 @@ cc.Class({
           // TODO: Is the following statement run asynchronously in an implicit manner? Should I explicitly run it asynchronously?
           self._sendInputFrameUpsyncBatch(noDelayInputFrameId);
         }
-        ++self.renderFrameId;
         const delayedInputFrameId = self._convertToInputFrameId(self.renderFrameId, self.inputDelayFrames); // The "inputFrameId" to use at current "renderFrameId"
         const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
         if (null == delayedInputFrameDownsync) {
@@ -782,6 +783,14 @@ cc.Class({
         } else {
           self._applyInputFrameDownsyncDynamics(delayedInputFrameDownsync, false);
         } 
+        const rdf = self._createRoomDownsyncFrameLocally();
+        self._dumpToFullFrameCache(rdf); 
+        /*
+        if (null != delayedInputFrameDownsync && null != delayedInputFrameDownsync.inputList && 0 < delayedInputFrameDownsync.inputList[self.selfPlayerInfo.joinIndex-1]) {
+          console.log("My critical status: renderFrame=", JSON.stringify(rdf), ", delayedInputFrameDownsync=", JSON.stringify(delayedInputFrameDownsync));
+        }
+        */
+        ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
       }
       const mapNode = self.node;
       const canvasNode = mapNode.parent;
@@ -792,7 +801,7 @@ cc.Class({
 
       // update countdown
       if (null != self.countdownNanos) {
-        self.countdownNanos -= dt*1000000000;
+        self.countdownNanos -= self.rollbackEstimatedDt*1000000000;
         if (self.countdownNanos <= 0) {
           self.onBattleStopped(self.playerRichInfoDict);
           return;
@@ -809,7 +818,6 @@ cc.Class({
     }
     if (null != self.ctrl) {
         self.ctrl.justifyMapNodePosAndScale(self.ctrl.linearSpeedBase, self.ctrl.zoomingSpeedBase);
-        self._createRoomDownsyncFrameLocally();
     }
   },
 
@@ -928,7 +936,7 @@ cc.Class({
         joinIndex: joinIndex 
       };
     }
-    self._dumpToFullFrameCache(rdf); 
+    return rdf;
   },
 
   _applyRoomDownsyncFrameDynamics(rdf) {
@@ -960,19 +968,21 @@ cc.Class({
     }
   }, 
   
-  _rollback(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2) {
+  _rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2) {
     const self = this;
     const rdf1 = self.recentFrameCache[renderFrameId1];
     if (null == rdf1) {
       const recentFrameCacheKeys = Object.keys(self.recentFrameCache);
-      console.warn("renderFrameId1=", renderFrameId1, "doesn't exist in recentFrameCache ", self._stringifyRecentFrameCache(false), ": COULDN'T ROLLBACK!");
+      console.error("renderFrameId1=", renderFrameId1, "doesn't exist in recentFrameCache ", self._stringifyRecentFrameCache(false), ": COULDN'T ROLLBACK!");
       return;
     }
     self._applyRoomDownsyncFrameDynamics(rdf1);
-    for (let renderFrameId = renderFrameId1; renderFrameId <= renderFrameId2; ++renderFrameId) {
+    // DON'T apply inputFrameDownsync dynamics for exactly "renderFrameId2", see the comment around the invocation of "_rollbackAndReplay". 
+    for (let renderFrameId = renderFrameId1; renderFrameId < renderFrameId2; ++renderFrameId) {
       const delayedInputFrameId = self._convertToInputFrameId(renderFrameId, self.inputDelayFrames);
-      const delayedInputFrame = self.recentInputCache[delayedInputFrameId];
-      self._applyInputFrameDownsyncDynamics(delayedInputFrame, true);
+      const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
+      self._applyInputFrameDownsyncDynamics(delayedInputFrameDownsync, true);
+      // console.log("_rollbackAndReplay, AFTER:", self._stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync));
     } 
   },
 
@@ -1000,10 +1010,17 @@ cc.Class({
 
   _stringifyRecentFrameCache(usefullOutput) {
     if (true == usefullOutput) {
-      return JSON.stringify(this.recentFrameCache);
+
+      let s = [];
+      for (let renderFrameId in self.recentFrameCache) {
+          const roomDownsyncFrame = self.recentFrameCache[renderFrameId];
+          s.push(JSON.stringify(roomDownsyncFrame));
+      }
+
+      return s.join('\n');
     }
-    const keys = Object.keys(this.recentInputCache);
-    return "[stIRenderFrameId=" + keys[0] + ", edRenderFrameId=" + keys[keys.length-1] + "]";
+    const keys = Object.keys(this.recentFrameCache);
+    return "[stRenderFrameId=" + keys[0] + ", edRenderFrameId=" + keys[keys.length-1] + "]";
   },
 
   _stringifyRecentInputCache(usefullOutput) {
@@ -1012,5 +1029,38 @@ cc.Class({
     }
     const keys = Object.keys(this.recentInputCache);
     return "[stInputFrameId=" + keys[0] + ", edInputFrameId=" + keys[keys.length-1] + "]";
+  },
+
+  _stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync) {
+    // Slightly different from "_createRoomDownsyncFrameLocally" 
+    const self = this;
+    const s = (
+      null == delayedInputFrameDownsync 
+      ? 
+      {
+        renderFrameId: renderFrameId,
+        players: {}
+      }
+      :
+      {
+        renderFrameId: renderFrameId,
+        players: {},
+        delayedInputFrameDownsync: delayedInputFrameDownsync,   
+      }
+    );
+    let players = {};
+    for (let playerId in self.playerRichInfoDict) {
+      const playerRichInfo = self.playerRichInfoDict[playerId]; 
+      const joinIndex = playerRichInfo.joinIndex; 
+      const playerNode = playerRichInfo.node; 
+      const playerScriptIns = playerRichInfo.scriptIns;
+      s.players[playerRichInfo.id] = {
+        id: playerRichInfo.id,
+        x: playerNode.position.x,
+        y: playerNode.position.y,
+      };
+    }
+
+    return JSON.stringify(s);
   },
 });

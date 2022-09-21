@@ -41,11 +41,6 @@ module.export = cc.Class({
 
     self.computedNewDifferentPosLocalToParentWithinCurrentFrame = null;
     self.actionMangerSingleton = new cc.ActionManager();
-    self.scheduledDirection = {
-      dx: 0,
-      dy: 0
-    };
-
     self.activeDirection = {
       dx: 0,
       dy: 0
@@ -65,6 +60,7 @@ module.export = cc.Class({
       '2-1': 'BottomRight'
     };
     const canvasNode = self.mapNode.parent;
+    self.mapIns = self.mapNode.getComponent("Map");
     self.contactedBarriers = [];
     const joystickInputControllerScriptIns = canvasNode.getComponent("TouchEventsManager");
     self.ctrl = joystickInputControllerScriptIns;
@@ -77,8 +73,9 @@ module.export = cc.Class({
       return;
     }
 
-    if (forceAnimSwitch || null == this.scheduledDirection || (newScheduledDirection.dx != this.scheduledDirection.dx || newScheduledDirection.dy != this.scheduledDirection.dy)) {
-      this.scheduledDirection = newScheduledDirection;
+    if (forceAnimSwitch || null == this.activeDirection || (newScheduledDirection.dx != this.activeDirection.dx || newScheduledDirection.dy != this.activeDirection.dy)) {
+      this.activeDirection = newScheduledDirection;
+      this.activeDirection = newScheduledDirection;
       const clipKey = newScheduledDirection.dx.toString() + newScheduledDirection.dy.toString();
       const clips = (this.attacked ? this.attackedClips : this.clips); 
       let clip = clips[clipKey];
@@ -90,7 +87,7 @@ module.export = cc.Class({
       } else {
         this.animComp.play(clip);
         if (this.attacked) {
-          cc.log(`Attacked, switching to play clipKey = ${clipKey}, clip == ${clip}, this.activeDirection == ${JSON.stringify(this.activeDirection)}, this.scheduledDirection == ${JSON.stringify(this.scheduledDirection)}.`);
+          cc.log(`Attacked, switching to play clipKey = ${clipKey}, clip == ${clip}, this.activeDirection == ${JSON.stringify(this.activeDirection)}, this.activeDirection == ${JSON.stringify(this.activeDirection)}.`);
         }
       }
     }
@@ -357,7 +354,7 @@ module.export = cc.Class({
 
   update(dt) {
     const self = this;
-    const vecToMoveBy = self._calculateVecToMoveBy(dt);
+    const vecToMoveBy = self._calculateVecToMoveBy(self.mapIns.rollbackEstimatedDt); // To be consistent w.r.t. rollback dynamics
     // console.log("activeDirection=", self.activeDirection, "vecToMoveBy=", vecToMoveBy, ", computedNewDifferentPosLocalToParentWithinCurrentFrame=", self.computedNewDifferentPosLocalToParentWithinCurrentFrame);
     if (self._canMoveBy(vecToMoveBy)) {
       self.node.position = self.computedNewDifferentPosLocalToParentWithinCurrentFrame;
@@ -366,8 +363,8 @@ module.export = cc.Class({
 
   lateUpdate(dt) {
     const self = this;
-    self.activeDirection.dx = self.scheduledDirection.dx;
-    self.activeDirection.dy = self.scheduledDirection.dy;
+    self.activeDirection.dx = self.activeDirection.dx;
+    self.activeDirection.dy = self.activeDirection.dy;
     const now = new Date().getTime();
     self.lastMovedAt = now;
   },
@@ -460,12 +457,10 @@ module.export = cc.Class({
   startFrozenDisplay() {
     const self =  this;
     self.attacked = true;
-    self.scheduleNewDirection(self.scheduledDirection, true);
   },
 
   stopFrozenDisplay() {
     const self = this;
     self.attacked = false;
-    self.scheduleNewDirection(self.scheduledDirection, true);
   },
 });
