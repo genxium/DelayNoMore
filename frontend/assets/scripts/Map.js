@@ -350,9 +350,7 @@ cc.Class({
     self.recentInputCacheCurrentSize = 0;
     self.recentInputCacheMaxCount = 1024;
     self.toRollbackRenderFrameId1 = null;
-    self.toRollbackRenderFrameId2 = null;
     self.toRollbackInputFrameId1 = null;
-    self.toRollbackInputFrameId2 = null;
     
     self.transitToState(ALL_MAP_STATES.VISUAL);
 
@@ -620,7 +618,7 @@ cc.Class({
           self._dumpToInputCache(inputFrameDownsync);
           // [WARNING] Currently "lastDownsyncInputFrameId" and "lastAllConfirmedInputFrameId" are identical, but they (their definitions) are prone to changes in the future
           self.lastDownsyncInputFrameId = inputFrameDownsyncId; 
-          self.lastAllConfirmedInputFrameId = inputFrameDownsyncId; 
+          self.lastAllConfirmedInputFrameId = inputFrameDownsyncId; // TODO: Should localInputFrameId > self.lastAllConfirmedInputFrameId be corrected for their predictions on the other players?  
         }
 
         if (null != firstPredictedYetIncorrectInputFrameId) {
@@ -635,13 +633,9 @@ cc.Class({
               // The actual rollback-and-replay would later be executed in update(dt). 
               if (null == self.toRollbackRenderFrameId1) {
                 self.toRollbackRenderFrameId1 = renderFrameId1;
-                self.toRollbackRenderFrameId2 = renderFrameId2;
                 self.toRollbackInputFrameId1 = inputFrameId1;
-                self.toRollbackInputFrameId2 = inputFrameId2;
               } else {
-                // Just extend the ending indices
-                self.toRollbackRenderFrameId2 = renderFrameId2;
-                self.toRollbackInputFrameId2 = inputFrameId2;
+                // Deliberately left blank. This case merely extends the ending indices
               }
             } else {
               self._rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2);
@@ -733,7 +727,7 @@ cc.Class({
   logBattleStats() {
     const self = this;
     let s = [];
-    s.push("Battle stats: lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastDownsyncInputFrameId=" + self.lastDownsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId + ", lastDownsyncInputFrameId=" + self.lastDownsyncInputFrameId);
+    s.push("Battle stats: lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastDownsyncInputFrameId=" + self.lastDownsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId);
 
     for (let inputFrameDownsyncId in self.recentInputCache) {
         const inputFrameDownsync = self.recentInputCache[inputFrameDownsyncId];
@@ -798,17 +792,19 @@ cc.Class({
           self._sendInputFrameUpsyncBatch(noDelayInputFrameId);
         }
         
+        const delayedInputFrameId = self._convertToInputFrameId(self.renderFrameId, self.inputDelayFrames); // The "inputFrameId" to use at current "renderFrameId"
         if (true == self.rollbackInMainUpdate) {
           if (null != self.toRollbackRenderFrameId1) {
-            self._rollbackAndReplay(self.toRollbackInputFrameId1, self.toRollbackRenderFrameId1, self.toRollbackInputFrameId2, self.toRollbackRenderFrameId2);
+            // Rollback-and-replay if necessary, prior to applying the latest dynamics 
+            const anotherJoinIndex = 3-self.selfPlayerInfo.joinIndex;
+            console.log("BEFORE rollback, the other player's position: ", JSON.stringify(self.playersNode[anotherJoinIndex].position));
+            self._rollbackAndReplay(self.toRollbackInputFrameId1, self.toRollbackRenderFrameId1, delayedInputFrameId, self.renderFrameId);
+            console.log("AFTER rollback, the other player's position: ", JSON.stringify(self.playersNode[anotherJoinIndex].position));
             self.toRollbackRenderFrameId1 = null;
             self.toRollbackRenderFrameId2 = null;
-            self.toRollbackInputFrameId1 = null;
-            self.toRollbackInputFrameId2 = null;
           }
         }
 
-        const delayedInputFrameId = self._convertToInputFrameId(self.renderFrameId, self.inputDelayFrames); // The "inputFrameId" to use at current "renderFrameId"
         const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
         if (null == delayedInputFrameDownsync) {
           console.warn("update(dt): recentInputCache is NOT having inputFrameId=", delayedInputFrameId, "; recentInputCache=", instance._stringifyRecentInputCache(false));
