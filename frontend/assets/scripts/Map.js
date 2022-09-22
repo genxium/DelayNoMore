@@ -138,18 +138,26 @@ cc.Class({
 
   _dumpToFullFrameCache: function(fullFrame) {
     const self = this;
-    while (self.recentFrameCacheEd - self.recentFrameCacheSt >= self.recentFrameCacheMaxCount) {
-      delete self.recentFrameCache[self.recentFrameCacheSt++];
+    self.recentFrameCache.set(fullFrame.id, fullFrame);
+    if (fullFrame.id >= self.recentFrameCacheEd) {
+      // Should be consecutive
+      ++self.recentFrameCacheEd;
     }
-    self.recentFrameCache[self.recentFrameCacheEd++] = fullFrame;
+    while (self.recentFrameCacheEd - self.recentFrameCacheSt >= self.recentFrameCacheMaxCount) {
+      self.recentFrameCache.delete(self.recentFrameCacheSt++);
+    }
   },
 
   _dumpToInputCache: function(inputFrameDownsync) {
     const self = this;
-    while (self.recentInputCacheEd - self.recentInputCacheSt >= self.recentInputCacheMaxCount) {
-      delete self.recentInputCache[self.recentInputCacheSt++];
+    self.recentInputCache.set(inputFrameDownsync.inputFrameId, inputFrameDownsync);
+    if (inputFrameDownsync.inputFrameId >= self.recentInputCacheEd) {
+      // Should be consecutive
+      ++self.recentInputCacheEd;
     }
-    self.recentInputCache[self.recentInputCacheEd++] = inputFrameDownsync;
+    while (self.recentInputCacheEd - self.recentInputCacheSt >= self.recentInputCacheMaxCount) {
+      self.recentInputCache.delete(self.recentInputCacheSt++);
+    }
   },
 
   _convertToInputFrameId(renderFrameId, inputDelayFrames) {
@@ -180,11 +188,11 @@ cc.Class({
     if (0 == instance.recentInputCacheEd) {
         prefabbedInputList = new Array(instance.playerRichInfoDict.size).fill(0);
     } else {
-        if (null == instance.recentInputCache || null == instance.recentInputCache[instance.recentInputCacheEd-1]) {
+        if (!instance.recentInputCache.has(instance.recentInputCacheEd-1)) {
             console.warn("_generateInputFrameUpsync: recentInputCache is NOT having inputFrameId=", instance.recentInputCacheEd-1, "; recentInputCache=", instance._stringifyRecentInputCache(false));
             prefabbedInputList = new Array(instance.playerRichInfoDict.size).fill(0); 
         } else {
-            prefabbedInputList = Array.from(instance.recentInputCache[instance.recentInputCacheEd-1].inputList); 
+            prefabbedInputList = Array.from(instance.recentInputCache.get(instance.recentInputCacheEd-1).inputList); 
             selfPlayerLastInputFrameInput = prefabbedInputList[(instance.selfPlayerInfo.joinIndex-1)]; // it's an integer, thus making a copy here, not impacted by later assignments 
         }
     }
@@ -216,9 +224,9 @@ cc.Class({
     const instance = this;
     let inputFrameUpsyncBatch = [];
     for (let i = instance.lastUpsyncInputFrameId+1; i <= inputFrameId; ++i) {
-        const inputFrameDownsync = instance.recentInputCache[i];
+        const inputFrameDownsync = instance.recentInputCache.get(i);
         if (null == inputFrameDownsync) {
-          console.warn("_sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=", i, "; recentInputCache=", JSON.stringify(instance.recentInputCache));
+          console.warn("_sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=", i, "; recentInputCache=", instance._stringifyRecentInputCache(false));
         } else {
           const inputFrameUpsync = {
             inputFrameId: i,
@@ -328,19 +336,19 @@ cc.Class({
     self.lastRoomDownsyncFrameId = 0;
     self.renderFrameId = 0; // After battle started
     self.inputDelayFrames = 8;
-    self.inputScaleFrames = 3;
+    self.inputScaleFrames = 2;
     self.lastDownsyncInputFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
     self.lastUpsyncInputFrameId = -1;
-    self.inputFrameUpsyncDelayTolerance = 3;
+    self.inputFrameUpsyncDelayTolerance = 2;
 
-    self.recentFrameCache = {};
+    self.recentFrameCache = new Map();
     self.recentFrameCacheSt = 0; // closed index
     self.recentFrameCacheEd = 0; // open index
     self.recentFrameCacheMaxCount = 1024;
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
-    self.recentInputCache = {}; // TODO: Use a ringbuf instead
+    self.recentInputCache = new Map(); // TODO: Use a ringbuf instead
     self.recentInputCacheSt = 0; // closed index
     self.recentInputCacheEd = 0; // open index
     self.recentInputCacheMaxCount = 1024;
@@ -580,13 +588,13 @@ cc.Class({
           return;
         }
 
-        // console.log("Received inputFrameDownsyncBatch=", batch, ", now correspondingLastLocalInputFrame=", self.recentInputCache[batch[batch.length-1].inputFrameId]); 
+        // console.log("Received inputFrameDownsyncBatch=", batch, ", now correspondingLastLocalInputFrame=", self.recentInputCache.get(batch[batch.length-1].inputFrameId)); 
         let firstPredictedYetIncorrectInputFrameId = null;
         let firstPredictedYetIncorrectInputFrameJoinIndex = null;
         for (let k in batch) {
           const inputFrameDownsync = batch[k]; 
           const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
-          const localInputFrame = self.recentInputCache[inputFrameDownsyncId]; 
+          const localInputFrame = self.recentInputCache.get(inputFrameDownsyncId); 
           if (null == localInputFrame) {
             console.warn("handleInputFrameDownsyncBatch: recentInputCache is NOT having inputFrameDownsyncId=", inputFrameDownsyncId, "; now recentInputCache=", self._stringifyRecentInputCache(false));
           } else {
@@ -713,11 +721,10 @@ cc.Class({
     const self = this;
     let s = [];
     s.push("Battle stats: lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastDownsyncInputFrameId=" + self.lastDownsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId);
-
-    for (let inputFrameDownsyncId in self.recentInputCache) {
-        const inputFrameDownsync = self.recentInputCache[inputFrameDownsyncId];
-        s.push(JSON.stringify(inputFrameDownsync));
-    }
+    
+    self.recentInputCache.forEach((inputFrameDownsync, inputFrameId) => {
+      s.push(JSON.stringify(inputFrameDownsync));
+    });
 
     console.log(s.join('\n'));
   },
@@ -786,7 +793,7 @@ cc.Class({
 
         const delayedInputFrameDownsync = self.assembleInputFrameDownsync(delayedInputFrameId);
         if (null == delayedInputFrameDownsync) {
-          console.warn("update(dt): recentInputCache is NOT having inputFrameId=", delayedInputFrameId, "; recentInputCache=", instance._stringifyRecentInputCache(false));
+          console.warn("update(dt): recentInputCache is NOT having inputFrameId=", delayedInputFrameId, "; recentInputCache=", self._stringifyRecentInputCache(false));
         } else {
           self._applyInputFrameDownsyncDynamics(delayedInputFrameDownsync, false);
         } 
@@ -957,9 +964,9 @@ cc.Class({
 
   assembleInputFrameDownsync(inputFrameId) {
     const self = this;
-    let inputFrameDownsync = self.recentInputCache[inputFrameId];
+    let inputFrameDownsync = self.recentInputCache.get(inputFrameId);
     if (-1 != self.lastAllConfirmedInputFrameId && inputFrameId > self.lastAllConfirmedInputFrameId) {
-      const lastAllConfirmedInputFrame = self.recentInputCache[self.lastAllConfirmedInputFrameId]; 
+      const lastAllConfirmedInputFrame = self.recentInputCache.get(self.lastAllConfirmedInputFrameId); 
       for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
         if (i == self.selfPlayerInfo.joinIndex-1) continue;
         inputFrameDownsync.inputList[i] = lastAllConfirmedInputFrame.inputList[i]; 
@@ -993,7 +1000,7 @@ cc.Class({
   
   _rollbackAndReplay(inputFrameId1, renderFrameId1, inputFrameId2, renderFrameId2) {
     const self = this;
-    const rdf1 = self.recentFrameCache[renderFrameId1];
+    const rdf1 = self.recentFrameCache.get(renderFrameId1);
     if (null == rdf1) {
       console.error("renderFrameId1=", renderFrameId1, "doesn't exist in recentFrameCache ", self._stringifyRecentFrameCache(false), ": COULDN'T ROLLBACK!");
       return;
@@ -1036,12 +1043,10 @@ cc.Class({
 
   _stringifyRecentFrameCache(usefullOutput) {
     if (true == usefullOutput) {
-
       let s = [];
-      for (let renderFrameId in self.recentFrameCache) {
-          const roomDownsyncFrame = self.recentFrameCache[renderFrameId];
-          s.push(JSON.stringify(roomDownsyncFrame));
-      }
+      self.recentFrameCache.forEach((roomDownsyncFrame, renderFrameId) => {
+        s.push(JSON.stringify(roomDownsyncFrame));
+      });
 
       return s.join('\n');
     }
@@ -1050,7 +1055,12 @@ cc.Class({
 
   _stringifyRecentInputCache(usefullOutput) {
     if (true == usefullOutput) {
-      return JSON.stringify(this.recentInputCache);
+      let s = [];
+      self.recentInputCache.forEach((inputFrameDownsync, inputFrameId) => {
+        s.push(JSON.stringify(inputFrameDownsync));
+      });
+
+      return s.join('\n');
     }
     return "[stInputFrameId=" + self.recentInputCacheSt + ", edInputFrameId=" + self.recentInputCacheEd + ")";
   },
