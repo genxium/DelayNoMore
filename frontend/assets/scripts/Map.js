@@ -138,25 +138,18 @@ cc.Class({
 
   _dumpToFullFrameCache: function(fullFrame) {
     const self = this;
-    while (self.recentFrameCacheCurrentSize >= self.recentFrameCacheMaxCount) {
-      const toDelFrameId = Object.keys(self.recentFrameCache)[0];
-      delete self.recentFrameCache[toDelFrameId];
-      --self.recentFrameCacheCurrentSize;
+    while (self.recentFrameCacheEd - self.recentFrameCacheSt >= self.recentFrameCacheMaxCount) {
+      delete self.recentFrameCache[self.recentFrameCacheSt++];
     }
-    self.recentFrameCache[fullFrame.id] = fullFrame;
-    ++self.recentFrameCacheCurrentSize;
+    self.recentFrameCache[self.recentFrameCacheEd++] = fullFrame;
   },
 
   _dumpToInputCache: function(inputFrameDownsync) {
     const self = this;
-    while (self.recentInputCacheCurrentSize >= self.recentInputCacheMaxCount) {
-      const toDelFrameId = Object.keys(self.recentInputCache)[0];
-      // console.log("Deleting toDelFrameId=", toDelFrameId, " from recentInputCache");
-      delete self.recentInputCache[toDelFrameId];
-      --self.recentInputCacheCurrentSize;
+    while (self.recentInputCacheEd - self.recentInputCacheSt >= self.recentInputCacheMaxCount) {
+      delete self.recentInputCache[self.recentInputCacheSt++];
     }
-    self.recentInputCache[inputFrameDownsync.inputFrameId] = inputFrameDownsync;
-    ++self.recentInputCacheCurrentSize;
+    self.recentInputCache[self.recentInputCacheEd++] = inputFrameDownsync;
   },
 
   _convertToInputFrameId(renderFrameId, inputDelayFrames) {
@@ -184,14 +177,14 @@ cc.Class({
     const discreteDir = instance.ctrl.getDiscretizedDirection();
     let prefabbedInputList = null;
     let selfPlayerLastInputFrameInput = 0;
-    if (0 == instance.lastLocalInputFrameId) {
-        prefabbedInputList = new Array(Object.keys(instance.playersNode).length).fill(0);
+    if (0 == instance.recentInputCacheEd) {
+        prefabbedInputList = new Array(instance.playerRichInfoDict.size).fill(0);
     } else {
-        if (null == instance.recentInputCache || null == instance.recentInputCache[instance.lastLocalInputFrameId-1]) {
-            console.warn("_generateInputFrameUpsync: recentInputCache is NOT having inputFrameId=", instance.lastLocalInputFrameId-1, "; recentInputCache=", instance._stringifyRecentInputCache(false));
-            prefabbedInputList = new Array(Object.keys(instance.playersNode).length).fill(0); 
+        if (null == instance.recentInputCache || null == instance.recentInputCache[instance.recentInputCacheEd-1]) {
+            console.warn("_generateInputFrameUpsync: recentInputCache is NOT having inputFrameId=", instance.recentInputCacheEd-1, "; recentInputCache=", instance._stringifyRecentInputCache(false));
+            prefabbedInputList = new Array(instance.playerRichInfoDict.size).fill(0); 
         } else {
-            prefabbedInputList = Array.from(instance.recentInputCache[instance.lastLocalInputFrameId-1].inputList); 
+            prefabbedInputList = Array.from(instance.recentInputCache[instance.recentInputCacheEd-1].inputList); 
             selfPlayerLastInputFrameInput = prefabbedInputList[(instance.selfPlayerInfo.joinIndex-1)]; // it's an integer, thus making a copy here, not impacted by later assignments 
         }
     }
@@ -322,32 +315,34 @@ cc.Class({
     self.countdownNanos = null;
 
     // Clearing previous info of all players. [BEGINS]
-    for (let joinIndex in self.playersNode) {
-        const node = self.playersNode[joinIndex];
-        if (node.parent) {
-          node.parent.removeChild(node);
+    if (null != self.playerRichInfoDict) {
+      self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
+        if (playerRichInfo.node.parent) {
+          playerRichInfo.node.parent.removeChild(playerRichInfo.node);
         }
-    }
-    self.playerRichInfoDict = {};
+      });
+    } 
+    self.playerRichInfoDict = new Map();
     // Clearing previous info of all players. [ENDS]
 
     self.lastRoomDownsyncFrameId = 0;
     self.renderFrameId = 0; // After battle started
     self.inputDelayFrames = 8;
     self.inputScaleFrames = 3;
-    self.lastLocalInputFrameId = 0;
     self.lastDownsyncInputFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
     self.lastUpsyncInputFrameId = -1;
     self.inputFrameUpsyncDelayTolerance = 3;
 
     self.recentFrameCache = {};
-    self.recentFrameCacheCurrentSize = 0;
+    self.recentFrameCacheSt = 0; // closed index
+    self.recentFrameCacheEd = 0; // open index
     self.recentFrameCacheMaxCount = 1024;
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
     self.recentInputCache = {}; // TODO: Use a ringbuf instead
-    self.recentInputCacheCurrentSize = 0;
+    self.recentInputCacheSt = 0; // closed index
+    self.recentInputCacheEd = 0; // open index
     self.recentInputCacheMaxCount = 1024;
     self.toRollbackRenderFrameId1 = null;
     self.toRollbackInputFrameId1 = null;
@@ -434,16 +429,6 @@ cc.Class({
     }
     self.widgetsAboveAllNode = self.mainCameraNode.getChildByName("WidgetsAboveAll");
     self.mainCameraNode.setPosition(cc.v2());
-
-    self.playersNode = {};
-    const player1Node = cc.instantiate(self.player1Prefab);
-    const player2Node = cc.instantiate(self.player2Prefab);
-    Object.assign(self.playersNode, {
-      1: player1Node
-    });
-    Object.assign(self.playersNode, {
-      2: player2Node
-    });
 
     /** Init required prefab ended. */
 
@@ -758,7 +743,7 @@ cc.Class({
 
   spawnPlayerNode(joinIndex, x, y) {
     const instance = this;
-    const newPlayerNode = instance.playersNode[joinIndex];
+    const newPlayerNode = 1 == joinIndex ? cc.instantiate(instance.player1Prefab) : cc.instantiate(instance.player2Prefab); // hardcoded for now, car color determined solely by joinIndex
     newPlayerNode.setPosition(cc.v2(x, y));
     newPlayerNode.getComponent("SelfPlayer").mapNode = instance.node;
 
@@ -775,10 +760,6 @@ cc.Class({
   update(dt) {
     const self = this;
     try {
-      let inputs = new Array(Object.keys(self.playersNode).length).fill({
-          dx: 0, 
-          dy: 0
-      });
       if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
         let prevSelfInput = null, currSelfInput = null;
         const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
@@ -797,15 +778,13 @@ cc.Class({
           if (null != self.toRollbackRenderFrameId1) {
             // Rollback-and-replay if necessary, prior to applying the latest dynamics 
             const anotherJoinIndex = 3-self.selfPlayerInfo.joinIndex;
-            console.log("BEFORE rollback, the other player's position: ", JSON.stringify(self.playersNode[anotherJoinIndex].position));
             self._rollbackAndReplay(self.toRollbackInputFrameId1, self.toRollbackRenderFrameId1, delayedInputFrameId, self.renderFrameId);
-            console.log("AFTER rollback, the other player's position: ", JSON.stringify(self.playersNode[anotherJoinIndex].position));
             self.toRollbackRenderFrameId1 = null;
             self.toRollbackRenderFrameId2 = null;
           }
         }
 
-        const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
+        const delayedInputFrameDownsync = self.assembleInputFrameDownsync(delayedInputFrameId);
         if (null == delayedInputFrameDownsync) {
           console.warn("update(dt): recentInputCache is NOT having inputFrameId=", delayedInputFrameId, "; recentInputCache=", instance._stringifyRecentInputCache(false));
         } else {
@@ -949,9 +928,7 @@ cc.Class({
         players: {},
         countdownNanos: self.countdownNanos 
     };
-
-    for (let playerId in self.playerRichInfoDict) {
-      const playerRichInfo = self.playerRichInfoDict[playerId]; 
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const joinIndex = playerRichInfo.joinIndex; 
       const playerNode = playerRichInfo.node; 
       const playerScriptIns = playerRichInfo.scriptIns;
@@ -963,29 +940,41 @@ cc.Class({
         speed: playerScriptIns.speed,
         joinIndex: joinIndex 
       };
-    }
+    });
     return rdf;
   },
 
   _applyRoomDownsyncFrameDynamics(rdf) {
     const self = this;
 
-    for (let playerId in self.playerRichInfoDict) {
-      const playerRichInfo = self.playerRichInfoDict[playerId]; 
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const immediatePlayerInfo = rdf.players[playerId];
       playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
       playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, true);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed); 
-    }
+    });
   }, 
+
+  assembleInputFrameDownsync(inputFrameId) {
+    const self = this;
+    let inputFrameDownsync = self.recentInputCache[inputFrameId];
+    if (-1 != self.lastAllConfirmedInputFrameId && inputFrameId > self.lastAllConfirmedInputFrameId) {
+      const lastAllConfirmedInputFrame = self.recentInputCache[self.lastAllConfirmedInputFrameId]; 
+      for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
+        if (i == self.selfPlayerInfo.joinIndex-1) continue;
+        inputFrameDownsync.inputList[i] = lastAllConfirmedInputFrame.inputList[i]; 
+      }
+    } 
+
+    return inputFrameDownsync;
+  },
 
   _applyInputFrameDownsyncDynamics(inputFrameDownsync, invokeUpdateToo) {
     // This application DOESN'T use a "full physics engine", but only "collider detection" of "box2d", thus when resetting room state, there's no need of resetting "momentums". 
     const self = this;
     const inputs = inputFrameDownsync.inputList; 
     // Update controlled player nodes 
-    for (let playerId in self.playerRichInfoDict) {
-      const playerRichInfo = self.playerRichInfoDict[playerId];
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const joinIndex = playerRichInfo.joinIndex; 
       const playerScriptIns = playerRichInfo.scriptIns;
       const decodedInput = self.ctrl.decodeDirection(inputs[joinIndex-1]);
@@ -993,7 +982,7 @@ cc.Class({
       if (invokeUpdateToo) {
         playerScriptIns.update(self.rollbackEstimatedDt);
       }
-    }
+    });
     
     if (invokeUpdateToo) {
       // [WARNING] CocosCreator v2.2.1 uses a singleton "CCDirector" to schedule "tree descendent updates" and "collision detections" in different timers, thus the following manual trigger of collision detection might not produce the same outcome for the "selfPlayer" as the other peers. Moreover, the aforementioned use of different timers is an intrinsic source of error! 
@@ -1006,7 +995,6 @@ cc.Class({
     const self = this;
     const rdf1 = self.recentFrameCache[renderFrameId1];
     if (null == rdf1) {
-      const recentFrameCacheKeys = Object.keys(self.recentFrameCache);
       console.error("renderFrameId1=", renderFrameId1, "doesn't exist in recentFrameCache ", self._stringifyRecentFrameCache(false), ": COULDN'T ROLLBACK!");
       return;
     }
@@ -1016,7 +1004,7 @@ cc.Class({
     // DON'T apply inputFrameDownsync dynamics for exactly "renderFrameId2", see the comment around the invocation of "_rollbackAndReplay". 
     for (let renderFrameId = renderFrameId1; renderFrameId < renderFrameId2; ++renderFrameId) {
       const delayedInputFrameId = self._convertToInputFrameId(renderFrameId, self.inputDelayFrames);
-      const delayedInputFrameDownsync = self.recentInputCache[delayedInputFrameId];
+      const delayedInputFrameDownsync = self.assembleInputFrameDownsync(delayedInputFrameId);
       self._applyInputFrameDownsyncDynamics(delayedInputFrameDownsync, true);
       // console.log("_rollbackAndReplay, AFTER:", self._stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync));
     } 
@@ -1028,13 +1016,13 @@ cc.Class({
     const self = this;
     for (let k in players) {
       const playerId = parseInt(k);
-      if (self.playerRichInfoDict.hasOwnProperty(playerId)) continue;
+      if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
       const immediatePlayerInfo = players[playerId];
       const immediatePlayerMeta = playerMetas[playerId];
       const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.x, immediatePlayerInfo.y);
-      self.playerRichInfoDict[playerId] = immediatePlayerInfo; 
+      self.playerRichInfoDict.set(playerId, immediatePlayerInfo); 
 
-      Object.assign(self.playerRichInfoDict[playerId], {
+      Object.assign(self.playerRichInfoDict.get(playerId), {
         node: nodeAndScriptIns[0],
         scriptIns: nodeAndScriptIns[1]
       });
@@ -1057,16 +1045,14 @@ cc.Class({
 
       return s.join('\n');
     }
-    const keys = Object.keys(this.recentFrameCache);
-    return "[stRenderFrameId=" + keys[0] + ", edRenderFrameId=" + keys[keys.length-1] + "]";
+    return "[stRenderFrameId=" + self.recentFrameCacheSt + ", edRenderFrameId=" + self.recentFrameCacheEd + ")";
   },
 
   _stringifyRecentInputCache(usefullOutput) {
     if (true == usefullOutput) {
       return JSON.stringify(this.recentInputCache);
     }
-    const keys = Object.keys(this.recentInputCache);
-    return "[stInputFrameId=" + keys[0] + ", edInputFrameId=" + keys[keys.length-1] + "]";
+    return "[stInputFrameId=" + self.recentInputCacheSt + ", edInputFrameId=" + self.recentInputCacheEd + ")";
   },
 
   _stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync) {
@@ -1087,8 +1073,7 @@ cc.Class({
       }
     );
     let players = {};
-    for (let playerId in self.playerRichInfoDict) {
-      const playerRichInfo = self.playerRichInfoDict[playerId]; 
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const joinIndex = playerRichInfo.joinIndex; 
       const playerNode = playerRichInfo.node; 
       const playerScriptIns = playerRichInfo.scriptIns;
@@ -1097,7 +1082,7 @@ cc.Class({
         x: playerNode.position.x,
         y: playerNode.position.y,
       };
-    }
+    });
 
     return JSON.stringify(s);
   },
