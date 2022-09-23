@@ -37,7 +37,6 @@ module.export = cc.Class({
     const self = this;
     self.contactedControlledPlayers = [];
     self.contactedNPCPlayers = [];
-    self.coveringShelterZReducers = [];
 
     self.computedNewDifferentPosLocalToParentWithinCurrentFrame = null;
     self.actionMangerSingleton = new cc.ActionManager();
@@ -91,25 +90,6 @@ module.export = cc.Class({
         }
       }
     }
-  },
-
-  _addCoveringShelterZReducer(comp) {
-    const self = this;
-    for (let coveringShelterZReducer of self.coveringShelterZReducers) {
-      if (coveringShelterZReducer._id == comp._id) {
-        return false;
-      }
-    }
-    self.coveringShelterZReducers.push(comp);
-    return true;
-  },
-
-  _removeCoveringShelterZReducer(comp) {
-    const self = this;
-    self.coveringShelterZReducers = self.coveringShelterZReducers.filter((coveringShelterZReducer) => {
-      return coveringShelterZReducer._id != comp._id;
-    });
-    return true;
   },
 
   _addContactedBarrier(collider) {
@@ -379,14 +359,6 @@ module.export = cc.Class({
       case "PolygonBoundaryBarrier":
         playerScriptIns._addContactedBarrier(other);
         break;
-      case "PolygonBoundaryShelter":
-        break;
-      case "PolygonBoundaryShelterZReducer":
-        playerScriptIns._addCoveringShelterZReducer(other);
-        if (1 == playerScriptIns.coveringShelterZReducers.length) {
-          setLocalZOrder(self.node, 2);
-        }
-        break;
       default:
         break;
     }
@@ -405,14 +377,6 @@ module.export = cc.Class({
         break;
       case "PolygonBoundaryBarrier":
         playerScriptIns._removeContactedBarrier(other);
-        break;
-      case "PolygonBoundaryShelter":
-        break;
-      case "PolygonBoundaryShelterZReducer":
-        playerScriptIns._removeCoveringShelterZReducer(other);
-        if (0 == playerScriptIns.coveringShelterZReducers.length) {
-          setLocalZOrder(self.node, 5);
-        }
         break;
       default:
         break;

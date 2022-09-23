@@ -1,5 +1,6 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
+
 cc.Class({
   extends: cc.Component,
 

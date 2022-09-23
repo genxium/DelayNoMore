@@ -1,6 +1,8 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
+const collisions = require('./modules/Collisions');
+
 window.ALL_MAP_STATES = {
   VISUAL: 0, // For free dragging & zooming.
   EDITING_BELONGING: 1,
@@ -53,14 +55,6 @@ cc.Class({
       default: null,
     },
     polygonBoundaryBarrierPrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    polygonBoundaryShelterPrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    polygonBoundaryShelterZReducerPrefab: {
       type: cc.Prefab,
       default: null,
     },
@@ -354,6 +348,9 @@ cc.Class({
     self.recentInputCacheMaxCount = 1024;
     self.toRollbackRenderFrameId1 = null;
     self.toRollbackInputFrameId1 = null;
+
+    self.latestCollisionSys = new collisions.Collisions();
+    self.chaserCollisionSys = new collisions.Collisions();
     
     self.transitToState(ALL_MAP_STATES.VISUAL);
 
@@ -386,8 +383,7 @@ cc.Class({
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
-    cc.director.getCollisionManager().enabled = true;
-    cc.director.getCollisionManager().enabledDebugDraw = CC_DEBUG;
+    cc.director.getCollisionManager().enabled = false;
     // self.musicEffectManagerScriptIns = self.node.getComponent("MusicEffectManager");
     self.musicEffectManagerScriptIns = null;
 

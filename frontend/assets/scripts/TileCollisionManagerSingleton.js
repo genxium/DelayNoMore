@@ -334,10 +334,6 @@ window.battleEntityTypeNameToGlobalGid = {};
 TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNode) {
   let toRet = {
     barriers: [],
-    shelters: [],
-    shelterChainTails: [],
-    shelterChainHeads: [],
-    sheltersZReducer: [],
     frameAnimations: [],
     grandBoundaries: [],
   };
@@ -404,8 +400,6 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
         var currentObjectGroupUnderTile = mapInfo._parseObjectGroup(ch);
         gidBoundariesMap[parentGid] = {
           barriers: [],
-          shelters: [],
-          sheltersZReducer: [],
         };
         for (let oidx = 0; oidx < currentObjectGroupUnderTile._objects.length; ++oidx) {
           const oo = currentObjectGroupUnderTile._objects[oidx];
@@ -428,22 +422,6 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
               }
               brToPushTmp.boundaryType = boundaryType;
               gidBoundariesMap[parentGid].barriers.push(brToPushTmp);
-              break;
-            case "shelter":
-              let shToPushTmp = [];
-              for (let shidx = 0; shidx < polylinePoints.length; ++shidx) {
-                shToPushTmp.push(cc.v2(oo.x, oo.y).add(polylinePoints[shidx]));
-              }
-              shToPushTmp.boundaryType = boundaryType;
-              gidBoundariesMap[parentGid].shelters.push(shToPushTmp);
-              break;
-            case "shelter_z_reducer":
-              let shzrToPushTmp = [];
-              for (let shzridx = 0; shzridx < polylinePoints.length; ++shzridx) {
-                shzrToPushTmp.push(cc.v2(oo.x, oo.y).add(polylinePoints[shzridx]));
-              }
-              shzrToPushTmp.boundaryType = boundaryType;
-              gidBoundariesMap[parentGid].sheltersZReducer.push(shzrToPushTmp);
               break;
             default:
               break;
@@ -510,22 +488,6 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
           toPushBarriers.boundaryType = boundaryType;
           toRet.barriers.push(toPushBarriers);
           break;
-        case "shelter":
-          let toPushShelters = [];
-          for (let kk = 0; kk < polylinePoints.length; ++kk) {
-            toPushShelters.push(this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset.add(polylinePoints[kk])));
-          }
-          toPushShelters.boundaryType = boundaryType;
-          toRet.shelters.push(toPushShelters);
-          break;
-        case "shelter_z_reducer":
-          let toPushSheltersZReducer = [];
-          for (let kkk = 0; kkk < polylinePoints.length; ++kkk) {
-            toPushSheltersZReducer.push(this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset.add(polylinePoints[kkk])));
-          }
-          toPushSheltersZReducer.boundaryType = boundaryType;
-          toRet.sheltersZReducer.push(toPushSheltersZReducer);
-          break;
         default:
           break;
       }
@@ -585,23 +547,6 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
               }
               toRet.barriers.push(brToPushTmp);
             }
-            for (let shidx = 0; shidx < gidBoundaries.shelters.length; ++shzridx) {
-              const theShelter = gidBoundaries.shelters[shidx]; // An array of cc.v2 points.
-              let shToPushTmp = [];
-              for (let tshidx = 0; tshidx < theShelter.length; ++tshidx) {
-                shToPushTmp.push(topLeftOfWholeTsxTileInMapNode.add(cc.v2(theShelter[tshidx].x, -theShelter[tshidx].y)));
-              }
-              toRet.shelters.push(shToPushTmp);
-            }
-            for (let shzridx = 0; shzridx < gidBoundaries.sheltersZReducer.length; ++shzridx) {
-              const theShelter = gidBoundaries.sheltersZReducer[shzridx]; // An array of cc.v2 points.
-              let shzrToPushTmp = [];
-              for (let tshzridx = 0; tshzridx < theShelter.length; ++tshzridx) {
-                shzrToPushTmp.push(topLeftOfWholeTsxTileInMapNode.add(cc.v2(theShelter[tshzridx].x, -theShelter[tshzridx].y)));
-              }
-              toRet.sheltersZReducer.push(shzrToPushTmp);
-            }
-            
             continue;
 
           default:
@@ -683,47 +628,6 @@ TileCollisionManager.prototype.initMapNodeByTiledBoundaries = function(mapScript
     frameAnimInType.push(animNode);
   }
 
-  for (let boundaryObj of extractedBoundaryObjs.shelterChainTails) {
-    const newShelter = cc.instantiate(mapScriptIns.polygonBoundaryShelterPrefab);
-    const newBoundaryOffsetInMapNode = cc.v2(boundaryObj[0].x, boundaryObj[0].y);
-    newShelter.setPosition(newBoundaryOffsetInMapNode);
-    newShelter.setAnchorPoint(cc.v2(0, 0));
-    const newShelterColliderIns = newShelter.getComponent(cc.PolygonCollider);
-    newShelterColliderIns.points = [];
-    for (let p of boundaryObj) {
-      newShelterColliderIns.points.push(p.sub(newBoundaryOffsetInMapNode));
-    }
-    newShelter.pTiledLayer = boundaryObj.pTiledLayer;
-    newShelter.tileDiscretePos = boundaryObj.tileDiscretePos;
-    if (null != boundaryObj.imageObject) {
-      newShelter.imageObject = boundaryObj.imageObject;
-      newShelter.tailOrHead = "tail";
-      window.addToGlobalShelterChainVerticeMap(newShelter.imageObject.imageObjectNode); // Deliberately NOT adding at the "traversal of shelterChainHeads".
-    }
-    newShelter.boundaryObj = boundaryObj;
-    mapScriptIns.node.addChild(newShelter);
-  }
-
-  for (let boundaryObj of extractedBoundaryObjs.shelterChainHeads) {
-    const newShelter = cc.instantiate(mapScriptIns.polygonBoundaryShelterPrefab);
-    const newBoundaryOffsetInMapNode = cc.v2(boundaryObj[0].x, boundaryObj[0].y);
-    newShelter.setPosition(newBoundaryOffsetInMapNode);
-    newShelter.setAnchorPoint(cc.v2(0, 0));
-    const newShelterColliderIns = newShelter.getComponent(cc.PolygonCollider);
-    newShelterColliderIns.points = [];
-    for (let p of boundaryObj) {
-      newShelterColliderIns.points.push(p.sub(newBoundaryOffsetInMapNode));
-    }
-    newShelter.pTiledLayer = boundaryObj.pTiledLayer;
-    newShelter.tileDiscretePos = boundaryObj.tileDiscretePos;
-    if (null != boundaryObj.imageObject) {
-      newShelter.imageObject = boundaryObj.imageObject;
-      newShelter.tailOrHead = "head";
-    }
-    newShelter.boundaryObj = boundaryObj;
-    mapScriptIns.node.addChild(newShelter);
-  }
-
   mapScriptIns.barrierColliders = [];
   for (let boundaryObj of extractedBoundaryObjs.barriers) {
     const newBarrier = cc.instantiate(mapScriptIns.polygonBoundaryBarrierPrefab);
@@ -739,29 +643,12 @@ TileCollisionManager.prototype.initMapNodeByTiledBoundaries = function(mapScript
     mapScriptIns.node.addChild(newBarrier);
   }
 
-  for (let boundaryObj of extractedBoundaryObjs.sheltersZReducer) {
-    const newShelter = cc.instantiate(mapScriptIns.polygonBoundaryShelterZReducerPrefab);
-    const newBoundaryOffsetInMapNode = cc.v2(boundaryObj[0].x, boundaryObj[0].y);
-    newShelter.setPosition(newBoundaryOffsetInMapNode);
-    newShelter.setAnchorPoint(cc.v2(0, 0));
-    const newShelterColliderIns = newShelter.getComponent(cc.PolygonCollider);
-    newShelterColliderIns.points = [];
-    for (let p of boundaryObj) {
-      newShelterColliderIns.points.push(p.sub(newBoundaryOffsetInMapNode));
-    }
-    mapScriptIns.node.addChild(newShelter);
-  }
-
   const allLayers = tiledMapIns.getLayers();
   for (let layer of allLayers) {
     const layerType = layer.getProperty("type");
     switch (layerType) {
       case "barrier_and_shelter":
         setLocalZOrder(layer.node, 3);
-        break;
-      case "shelter_preview":
-        layer.node.opacity = 100;
-        setLocalZOrder(layer.node, 500);
         break;
       default:
         break;

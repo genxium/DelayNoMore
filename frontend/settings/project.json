@@ -33,20 +33,21 @@
   "design-resolution-height": 640,
   "design-resolution-width": 960,
   "excluded-modules": [
-    "Spine Skeleton",
+    "Collider",
     "DragonBones",
-    "RichText",
+    "Geom Utils",
+    "Mesh",
     "MotionStreak",
+    "Physics",
     "PageView",
     "PageViewIndicator",
+    "RichText",
     "Slider",
+    "Spine Skeleton",
+    "StudioComponent",
     "VideoPlayer",
     "WebView",
-    "Physics",
-    "StudioComponent",
     "3D",
-    "Mesh",
-    "Geom Utils",
     "3D Primitive"
   ],
   "facebook": {
@@ -74,7 +75,7 @@
     "height": 640,
     "width": 960
   },
-  "start-scene": "current",
-  "use-customize-simulator": false,
-  "use-project-simulator-setting": false
+  "use-customize-simulator": true,
+  "use-project-simulator-setting": false,
+  "start-scene": "current"
 }
