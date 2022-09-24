@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/xml"
 	"fmt"
-    "strings"
 	"github.com/ByteArena/box2d"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
@@ -15,6 +14,7 @@ import (
 	. "server/common"
 	"server/common/utils"
 	pb "server/pb_output"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,8 +31,8 @@ const (
 )
 
 const (
-	MAGIC_REMOVED_AT_FRAME_ID_PERMANENT_REMOVAL_MARGIN    = 5
-	MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START    = -99
+	MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START    = -1
+	MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_START             = 0
 	MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_ADDED_AND_ACKED   = -98
 	MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_READDED_AND_ACKED = -97
 
@@ -535,7 +535,7 @@ func (pR *Room) ChooseStage() error {
 	ErrFatal(err)
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{/*"pacman" ,*/ "richsoil"}
+	stageNameList := []string{ /*"pacman" ,*/ "richsoil"}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]
@@ -701,10 +701,10 @@ func (pR *Room) CanPopSt(refLowerInputFrameId int32) bool {
 
 func (pR *Room) AllPlayerInputsBufferString() string {
 	s := make([]string, 0)
-    s = append(s, fmt.Sprintf("{lastAllConfirmedInputFrameId: %v, lastAllConfirmedInputFrameIdWithChange: %v}", pR.LastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameIdWithChange))
+	s = append(s, fmt.Sprintf("{lastAllConfirmedInputFrameId: %v, lastAllConfirmedInputFrameIdWithChange: %v}", pR.LastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameIdWithChange))
 	for playerId, player := range pR.Players {
-        s = append(s, fmt.Sprintf("{playerId: %v, ackingFrameId: %v, ackingInputFrameId: %v, lastSentInputFrameId: %v}", playerId, player.AckingFrameId, player.AckingInputFrameId, player.LastSentInputFrameId))
-    }
+		s = append(s, fmt.Sprintf("{playerId: %v, ackingFrameId: %v, ackingInputFrameId: %v, lastSentInputFrameId: %v}", playerId, player.AckingFrameId, player.AckingInputFrameId, player.LastSentInputFrameId))
+	}
 	for i := pR.AllPlayerInputsBuffer.StFrameId; i < pR.AllPlayerInputsBuffer.EdFrameId; i++ {
 		tmp := pR.AllPlayerInputsBuffer.GetByFrameId(i)
 		if nil == tmp {
@@ -736,27 +736,23 @@ func (pR *Room) StartBattle() {
 	 */
 	battleMainLoop := func() {
 		defer func() {
-            if r := recover(); r != nil {
-                Logger.Error("battleMainLoop, recovery spot#1, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
-            }
+			if r := recover(); r != nil {
+				Logger.Error("battleMainLoop, recovery spot#1, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
+			}
 			Logger.Info("The `battleMainLoop` is stopped for:", zap.Any("roomId", pR.Id))
 			pR.onBattleStoppedForSettlement()
 		}()
 
 		battleMainLoopStartedNanos := utils.UnixtimeNano()
-		var totalElapsedNanos int64
-		totalElapsedNanos = 0
-
-		// inputFrameIdDownsyncToleranceFrameCnt := int32(1)
+		totalElapsedNanos := int64(0)
 
 		Logger.Info("The `battleMainLoop` is started for:", zap.Any("roomId", pR.Id))
 		for {
-			pR.Tick++ // It's important to increment "pR.Tick" here such that the "InputFrameDownsync.InputFrameId" is most advanced
-			if 1 == pR.Tick {
+			if 0 == pR.Tick {
 				// The legacy frontend code needs this "kickoffFrame" to remove the "ready to start 3-2-1" panel
 				kickoffFrame := pb.RoomDownsyncFrame{
 					Id:             pR.Tick,
-					RefFrameId:     0, // Hardcoded for now.
+					RefFrameId:     MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_START,
 					Players:        toPbPlayers(pR.Players),
 					Treasures:      toPbTreasures(pR.Treasures),
 					Traps:          toPbTraps(pR.Traps),
@@ -822,7 +818,6 @@ func (pR *Room) StartBattle() {
 				// [WARNING] EDGE CASE HERE: Upon initialization, all of "lastAllConfirmedInputFrameId", "lastAllConfirmedInputFrameIdWithChange" and "anchorInputFrameId" are "-1", thus "candidateToSendInputFrameId" starts with "0", however "inputFrameId: 0" might not have been all confirmed!
 				debugSendingInputFrameId := int32(-1)
 
-                // TODO: If a buffered "inputFrame" is inserted but has been non-all-confirmed for a long time, e.g. inserted at "inputFrameId=42" but still non-all-confirmed at "inputFrameId=980", the server should mark that of "inputFrameId=42" as well as send it to the unconfirmed players with an extra "RoomDownsyncFrame" for their FORCE RESET OF REFERENCE STATE     
 				for candidateToSendInputFrameId <= lastAllConfirmedInputFrameIdWithChange {
 					tmp := pR.AllPlayerInputsBuffer.GetByFrameId(candidateToSendInputFrameId)
 					if nil == tmp {
@@ -848,12 +843,7 @@ func (pR *Room) StartBattle() {
 				}
 			}
 
-            /*
-			if swapped := atomic.CompareAndSwapInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), lastAllConfirmedInputFrameIdWithChange, -1); !swapped {
-				// "OnBattleCmdReceived" might be updating "pR.LastAllConfirmedInputFrameIdWithChange" simultaneously, don't update here if the old value is no longer valid
-				Logger.Warn("pR.LastAllConfirmedInputFrameIdWithChange NOT UPDATED:", zap.Any("roomId", pR.Id), zap.Any("refInputFrameId", refInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
-			}
-            */
+			pR.Tick++
 			now := utils.UnixtimeNano()
 			elapsedInCalculation := now - stCalculation
 			totalElapsedNanos = (now - battleMainLoopStartedNanos)
@@ -953,10 +943,10 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 					Logger.Info("Key inputFrame change", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", clientInputFrameId), zap.Any("lastInputFrameId", pR.LastAllConfirmedInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId), zap.Any("newInputList", inputFrameDownsync.InputList), zap.Any("lastInputList", pR.LastAllConfirmedInputList))
 				}
 				atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameId), clientInputFrameId) // [WARNING] It's IMPORTANT that "pR.LastAllConfirmedInputFrameId" is NOT NECESSARILY CONSECUTIVE, i.e. if one of the players disconnects and reconnects within a considerable amount of frame delays!
-                for i,v := range inputFrameDownsync.InputList {
-                    // To avoid potential misuse of pointers
-                    pR.LastAllConfirmedInputList[i] = v
-                }
+				for i, v := range inputFrameDownsync.InputList {
+					// To avoid potential misuse of pointers
+					pR.LastAllConfirmedInputList[i] = v
+				}
 				if pR.inputFrameIdDebuggable(clientInputFrameId) {
 					Logger.Info("inputFrame lifecycle#2[allconfirmed]", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("inputFrameId", clientInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
 				}
@@ -1027,12 +1017,12 @@ func (pR *Room) onBattlePrepare(cb BattleStartCbType) {
 	}
 
 	battleReadyToStartFrame := pb.RoomDownsyncFrame{
-		Id:          pR.Tick,
-		Players:     toPbPlayers(pR.Players),
-		SentAt:      utils.UnixtimeMilli(),
-		RefFrameId:  MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START,
-		PlayerMetas: playerMetas,
-        CountdownNanos: pR.BattleDurationNanos,
+		Id:             pR.Tick,
+		Players:        toPbPlayers(pR.Players),
+		SentAt:         utils.UnixtimeMilli(),
+		RefFrameId:     MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START,
+		PlayerMetas:    playerMetas,
+		CountdownNanos: pR.BattleDurationNanos,
 	}
 
 	Logger.Info("Sending out frame for RoomBattleState.PREPARE ", zap.Any("battleReadyToStartFrame", battleReadyToStartFrame))

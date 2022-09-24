@@ -389,8 +389,6 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
       let childrenOfCurrentTile = null;
       if (cc.sys.isNative) {
         childrenOfCurrentTile = currentTile.getElementsByTagName("objectgroup");
-      } else if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-        childrenOfCurrentTile = currentTile.childNodes;
       } else {
         childrenOfCurrentTile = currentTile.children;
       }
@@ -498,7 +496,7 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
 
   let layerDOMTrees = [];
   const mapDomTree = mapInfo._parser._parseXML(tiledMapIns.tmxAsset.tmxXmlStr).documentElement;
-  const mapDOMAllChildren = (cc.sys.platform == cc.sys.WECHAT_GAME ? mapDomTree.childNodes : mapDomTree.children);
+  const mapDOMAllChildren = (mapDomTree.children);
   for (let mdtIdx = 0; mdtIdx < mapDOMAllChildren.length; ++mdtIdx) {
     const tmpCh = mapDOMAllChildren[mdtIdx];
     if (mapInfo._shouldIgnoreNode(tmpCh)) {
@@ -582,6 +580,7 @@ TileCollisionManager.prototype.isOutOfMapNode = function (tiledMapNode, continuo
 };
 
 TileCollisionManager.prototype.initMapNodeByTiledBoundaries = function(mapScriptIns, mapNode, extractedBoundaryObjs) {
+  // TODO: TO DEPRECATE!
   const tiledMapIns = mapNode.getComponent(cc.TiledMap);
   if (extractedBoundaryObjs.grandBoundaries) {
     window.grandBoundary = [];

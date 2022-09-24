@@ -1,8 +1,8 @@
 package models
 
 type RingBuffer struct {
-	Ed        int32 // write index
-	St        int32 // read index
+	Ed        int32 // write index, open index
+	St        int32 // read index, closed index
 	EdFrameId int32
 	StFrameId int32
 	N         int32

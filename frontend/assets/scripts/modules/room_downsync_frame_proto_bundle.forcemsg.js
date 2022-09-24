@@ -4343,7 +4343,6 @@ $root.treasurehunterx = (function() {
          * @property {Object.<string,treasurehunterx.Trap>|null} [traps] RoomDownsyncFrame traps
          * @property {Object.<string,treasurehunterx.Bullet>|null} [bullets] RoomDownsyncFrame bullets
          * @property {Object.<string,treasurehunterx.SpeedShoe>|null} [speedShoes] RoomDownsyncFrame speedShoes
-         * @property {Object.<string,treasurehunterx.Pumpkin>|null} [pumpkin] RoomDownsyncFrame pumpkin
          * @property {Object.<string,treasurehunterx.GuardTower>|null} [guardTowers] RoomDownsyncFrame guardTowers
          * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
          */
@@ -4362,7 +4361,6 @@ $root.treasurehunterx = (function() {
             this.traps = {};
             this.bullets = {};
             this.speedShoes = {};
-            this.pumpkin = {};
             this.guardTowers = {};
             this.playerMetas = {};
             if (properties)
@@ -4444,14 +4442,6 @@ $root.treasurehunterx = (function() {
         RoomDownsyncFrame.prototype.speedShoes = $util.emptyObject;
 
         /**
-         * RoomDownsyncFrame pumpkin.
-         * @member {Object.<string,treasurehunterx.Pumpkin>} pumpkin
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.pumpkin = $util.emptyObject;
-
-        /**
          * RoomDownsyncFrame guardTowers.
          * @member {Object.<string,treasurehunterx.GuardTower>} guardTowers
          * @memberof treasurehunterx.RoomDownsyncFrame
@@ -4524,19 +4514,14 @@ $root.treasurehunterx = (function() {
                     writer.uint32(/* id 9, wireType 2 =*/74).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.treasurehunterx.SpeedShoe.encode(message.speedShoes[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.pumpkin != null && Object.hasOwnProperty.call(message, "pumpkin"))
-                for (var keys = Object.keys(message.pumpkin), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 10, wireType 2 =*/82).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Pumpkin.encode(message.pumpkin[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
             if (message.guardTowers != null && Object.hasOwnProperty.call(message, "guardTowers"))
                 for (var keys = Object.keys(message.guardTowers), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 11, wireType 2 =*/90).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    writer.uint32(/* id 10, wireType 2 =*/82).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.treasurehunterx.GuardTower.encode(message.guardTowers[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
                 for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 12, wireType 2 =*/98).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    writer.uint32(/* id 11, wireType 2 =*/90).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             return writer;
@@ -4705,29 +4690,6 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 10: {
-                        if (message.pumpkin === $util.emptyObject)
-                            message.pumpkin = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Pumpkin.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.pumpkin[key] = value;
-                        break;
-                    }
-                case 11: {
                         if (message.guardTowers === $util.emptyObject)
                             message.guardTowers = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -4750,7 +4712,7 @@ $root.treasurehunterx = (function() {
                         message.guardTowers[key] = value;
                         break;
                     }
-                case 12: {
+                case 11: {
                         if (message.playerMetas === $util.emptyObject)
                             message.playerMetas = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -4890,20 +4852,6 @@ $root.treasurehunterx = (function() {
                     }
                 }
             }
-            if (message.pumpkin != null && message.hasOwnProperty("pumpkin")) {
-                if (!$util.isObject(message.pumpkin))
-                    return "pumpkin: object expected";
-                var key = Object.keys(message.pumpkin);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "pumpkin: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Pumpkin.verify(message.pumpkin[key[i]]);
-                        if (error)
-                            return "pumpkin." + error;
-                    }
-                }
-            }
             if (message.guardTowers != null && message.hasOwnProperty("guardTowers")) {
                 if (!$util.isObject(message.guardTowers))
                     return "guardTowers: object expected";
@@ -5019,16 +4967,6 @@ $root.treasurehunterx = (function() {
                     message.speedShoes[keys[i]] = $root.treasurehunterx.SpeedShoe.fromObject(object.speedShoes[keys[i]]);
                 }
             }
-            if (object.pumpkin) {
-                if (typeof object.pumpkin !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.pumpkin: object expected");
-                message.pumpkin = {};
-                for (var keys = Object.keys(object.pumpkin), i = 0; i < keys.length; ++i) {
-                    if (typeof object.pumpkin[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.pumpkin: object expected");
-                    message.pumpkin[keys[i]] = $root.treasurehunterx.Pumpkin.fromObject(object.pumpkin[keys[i]]);
-                }
-            }
             if (object.guardTowers) {
                 if (typeof object.guardTowers !== "object")
                     throw TypeError(".treasurehunterx.RoomDownsyncFrame.guardTowers: object expected");
@@ -5071,7 +5009,6 @@ $root.treasurehunterx = (function() {
                 object.traps = {};
                 object.bullets = {};
                 object.speedShoes = {};
-                object.pumpkin = {};
                 object.guardTowers = {};
                 object.playerMetas = {};
             }
@@ -5128,11 +5065,6 @@ $root.treasurehunterx = (function() {
                 object.speedShoes = {};
                 for (var j = 0; j < keys2.length; ++j)
                     object.speedShoes[keys2[j]] = $root.treasurehunterx.SpeedShoe.toObject(message.speedShoes[keys2[j]], options);
-            }
-            if (message.pumpkin && (keys2 = Object.keys(message.pumpkin)).length) {
-                object.pumpkin = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.pumpkin[keys2[j]] = $root.treasurehunterx.Pumpkin.toObject(message.pumpkin[keys2[j]], options);
             }
             if (message.guardTowers && (keys2 = Object.keys(message.guardTowers)).length) {
                 object.guardTowers = {};
