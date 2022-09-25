@@ -631,7 +631,7 @@ cc.Class({
             --------------------------------------------------------
             */
             if (renderFrameId1 < self.chaserRenderFrameId) {
-              // The actual rollback-and-replay would later be executed in update(dt). 
+              // The actual rollback-and-chase would later be executed in update(dt). 
               console.warn("Mismatched input detected, resetting chaserRenderFrameId: inputFrameId1:", inputFrameId1, ", renderFrameId1:", renderFrameId1, ", chaserRenderFrameId before reset: ", self.chaserRenderFrameId);
               self.chaserRenderFrameId = renderFrameId1; 
             } else {
@@ -798,15 +798,16 @@ cc.Class({
           }        
 
           let t1 = performance.now(); 
+          // Use "fractional-frame-chasing" to guarantee that "self.update(dt)" is not jammed by a "large range of frame-chasing". See `<proj-root>/ConcerningEdgeCases.md` for the motivation. 
           const prevChaserRenderFrameId = self.chaserRenderFrameId;
           let nextChaserRenderFrameId = (prevChaserRenderFrameId + self.maxChasingRenderFramesPerUpdate); 
           if (nextChaserRenderFrameId > self.renderFrameId) nextChaserRenderFrameId = self.renderFrameId; 
-          self.rollbackAndReplay(prevChaserRenderFrameId, nextChaserRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
+          self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
           self.chaserRenderFrameId = nextChaserRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
           let t2 = performance.now(); 
 
-          // Inside "self.rollbackAndReplay", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
-          const rdf = self.rollbackAndReplay(self.renderFrameId, self.renderFrameId+1, self.latestCollisionSys, self.latestCollisionSysMap);
+          // Inside "self.rollbackAndChase", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
+          const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId+1, self.latestCollisionSys, self.latestCollisionSysMap);
 
           self.applyRoomDownsyncFrameDynamics(rdf);
           let t3 = performance.now(); 
@@ -1011,7 +1012,7 @@ cc.Class({
     return inputFrameDownsync;
   },
 
-  rollbackAndReplay(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
+  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
     if (renderFrameSt >= renderFrameIdEd) {
       return;
     }
