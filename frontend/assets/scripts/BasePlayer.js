@@ -8,11 +8,11 @@ module.export = cc.Class({
     },
     baseSpeed: {
       type: cc.Float,
-      default: 300,
+      default: 50,
     },
     speed: {
       type: cc.Float,
-      default: 300
+      default: 50
     },
     lastMovedAt: {
       type: cc.Float,

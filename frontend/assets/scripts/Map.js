@@ -614,30 +614,31 @@ cc.Class({
         }
 
         if (null != firstPredictedYetIncorrectInputFrameId) {
-          const renderFrameId2 = self.renderFrameId;
-          const inputFrameId2 = self._convertToInputFrameId(renderFrameId2, self.inputDelayFrames);
           const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
           const renderFrameId1 = self._convertToRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
-          if (renderFrameId1 < renderFrameId2) {
+          if (renderFrameId1 < self.renderFrameId) {
             /*
             A typical case is as follows.
             --------------------------------------------------------
-            [lastAllConfirmedRenderFrameId]       :              22
+            [self.lastAllConfirmedRenderFrameId]       :              22
 
-            <renderFrameId1>                      :              36
+            <renderFrameId1>                           :              36
 
 
-            [chaserRenderFrameId]                 :              62
+            <self.chaserRenderFrameId>                 :              62
 
-            <renderFrameId2>                      :              64
+            [self.renderFrameId]                       :              64
             --------------------------------------------------------
             */
-            console.warn("Mismatched input detected!: inputFrameId1:", inputFrameId1, ", renderFrameId1:", renderFrameId1);
-            // The actual rollback-and-replay would later be executed in update(dt). 
-            self.chaserRenderFrameId = renderFrameId1;
+            if (renderFrameId1 < self.chaserRenderFrameId) {
+              // The actual rollback-and-replay would later be executed in update(dt). 
+              console.warn("Mismatched input detected, resetting chaserRenderFrameId: inputFrameId1:", inputFrameId1, ", renderFrameId1:", renderFrameId1, ", chaserRenderFrameId before reset: ", self.chaserRenderFrameId);
+              self.chaserRenderFrameId = renderFrameId1; 
+            } else {
+              // Deliberately left blank, chasing is ongoing.
+            }
           } else {
-            // No need to rollback when "renderFrameId1 == renderFrameId2", because the "delayedInputFrame for renderFrameId2" is not yet executed by now, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range. 
-            console.log("Mismatched input yet no rollback needed: [inputFrameId1:", inputFrameId1, ", inputFrameId2:", inputFrameId2, "), [renderFrameId1:", renderFrameId1, ", renderFrameId2:", renderFrameId2, "). ");
+            // No need to rollback when "renderFrameId1 == self.renderFrameId", because the "corresponding delayedInputFrame for renderFrameId2" is NOT YET EXECUTED BY NOW, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range. 
           }
         }
       };
@@ -718,6 +719,9 @@ cc.Class({
     self.applyRoomDownsyncFrameDynamics(rdf);
     self._dumpToRenderCache(rdf);
     self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"
+    if (null != window.boundRoomId) {
+      self.boundRoomIdLabel.string = window.boundRoomId;
+    }
   },
 
   logBattleStats() {
@@ -725,9 +729,10 @@ cc.Class({
     let s = [];
     s.push("Battle stats: lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId);
     
-    self.recentInputCache.forEach((inputFrameDownsync, inputFrameId) => {
+    for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
+      const inputFrameDownsync = self.recentInputCache.getByFrameId(i);  
       s.push(JSON.stringify(inputFrameDownsync));
-    });
+    } 
 
     console.log(s.join('\n'));
   },
@@ -776,65 +781,64 @@ cc.Class({
 
   update(dt) {
     const self = this;
-    try {
-      if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
-        let prevSelfInput = null, currSelfInput = null;
-        const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-        if (self._shouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId); 
-          prevSelfInput = prevAndCurrInputs[0];
-          currSelfInput = prevAndCurrInputs[1]; 
+    if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
+      try {
+          let prevSelfInput = null, currSelfInput = null;
+          const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
+          if (self._shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+            const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId); 
+            prevSelfInput = prevAndCurrInputs[0];
+            currSelfInput = prevAndCurrInputs[1]; 
+          }
+
+          let t0 = performance.now(); 
+          if (self.shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, self.lastUpsyncInputFrameId, noDelayInputFrameId)) {
+            // TODO: Is the following statement run asynchronously in an implicit manner? Should I explicitly run it asynchronously?
+            self.sendInputFrameUpsyncBatch(noDelayInputFrameId);
+          }        
+
+          let t1 = performance.now(); 
+          const prevChaserRenderFrameId = self.chaserRenderFrameId;
+          let nextChaserRenderFrameId = (prevChaserRenderFrameId + self.maxChasingRenderFramesPerUpdate); 
+          if (nextChaserRenderFrameId > self.renderFrameId) nextChaserRenderFrameId = self.renderFrameId; 
+          self.rollbackAndReplay(prevChaserRenderFrameId, nextChaserRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
+          self.chaserRenderFrameId = nextChaserRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+          let t2 = performance.now(); 
+
+          // Inside "self.rollbackAndReplay", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
+          const rdf = self.rollbackAndReplay(self.renderFrameId, self.renderFrameId+1, self.latestCollisionSys, self.latestCollisionSysMap);
+
+          self.applyRoomDownsyncFrameDynamics(rdf);
+          let t3 = performance.now(); 
+          /*
+          if (prevChaserRenderFrameId < nextChaserRenderFrameId) {
+            console.log("Took ", t1-t0, " milliseconds to send upsync cmds, ", t2-t1, " milliseconds to chase renderFrameIds=[", prevChaserRenderFrameId, ", ", nextChaserRenderFrameId, "], @renderFrameId=", self.renderFrameId); 
+          }
+          */
+      } catch (err) {
+        console.error("Error during Map.update", err);
+      } finally {
+        // Update camera to track selfPlayer.
+        if (null != self.ctrl) {
+          self.ctrl.justifyMapNodePosAndScale(self.ctrl.linearSpeedBase, self.ctrl.zoomingSpeedBase);
         }
 
-        let t0 = performance.now(); 
-        if (self.shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, self.lastUpsyncInputFrameId, noDelayInputFrameId)) {
-          // TODO: Is the following statement run asynchronously in an implicit manner? Should I explicitly run it asynchronously?
-          self.sendInputFrameUpsyncBatch(noDelayInputFrameId);
-        }        
+        // Update countdown
+        if (null != self.countdownNanos) {
+          self.countdownNanos -= self.rollbackEstimatedDt*1000000000;
+          if (self.countdownNanos <= 0) {
+            self.onBattleStopped(self.playerRichInfoDict);
+            return;
+          }
 
-        let t1 = performance.now(); 
-        if (self.chaserRenderFrameId <= self.renderFrameId) {
-          let chaserUpperRenderFrameId = (self.chaserRenderFrameId + self.maxChasingRenderFramesPerUpdate); 
-          if (chaserUpperRenderFrameId > self.renderFrameId) chaserUpperRenderFrameId = self.renderFrameId; 
-          self.rollbackAndReplay(self.chaserRenderFrameId, chaserUpperRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
-          self.chaserRenderFrameId = chaserUpperRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+          const countdownSeconds = parseInt(self.countdownNanos / 1000000000);
+          if (isNaN(countdownSeconds)) {
+            console.warn(`countdownSeconds is NaN for countdownNanos == ${self.countdownNanos}.`);
+          }
+          self.countdownLabel.string = countdownSeconds;
         }
-        let t2 = performance.now(); 
-
-        // Inside "self.rollbackAndReplay", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
-        const rdf = self.rollbackAndReplay(self.renderFrameId, self.renderFrameId+1, self.latestCollisionSys, self.latestCollisionSysMap);
-
-        self.applyRoomDownsyncFrameDynamics(rdf);
-        let t3 = performance.now(); 
-
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
       }
-      const mapNode = self.node;
-      const canvasNode = mapNode.parent;
-      const canvasParentNode = canvasNode.parent;
-      if (null != window.boundRoomId) {
-        self.boundRoomIdLabel.string = window.boundRoomId;
-      }
-
-      // update countdown
-      if (null != self.countdownNanos) {
-        self.countdownNanos -= self.rollbackEstimatedDt*1000000000;
-        if (self.countdownNanos <= 0) {
-          self.onBattleStopped(self.playerRichInfoDict);
-          return;
-        }
-
-        const countdownSeconds = parseInt(self.countdownNanos / 1000000000);
-        if (isNaN(countdownSeconds)) {
-          console.warn(`countdownSeconds is NaN for countdownNanos == ${self.countdownNanos}.`);
-        }
-        self.countdownLabel.string = countdownSeconds;
-      }
-    } catch (err) {
-      console.error("Error during Map.update", err);
-    }
-    if (null != self.ctrl) {
-      self.ctrl.justifyMapNodePosAndScale(self.ctrl.linearSpeedBase, self.ctrl.zoomingSpeedBase);
     }
   },
 
@@ -996,7 +1000,7 @@ cc.Class({
   getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
     const self = this;
     let inputFrameDownsync = self.recentInputCache.getByFrameId(inputFrameId);
-    if (-1 != self.lastAllConfirmedInputFrameId && inputFrameId > self.lastAllConfirmedInputFrameId) {
+    if (null != inputFrameDownsync && -1 != self.lastAllConfirmedInputFrameId && inputFrameId > self.lastAllConfirmedInputFrameId) {
       const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId); 
       for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
         if (i == self.selfPlayerInfo.joinIndex-1) continue;
@@ -1008,8 +1012,7 @@ cc.Class({
   },
 
   rollbackAndReplay(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
-    if (renderFrameSt == renderFrameIdEd) {
-      console.warn("Unexpected input!");
+    if (renderFrameSt >= renderFrameIdEd) {
       return;
     }
 
@@ -1031,18 +1034,25 @@ cc.Class({
     /*
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
     */
-    for (let i = renderFrameSt; i < renderFrameIdEd; ++i) {
+    for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
       const renderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      const inputs = self.recentInputCache.getByFrameId(j).inputList; 
+      const inputList = self.getCachedInputFrameDownsyncWithPrediction(j).inputList; 
       self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
         const joinIndex = playerRichInfo.joinIndex; 
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = renderFrame.players[playerId];
-        const decodedInput = self.ctrl.decodeDirection(inputs[joinIndex-1]);
-        playerCollider.x += player.speed*decodedInput.dx*self.rollbackEstimatedDt;
-        playerCollider.y += player.speed*decodedInput.dy*self.rollbackEstimatedDt;
+        const encodedInput = inputList[joinIndex-1];
+        const decodedInput = self.ctrl.decodeDirection(encodedInput);
+        const baseChange = player.speed*self.rollbackEstimatedDt;
+        playerCollider.x += baseChange*decodedInput.dx;
+        playerCollider.y += baseChange*decodedInput.dy;
+        /*
+        if (0 < encodedInput) {
+          console.log("playerId=", playerId, "@renderFrameId=", i, ", delayedInputFrameId=", j, ", baseChange=", baseChange, ": x=", playerCollider.x, ", y=", playerCollider.y);
+        }
+        */
       });
 
       collisionSys.update();
