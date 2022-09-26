@@ -74,8 +74,6 @@ function _base64ToUint8Array(base64) {
       origBytes[i] = origBinaryStr.charCodeAt(i);
     }
     return origBytes;
-  } else if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-    return Buffer.from(base64, 'base64');
   } else {
     return null;
   }
@@ -86,16 +84,12 @@ function _base64ToArrayBuffer(base64) {
 }
 
 window.getExpectedRoomIdSync = function() {
-  if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-    return window.expectedRoomId;
+  const qDict = window.getQueryParamDict();
+  if (qDict) {
+    return qDict["expectedRoomId"];
   } else {
-    const qDict = window.getQueryParamDict();
-    if (qDict) {
-      return qDict["expectedRoomId"];
-    } else {
-      if (window.history && window.history.state) {
-        return window.history.state.expectedRoomId;
-      }
+    if (window.history && window.history.state) {
+      return window.history.state.expectedRoomId;
     }
   }
 
@@ -129,10 +123,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   if (null != expectedRoomId) {
     console.log("initPersistentSessionClient with expectedRoomId == " + expectedRoomId);
     urlToConnect = urlToConnect + "&expectedRoomId=" + expectedRoomId;
-    if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-      // This is a dirty hack. -- YFLu
-      window.expectedRoomId = null;
-    }
   } else {
     window.boundRoomId = getBoundRoomIdFromPersistentStorage();
     if (null != window.boundRoomId) {
@@ -142,10 +132,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   }
 
   const currentHistoryState = window.history && window.history.state ? window.history.state : {};
-
-  if (cc.sys.platform != cc.sys.WECHAT_GAME) {
-    window.history.replaceState(currentHistoryState, document.title, window.location.pathname);
-  }
 
   const clientSession = new WebSocket(urlToConnect);
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
@@ -254,10 +240,6 @@ window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdIn
   if (true != shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
   }
-  if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-    cc.director.loadScene('wechatGameLogin');
-  } else {
-    cc.director.loadScene('login');
-  }
+  cc.director.loadScene('login');
 };
 

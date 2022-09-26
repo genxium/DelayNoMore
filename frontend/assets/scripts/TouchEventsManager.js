@@ -1,18 +1,23 @@
 window.DIRECTION_DECODER = [
-    [0, 0],
-    [0, +1],
-    [0, -1],
-    [+2, 0],
-    [-2, 0],
-    [+2, +1],
-    [-2, -1],
-    [+2, -1],
-    [-2, +1],
-    [+2, 0],
-    [-2, 0],
-    [0, +1],
-    [0, -1],
+    [0, 0, null],
+    [0, +1, null],
+    [0, -1, null],
+    [+2, 0, null],
+    [-2, 0, null],
+    [+2, +1, null],
+    [-2, -1, null],
+    [+2, -1, null],
+    [-2, +1, null],
+    [+2, 0, null],
+    [-2, 0, null],
+    [0, +1, null],
+    [0, -1, null],
 ];
+
+for (let k in window.DIRECTION_DECODER) {
+  const length = Math.sqrt(window.DIRECTION_DECODER[k][0]*window.DIRECTION_DECODER[k][0] + window.DIRECTION_DECODER[k][1]*window.DIRECTION_DECODER[k][1]);
+  window.DIRECTION_DECODER[k][2] = (0 == length ? 0 : (1.0/length));
+}
 
 cc.Class({
   extends: cc.Component,
@@ -112,43 +117,6 @@ cc.Class({
 
     this.mapScriptIns = this.mapNode.getComponent("Map");
     this.initialized = true;
-  },
-
-  justifyMapNodePosAndScale(linearSpeedBase, zoomingSpeedBase) {
-    const self = this;
-    if (false == self.mapScriptIns._inputControlEnabled) return;
-    if (null != self._cachedMapNodePosTarget) {
-      while (self.maxMovingBufferLength < self._cachedMapNodePosTarget.length) {
-        self._cachedMapNodePosTarget.shift();
-      }
-      if (0 < self._cachedMapNodePosTarget.length && 0 == self.mapNode.getNumberOfRunningActions()) {
-        const nextMapNodePosTarget = self._cachedMapNodePosTarget.shift();
-        const linearSpeed = linearSpeedBase;
-        const finalDiffVec = nextMapNodePosTarget.pos.sub(self.mapNode.position);
-        const finalDiffVecMag = finalDiffVec.mag();
-        if (self.linearMovingEps > finalDiffVecMag) {
-          // Jittering.
-          // cc.log("Map node moving by finalDiffVecMag == %s is just jittering.", finalDiffVecMag);
-          return;
-        }
-        const durationSeconds = finalDiffVecMag / linearSpeed;
-        cc.log("Map node moving to %o in %s/%s == %s seconds.", nextMapNodePosTarget.pos, finalDiffVecMag, linearSpeed, durationSeconds);
-        const bufferedTargetPos = cc.v2(nextMapNodePosTarget.pos.x, nextMapNodePosTarget.pos.y);
-        self.mapNode.runAction(cc.sequence(
-          cc.moveTo(durationSeconds, bufferedTargetPos),
-          cc.callFunc(() => {
-            if (self._isMapOverMoved(self.mapNode.position)) {
-              self.mapNode.setPosition(bufferedTargetPos);
-            }
-          }, self)
-        ));
-      }
-    }
-    if (null != self._cachedZoomRawTarget && false == self._cachedZoomRawTarget.processed) {
-      cc.log(`Processing self._cachedZoomRawTarget == ${self._cachedZoomRawTarget}`);
-      self._cachedZoomRawTarget.processed = true;
-      self.mapNode.setScale(self._cachedZoomRawTarget.scale);
-    }
   },
 
   _initTouchEvent() {
@@ -377,7 +345,8 @@ cc.Class({
     }
     return {
       dx: mapped[0],
-      dy: mapped[1]
+      dy: mapped[1], 
+      speedFactor: mapped[2],
     }
   },
 

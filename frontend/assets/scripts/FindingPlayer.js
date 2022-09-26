@@ -26,19 +26,6 @@ cc.Class({
 
   // LIFE-CYCLE CALLBACKS:
   onLoad() {
-    // WARNING: 不能保证在ws连接成功并且拿到boundRoomId后才运行到此处。
-    if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-      const boundRoomId = window.getBoundRoomIdFromPersistentStorage();
-      const wxToShareMessage = {
-        title: '夺宝大作战',
-        imageUrl: 'https://mmocgame.qpic.cn/wechatgame/ibxA6JVNslX02zq6aAWCZiaWTXLYGorrVgUszo3WH1oL1CFDcFU7VKPRXPFiadxagMR/0',
-        imageUrlId: 'FiLZpa5FT5GgEeEagzGBsA',
-        query: 'expectedRoomId=' + boundRoomId,
-      };
-      console.warn("The boundRoomId for sharing: ", boundRoomId, " wxToShareMessage ", wxToShareMessage);
-      wx.showShareMenu();
-      wx.onShareAppMessage(() => (wxToShareMessage));
-    }
   },
 
   init() {
@@ -73,11 +60,7 @@ cc.Class({
   exitBtnOnClick(evt) {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     window.closeWSConnection();
-    if (cc.sys.platform == cc.sys.WECHAT_GAME) {
-      cc.director.loadScene('wechatGameLogin');
-    } else {
-      cc.director.loadScene('login');
-    }
+    cc.director.loadScene('login');
   },
 
   updatePlayersInfo(playerMetas) {
@@ -107,23 +90,7 @@ cc.Class({
         if (remoteUrl == null || remoteUrl == '') {
           cc.log(`No avatar to show for :`);
           cc.log(playerMeta);
-          remoteUrl = 'http://wx.qlogo.cn/mmopen/PiajxSqBRaEJUWib5D85KXWHumaxhU4E9XOn9bUpCNKF3F4ibfOj8JYHCiaoosvoXCkTmOQE1r2AKKs8ObMaz76EdA/0'
         }
-        cc.loader.load({
-          url: remoteUrl,
-          type: 'jpg'
-        }, function(err, texture) {
-          if (null != err ) {
-            console.error(err);
-          } else {
-            if (null == texture) {
-              return;
-            }
-            const sf = new cc.SpriteFrame();
-            sf.setTexture(texture);
-            playerInfoNode.getChildByName('avatarMask').getChildByName('avatar').getComponent(cc.Sprite).spriteFrame = sf;
-          }
-        });
       })();
 
       function isEmptyString(str) {

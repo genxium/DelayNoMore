@@ -1,5 +1,6 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
+
 cc.Class({
   extends: cc.Component,
 
@@ -59,11 +60,7 @@ cc.Class({
     loadingPrefab: {
       default: null,
       type: cc.Prefab
-    },
-    wechatLoginTips: {
-      default: null,
-      type: cc.Label,
-    },
+    }
   },
 
   // LIFE-CYCLE CALLBACKS:
@@ -88,22 +85,18 @@ cc.Class({
     self.getRetCodeList();
     self.getRegexList();
 
-    const isUsingX5BlinkKernelOrWebkitWeChatKernel = window.isUsingX5BlinkKernelOrWebkitWeChatKernel();
-    //const isUsingX5BlinkKernelOrWebkitWeChatKernel = true;
-    if (!CC_DEBUG) {
-      self.phoneNumberTips.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-      self.smsLoginCaptchaButton.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
+    self.phoneNumberTips.active = true;
+    self.smsLoginCaptchaButton.active = true;
 
-      self.captchaTips.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-      self.phoneCountryCodeInput.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-      self.phoneNumberInput.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-      self.smsLoginCaptchaInput.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
+    self.captchaTips.active = true;
+    self.phoneCountryCodeInput.active = true;
+    self.phoneNumberInput.active = true;
+    self.smsLoginCaptchaInput.active = true;
 
-      self.phoneLabel.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-      self.smsLoginCaptchaLabel.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
+    self.phoneLabel.active = true;
+    self.smsLoginCaptchaLabel.active = true;
 
-      self.loginButton.active = !isUsingX5BlinkKernelOrWebkitWeChatKernel;
-    }
+    self.loginButton.active = true;
     self.checkPhoneNumber = self.checkPhoneNumber.bind(self);
     self.checkIntAuthTokenExpire = self.checkIntAuthTokenExpire.bind(self);
     self.checkCaptcha = self.checkCaptcha.bind(self);
@@ -124,15 +117,13 @@ cc.Class({
         cc.error(err.message || err);
         return;
       }
-      if (false == (cc.sys.platform == cc.sys.WECHAT_GAME)) {
-        // Otherwise, `window.RoomDownsyncFrame` is already assigned.
-        let protoRoot = new protobuf.Root;
-        window.protobuf.parse(textAsset.text, protoRoot);
-        window.RoomDownsyncFrame = protoRoot.lookupType("treasurehunterx.RoomDownsyncFrame"); 
-        window.BattleColliderInfo = protoRoot.lookupType("treasurehunterx.BattleColliderInfo"); 
-        window.WsReq = protoRoot.lookupType("treasurehunterx.WsReq"); 
-        window.WsResp = protoRoot.lookupType("treasurehunterx.WsResp"); 
-      }
+      // Otherwise, `window.RoomDownsyncFrame` is already assigned.
+      let protoRoot = new protobuf.Root;
+      window.protobuf.parse(textAsset.text, protoRoot);
+      window.RoomDownsyncFrame = protoRoot.lookupType("treasurehunterx.RoomDownsyncFrame"); 
+      window.BattleColliderInfo = protoRoot.lookupType("treasurehunterx.BattleColliderInfo"); 
+      window.WsReq = protoRoot.lookupType("treasurehunterx.WsReq"); 
+      window.WsResp = protoRoot.lookupType("treasurehunterx.WsResp"); 
       self.checkIntAuthTokenExpire().then(
         () => {
           const intAuthToken = JSON.parse(cc.sys.localStorage.getItem('selfPlayer')).intAuthToken;
@@ -140,19 +131,6 @@ cc.Class({
         },
         () => {
           window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-          if ( (CC_DEBUG || isUsingX5BlinkKernelOrWebkitWeChatKernel) ) {
-            if (null != qDict && qDict["code"]) {
-              const code = qDict["code"];
-              console.log("Got the wx authcode: ", code, "while at full url: " + window.location.href);
-              self.useWXCodeLogin(code);
-            } else {
-              if (isUsingX5BlinkKernelOrWebkitWeChatKernel) {
-                self.getWechatCode(null);
-              } else {
-                // Deliberately left blank.
-              }
-            }
-          }
         }
       );
     });
@@ -355,46 +333,10 @@ cc.Class({
     });
   },
 
-  onWechatLoggedIn(res) {
-    const self = this;
-    if (res.ret === self.retCodeDict.OK) {
-      self.enableInteractiveControls(false);
-      const date = Number(res.expiresAt);
-      const selfPlayer = {
-        expiresAt: date,
-        playerId: res.playerId,
-        intAuthToken: res.intAuthToken,
-        displayName: res.displayName,
-        avatar: res.avatar,
-      }
-      cc.sys.localStorage.setItem('selfPlayer', JSON.stringify(selfPlayer));
-
-      const qDict = window.getQueryParamDict();
-      const expectedRoomId = qDict["expectedRoomId"];
-      if (null != expectedRoomId) {
-        console.log("onWechatLoggedIn using expectedRoomId == " + expectedRoomId);
-        window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-      }
-      // To remove "code=XXX" in "query string".
-      window.history.replaceState(qDict, null, window.location.pathname);
-      self.useTokenLogin(res.intAuthToken);
-    } else {
-      cc.sys.localStorage.removeItem("selfPlayer");
-      window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-      self.wechatLoginTips.string = constants.ALERT.TIP_LABEL.WECHAT_LOGIN_FAILS + ", errorCode = " + res.ret;
-      // To remove "code=XXX" in "query string".
-      window.history.replaceState({}, null, window.location.pathname);
-    }
-  },
-
   onLoggedIn(res) {
     const self = this;
     cc.log(`OnLoggedIn ${JSON.stringify(res)}.`)
     if (res.ret === self.retCodeDict.OK) {
-      if(window.isUsingX5BlinkKernelOrWebkitWeChatKernel()) {
-        window.initWxSdk = self.initWxSdk.bind(self);
-        window.initWxSdk();
-      }
       self.enableInteractiveControls(false);
       const date = Number(res.expiresAt);
       const selfPlayer = {
@@ -450,106 +392,5 @@ cc.Class({
           break;
       }
     }
-  },
-
-  useWXCodeLogin(_code) {
-    const self = this;
-    NetworkUtils.ajax({
-      url: backendAddress.PROTOCOL + '://' + backendAddress.HOST + ':' + backendAddress.PORT + constants.ROUTE_PATH.API + constants.ROUTE_PATH.PLAYER + constants.ROUTE_PATH.VERSION + constants.ROUTE_PATH.WECHAT + constants.ROUTE_PATH.LOGIN,
-      type: "POST",
-      data: {
-        code: _code
-      },
-      success: function(res) {
-        self.onWechatLoggedIn(res);
-      },
-      error: function(xhr, status, errMsg) {
-        console.log("Login attempt `useWXCodeLogin` failed, about to execute `clearBoundRoomIdInBothVolatileAndPersistentStorage`.");
-        cc.sys.localStorage.removeItem("selfPlayer");
-        window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-        self.wechatLoginTips.string = constants.ALERT.TIP_LABEL.WECHAT_LOGIN_FAILS + ", errorMsg =" + errMsg;
-        window.history.replaceState({}, null, window.location.pathname);
-      },
-    });
-  },
-
-  getWechatCode(evt) {
-    let self = this;
-    self.wechatLoginTips.string = "";
-    const wechatServerEndpoint = wechatAddress.PROTOCOL + "://" + wechatAddress.HOST + ((null != wechatAddress.PORT && "" != wechatAddress.PORT.trim()) ? (":" + wechatAddress.PORT) : "");
-    const url = wechatServerEndpoint + constants.WECHAT.AUTHORIZE_PATH + "?" + wechatAddress.APPID_LITERAL + "&" + constants.WECHAT.REDIRECT_RUI_KEY + NetworkUtils.encode(window.location.href) + "&" + constants.WECHAT.RESPONSE_TYPE + "&" + constants.WECHAT.SCOPE + constants.WECHAT.FIN;
-    console.log("To visit wechat auth addr: " + url);
-    window.location.href = url;
-  },
-
-  initWxSdk() {
-    const selfPlayer = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
-    const origUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-    /*
-    * The `shareLink` must 
-    * - have its 2nd-order-domain registered as trusted 2nd-order under the targetd `res.jsConfig.app_id`, and
-    * - extracted from current window.location.href.   
-    */
-    const shareLink = origUrl;
-    const updateAppMsgShareDataObj = {
-      type: 'link', // 分享类型,music、video或link，不填默认为link
-      dataUrl: '', // 如果type是music或video，则要提供数据链接，默认为空
-      title: document.title, // 分享标题
-      desc: 'Let\'s play together!', // 分享描述
-      link: shareLink + (cc.sys.localStorage.getItem('boundRoomId') ? "" : ("?expectedRoomId=" + cc.sys.localStorage.getItem('boundRoomId'))),
-      imgUrl: origUrl + "/favicon.ico", // 分享图标
-      success: function() {
-        // 设置成功
-      }
-    };
-    const menuShareTimelineObj = {
-      title: document.title, // 分享标题
-      link: shareLink + (cc.sys.localStorage.getItem('boundRoomId') ? "" : ("?expectedRoomId=" + cc.sys.localStorage.getItem('boundRoomId'))),
-      imgUrl: origUrl + "/favicon.ico", // 分享图标
-      success: function() {}
-    };
-
-    const wxConfigUrl = (window.isUsingWebkitWechatKernel() ? window.atFirstLocationHref : window.location.href); 
-    //接入微信登录接口
-    NetworkUtils.ajax({
-      "url": backendAddress.PROTOCOL + '://' + backendAddress.HOST + ':' + backendAddress.PORT + constants.ROUTE_PATH.API + constants.ROUTE_PATH.PLAYER + constants.ROUTE_PATH.VERSION + constants.ROUTE_PATH.WECHAT + constants.ROUTE_PATH.JSCONFIG,
-      type: "POST",
-      data: {
-        "url": wxConfigUrl,
-        "intAuthToken": selfPlayer.intAuthToken,
-      },
-      success: function(res) {
-        if (constants.RET_CODE.OK != res.ret) {
-          console.log("cannot get the wsConfig. retCode == " + res.ret);
-          return;
-        }
-        const jsConfig = res.jsConfig;
-        console.log(updateAppMsgShareDataObj);
-        const configData = {
-          debug: CC_DEBUG, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-          appId: jsConfig.app_id, // 必填，公众号的唯一标识
-          timestamp: jsConfig.timestamp.toString(), // 必填，生成签名的时间戳
-          nonceStr: jsConfig.nonce_str, // 必填，生成签名的随机串
-          jsApiList: ['onMenuShareAppMessage', 'onMenuShareTimeline'],
-          signature: jsConfig.signature, // 必填，签名
-        };
-        console.log("config url: " + wxConfigUrl);
-        console.log("wx.config: ");
-        console.log(configData);
-        wx.config(configData);
-        console.log("Current window.location.href: " + window.location.href);
-        wx.ready(function() {
-          console.log("Here is wx.ready.")
-          wx.onMenuShareAppMessage(updateAppMsgShareDataObj);
-          wx.onMenuShareTimeline(menuShareTimelineObj);
-        });
-        wx.error(function(res) {
-          console.error("wx config fails and error is " + JSON.stringify(res));
-        });
-      },
-      error: function(xhr, status, errMsg) {
-        console.log("cannot get the wsConfig. errMsg == " + errMsg);
-      },
-    });
   },
 });

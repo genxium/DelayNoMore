@@ -126,9 +126,8 @@ message RoomDownsyncFrame {
   map<int32, Trap> traps = 7; 
   map<int32, Bullet> bullets = 8;
   map<int32, SpeedShoe> speedShoes = 9;
-  map<int32, Pumpkin> pumpkin = 10;
-  map<int32, GuardTower> guardTowers = 11; 
-  map<int32, PlayerMeta> playerMetas = 12;
+  map<int32, GuardTower> guardTowers = 10; 
+  map<int32, PlayerMeta> playerMetas = 11;
 }
 
 message InputFrameUpsync {

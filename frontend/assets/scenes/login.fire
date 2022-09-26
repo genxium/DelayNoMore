@@ -440,7 +440,7 @@
       "array": [
         0,
         0,
-        209.7912853806815,
+        216.05530045313827,
         0,
         0,
         0,
@@ -2990,9 +2990,6 @@
     },
     "loadingPrefab": {
       "__uuid__": "f2a3cece-30bf-4f62-bc20-34d44a9ddf98"
-    },
-    "wechatLoginTips": {
-      "__id__": 68
     },
     "_id": "51YNpecnJBea8vzAxGdkv2"
   },
