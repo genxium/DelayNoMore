@@ -19,7 +19,6 @@ import (
 const (
 	LOW_SCORE_TREASURE_TYPE  = 1
 	HIGH_SCORE_TREASURE_TYPE = 2
-
 	SPEED_SHOES_TYPE = 3
 
 	LOW_SCORE_TREASURE_SCORE  = 100
@@ -297,7 +296,7 @@ func DeserializeTsxToColliderDict(pTmxMapIns *TmxMap, byteArrOfTsxFile []byte, f
 	for _, tile := range pTsxIns.Tiles {
 		globalGid := (firstGid + int(tile.Id))
 		/**
-				   Per tile xml str could be
+				   A tile xml string could be
 
 				   ```
 				   <tile id="13">
@@ -367,8 +366,6 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMapInB2World map[i
 	   - "Polygon2D"s of "toRetStrToPolygon2DListMap"
 
 	   are already transformed into the "coordinate of B2World".
-
-	   -- YFLu
 	*/
 
 	for _, objGroup := range pTmxMapIns.ObjectGroups {
@@ -391,13 +388,8 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMapInB2World map[i
 				thePosInWorld := pTmxMapIns.continuousObjLayerOffsetToContinuousMapNodePos(theUntransformedPos)
 				*pTheVec2DListToCache = append(*pTheVec2DListToCache, &thePosInWorld)
 			}
-		case "Pumpkin", "SpeedShoe":
 		case "Barrier":
-			/*
-							   Note that in this case, the "Polygon2D.Anchor" of each "TmxOrTsxObject" is located exactly in an overlapping with "Polygon2D.Points[0]" w.r.t. B2World.
-
-				         -- YFLu
-			*/
+			// Note that in this case, the "Polygon2D.Anchor" of each "TmxOrTsxObject" is exactly overlapping with "Polygon2D.Points[0]" w.r.t. B2World.
 			var pThePolygon2DListToCache *Polygon2DList
 			_, ok := toRetStrToPolygon2DListMap[objGroup.Name]
 			if false == ok {
@@ -421,65 +413,6 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMapInB2World map[i
 					panic(err)
 				}
 				*pThePolygon2DListToCache = append(*pThePolygon2DListToCache, thePolygon2DInWorld)
-			}
-		case "LowScoreTreasure", "GuardTower", "HighScoreTreasure":
-			/*
-							   Note that in this case, the "Polygon2D.Anchor" of each "TmxOrTsxObject" ISN'T located exactly in an overlapping with "Polygon2D.Points[0]" w.r.t. B2World, refer to "https://shimo.im/docs/SmLJJhXm2C8XMzZT" for details.
-
-				         -- YFLu
-			*/
-			for _, singleObjInTmxFile := range objGroup.Objects {
-				if nil == singleObjInTmxFile.Gid {
-					continue
-				}
-				theGlobalGid := singleObjInTmxFile.Gid
-				theStrToPolygon2DListMap, ok := gidBoundariesMapInB2World[*theGlobalGid]
-				if false == ok {
-					continue
-				}
-
-				pThePolygon2DList, ok := theStrToPolygon2DListMap[objGroup.Name]
-				if false == ok {
-					continue
-				}
-
-				var pThePolygon2DListToCache *Polygon2DList
-				_, ok = toRetStrToPolygon2DListMap[objGroup.Name]
-				if false == ok {
-					thePolygon2DListToCache := make(Polygon2DList, 0)
-					toRetStrToPolygon2DListMap[objGroup.Name] = &thePolygon2DListToCache
-					pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
-				} else {
-					pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
-				}
-
-				for _, thePolygon2D := range *pThePolygon2DList {
-					theUntransformedBottomCenterAsAnchor := &Vec2D{
-						X: singleObjInTmxFile.X,
-						Y: singleObjInTmxFile.Y,
-					}
-
-					theTransformedBottomCenterAsAnchor := pTmxMapIns.continuousObjLayerOffsetToContinuousMapNodePos(theUntransformedBottomCenterAsAnchor)
-
-					thePolygon2DInWorld := &Polygon2D{
-						Anchor:     &theTransformedBottomCenterAsAnchor,
-						Points:     make([]*Vec2D, len(thePolygon2D.Points)),
-						TileWidth:  thePolygon2D.TileWidth,
-						TileHeight: thePolygon2D.TileHeight,
-					}
-					if nil != singleObjInTmxFile.Width && nil != singleObjInTmxFile.Height {
-						thePolygon2DInWorld.TmxObjectWidth = *singleObjInTmxFile.Width
-						thePolygon2DInWorld.TmxObjectHeight = *singleObjInTmxFile.Height
-					}
-					for kk, p := range thePolygon2D.Points {
-						// [WARNING] It's intentionally recreating a copy of "Vec2D" here.
-						thePolygon2DInWorld.Points[kk] = &Vec2D{
-							X: p.X,
-							Y: p.Y,
-						}
-					}
-					*pThePolygon2DListToCache = append(*pThePolygon2DListToCache, thePolygon2DInWorld)
-				}
 			}
 		default:
 		}

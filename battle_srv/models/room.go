@@ -43,20 +43,10 @@ const (
 const (
 	// You can equivalently use the `GroupIndex` approach, but the more complicated and general purpose approach is used deliberately here. Reference http://www.aurelienribon.com/post/2011-07-box2d-tutorial-collision-filtering.
 	COLLISION_CATEGORY_CONTROLLED_PLAYER = (1 << 1)
-	COLLISION_CATEGORY_TREASURE          = (1 << 2)
-	COLLISION_CATEGORY_TRAP              = (1 << 3)
-	COLLISION_CATEGORY_TRAP_BULLET       = (1 << 4)
-	COLLISION_CATEGORY_BARRIER           = (1 << 5)
-	COLLISION_CATEGORY_PUMPKIN           = (1 << 6)
-	COLLISION_CATEGORY_SPEED_SHOES       = (1 << 7)
+	COLLISION_CATEGORY_BARRIER           = (1 << 2)
 
-	COLLISION_MASK_FOR_CONTROLLED_PLAYER = (COLLISION_CATEGORY_TREASURE | COLLISION_CATEGORY_TRAP | COLLISION_CATEGORY_TRAP_BULLET | COLLISION_CATEGORY_SPEED_SHOES)
-	COLLISION_MASK_FOR_TREASURE          = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
-	COLLISION_MASK_FOR_TRAP              = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
-	COLLISION_MASK_FOR_TRAP_BULLET       = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
-	COLLISION_MASK_FOR_BARRIER           = (COLLISION_CATEGORY_PUMPKIN)
-	COLLISION_MASK_FOR_PUMPKIN           = (COLLISION_CATEGORY_BARRIER)
-	COLLISION_MASK_FOR_SPEED_SHOES       = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
+	COLLISION_MASK_FOR_CONTROLLED_PLAYER = (COLLISION_CATEGORY_BARRIER)
+	COLLISION_MASK_FOR_BARRIER           = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
 )
 
 var DIRECTION_DECODER = [][]int32{
@@ -73,6 +63,22 @@ var DIRECTION_DECODER = [][]int32{
 	{-2, 0},
 	{0, +1},
 	{0, -1},
+}
+
+var DIRECTION_DECODER_INVERSE_LENGTH = []float32{
+	0.0,
+	1.0,
+	1.0,
+	0.5,
+	0.5,
+	0.4472,
+	0.4472,
+	0.4472,
+	0.4472,
+	0.5,
+	0.5,
+	1.0,
+	1.0,
 }
 
 type RoomBattleState struct {
@@ -142,16 +148,11 @@ type Room struct {
 	BattleDurationNanos                    int64
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
-	Treasures                              map[int32]*Treasure
-	Traps                                  map[int32]*Trap
-	GuardTowers                            map[int32]*GuardTower
-	Bullets                                map[int32]*Bullet
-	SpeedShoes                             map[int32]*SpeedShoe
 	Barriers                               map[int32]*Barrier
-	Pumpkins                               map[int32]*Pumpkin
 	AccumulatedLocalIdForBullets           int32
 	CollidableWorld                        *box2d.B2World
 	AllPlayerInputsBuffer                  *RingBuffer
+	RenderFrameBuffer                      *RingBuffer
 	LastAllConfirmedInputFrameId           int32
 	LastAllConfirmedInputFrameIdWithChange int32
 	LastAllConfirmedInputList              []uint64
@@ -168,57 +169,10 @@ type Room struct {
 	RawBattleStrToPolygon2DListMap StrToPolygon2DListMap
 }
 
-func (pR *Room) onTreasurePickedUp(contactingPlayer *Player, contactingTreasure *Treasure) {
-	if _, existent := pR.Treasures[contactingTreasure.LocalIdInBattle]; existent {
-		Logger.Info("Player has picked up treasure:", zap.Any("roomId", pR.Id), zap.Any("contactingPlayer.Id", contactingPlayer.Id), zap.Any("contactingTreasure.LocalIdInBattle", contactingTreasure.LocalIdInBattle))
-		pR.CollidableWorld.DestroyBody(contactingTreasure.CollidableBody)
-		pR.Treasures[contactingTreasure.LocalIdInBattle] = &Treasure{Removed: true}
-		pR.Players[contactingPlayer.Id].Score += contactingTreasure.Score
-	}
-}
-
 const (
 	PLAYER_DEFAULT_SPEED = 200 // Hardcoded
 	ADD_SPEED            = 100 // Hardcoded
 )
-
-func (pR *Room) onSpeedShoePickedUp(contactingPlayer *Player, contactingSpeedShoe *SpeedShoe, nowMillis int64) {
-	if _, existent := pR.SpeedShoes[contactingSpeedShoe.LocalIdInBattle]; existent && contactingPlayer.AddSpeedAtGmtMillis == -1 {
-		Logger.Info("Player has picked up a SpeedShoe:", zap.Any("roomId", pR.Id), zap.Any("contactingPlayer.Id", contactingPlayer.Id), zap.Any("contactingSpeedShoe.LocalIdInBattle", contactingSpeedShoe.LocalIdInBattle))
-		pR.CollidableWorld.DestroyBody(contactingSpeedShoe.CollidableBody)
-		pR.SpeedShoes[contactingSpeedShoe.LocalIdInBattle] = &SpeedShoe{
-			Removed:          true,
-			RemovedAtFrameId: pR.Tick,
-		}
-		pR.Players[contactingPlayer.Id].Speed += ADD_SPEED
-		pR.Players[contactingPlayer.Id].AddSpeedAtGmtMillis = nowMillis
-	}
-}
-
-func (pR *Room) onBulletCrashed(contactingPlayer *Player, contactingBullet *Bullet, nowMillis int64, maxMillisToFreezePerPlayer int64) {
-	if _, existent := pR.Bullets[contactingBullet.LocalIdInBattle]; existent {
-		pR.CollidableWorld.DestroyBody(contactingBullet.CollidableBody)
-		pR.Bullets[contactingBullet.LocalIdInBattle] = &Bullet{
-			Removed:          true,
-			RemovedAtFrameId: pR.Tick,
-		}
-
-		if contactingPlayer != nil {
-			if maxMillisToFreezePerPlayer > (nowMillis - pR.Players[contactingPlayer.Id].FrozenAtGmtMillis) {
-				// Deliberately doing nothing. -- YFLu, 2019-09-04.
-			} else {
-				pR.Players[contactingPlayer.Id].Speed = 0
-				pR.Players[contactingPlayer.Id].FrozenAtGmtMillis = nowMillis
-				pR.Players[contactingPlayer.Id].AddSpeedAtGmtMillis = -1
-				//Logger.Info("Player has picked up bullet:", zap.Any("roomId", pR.Id), zap.Any("contactingPlayer.Id", contactingPlayer.Id), zap.Any("contactingBullet.LocalIdInBattle", contactingBullet.LocalIdInBattle), zap.Any("pR.Players[contactingPlayer.Id].Speed", pR.Players[contactingPlayer.Id].Speed))
-			}
-		}
-	}
-}
-
-func (pR *Room) onPumpkinEncounterPlayer(pumpkin *Pumpkin, player *Player) {
-	Logger.Info("pumpkin has caught the player: ", zap.Any("pumpkinId", pumpkin.LocalIdInBattle), zap.Any("playerId", player.Id))
-}
 
 func (pR *Room) updateScore() {
 	pR.Score = calRoomScore(pR.EffectivePlayerCount, pR.Capacity, pR.State)
@@ -278,251 +232,6 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("player AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("player AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId))
 	return true
-}
-
-func (pR *Room) refreshColliders() {
-	/*
-	  "BarrierCollider"s are NOT added to the "colliders in B2World of the current battle", thus NOT involved in server-side collision detection!
-
-	  -- YFLu, 2019-09-04
-	*/
-	gravity := box2d.MakeB2Vec2(0.0, 0.0)
-	world := box2d.MakeB2World(gravity)
-	world.SetContactFilter(&box2d.B2ContactFilter{})
-	pR.CollidableWorld = &world
-
-	Logger.Info("Begins `refreshColliders` for players:", zap.Any("roomId", pR.Id))
-	for _, player := range pR.Players {
-		var bdDef box2d.B2BodyDef
-		colliderOffset := box2d.MakeB2Vec2(0, 0) // Matching that of client-side setting.
-		bdDef = box2d.MakeB2BodyDef()
-		bdDef.Type = box2d.B2BodyType.B2_dynamicBody
-		bdDef.Position.Set(player.X+colliderOffset.X, player.Y+colliderOffset.Y)
-
-		b2Body := pR.CollidableWorld.CreateBody(&bdDef)
-
-		b2CircleShape := box2d.MakeB2CircleShape()
-		b2CircleShape.M_radius = 32 // Matching that of client-side setting.
-
-		fd := box2d.MakeB2FixtureDef()
-		fd.Shape = &b2CircleShape
-		fd.Filter.CategoryBits = COLLISION_CATEGORY_CONTROLLED_PLAYER
-		fd.Filter.MaskBits = COLLISION_MASK_FOR_CONTROLLED_PLAYER
-		fd.Density = 0.0
-		b2Body.CreateFixtureFromDef(&fd)
-
-		player.CollidableBody = b2Body
-		b2Body.SetUserData(player)
-	}
-	Logger.Info("Ends `refreshColliders` for players:", zap.Any("roomId", pR.Id))
-
-	Logger.Info("Begins `refreshColliders` for treasures:", zap.Any("roomId", pR.Id))
-	for _, treasure := range pR.Treasures {
-		var bdDef box2d.B2BodyDef
-		bdDef.Type = box2d.B2BodyType.B2_dynamicBody
-		bdDef = box2d.MakeB2BodyDef()
-		bdDef.Position.Set(treasure.PickupBoundary.Anchor.X, treasure.PickupBoundary.Anchor.Y)
-
-		b2Body := pR.CollidableWorld.CreateBody(&bdDef)
-
-		pointsCount := len(treasure.PickupBoundary.Points)
-
-		b2Vertices := make([]box2d.B2Vec2, pointsCount)
-		for vIndex, v2 := range treasure.PickupBoundary.Points {
-			b2Vertices[vIndex] = v2.ToB2Vec2()
-		}
-
-		b2PolygonShape := box2d.MakeB2PolygonShape()
-		b2PolygonShape.Set(b2Vertices, pointsCount)
-
-		fd := box2d.MakeB2FixtureDef()
-		fd.Shape = &b2PolygonShape
-		fd.Filter.CategoryBits = COLLISION_CATEGORY_TREASURE
-		fd.Filter.MaskBits = COLLISION_MASK_FOR_TREASURE
-		fd.Density = 0.0
-		b2Body.CreateFixtureFromDef(&fd)
-
-		treasure.CollidableBody = b2Body
-		b2Body.SetUserData(treasure)
-	}
-	Logger.Info("Ends `refreshColliders` for treasures:", zap.Any("roomId", pR.Id))
-
-	Logger.Info("Begins `refreshColliders` for towers:", zap.Any("roomId", pR.Id))
-	for _, tower := range pR.GuardTowers {
-		// Logger.Info("Begins `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower.LocalIdInBattle", tower.LocalIdInBattle), zap.Any("tower.X", tower.X), zap.Any("tower.Y", tower.Y), zap.Any("tower.PickupBoundary", tower.PickupBoundary), zap.Any("tower.PickupBoundary.Points", tower.PickupBoundary.Points), zap.Any("tower.WidthInB2World", tower.WidthInB2World), zap.Any("tower.HeightInB2World", tower.HeightInB2World), zap.Any("roomId", pR.Id))
-		var bdDef box2d.B2BodyDef
-		bdDef.Type = box2d.B2BodyType.B2_dynamicBody
-		bdDef = box2d.MakeB2BodyDef()
-		bdDef.Position.Set(tower.PickupBoundary.Anchor.X, tower.PickupBoundary.Anchor.Y)
-
-		b2Body := pR.CollidableWorld.CreateBody(&bdDef)
-		// Logger.Info("Checks#1 `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-
-		pointsCount := len(tower.PickupBoundary.Points)
-
-		b2Vertices := make([]box2d.B2Vec2, pointsCount)
-		for vIndex, v2 := range tower.PickupBoundary.Points {
-			b2Vertices[vIndex] = v2.ToB2Vec2()
-		}
-		// Logger.Info("Checks#2 `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-
-		b2PolygonShape := box2d.MakeB2PolygonShape()
-		// Logger.Info("Checks#3 `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-		b2PolygonShape.Set(b2Vertices, pointsCount)
-		// Logger.Info("Checks#4 `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-
-		fd := box2d.MakeB2FixtureDef()
-		fd.Shape = &b2PolygonShape
-		fd.Filter.CategoryBits = COLLISION_CATEGORY_TRAP
-		fd.Filter.MaskBits = COLLISION_MASK_FOR_TRAP
-		fd.Density = 0.0
-		b2Body.CreateFixtureFromDef(&fd)
-		// Logger.Info("Checks#5 `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-
-		tower.CollidableBody = b2Body
-		b2Body.SetUserData(tower)
-		// Logger.Info("Ends `refreshColliders` for single tower:", zap.Any("k-th", k), zap.Any("tower", tower), zap.Any("roomId", pR.Id))
-	}
-	Logger.Info("Ends `refreshColliders` for towers:", zap.Any("roomId", pR.Id))
-
-	listener := RoomBattleContactListener{
-		name: "TreasureHunterX",
-		room: pR,
-	}
-	/*
-	 * Setting a "ContactListener" for "pR.CollidableWorld"
-	 * will only trigger corresponding callbacks in the
-	 * SAME GOROUTINE of "pR.CollidableWorld.Step(...)" according
-	 * to "https://github.com/ByteArena/box2d/blob/master/DynamicsB2World.go" and
-	 * "https://github.com/ByteArena/box2d/blob/master/DynamicsB2Contact.go".
-	 *
-	 * The invocation-chain involves "Step -> SolveTOI -> B2ContactUpdate -> [BeginContact, EndContact, PreSolve]".
-	 */
-	pR.CollidableWorld.SetContactListener(listener)
-}
-
-func calculateDiffFrame(currentFrame *pb.RoomDownsyncFrame, lastFrame *pb.RoomDownsyncFrame) *pb.RoomDownsyncFrame {
-	if lastFrame == nil {
-		return currentFrame
-	}
-	diffFrame := &pb.RoomDownsyncFrame{
-		Id:             currentFrame.Id,
-		RefFrameId:     lastFrame.Id,
-		Players:        currentFrame.Players,
-		SentAt:         currentFrame.SentAt,
-		CountdownNanos: currentFrame.CountdownNanos,
-		Bullets:        currentFrame.Bullets,
-		Treasures:      make(map[int32]*pb.Treasure, 0),
-		Traps:          make(map[int32]*pb.Trap, 0),
-		SpeedShoes:     make(map[int32]*pb.SpeedShoe, 0),
-		GuardTowers:    make(map[int32]*pb.GuardTower, 0),
-	}
-
-	for k, last := range lastFrame.Treasures {
-		if last.Removed {
-			diffFrame.Treasures[k] = last
-			continue
-		}
-		curr, ok := currentFrame.Treasures[k]
-		if !ok {
-			diffFrame.Treasures[k] = &pb.Treasure{Removed: true}
-			Logger.Info("A treasure is removed.", zap.Any("diffFrame.id", diffFrame.Id), zap.Any("treasure.LocalIdInBattle", curr.LocalIdInBattle))
-			continue
-		}
-		if ok, v := diffTreasure(last, curr); ok {
-			diffFrame.Treasures[k] = v
-		}
-	}
-
-	for k, last := range lastFrame.Bullets {
-		curr, ok := currentFrame.Bullets[k]
-		/*
-		 * The use of 'bullet.RemovedAtFrameId' implies that you SHOULDN'T create a record '&Bullet{Removed: true}' here after it's already deleted from 'room.Bullets'. Same applies for `Traps` and `SpeedShoes`.
-		 *
-		 * -- YFLu
-		 */
-		if false == ok {
-			diffFrame.Bullets[k] = &pb.Bullet{Removed: true}
-			// Logger.Info("A bullet is removed.", zap.Any("diffFrame.id", diffFrame.Id), zap.Any("bullet.LocalIdInBattle", lastFrame.Bullets[k].LocalIdInBattle))
-			continue
-		}
-		if ok, v := diffBullet(last, curr); ok {
-			diffFrame.Bullets[k] = v
-		}
-	}
-
-	for k, last := range lastFrame.Traps {
-		curr, ok := currentFrame.Traps[k]
-		if false == ok {
-			continue
-		}
-		if ok, v := diffTrap(last, curr); ok {
-			diffFrame.Traps[k] = v
-		}
-	}
-
-	for k, last := range lastFrame.SpeedShoes {
-		curr, ok := currentFrame.SpeedShoes[k]
-		if false == ok {
-			continue
-		}
-		if ok, v := diffSpeedShoe(last, curr); ok {
-			diffFrame.SpeedShoes[k] = v
-		}
-	}
-
-	return diffFrame
-}
-
-func diffTreasure(last *pb.Treasure, curr *pb.Treasure) (bool, *pb.Treasure) {
-	treature := &pb.Treasure{}
-	t := false
-	if last.Score != curr.Score {
-		treature.Score = curr.Score
-		t = true
-	}
-	if last.X != curr.X {
-		treature.X = curr.X
-		t = true
-	}
-	if last.Y != curr.Y {
-		treature.Y = curr.Y
-		t = true
-	}
-	return t, treature
-}
-
-func diffTrap(last *pb.Trap, curr *pb.Trap) (bool, *pb.Trap) {
-	trap := &pb.Trap{}
-	t := false
-	if last.X != curr.X {
-		trap.X = curr.X
-		t = true
-	}
-	if last.Y != curr.Y {
-		trap.Y = curr.Y
-		t = true
-	}
-	return t, trap
-}
-
-func diffSpeedShoe(last *pb.SpeedShoe, curr *pb.SpeedShoe) (bool, *pb.SpeedShoe) {
-	speedShoe := &pb.SpeedShoe{}
-	t := false
-	if last.X != curr.X {
-		speedShoe.X = curr.X
-		t = true
-	}
-	if last.Y != curr.Y {
-		speedShoe.Y = curr.Y
-		t = true
-	}
-	return t, speedShoe
-}
-
-func diffBullet(last *pb.Bullet, curr *pb.Bullet) (bool, *pb.Bullet) {
-	t := true
-	return t, curr
 }
 
 func (pR *Room) ChooseStage() error {
@@ -592,81 +301,21 @@ func (pR *Room) ChooseStage() error {
 	pR.RawBattleStrToVec2DListMap = toRetStrToVec2DListMap
 	pR.RawBattleStrToPolygon2DListMap = toRetStrToPolygon2DListMap
 
-	// Refresh "Treasure" data for RoomDownsyncFrame.
-	lowScoreTreasurePolygon2DList := *(toRetStrToPolygon2DListMap["LowScoreTreasure"])
-	highScoreTreasurePolygon2DList := *(toRetStrToPolygon2DListMap["HighScoreTreasure"])
+	barrierPolygon2DList := *(toRetStrToPolygon2DListMap["Barrier"])
 
-	var treasureLocalIdInBattle int32 = 0
-	for _, polygon2D := range lowScoreTreasurePolygon2DList {
+	var barrierLocalIdInBattle int32 = 0
+	for _, polygon2D := range barrierPolygon2DList {
 		/*
 		   // For debug-printing only.
-
-		   Logger.Info("ChooseStage printing polygon2D for lowScoreTreasurePolygon2DList", zap.Any("treasureLocalIdInBattle", treasureLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
+		   Logger.Info("ChooseStage printing polygon2D for barrierPolygon2DList", zap.Any("barrierLocalIdInBattle", barrierLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
 		*/
-
-		theTreasure := &Treasure{
-			Id:              0,
-			LocalIdInBattle: treasureLocalIdInBattle,
-			Score:           LOW_SCORE_TREASURE_SCORE,
-			Type:            LOW_SCORE_TREASURE_TYPE,
+		pR.Barriers[barrierLocalIdInBattle] = &Barrier{
 			X:               polygon2D.Anchor.X,
 			Y:               polygon2D.Anchor.Y,
-			PickupBoundary:  polygon2D,
+			Boundary:        polygon2D,
 		}
 
-		pR.Treasures[theTreasure.LocalIdInBattle] = theTreasure
-		treasureLocalIdInBattle++
-	}
-
-	for _, polygon2D := range highScoreTreasurePolygon2DList {
-		/*
-		   // For debug-printing only.
-
-		   Logger.Info("ChooseStage printing polygon2D for highScoreTreasurePolygon2DList", zap.Any("treasureLocalIdInBattle", treasureLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
-		*/
-		theTreasure := &Treasure{
-			Id:              0,
-			LocalIdInBattle: treasureLocalIdInBattle,
-			Score:           HIGH_SCORE_TREASURE_SCORE,
-			Type:            HIGH_SCORE_TREASURE_TYPE,
-			X:               polygon2D.Anchor.X,
-			Y:               polygon2D.Anchor.Y,
-			PickupBoundary:  polygon2D,
-		}
-
-		pR.Treasures[theTreasure.LocalIdInBattle] = theTreasure
-
-		treasureLocalIdInBattle++
-	}
-
-	// Refresh "GuardTower" data for RoomDownsyncFrame.
-	guardTowerPolygon2DList := *(toRetStrToPolygon2DListMap["GuardTower"])
-	var guardTowerLocalIdInBattle int32 = 0
-	for _, polygon2D := range guardTowerPolygon2DList {
-		/*
-		   // For debug-printing only.
-
-		   Logger.Info("ChooseStage printing polygon2D for guardTowerPolygon2DList", zap.Any("guardTowerLocalIdInBattle", guardTowerLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points), zap.Any("pR.GuardTowers", pR.GuardTowers))
-		*/
-
-		var inRangePlayers InRangePlayerCollection
-		pInRangePlayers := &inRangePlayers
-		pInRangePlayers = pInRangePlayers.Init(10)
-		theGuardTower := &GuardTower{
-			Id:              0,
-			LocalIdInBattle: guardTowerLocalIdInBattle,
-			X:               polygon2D.Anchor.X,
-			Y:               polygon2D.Anchor.Y,
-			PickupBoundary:  polygon2D,
-			InRangePlayers:  pInRangePlayers,
-			LastAttackTick:  utils.UnixtimeNano(),
-			WidthInB2World:  float64(polygon2D.TmxObjectWidth),
-			HeightInB2World: float64(polygon2D.TmxObjectHeight),
-		}
-
-		pR.GuardTowers[theGuardTower.LocalIdInBattle] = theGuardTower
-
-		guardTowerLocalIdInBattle++
+		barrierLocalIdInBattle++
 	}
 
 	return nil
@@ -754,11 +403,6 @@ func (pR *Room) StartBattle() {
 					Id:             pR.Tick,
 					RefFrameId:     MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_START,
 					Players:        toPbPlayers(pR.Players),
-					Treasures:      toPbTreasures(pR.Treasures),
-					Traps:          toPbTraps(pR.Traps),
-					Bullets:        toPbBullets(pR.Bullets),
-					SpeedShoes:     toPbSpeedShoes(pR.SpeedShoes),
-					GuardTowers:    toPbGuardTowers(pR.GuardTowers),
 					SentAt:         utils.UnixtimeMilli(),
 					CountdownNanos: (pR.BattleDurationNanos - totalElapsedNanos),
 				}
@@ -782,6 +426,8 @@ func (pR *Room) StartBattle() {
 				return
 			}
 			stCalculation := utils.UnixtimeNano()
+
+            // TODO: Force confirm some non-all-confirmed but outdated input frames, derive server-sider RenderFrameBuffer elements from them, and send to respective players with "RoomDownsyncFrame.refFrameId=MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_READDED_AND_ACKED"  
 
 			refInputFrameId := int32(999999999) // Hardcoded as a max reference.
 			for playerId, _ := range pR.Players {
@@ -981,8 +627,6 @@ func (pR *Room) StopBattleForSettlement() {
 			Players:        toPbPlayers(pR.Players),
 			SentAt:         utils.UnixtimeMilli(),
 			CountdownNanos: -1, // TODO: Replace this magic constant!
-			Treasures:      toPbTreasures(pR.Treasures),
-			Traps:          toPbTraps(pR.Traps),
 		}
 		pR.sendSafely(assembledFrame, playerId)
 	}
@@ -1089,11 +733,6 @@ func (pR *Room) onDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.Players = make(map[int32]*Player)
-	pR.Treasures = make(map[int32]*Treasure)
-	pR.Traps = make(map[int32]*Trap)
-	pR.GuardTowers = make(map[int32]*GuardTower)
-	pR.Bullets = make(map[int32]*Bullet)
-	pR.SpeedShoes = make(map[int32]*SpeedShoe)
 	pR.PlayerDownsyncSessionDict = make(map[int32]*websocket.Conn)
 	pR.PlayerSignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 
@@ -1105,6 +744,7 @@ func (pR *Room) onDismissed() {
 		pR.JoinIndexBooleanArr[indice] = false
 	}
 	pR.AllPlayerInputsBuffer = NewRingBuffer(1024)
+	pR.RenderFrameBuffer = NewRingBuffer(1024)
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1114,14 +754,6 @@ func (pR *Room) onDismissed() {
 	pR.updateScore()
 
 	Logger.Info("The room is completely dismissed:", zap.Any("roomId", pR.Id))
-}
-
-func (pR *Room) Unicast(toPlayerId int32, msg interface{}) {
-	// TODO
-}
-
-func (pR *Room) Broadcast(msg interface{}) {
-	// TODO
 }
 
 func (pR *Room) expelPlayerDuringGame(playerId int32) {
@@ -1368,6 +1000,84 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 	return 0 == (inputFrameId % 10)
 }
 
+func (pR *Room) refreshColliders() {
+	gravity := box2d.MakeB2Vec2(0.0, 0.0)
+	world := box2d.MakeB2World(gravity)
+	world.SetContactFilter(&box2d.B2ContactFilter{})
+	pR.CollidableWorld = &world
+
+	Logger.Info("Begins players collider processing:", zap.Any("roomId", pR.Id))
+	for _, player := range pR.Players {
+		var bdDef box2d.B2BodyDef
+		colliderOffset := box2d.MakeB2Vec2(0, 0) // Matching that of client-side setting.
+		bdDef = box2d.MakeB2BodyDef()
+		bdDef.Type = box2d.B2BodyType.B2_dynamicBody
+		bdDef.Position.Set(player.X+colliderOffset.X, player.Y+colliderOffset.Y)
+
+		b2Body := pR.CollidableWorld.CreateBody(&bdDef)
+
+		b2CircleShape := box2d.MakeB2CircleShape()
+		b2CircleShape.M_radius = 32 // Matching that of client-side setting.
+
+		fd := box2d.MakeB2FixtureDef()
+		fd.Shape = &b2CircleShape
+		fd.Filter.CategoryBits = COLLISION_CATEGORY_CONTROLLED_PLAYER
+		fd.Filter.MaskBits = COLLISION_MASK_FOR_CONTROLLED_PLAYER
+		fd.Density = 0.0
+		b2Body.CreateFixtureFromDef(&fd)
+
+		player.CollidableBody = b2Body
+		b2Body.SetUserData(player)
+	}
+	Logger.Info("Ends players collider processing:", zap.Any("roomId", pR.Id))
+
+	Logger.Info("Begins barriers collider processing:", zap.Any("roomId", pR.Id))
+	for _, barrier := range pR.Barriers {
+		var bdDef box2d.B2BodyDef
+		bdDef.Type = box2d.B2BodyType.B2_dynamicBody
+		bdDef = box2d.MakeB2BodyDef()
+		bdDef.Position.Set(barrier.Boundary.Anchor.X, barrier.Boundary.Anchor.Y)
+
+		b2Body := pR.CollidableWorld.CreateBody(&bdDef)
+
+		pointsCount := len(barrier.Boundary.Points)
+
+		b2Vertices := make([]box2d.B2Vec2, pointsCount)
+		for vIndex, v2 := range barrier.Boundary.Points {
+			b2Vertices[vIndex] = v2.ToB2Vec2()
+		}
+
+		b2PolygonShape := box2d.MakeB2PolygonShape()
+		b2PolygonShape.Set(b2Vertices, pointsCount)
+
+		fd := box2d.MakeB2FixtureDef()
+		fd.Shape = &b2PolygonShape
+		fd.Filter.CategoryBits = COLLISION_CATEGORY_BARRIER
+		fd.Filter.MaskBits = COLLISION_MASK_FOR_BARRIER
+		fd.Density = 0.0
+		b2Body.CreateFixtureFromDef(&fd)
+
+		barrier.CollidableBody = b2Body
+		b2Body.SetUserData(barrier)
+	}
+	Logger.Info("Ends barriers collider processing:", zap.Any("roomId", pR.Id))
+
+	listener := RoomBattleContactListener{
+		name: "DelayNoMore",
+		room: pR,
+	}
+	/*
+	 * Setting a "ContactListener" for "pR.CollidableWorld"
+	 * will only trigger corresponding callbacks in the
+	 * SAME GOROUTINE of "pR.CollidableWorld.Step(...)" according
+	 * to "https://github.com/ByteArena/box2d/blob/master/DynamicsB2World.go" and
+	 * "https://github.com/ByteArena/box2d/blob/master/DynamicsB2Contact.go".
+	 *
+	 * The invocation-chain involves "Step -> SolveTOI -> B2ContactUpdate -> [BeginContact, EndContact, PreSolve]".
+	 */
+	pR.CollidableWorld.SetContactListener(listener)
+}
+
 type RoomBattleContactListener struct {
 	name string
 	room *Room
@@ -1376,15 +1086,15 @@ type RoomBattleContactListener struct {
 // Implementing the GolangBox2d contact listeners [begins].
 /**
  * Note that the execution of these listeners is within the SAME GOROUTINE as that of "`battleMainLoop` in the same room".
- * See the comments in `Room.refreshContactListener()` for details.
+ * See the comments in `Room.refreshColliders()` for details.
  */
 func (l RoomBattleContactListener) BeginContact(contact box2d.B2ContactInterface) {
-	var pTower *GuardTower
+	var pBarrier *Barrier
 	var pPlayer *Player
 
 	switch v := contact.GetNodeA().Other.GetUserData().(type) {
-	case *GuardTower:
-		pTower = v
+	case *Barrier:
+		pBarrier = v
 	case *Player:
 		pPlayer = v
 	default:
@@ -1392,40 +1102,41 @@ func (l RoomBattleContactListener) BeginContact(contact box2d.B2ContactInterface
 	}
 
 	switch v := contact.GetNodeB().Other.GetUserData().(type) {
-	case *GuardTower:
-		pTower = v
+	case *Barrier:
+		pBarrier = v
 	case *Player:
 		pPlayer = v
 	default:
 	}
 
-	if pTower != nil && pPlayer != nil {
-		pTower.InRangePlayers.AppendPlayer(pPlayer)
+	if pBarrier != nil && pPlayer != nil {
+   	    Logger.Info("player begins collision with barrier:", zap.Any("barrier", pBarrier), zap.Any("player", pPlayer))
+        // TODO: Push back player
 	}
 }
 
 func (l RoomBattleContactListener) EndContact(contact box2d.B2ContactInterface) {
-	var pTower *GuardTower
+	var pBarrier *Barrier
 	var pPlayer *Player
 
 	switch v := contact.GetNodeA().Other.GetUserData().(type) {
-	case *GuardTower:
-		pTower = v
+	case *Barrier:
+		pBarrier = v
 	case *Player:
 		pPlayer = v
 	default:
 	}
 
 	switch v := contact.GetNodeB().Other.GetUserData().(type) {
-	case *GuardTower:
-		pTower = v
+	case *Barrier:
+		pBarrier = v
 	case *Player:
 		pPlayer = v
 	default:
 	}
 
-	if pTower != nil && pPlayer != nil {
-		pTower.InRangePlayers.RemovePlayerById(pPlayer.Id)
+	if pBarrier != nil && pPlayer != nil {
+   	    Logger.Info("player ends collision with barrier:", zap.Any("barrier", pBarrier), zap.Any("player", pPlayer))
 	}
 }
 
