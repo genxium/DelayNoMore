@@ -977,7 +977,7 @@ func (pR *Room) StopBattleForSettlement() {
 	for playerId, _ := range pR.Players {
 		assembledFrame := pb.RoomDownsyncFrame{
 			Id:             pR.Tick,
-			RefFrameId:     0, // Hardcoded for now.
+			RefFrameId:     pR.Tick, // Hardcoded for now.
 			Players:        toPbPlayers(pR.Players),
 			SentAt:         utils.UnixtimeMilli(),
 			CountdownNanos: -1, // TODO: Replace this magic constant!

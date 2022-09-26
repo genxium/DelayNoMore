@@ -137,8 +137,11 @@ cc.Class({
   _dumpToRenderCache: function(roomDownsyncFrame) {
     const self = this;
     const minToKeepRenderFrameId = self.lastAllConfirmedRenderFrameId; 
-    while (self.recentInputCache.stFrameId < minToKeepRenderFrameId) {
+    while (0 < self.recentRenderCache.cnt && self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
       self.recentRenderCache.pop();
+    }
+    if (self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
+      console.warn("Weird dumping of RENDER frame: self.renderFrame=", self.renderFrame, ", self.recentInputCache=", self._stringifyRecentInputCache(false), ", self.recentRenderCache=", self._stringifyRecentRenderCache(false), ", self.lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", self.lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId);
     }
     const existing = self.recentRenderCache.getByFrameId(roomDownsyncFrame.id); 
     if (null != existing) {
@@ -157,9 +160,13 @@ cc.Class({
 
   _dumpToInputCache: function(inputFrameDownsync) {
     const self = this;
-    const minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames); // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding inputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
-    while (self.recentInputCache.stFrameId < minToKeepInputFrameId) {
+    let minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames); // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding inputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
+    if (minToKeepInputFrameId > self.lastAllConfirmedInputFrameId) minToKeepInputFrameId = self.lastAllConfirmedInputFrameId;
+    while (0 < self.recentInputCache.cnt && self.recentInputCache.stFrameId < minToKeepInputFrameId) {
       self.recentInputCache.pop();
+    }
+    if (self.recentInputCache.stFrameId < minToKeepInputFrameId) {
+      console.warn("Weird dumping of INPUT frame: self.renderFrame=", self.renderFrame, ", self.recentInputCache=", self._stringifyRecentInputCache(false), ", self.recentRenderCache=", self._stringifyRecentRenderCache(false), ", self.lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", self.lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId);
     }
     const existing = self.recentInputCache.getByFrameId(inputFrameDownsync.inputFrameId); 
     if (null != existing) {
@@ -532,54 +539,38 @@ cc.Class({
       self.transitToState(ALL_MAP_STATES.WAITING);
       self._inputControlEnabled = false;
     
-      let findingPlayerScriptIns = null;
+      let findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
       window.handleRoomDownsyncFrame = function(rdf) {
         if (ALL_BATTLE_STATES.WAITING != self.battleState
           && ALL_BATTLE_STATES.IN_BATTLE != self.battleState
           && ALL_BATTLE_STATES.IN_SETTLEMENT != self.battleState) {
           return;
         }
+
+        const frameId = rdf.id;
         // Right upon establishment of the "PersistentSessionClient", we should receive an initial signal "BattleColliderInfo" earlier than any "RoomDownsyncFrame" containing "PlayerMeta" data. 
         const refFrameId = rdf.refFrameId;
         switch (refFrameId) {
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_ADDED_AND_ACKED:
-          self._initPlayerRichInfoDict(rdf.players, rdf.playerMetas);
-          // 显示匹配玩家
-          findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
+          // Update the "finding player" GUI and show it if not previously present
           if (!self.findingPlayerNode.parent) {
             self.showPopupInCanvas(self.findingPlayerNode);
           }
           findingPlayerScriptIns.updatePlayersInfo(rdf.playerMetas);
           return;
-        case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_READDED_AND_ACKED:
-          self._initPlayerRichInfoDict(rdf.players, rdf.playerMetas);
-          // In this case, we're definitely in an active battle, thus the "self.findingPlayerNode" should be hidden if being presented. 
-          if (self.findingPlayerNode && self.findingPlayerNode.parent) {
-            self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
-            self.transitToState(ALL_MAP_STATES.VISUAL);
-            if (self.playersInfoNode) {
-              for (let playerId in rdf.playerMetas) {
-                const playerMeta = rdf.playerMetas[playerId];
-                const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-                playersInfoScriptIns.updateData(playerMeta);
-              }
-            }
-          }
-          return;
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_READY_TO_START:
-          // 显示倒计时
-          self.playersMatched(rdf.playerMetas);
-          // 隐藏返回按钮
-          findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-          findingPlayerScriptIns.hideExitButton();
+          self.onBattleReadyToStart(rdf.playerMetas, false);
           return;
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START:
           self.onBattleStarted(rdf); 
           return; 
+        case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_READDED_AND_ACKED:
+          self.lastAllConfirmedRenderFrameId = frameId;
+          self.onBattleReadyToStart(rdf.playerMetas, true);
+          self.onBattleStarted(rdf);
+          return;
         }
 
-        const frameId = rdf.id;
-        self.lastAllConfirmedRenderFrameId = frameId;
         // TODO: Inject a NetworkDoctor as introduced in https://app.yinxiang.com/shard/s61/nl/13267014/5c575124-01db-419b-9c02-ec81f78c6ddc/.
       }; 
 
@@ -698,10 +689,19 @@ cc.Class({
 
   onBattleStarted(rdf) {
     // This function is also applicable to "re-joining".
-    const players = rdf.players;
-    const playerMetas = rdf.playerMetas;
     console.log('On battle started!');
     const self = window.mapIns;
+    const players = rdf.players;
+    const playerMetas = rdf.playerMetas;
+    self._initPlayerRichInfoDict(players, playerMetas);
+
+    // Show the top status indicators for IN_BATTLE 
+    const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
+    for (let i in playerMetas) {
+      const playerMeta = playerMetas[i];
+      playersInfoScriptIns.updateData(playerMeta);
+    }
+
     if (null != rdf.countdownNanos) {
       self.countdownNanos = rdf.countdownNanos;
     }
@@ -715,7 +715,7 @@ cc.Class({
       self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
     }
     self.transitToState(ALL_MAP_STATES.VISUAL);
-    self.chaserRenderFrameId = MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START;
+    self.chaserRenderFrameId = rdf.id;
     self.applyRoomDownsyncFrameDynamics(rdf);
     self._dumpToRenderCache(rdf);
     self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"
@@ -912,27 +912,29 @@ cc.Class({
     setLocalZOrder(toShowNode, 10);
   },
 
-  playersMatched(playerMetas) {
-    console.log("Calling `playersMatched` with:", playerMetas);
-
+  onBattleReadyToStart(playerMetas, isSelfRejoining) {
+    console.log("Calling `onBattleReadyToStart` with:", playerMetas);
     const self = this;
     const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
+    findingPlayerScriptIns.hideExitButton();
     findingPlayerScriptIns.updatePlayersInfo(playerMetas);
-    window.setTimeout(() => {
-      if (null != self.findingPlayerNode.parent) {
-        self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
-        self.transitToState(ALL_MAP_STATES.VISUAL);
-        const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-        for (let i in playerMetas) {
-          const playerMeta = playerMetas[i];
-          playersInfoScriptIns.updateData(playerMeta);
-        }
-      }
-      const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
-      countDownScriptIns.setData();
-      self.showPopupInCanvas(self.countdownToBeginGameNode);
-      return;
-    }, 2000);
+
+    const hideFindingPlayersGUI = function() {
+      if (null == self.findingPlayerNode.parent) return;
+      self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
+    };
+
+    if (true == isSelfRejoining) {
+        hideFindingPlayersGUI();
+    } else { 
+      // Delay to hide the "finding player" GUI, then show a countdown clock
+      window.setTimeout(() => {
+        hideFindingPlayersGUI();
+        const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
+        countDownScriptIns.setData();
+        self.showPopupInCanvas(self.countdownToBeginGameNode);
+      }, 1500);
+    }
   },
 
   _createRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
@@ -1019,6 +1021,9 @@ cc.Class({
 
     const self = this;
     const renderFrameSt = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
+    if (null == renderFrameSt) {
+      console.error("Couldn't find renderFrameId=", renderFrameIdSt, " to rollback, recentRenderCache=", self._stringifyRecentRenderCache(false));
+    }
     /* 
     Reset "position" of players in "collisionSys" according to "renderFrameSt". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
     */
@@ -1031,7 +1036,6 @@ cc.Class({
       playerCollider.y = player.y;
     });
 
-    const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
     /*
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
     */
@@ -1057,6 +1061,7 @@ cc.Class({
       });
 
       collisionSys.update();
+      const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
         
       self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
         const joinIndex = playerRichInfo.joinIndex; 
@@ -1099,44 +1104,29 @@ cc.Class({
   },
 
   _stringifyRecentInputCache(usefullOutput) {
+    const self = this;
     if (true == usefullOutput) {
       let s = [];
-      self.recentInputCache.forEach((inputFrameDownsync, inputFrameId) => {
-        s.push(JSON.stringify(inputFrameDownsync));
-      });
+      for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
+        s.push(JSON.stringify(self.recentInputCache.getByFrameId(i)));
+      }
 
       return s.join('\n');
     }
-    return "[stInputFrameId=" + self.recentInputCacheSt + ", edInputFrameId=" + self.recentInputCacheEd + ")";
+    return "[stInputFrameId=" + self.recentInputCache.stFrameId + ", edInputFrameId=" + self.recentInputCache.edFrameId + ")";
   },
 
-  _stringifyRollbackResult(renderFrameId, delayedInputFrameDownsync) {
+  _stringifyRecentRenderCache(usefullOutput) {
     const self = this;
-    const s = (
-      null == delayedInputFrameDownsync 
-      ? 
-      {
-        renderFrameId: renderFrameId,
-        players: {}
+    if (true == usefullOutput) {
+      let s = [];
+      for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
+        s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
       }
-      :
-      {
-        renderFrameId: renderFrameId,
-        players: {},
-        delayedInputFrameDownsync: delayedInputFrameDownsync,   
-      }
-    );
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      const joinIndex = playerRichInfo.joinIndex; 
-      const playerNode = playerRichInfo.node; 
-      const playerScriptIns = playerRichInfo.scriptIns;
-      s.players[playerRichInfo.id] = {
-        id: playerRichInfo.id,
-        x: playerNode.position.x,
-        y: playerNode.position.y,
-      };
-    });
 
-    return JSON.stringify(s);
+      return s.join('\n');
+    }
+    return "[stRenderFrameId=" + self.recentRenderCache.stFrameId + ", edRenderFrameId=" + self.recentRenderCache.edFrameId + ")";
   },
+
 });

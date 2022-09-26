@@ -90,23 +90,7 @@ cc.Class({
         if (remoteUrl == null || remoteUrl == '') {
           cc.log(`No avatar to show for :`);
           cc.log(playerMeta);
-          remoteUrl = 'http://wx.qlogo.cn/mmopen/PiajxSqBRaEJUWib5D85KXWHumaxhU4E9XOn9bUpCNKF3F4ibfOj8JYHCiaoosvoXCkTmOQE1r2AKKs8ObMaz76EdA/0'
         }
-        cc.loader.load({
-          url: remoteUrl,
-          type: 'jpg'
-        }, function(err, texture) {
-          if (null != err ) {
-            console.error(err);
-          } else {
-            if (null == texture) {
-              return;
-            }
-            const sf = new cc.SpriteFrame();
-            sf.setTexture(texture);
-            playerInfoNode.getChildByName('avatarMask').getChildByName('avatar').getComponent(cc.Sprite).spriteFrame = sf;
-          }
-        });
       })();
 
       function isEmptyString(str) {
