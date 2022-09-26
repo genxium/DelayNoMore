@@ -126,7 +126,7 @@ cc.Class({
     },
     maxChasingRenderFramesPerUpdate: {
       type: cc.Integer,
-      default: 5
+      default: 10
     },
   },
     
@@ -565,7 +565,9 @@ cc.Class({
           self.onBattleStarted(rdf); 
           return; 
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_READDED_AND_ACKED:
-          self.lastAllConfirmedRenderFrameId = frameId;
+          // [WARNING] The "frameId" from server could be quite fast-forwarding, don't assign it in other cases.
+          self.renderFrameId = frameId;
+          self.lastAllConfirmedRenderFrameId = frameId;  
           self.onBattleReadyToStart(rdf.playerMetas, true);
           self.onBattleStarted(rdf);
           return;
@@ -763,8 +765,8 @@ cc.Class({
     newPlayerNode.getComponent("SelfPlayer").mapNode = self.node;
     const currentSelfColliderCircle = newPlayerNode.getComponent(cc.CircleCollider);
 
-    const newPlayerColliderLatest = self.latestCollisionSys.createCircle(x, y, currentSelfColliderCircle);
-    const newPlayerColliderChaser = self.chaserCollisionSys.createCircle(x, y, currentSelfColliderCircle);
+    const newPlayerColliderLatest = self.latestCollisionSys.createCircle(x, y, currentSelfColliderCircle.radius);
+    const newPlayerColliderChaser = self.chaserCollisionSys.createCircle(x, y, currentSelfColliderCircle.radius);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     self.latestCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderLatest);
     self.chaserCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderChaser);
@@ -819,11 +821,6 @@ cc.Class({
       } catch (err) {
         console.error("Error during Map.update", err);
       } finally {
-        // Update camera to track selfPlayer.
-        if (null != self.ctrl) {
-          self.ctrl.justifyMapNodePosAndScale(self.ctrl.linearSpeedBase, self.ctrl.zoomingSpeedBase);
-        }
-
         // Update countdown
         if (null != self.countdownNanos) {
           self.countdownNanos -= self.rollbackEstimatedDt*1000000000;
@@ -1050,7 +1047,7 @@ cc.Class({
         const player = renderFrame.players[playerId];
         const encodedInput = inputList[joinIndex-1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
-        const baseChange = player.speed*self.rollbackEstimatedDt;
+        const baseChange = player.speed*self.rollbackEstimatedDt*decodedInput.speedFactor;
         playerCollider.x += baseChange*decodedInput.dx;
         playerCollider.y += baseChange*decodedInput.dy;
         /*
@@ -1063,8 +1060,9 @@ cc.Class({
       collisionSys.update();
       const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
         
-      self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-        const joinIndex = playerRichInfo.joinIndex; 
+      // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
+      for (let i in self.playerRichInfoArr) {
+        const joinIndex = parseInt(i) + 1; 
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const potentials = playerCollider.potentials();
@@ -1075,7 +1073,7 @@ cc.Class({
           playerCollider.x -= result.overlap * result.overlap_x;
           playerCollider.y -= result.overlap * result.overlap_y;
         }
-      });
+      }
     }
   
     return self._createRoomDownsyncFrameLocally(renderFrameIdEd, collisionSys, collisionSysMap);
@@ -1101,6 +1099,10 @@ cc.Class({
         nodeAndScriptIns[1].showArrowTipNode();
       }
     }
+    self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
+      self.playerRichInfoArr[playerRichInfo.joinIndex-1] = playerRichInfo;
+    });    
   },
 
   _stringifyRecentInputCache(usefullOutput) {
