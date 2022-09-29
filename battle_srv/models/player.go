@@ -37,7 +37,7 @@ type Player struct {
 	X                 float64    `json:"x,omitempty"`
 	Y                 float64    `json:"y,omitempty"`
 	Dir               *Direction `json:"dir,omitempty"`
-	Speed             int32      `json:"speed,omitempty"`
+	Speed             float64    `json:"speed,omitempty"`
 	BattleState       int32      `json:"battleState,omitempty"`
 	LastMoveGmtMillis int32      `json:"lastMoveGmtMillis,omitempty"`
 	Score             int32      `json:"score,omitempty"`

@@ -1815,7 +1815,7 @@ $root.treasurehunterx = (function() {
             if (message.dir != null && Object.hasOwnProperty.call(message, "dir"))
                 $root.treasurehunterx.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.speed);
+                writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
             if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.battleState);
             if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
@@ -1877,7 +1877,7 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 5: {
-                        message.speed = reader.int32();
+                        message.speed = reader.double();
                         break;
                     }
                 case 6: {
@@ -1950,8 +1950,8 @@ $root.treasurehunterx = (function() {
                     return "dir." + error;
             }
             if (message.speed != null && message.hasOwnProperty("speed"))
-                if (!$util.isInteger(message.speed))
-                    return "speed: integer expected";
+                if (typeof message.speed !== "number")
+                    return "speed: number expected";
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 if (!$util.isInteger(message.battleState))
                     return "battleState: integer expected";
@@ -1994,7 +1994,7 @@ $root.treasurehunterx = (function() {
                 message.dir = $root.treasurehunterx.Direction.fromObject(object.dir);
             }
             if (object.speed != null)
-                message.speed = object.speed | 0;
+                message.speed = Number(object.speed);
             if (object.battleState != null)
                 message.battleState = object.battleState | 0;
             if (object.lastMoveGmtMillis != null)
@@ -2042,7 +2042,7 @@ $root.treasurehunterx = (function() {
             if (message.dir != null && message.hasOwnProperty("dir"))
                 object.dir = $root.treasurehunterx.Direction.toObject(message.dir, options);
             if (message.speed != null && message.hasOwnProperty("speed"))
-                object.speed = message.speed;
+                object.speed = options.json && !isFinite(message.speed) ? String(message.speed) : message.speed;
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 object.battleState = message.battleState;
             if (message.lastMoveGmtMillis != null && message.hasOwnProperty("lastMoveGmtMillis"))
@@ -2379,446 +2379,6 @@ $root.treasurehunterx = (function() {
         };
 
         return PlayerMeta;
-    })();
-
-    treasurehunterx.RoomDownsyncFrame = (function() {
-
-        /**
-         * Properties of a RoomDownsyncFrame.
-         * @memberof treasurehunterx
-         * @interface IRoomDownsyncFrame
-         * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {number|null} [refFrameId] RoomDownsyncFrame refFrameId
-         * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
-         * @property {number|Long|null} [sentAt] RoomDownsyncFrame sentAt
-         * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
-         * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
-         */
-
-        /**
-         * Constructs a new RoomDownsyncFrame.
-         * @memberof treasurehunterx
-         * @classdesc Represents a RoomDownsyncFrame.
-         * @implements IRoomDownsyncFrame
-         * @constructor
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
-         */
-        function RoomDownsyncFrame(properties) {
-            this.players = {};
-            this.playerMetas = {};
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * RoomDownsyncFrame id.
-         * @member {number} id
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.id = 0;
-
-        /**
-         * RoomDownsyncFrame refFrameId.
-         * @member {number} refFrameId
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.refFrameId = 0;
-
-        /**
-         * RoomDownsyncFrame players.
-         * @member {Object.<string,treasurehunterx.Player>} players
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.players = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame sentAt.
-         * @member {number|Long} sentAt
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.sentAt = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * RoomDownsyncFrame countdownNanos.
-         * @member {number|Long} countdownNanos
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.countdownNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * RoomDownsyncFrame playerMetas.
-         * @member {Object.<string,treasurehunterx.PlayerMeta>} playerMetas
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.playerMetas = $util.emptyObject;
-
-        /**
-         * Creates a new RoomDownsyncFrame instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame instance
-         */
-        RoomDownsyncFrame.create = function create(properties) {
-            return new RoomDownsyncFrame(properties);
-        };
-
-        /**
-         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        RoomDownsyncFrame.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.refFrameId != null && Object.hasOwnProperty.call(message, "refFrameId"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.refFrameId);
-            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
-                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.sentAt != null && Object.hasOwnProperty.call(message, "sentAt"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.sentAt);
-            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.countdownNanos);
-            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
-                for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            return writer;
-        };
-
-        /**
-         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        RoomDownsyncFrame.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a RoomDownsyncFrame message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        RoomDownsyncFrame.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.RoomDownsyncFrame(), key, value;
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.refFrameId = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        if (message.players === $util.emptyObject)
-                            message.players = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Player.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.players[key] = value;
-                        break;
-                    }
-                case 4: {
-                        message.sentAt = reader.int64();
-                        break;
-                    }
-                case 5: {
-                        message.countdownNanos = reader.int64();
-                        break;
-                    }
-                case 6: {
-                        if (message.playerMetas === $util.emptyObject)
-                            message.playerMetas = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.PlayerMeta.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.playerMetas[key] = value;
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a RoomDownsyncFrame message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        RoomDownsyncFrame.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a RoomDownsyncFrame message.
-         * @function verify
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        RoomDownsyncFrame.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                if (!$util.isInteger(message.refFrameId))
-                    return "refFrameId: integer expected";
-            if (message.players != null && message.hasOwnProperty("players")) {
-                if (!$util.isObject(message.players))
-                    return "players: object expected";
-                var key = Object.keys(message.players);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "players: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Player.verify(message.players[key[i]]);
-                        if (error)
-                            return "players." + error;
-                    }
-                }
-            }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (!$util.isInteger(message.sentAt) && !(message.sentAt && $util.isInteger(message.sentAt.low) && $util.isInteger(message.sentAt.high)))
-                    return "sentAt: integer|Long expected";
-            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
-                if (!$util.isInteger(message.countdownNanos) && !(message.countdownNanos && $util.isInteger(message.countdownNanos.low) && $util.isInteger(message.countdownNanos.high)))
-                    return "countdownNanos: integer|Long expected";
-            if (message.playerMetas != null && message.hasOwnProperty("playerMetas")) {
-                if (!$util.isObject(message.playerMetas))
-                    return "playerMetas: object expected";
-                var key = Object.keys(message.playerMetas);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "playerMetas: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.PlayerMeta.verify(message.playerMetas[key[i]]);
-                        if (error)
-                            return "playerMetas." + error;
-                    }
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a RoomDownsyncFrame message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         */
-        RoomDownsyncFrame.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.RoomDownsyncFrame)
-                return object;
-            var message = new $root.treasurehunterx.RoomDownsyncFrame();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.refFrameId != null)
-                message.refFrameId = object.refFrameId | 0;
-            if (object.players) {
-                if (typeof object.players !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
-                message.players = {};
-                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
-                    if (typeof object.players[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
-                }
-            }
-            if (object.sentAt != null)
-                if ($util.Long)
-                    (message.sentAt = $util.Long.fromValue(object.sentAt)).unsigned = false;
-                else if (typeof object.sentAt === "string")
-                    message.sentAt = parseInt(object.sentAt, 10);
-                else if (typeof object.sentAt === "number")
-                    message.sentAt = object.sentAt;
-                else if (typeof object.sentAt === "object")
-                    message.sentAt = new $util.LongBits(object.sentAt.low >>> 0, object.sentAt.high >>> 0).toNumber();
-            if (object.countdownNanos != null)
-                if ($util.Long)
-                    (message.countdownNanos = $util.Long.fromValue(object.countdownNanos)).unsigned = false;
-                else if (typeof object.countdownNanos === "string")
-                    message.countdownNanos = parseInt(object.countdownNanos, 10);
-                else if (typeof object.countdownNanos === "number")
-                    message.countdownNanos = object.countdownNanos;
-                else if (typeof object.countdownNanos === "object")
-                    message.countdownNanos = new $util.LongBits(object.countdownNanos.low >>> 0, object.countdownNanos.high >>> 0).toNumber();
-            if (object.playerMetas) {
-                if (typeof object.playerMetas !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
-                message.playerMetas = {};
-                for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
-                    if (typeof object.playerMetas[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
-                    message.playerMetas[keys[i]] = $root.treasurehunterx.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a RoomDownsyncFrame message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        RoomDownsyncFrame.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.objects || options.defaults) {
-                object.players = {};
-                object.playerMetas = {};
-            }
-            if (options.defaults) {
-                object.id = 0;
-                object.refFrameId = 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.sentAt = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.sentAt = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.countdownNanos = options.longs === String ? "0" : 0;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                object.refFrameId = message.refFrameId;
-            var keys2;
-            if (message.players && (keys2 = Object.keys(message.players)).length) {
-                object.players = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
-            }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (typeof message.sentAt === "number")
-                    object.sentAt = options.longs === String ? String(message.sentAt) : message.sentAt;
-                else
-                    object.sentAt = options.longs === String ? $util.Long.prototype.toString.call(message.sentAt) : options.longs === Number ? new $util.LongBits(message.sentAt.low >>> 0, message.sentAt.high >>> 0).toNumber() : message.sentAt;
-            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
-                if (typeof message.countdownNanos === "number")
-                    object.countdownNanos = options.longs === String ? String(message.countdownNanos) : message.countdownNanos;
-                else
-                    object.countdownNanos = options.longs === String ? $util.Long.prototype.toString.call(message.countdownNanos) : options.longs === Number ? new $util.LongBits(message.countdownNanos.low >>> 0, message.countdownNanos.high >>> 0).toNumber() : message.countdownNanos;
-            if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
-                object.playerMetas = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.playerMetas[keys2[j]] = $root.treasurehunterx.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this RoomDownsyncFrame to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        RoomDownsyncFrame.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for RoomDownsyncFrame
-         * @function getTypeUrl
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.RoomDownsyncFrame";
-        };
-
-        return RoomDownsyncFrame;
     })();
 
     treasurehunterx.InputFrameUpsync = (function() {
@@ -3562,6 +3122,446 @@ $root.treasurehunterx = (function() {
         };
 
         return HeartbeatUpsync;
+    })();
+
+    treasurehunterx.RoomDownsyncFrame = (function() {
+
+        /**
+         * Properties of a RoomDownsyncFrame.
+         * @memberof treasurehunterx
+         * @interface IRoomDownsyncFrame
+         * @property {number|null} [id] RoomDownsyncFrame id
+         * @property {number|null} [refFrameId] RoomDownsyncFrame refFrameId
+         * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
+         * @property {number|Long|null} [sentAt] RoomDownsyncFrame sentAt
+         * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
+         * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
+         */
+
+        /**
+         * Constructs a new RoomDownsyncFrame.
+         * @memberof treasurehunterx
+         * @classdesc Represents a RoomDownsyncFrame.
+         * @implements IRoomDownsyncFrame
+         * @constructor
+         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
+         */
+        function RoomDownsyncFrame(properties) {
+            this.players = {};
+            this.playerMetas = {};
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RoomDownsyncFrame id.
+         * @member {number} id
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.id = 0;
+
+        /**
+         * RoomDownsyncFrame refFrameId.
+         * @member {number} refFrameId
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.refFrameId = 0;
+
+        /**
+         * RoomDownsyncFrame players.
+         * @member {Object.<string,treasurehunterx.Player>} players
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.players = $util.emptyObject;
+
+        /**
+         * RoomDownsyncFrame sentAt.
+         * @member {number|Long} sentAt
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.sentAt = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoomDownsyncFrame countdownNanos.
+         * @member {number|Long} countdownNanos
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.countdownNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoomDownsyncFrame playerMetas.
+         * @member {Object.<string,treasurehunterx.PlayerMeta>} playerMetas
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.playerMetas = $util.emptyObject;
+
+        /**
+         * Creates a new RoomDownsyncFrame instance using the specified properties.
+         * @function create
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame instance
+         */
+        RoomDownsyncFrame.create = function create(properties) {
+            return new RoomDownsyncFrame(properties);
+        };
+
+        /**
+         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * @function encode
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoomDownsyncFrame.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
+            if (message.refFrameId != null && Object.hasOwnProperty.call(message, "refFrameId"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.refFrameId);
+            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
+                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                }
+            if (message.sentAt != null && Object.hasOwnProperty.call(message, "sentAt"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.sentAt);
+            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.countdownNanos);
+            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
+                for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                }
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoomDownsyncFrame.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a RoomDownsyncFrame message from the specified reader or buffer.
+         * @function decode
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoomDownsyncFrame.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.RoomDownsyncFrame(), key, value;
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.refFrameId = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        if (message.players === $util.emptyObject)
+                            message.players = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.treasurehunterx.Player.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.players[key] = value;
+                        break;
+                    }
+                case 4: {
+                        message.sentAt = reader.int64();
+                        break;
+                    }
+                case 5: {
+                        message.countdownNanos = reader.int64();
+                        break;
+                    }
+                case 6: {
+                        if (message.playerMetas === $util.emptyObject)
+                            message.playerMetas = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.treasurehunterx.PlayerMeta.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.playerMetas[key] = value;
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RoomDownsyncFrame message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoomDownsyncFrame.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RoomDownsyncFrame message.
+         * @function verify
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RoomDownsyncFrame.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isInteger(message.id))
+                    return "id: integer expected";
+            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
+                if (!$util.isInteger(message.refFrameId))
+                    return "refFrameId: integer expected";
+            if (message.players != null && message.hasOwnProperty("players")) {
+                if (!$util.isObject(message.players))
+                    return "players: object expected";
+                var key = Object.keys(message.players);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "players: integer key{k:int32} expected";
+                    {
+                        var error = $root.treasurehunterx.Player.verify(message.players[key[i]]);
+                        if (error)
+                            return "players." + error;
+                    }
+                }
+            }
+            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
+                if (!$util.isInteger(message.sentAt) && !(message.sentAt && $util.isInteger(message.sentAt.low) && $util.isInteger(message.sentAt.high)))
+                    return "sentAt: integer|Long expected";
+            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
+                if (!$util.isInteger(message.countdownNanos) && !(message.countdownNanos && $util.isInteger(message.countdownNanos.low) && $util.isInteger(message.countdownNanos.high)))
+                    return "countdownNanos: integer|Long expected";
+            if (message.playerMetas != null && message.hasOwnProperty("playerMetas")) {
+                if (!$util.isObject(message.playerMetas))
+                    return "playerMetas: object expected";
+                var key = Object.keys(message.playerMetas);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "playerMetas: integer key{k:int32} expected";
+                    {
+                        var error = $root.treasurehunterx.PlayerMeta.verify(message.playerMetas[key[i]]);
+                        if (error)
+                            return "playerMetas." + error;
+                    }
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a RoomDownsyncFrame message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         */
+        RoomDownsyncFrame.fromObject = function fromObject(object) {
+            if (object instanceof $root.treasurehunterx.RoomDownsyncFrame)
+                return object;
+            var message = new $root.treasurehunterx.RoomDownsyncFrame();
+            if (object.id != null)
+                message.id = object.id | 0;
+            if (object.refFrameId != null)
+                message.refFrameId = object.refFrameId | 0;
+            if (object.players) {
+                if (typeof object.players !== "object")
+                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
+                message.players = {};
+                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
+                    if (typeof object.players[keys[i]] !== "object")
+                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
+                    message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
+                }
+            }
+            if (object.sentAt != null)
+                if ($util.Long)
+                    (message.sentAt = $util.Long.fromValue(object.sentAt)).unsigned = false;
+                else if (typeof object.sentAt === "string")
+                    message.sentAt = parseInt(object.sentAt, 10);
+                else if (typeof object.sentAt === "number")
+                    message.sentAt = object.sentAt;
+                else if (typeof object.sentAt === "object")
+                    message.sentAt = new $util.LongBits(object.sentAt.low >>> 0, object.sentAt.high >>> 0).toNumber();
+            if (object.countdownNanos != null)
+                if ($util.Long)
+                    (message.countdownNanos = $util.Long.fromValue(object.countdownNanos)).unsigned = false;
+                else if (typeof object.countdownNanos === "string")
+                    message.countdownNanos = parseInt(object.countdownNanos, 10);
+                else if (typeof object.countdownNanos === "number")
+                    message.countdownNanos = object.countdownNanos;
+                else if (typeof object.countdownNanos === "object")
+                    message.countdownNanos = new $util.LongBits(object.countdownNanos.low >>> 0, object.countdownNanos.high >>> 0).toNumber();
+            if (object.playerMetas) {
+                if (typeof object.playerMetas !== "object")
+                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
+                message.playerMetas = {};
+                for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
+                    if (typeof object.playerMetas[keys[i]] !== "object")
+                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
+                    message.playerMetas[keys[i]] = $root.treasurehunterx.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RoomDownsyncFrame message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RoomDownsyncFrame.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.objects || options.defaults) {
+                object.players = {};
+                object.playerMetas = {};
+            }
+            if (options.defaults) {
+                object.id = 0;
+                object.refFrameId = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.sentAt = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.sentAt = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.countdownNanos = options.longs === String ? "0" : 0;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
+                object.refFrameId = message.refFrameId;
+            var keys2;
+            if (message.players && (keys2 = Object.keys(message.players)).length) {
+                object.players = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
+            }
+            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
+                if (typeof message.sentAt === "number")
+                    object.sentAt = options.longs === String ? String(message.sentAt) : message.sentAt;
+                else
+                    object.sentAt = options.longs === String ? $util.Long.prototype.toString.call(message.sentAt) : options.longs === Number ? new $util.LongBits(message.sentAt.low >>> 0, message.sentAt.high >>> 0).toNumber() : message.sentAt;
+            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
+                if (typeof message.countdownNanos === "number")
+                    object.countdownNanos = options.longs === String ? String(message.countdownNanos) : message.countdownNanos;
+                else
+                    object.countdownNanos = options.longs === String ? $util.Long.prototype.toString.call(message.countdownNanos) : options.longs === Number ? new $util.LongBits(message.countdownNanos.low >>> 0, message.countdownNanos.high >>> 0).toNumber() : message.countdownNanos;
+            if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
+                object.playerMetas = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.playerMetas[keys2[j]] = $root.treasurehunterx.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this RoomDownsyncFrame to JSON.
+         * @function toJSON
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RoomDownsyncFrame.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoomDownsyncFrame
+         * @function getTypeUrl
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/treasurehunterx.RoomDownsyncFrame";
+        };
+
+        return RoomDownsyncFrame;
     })();
 
     treasurehunterx.WsReq = (function() {

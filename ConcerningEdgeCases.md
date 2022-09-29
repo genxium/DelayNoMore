@@ -1,3 +1,4 @@
+# Potential avalanche from local lag
 Under the current "input delay" algorithm, the lag of a single player would cause all the other players to receive outdated commands, e.g. when at a certain moment   
 - player#1: renderFrameId = 100, significantly lagged due to local CPU overheated
 - player#2: renderFrameId = 240
@@ -9,3 +10,34 @@ players #2, #3 #4 would receive "outdated(in their subjective feelings) but all-
 In a "no-server & p2p" setup, I couldn't think of a proper way to cope with such edge case. Solely on the frontend we could only mitigate the impact to players #2, #3, #4, e.g. a potential lag due to "large range of frame-chasing" is proactively avoided in `<proj-root>/frontend/assets/scripts/Map.js, function update(dt)`.
 
 However in a "server as authority" setup, the server could force confirming an inputFrame without player#1's upsync, and notify player#1 to apply a "roomDownsyncFrame" as well as drop all its outdated local inputFrames. 
+
+# Start up frames
+renderFrameId      |   generatedInputFrameId    |  toApplyInputFrameId            
+-------------------|----------------------------|----------------------
+0, 1, 2, 3         |   0, _EMP_, _EMP_, _EMP_   |  0
+4, 5, 6, 7         |   1, _EMP_, _EMP_, _EMP_   |  0
+8, 9, 10, 11       |   2, _EMP_, _EMP_, _EMP_   |  1 
+12, 13, 14, 15     |   3, _EMP_, _EMP_, _EMP_   |  2
+
+It should be reasonable to assume that inputFrameId=0 is always of all-empty content, because human has no chance of clicking at the very first render frame.  
+
+# Alignment of the current setup 
+The following setup is chosen deliberately for some "%4" number coincidence.
+- NstDelayFrames = 2 
+- InputDelayFrames = 4
+- InputScaleFrames = 2  
+
+If "InputDelayFrames" is changed, the impact would be as follows, kindly note that "372%4 == 0".
+
+### pR.InputDelayFrames = 4
+toApplyInputFrameId       |      renderFrameId
+--------------------------|----------------------------------------- 
+       92                 |   _EMP_, _EMP_, _EMP_, _EMP_, 372, 373, 374, 375 
+       91                 |   368, 369, 370, 371 
+
+### pR.InputDelayFrames = 5
+toApplyInputFrameId       |      renderFrameId
+--------------------------|----------------------------------------- 
+       92                 |   _EMP_, _EMP_, _EMP_, _EMP_, 373, 374, 375 
+       91                 |   _EMP_, 369, 370, 371, 372 
+       90                 |   368 

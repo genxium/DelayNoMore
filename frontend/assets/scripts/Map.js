@@ -182,11 +182,11 @@ cc.Class({
     return ((renderFrameId - inputDelayFrames) >> this.inputScaleFrames);
   },
 
-  _convertToRenderFrameId(inputFrameId, inputDelayFrames) {
+  _convertToFirstUsedRenderFrameId(inputFrameId, inputDelayFrames) {
     return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames);
   },
 
-  _shouldGenerateInputFrameUpsync(renderFrameId) {
+  shouldGenerateInputFrameUpsync(renderFrameId) {
     return ((renderFrameId & ((1 << this.inputScaleFrames)-1)) == 0);
   },
 
@@ -608,7 +608,7 @@ cc.Class({
 
         if (null != firstPredictedYetIncorrectInputFrameId) {
           const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
-          const renderFrameId1 = self._convertToRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
+          const renderFrameId1 = self._convertToFirstUsedRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
           if (renderFrameId1 < self.renderFrameId) {
             /*
             A typical case is as follows.
@@ -787,7 +787,7 @@ cc.Class({
       try {
           let prevSelfInput = null, currSelfInput = null;
           const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-          if (self._shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+          if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
             const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId); 
             prevSelfInput = prevAndCurrInputs[0];
             currSelfInput = prevAndCurrInputs[1]; 
@@ -937,7 +937,7 @@ cc.Class({
   _createRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
     const self = this;
     const prevRenderFrameId = renderFrameId-1; 
-    const inputFrameForPrevRenderFrame = (
+    const inputFrameAppliedOnPrevRenderFrame = (
       0 > prevRenderFrameId 
       ?   
       null
@@ -948,11 +948,11 @@ cc.Class({
     // TODO: Find a better way to assign speeds instead of using "speedRefRenderFrameId".
     const speedRefRenderFrameId = prevRenderFrameId;
     const speedRefRenderFrame = (
-      0 > prevRenderFrameId 
+      0 > speedRefRenderFrameId
       ?   
       null
       :
-      self.recentRenderCache.getByFrameId(prevRenderFrameId)
+      self.recentRenderCache.getByFrameId(speedRefRenderFrameId)
     );
 
     const rdf = {
@@ -968,13 +968,13 @@ cc.Class({
         id: playerRichInfo.id,
         x: playerCollider.x,
         y: playerCollider.y,
-        dir: self.ctrl.decodeDirection(null == inputFrameForPrevRenderFrame ? 0 : inputFrameForPrevRenderFrame.inputList[joinIndex-1]),
+        dir: self.ctrl.decodeDirection(null == inputFrameAppliedOnPrevRenderFrame ? 0 : inputFrameAppliedOnPrevRenderFrame.inputList[joinIndex-1]),
         speed: (null == speedRefRenderFrame ? playerRichInfo.speed : speedRefRenderFrame.players[playerRichInfo.id].speed),
         joinIndex: joinIndex 
       };
     });
     if (
-      null != inputFrameForPrevRenderFrame && self._allConfirmed(inputFrameForPrevRenderFrame.confirmedList) 
+      null != inputFrameAppliedOnPrevRenderFrame && self._allConfirmed(inputFrameAppliedOnPrevRenderFrame.confirmedList) 
       && 
       self.lastAllConfirmedRenderFrameId >= prevRenderFrameId
       &&
@@ -1033,6 +1033,8 @@ cc.Class({
       playerCollider.y = player.y;
     });
 
+    // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
+
     /*
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
     */
@@ -1040,8 +1042,8 @@ cc.Class({
       const renderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
       const inputList = self.getCachedInputFrameDownsyncWithPrediction(j).inputList; 
-      self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-        const joinIndex = playerRichInfo.joinIndex; 
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1; 
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = renderFrame.players[playerId];
@@ -1055,12 +1057,11 @@ cc.Class({
           console.log("playerId=", playerId, "@renderFrameId=", i, ", delayedInputFrameId=", j, ", baseChange=", baseChange, ": x=", playerCollider.x, ", y=", playerCollider.y);
         }
         */
-      });
+      }
 
       collisionSys.update();
       const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
         
-      // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
       for (let i in self.playerRichInfoArr) {
         const joinIndex = parseInt(i) + 1; 
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;

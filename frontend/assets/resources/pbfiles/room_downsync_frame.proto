@@ -45,7 +45,7 @@ message Player {
   double x = 2; 
   double y = 3; 
   Direction dir = 4;
-  int32 speed = 5;
+  double speed = 5;
   int32 battleState = 6;
   int32 lastMoveGmtMillis = 7;
   int32 score = 10;
@@ -61,15 +61,6 @@ message PlayerMeta {
   int32 joinIndex = 5;
 }
 
-message RoomDownsyncFrame {
-  int32 id = 1;
-  int32 refFrameId = 2;
-  map<int32, Player> players = 3;
-  int64 sentAt = 4;
-  int64 countdownNanos = 5;
-  map<int32, PlayerMeta> playerMetas = 6;
-}
-
 message InputFrameUpsync {
   int32 inputFrameId = 1;
   int32 encodedDir = 6;
@@ -83,6 +74,15 @@ message InputFrameDownsync {
 
 message HeartbeatUpsync {
   int64 clientTimestamp = 1;     
+}
+
+message RoomDownsyncFrame {
+  int32 id = 1;
+  int32 refFrameId = 2;
+  map<int32, Player> players = 3;
+  int64 sentAt = 4;
+  int64 countdownNanos = 5;
+  map<int32, PlayerMeta> playerMetas = 6;
 }
 
 message WsReq {

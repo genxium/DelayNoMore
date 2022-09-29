@@ -26,6 +26,7 @@ require (
 	github.com/mattn/go-isatty v0.0.3 // indirect
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
+	github.com/solarlune/resolv v0.5.1
 	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713
 	github.com/ugorji/go v1.1.1 // indirect
 	go.uber.org/atomic v1.3.2 // indirect
