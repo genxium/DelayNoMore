@@ -30,14 +30,14 @@ The following setup is chosen deliberately for some "%4" number coincidence.
 If "InputDelayFrames" is changed, the impact would be as follows, kindly note that "372%4 == 0".
 
 ### pR.InputDelayFrames = 4
-toApplyInputFrameId       |      renderFrameId
---------------------------|----------------------------------------- 
-       92                 |   _EMP_, _EMP_, _EMP_, _EMP_, 372, 373, 374, 375 
-       91                 |   368, 369, 370, 371 
+renderFrameId             |   toApplyInputFrameId      
+--------------------------|---------------------------------------------------- 
+368, 369, 370, 371        |   91
+372, 373, 374, 375        |   92       
 
 ### pR.InputDelayFrames = 5
-toApplyInputFrameId       |      renderFrameId
---------------------------|----------------------------------------- 
-       92                 |   _EMP_, _EMP_, _EMP_, _EMP_, 373, 374, 375 
-       91                 |   _EMP_, 369, 370, 371, 372 
-       90                 |   368 
+renderFrameId             |   toApplyInputFrameId      
+--------------------------|---------------------------------------------------- 
+..., ..., ..., 368        |   90
+369, 370, 371, 372        |   91
+373, 374, 375, ...        |   92      
