@@ -1,5 +1,5 @@
 package models
 
 type Barrier struct {
-	Boundary       *Polygon2D
+	Boundary *Polygon2D
 }

@@ -124,6 +124,10 @@ cc.Class({
       type: cc.Float,
       default: 1.0/60 
     },
+    perFrameDtMaxTolerance: {
+      type: cc.Float,
+      default: 1.0/600 
+    },
     maxChasingRenderFramesPerUpdate: {
       type: cc.Integer,
       default: 10
@@ -787,7 +791,12 @@ cc.Class({
   update(dt) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
+      if (dt < self.rollbackEstimatedDt-self.perFrameDtMaxTolerance) {
+        console.warn("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": dt=", dt);
+        return;
+      }
       try {
+          let st = performance.now(); 
           let prevSelfInput = null, currSelfInput = null;
           const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
           if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
@@ -813,14 +822,8 @@ cc.Class({
 
           // Inside "self.rollbackAndChase", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
           const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId+1, self.latestCollisionSys, self.latestCollisionSysMap);
-
           self.applyRoomDownsyncFrameDynamics(rdf);
           let t3 = performance.now(); 
-          /*
-          if (prevChaserRenderFrameId < nextChaserRenderFrameId) {
-            console.log("Took ", t1-t0, " milliseconds to send upsync cmds, ", t2-t1, " milliseconds to chase renderFrameIds=[", prevChaserRenderFrameId, ", ", nextChaserRenderFrameId, "], @renderFrameId=", self.renderFrameId); 
-          }
-          */
       } catch (err) {
         console.error("Error during Map.update", err);
       } finally {

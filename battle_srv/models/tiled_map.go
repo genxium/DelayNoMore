@@ -355,8 +355,8 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 			if false == ok {
 				theVec2DListToCache := make(Vec2DList, 0)
 				toRetStrToVec2DListMap[objGroup.Name] = &theVec2DListToCache
-			} 
-            pTheVec2DListToCache = toRetStrToVec2DListMap[objGroup.Name]
+			}
+			pTheVec2DListToCache = toRetStrToVec2DListMap[objGroup.Name]
 			for _, singleObjInTmxFile := range objGroup.Objects {
 				theUntransformedPos := &Vec2D{
 					X: singleObjInTmxFile.X,
@@ -373,7 +373,7 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 				thePolygon2DListToCache := make(Polygon2DList, 0)
 				toRetStrToPolygon2DListMap[objGroup.Name] = &thePolygon2DListToCache
 			}
-            pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
+			pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
 
 			for _, singleObjInTmxFile := range objGroup.Objects {
 				if nil == singleObjInTmxFile.Polyline {

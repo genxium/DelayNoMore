@@ -47,15 +47,15 @@ type Player struct {
 	DisplayName string `json:"displayName,omitempty" db:"display_name"`
 	Avatar      string `json:"avatar,omitempty"`
 
-	FrozenAtGmtMillis    int64         `json:"-" db:"-"`
-	AddSpeedAtGmtMillis  int64         `json:"-" db:"-"`
-	CreatedAt            int64         `json:"-" db:"created_at"`
-	UpdatedAt            int64         `json:"-" db:"updated_at"`
-	DeletedAt            NullInt64     `json:"-" db:"deleted_at"`
-	TutorialStage        int           `json:"-" db:"tutorial_stage"`
-	AckingFrameId        int32         `json:"ackingFrameId"`
-	AckingInputFrameId   int32         `json:"-"`
-	LastSentInputFrameId int32         `json:"-"`
+	FrozenAtGmtMillis    int64     `json:"-" db:"-"`
+	AddSpeedAtGmtMillis  int64     `json:"-" db:"-"`
+	CreatedAt            int64     `json:"-" db:"created_at"`
+	UpdatedAt            int64     `json:"-" db:"updated_at"`
+	DeletedAt            NullInt64 `json:"-" db:"deleted_at"`
+	TutorialStage        int       `json:"-" db:"tutorial_stage"`
+	AckingFrameId        int32     `json:"ackingFrameId"`
+	AckingInputFrameId   int32     `json:"-"`
+	LastSentInputFrameId int32     `json:"-"`
 }
 
 func ExistPlayerByName(name string) (bool, error) {
