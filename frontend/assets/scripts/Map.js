@@ -1047,6 +1047,7 @@ cc.Class({
       const inputList = self.getCachedInputFrameDownsyncWithPrediction(j).inputList; 
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1; 
+        const playerId = self.playerRichInfoArr[j].id; 
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = renderFrame.players[playerId];

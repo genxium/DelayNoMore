@@ -348,7 +348,7 @@ func (pR *Room) EncodeUpsyncCmd(upsyncCmd *pb.InputFrameUpsync) uint64 {
 
 func (pR *Room) AllPlayerInputsBufferString() string {
 	s := make([]string, 0)
-	s = append(s, fmt.Sprintf("{lastAllConfirmedInputFrameId: %v, lastAllConfirmedInputFrameIdWithChange: %v}", pR.LastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameIdWithChange))
+	s = append(s, fmt.Sprintf("\n{stInputFrameId: %v, edInputFrameId: %v, lastAllConfirmedInputFrameIdWithChange: %v, lastAllConfirmedInputFrameId: %v}", pR.AllPlayerInputsBuffer.StFrameId, pR.AllPlayerInputsBuffer.EdFrameId, pR.LastAllConfirmedInputFrameIdWithChange, pR.LastAllConfirmedInputFrameId))
 	for playerId, player := range pR.Players {
 		s = append(s, fmt.Sprintf("{playerId: %v, ackingFrameId: %v, ackingInputFrameId: %v, lastSentInputFrameId: %v}", playerId, player.AckingFrameId, player.AckingInputFrameId, player.LastSentInputFrameId))
 	}
@@ -456,7 +456,7 @@ func (pR *Room) StartBattle() {
                 toSendInputFrames := make([]*pb.InputFrameDownsync, 0, pR.AllPlayerInputsBuffer.Cnt)
                 candidateToSendInputFrameId := atomic.LoadInt32(&(pR.Players[playerId].LastSentInputFrameId)) + 1
                 if candidateToSendInputFrameId < pR.AllPlayerInputsBuffer.StFrameId {
-                    Logger.Warn("LastSentInputFrameId already popped:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("lastSentInputFrameId", candidateToSendInputFrameId-1), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString()))
+                    Logger.Warn(fmt.Sprintf("LastSentInputFrameId already popped: roomId=%v, playerId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, candidateToSendInputFrameId-1, player.AckingInputFrameId, pR.AllPlayerInputsBufferString()))
                     candidateToSendInputFrameId = pR.AllPlayerInputsBuffer.StFrameId
                 }
 
@@ -534,7 +534,7 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 	ackingInputFrameId := pReq.AckingInputFrameId
 
 	if _, existent := pR.Players[playerId]; !existent {
-		Logger.Warn("upcmd player doesn't exist:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId))
+        Logger.Warn(fmt.Sprintf("upcmd player doesn't exist: roomId=%v, playerId=%v", pR.Id, playerId))
 		return
 	}
 
@@ -549,7 +549,7 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 	for _, inputFrameUpsync := range inputFrameUpsyncBatch {
 		clientInputFrameId := inputFrameUpsync.InputFrameId
 		if clientInputFrameId < pR.AllPlayerInputsBuffer.StFrameId {
-			Logger.Warn("Obsolete inputFrameUpsync:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("clientInputFrameId", clientInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
+			Logger.Warn(fmt.Sprintf("Obsolete inputFrameUpsync: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString()))
 			return
 		}
 
@@ -557,36 +557,36 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 		encodedInput := pR.EncodeUpsyncCmd(inputFrameUpsync)
 
 		if clientInputFrameId >= pR.AllPlayerInputsBuffer.EdFrameId {
-			Logger.Warn("inputFrame too advanced! is the player cheating?", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("inputFrameId", clientInputFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
+			Logger.Warn(fmt.Sprintf("inputFrame too advanced! is the player cheating?: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString()))
 			return
 		}
 		tmp2 := pR.AllPlayerInputsBuffer.GetByFrameId(clientInputFrameId)
 		if nil == tmp2 {
 			// This shouldn't happen due to the previous 2 checks
-			Logger.Warn("Mysterious error getting an input frame:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("clientInputFrameId", clientInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
+			Logger.Warn(fmt.Sprintf("Mysterious error getting an input frame: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString()))
 			return
 		}
 		inputFrameDownsync := tmp2.(*pb.InputFrameDownsync)
 		oldConfirmedList := atomic.LoadUint64(&(inputFrameDownsync.ConfirmedList))
 		if (oldConfirmedList & joinMask) > 0 {
-			Logger.Warn("Cmd already confirmed but getting set attempt, omitting this upsync cmd:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("clientInputFrameId", clientInputFrameId), zap.Any("StFrameId", pR.AllPlayerInputsBuffer.StFrameId), zap.Any("EdFrameId", pR.AllPlayerInputsBuffer.EdFrameId))
+            Logger.Warn(fmt.Sprintf("Cmd already confirmed but getting set attempt, omitting this upsync cmd: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString()))
 			return
 		}
 
 		// In Golang 1.12, there's no "compare-and-swap primitive" on a custom struct (or it's pointer, unless it's an unsafe pointer https://pkg.go.dev/sync/atomic@go1.12#CompareAndSwapPointer). Although CAS on custom struct is possible in Golang 1.19 https://pkg.go.dev/sync/atomic@go1.19.1#Value.CompareAndSwap, using a single word is still faster whenever possible.
 		if swapped := atomic.CompareAndSwapUint64(&inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr], uint64(0), encodedInput); !swapped {
-			Logger.Warn("Failed input CAS:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("clientInputFrameId", clientInputFrameId))
+			Logger.Warn(fmt.Sprintf("Failed input CAS: roomId=%v, playerId=%v, clientInputFrameId=%v", pR.Id, playerId, clientInputFrameId))
 			return
 		}
 
 		newConfirmedList := (oldConfirmedList | joinMask)
 		if swapped := atomic.CompareAndSwapUint64(&(inputFrameDownsync.ConfirmedList), oldConfirmedList, newConfirmedList); !swapped {
 			// [WARNING] Upon this error, the actual input has already been updated, which is an expected result if it caused by the force confirmation from "battleMainLoop".
-			Logger.Warn("Failed confirm CAS:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("clientInputFrameId", clientInputFrameId))
+			Logger.Warn(fmt.Sprintf("Failed confirm CAS: roomId=%v, playerId=%v, clientInputFrameId=%v", pR.Id, playerId, clientInputFrameId))
 			return
 		}
 
-		totPlayerCnt := uint32(len(pR.Players))
+		totPlayerCnt := uint32(pR.Capacity)
 		allConfirmedMask := uint64((1 << totPlayerCnt) - 1) 
 		if allConfirmedMask == newConfirmedList {
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, playerId)
@@ -598,7 +598,7 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
     clientInputFrameId := inputFrameDownsync.InputFrameId
 	if false == pR.equalInputLists(inputFrameDownsync.InputList, pR.LastAllConfirmedInputList) {
 		atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), clientInputFrameId) // [WARNING] Different from the CAS in "battleMainLoop", it's safe to just update "pR.LastAllConfirmedInputFrameIdWithChange" here, because only monotonic increment is possible here!
-		Logger.Info("Key inputFrame change", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", clientInputFrameId), zap.Any("lastInputFrameId", pR.LastAllConfirmedInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString()), zap.Any("newInputList", inputFrameDownsync.InputList), zap.Any("lastInputList", pR.LastAllConfirmedInputList))
+		Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, clientInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.AllPlayerInputsBufferString()))
 	}
 	atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameId), clientInputFrameId) // [WARNING] It's IMPORTANT that "pR.LastAllConfirmedInputFrameId" is NOT NECESSARILY CONSECUTIVE, i.e. if one of the players disconnects and reconnects within a considerable amount of frame delays!
 	for i, v := range inputFrameDownsync.InputList {
@@ -606,7 +606,7 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
 		pR.LastAllConfirmedInputList[i] = v
 	}
 	if pR.inputFrameIdDebuggable(clientInputFrameId) {
-		Logger.Info("inputFrame lifecycle#2[allconfirmed]", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("inputFrameId", clientInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString()))
+		Logger.Info(fmt.Sprintf("inputFrame lifecycle#2[allconfirmed]: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.LastAllConfirmedInputFrameId, pR.AllPlayerInputsBufferString()))
 	}
 }
 
@@ -1074,7 +1074,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
             if nil == tmp {
                 panic(fmt.Sprintf("delayedInputFrameId=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! AllPlayerInputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.AllPlayerInputsBufferString()))
             }
-            delayedInputFrame := tmp.(pb.InputFrameDownsync)
+            delayedInputFrame := tmp.(*pb.InputFrameDownsync)
             if swapped := atomic.CompareAndSwapUint64(&(delayedInputFrame.ConfirmedList), allConfirmedMask, allConfirmedMask); !swapped {
                 panic(fmt.Sprintf("delayedInputFrameId=%v is not yet all-confirmed for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! AllPlayerInputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.AllPlayerInputsBufferString()))
             }
