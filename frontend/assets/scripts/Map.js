@@ -18,11 +18,8 @@ window.ALL_BATTLE_STATES = {
 };
 
 window.MAGIC_ROOM_DOWNSYNC_FRAME_ID = {
-  PLAYER_ADDED_AND_ACKED: -98,
-  PLAYER_READDED_AND_ACKED: -97,
-
   BATTLE_READY_TO_START: -1,
-  BATTLE_START: 0,
+  BATTLE_START: 0
 };
 
 cc.Class({
@@ -124,9 +121,13 @@ cc.Class({
       type: cc.Float,
       default: 1.0/60 
     },
-    perFrameDtMaxTolerance: {
+    rollbackEstimatedDtMillis: {
       type: cc.Float,
-      default: 1.0/600 
+      default: 1000.0/60 
+    },
+    rollbackEstimatedDtToleranceMillis: {
+      type: cc.Float,
+      default: 1.0/60 
     },
     maxChasingRenderFramesPerUpdate: {
       type: cc.Integer,
@@ -353,7 +354,7 @@ cc.Class({
     self.lastAllConfirmedInputFrameId = -1;
     self.chaserRenderFrameId = -1; // at any moment, "lastAllConfirmedRenderFrameId <= chaserRenderFrameId <= renderFrameId", but "chaserRenderFrameId" would fluctuate according to "handleInputFrameDownsyncBatch"
 
-    self.inputDelayFrames = 8;
+    self.inputDelayFrames = 4;
     self.inputScaleFrames = 2;
     self.lastUpsyncInputFrameId = -1;
     self.inputFrameUpsyncDelayTolerance = 2;
@@ -547,34 +548,24 @@ cc.Class({
       self._inputControlEnabled = false;
     
       let findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-      window.handleRoomDownsyncFrame = function(rdf) {
-        if (ALL_BATTLE_STATES.WAITING != self.battleState
-          && ALL_BATTLE_STATES.IN_BATTLE != self.battleState
-          && ALL_BATTLE_STATES.IN_SETTLEMENT != self.battleState) {
-          return;
+      window.handlePlayerAdded = function(rdf) {
+        // Update the "finding player" GUI and show it if not previously present
+        if (!self.findingPlayerNode.parent) {
+          self.showPopupInCanvas(self.findingPlayerNode);
         }
+        findingPlayerScriptIns.updatePlayersInfo(rdf.playerMetas);
+      };
 
+      window.handleRoomDownsyncFrame = function(rdf) {
         const frameId = rdf.id;
         // Right upon establishment of the "PersistentSessionClient", we should receive an initial signal "BattleColliderInfo" earlier than any "RoomDownsyncFrame" containing "PlayerMeta" data. 
-        const refFrameId = rdf.refFrameId;
-        switch (refFrameId) {
-        case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_ADDED_AND_ACKED:
-          // Update the "finding player" GUI and show it if not previously present
-          if (!self.findingPlayerNode.parent) {
-            self.showPopupInCanvas(self.findingPlayerNode);
-          }
-          findingPlayerScriptIns.updatePlayersInfo(rdf.playerMetas);
-          return;
+        switch (frameId) {
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_READY_TO_START:
           self.onBattleReadyToStart(rdf.playerMetas, false);
           return;
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START:
           self.onBattleStartedOrResynced(rdf); 
           return; 
-        case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_READDED_AND_ACKED:
-          self.onBattleReadyToStart(rdf.playerMetas, true);
-          self.onBattleStartedOrResynced(rdf);
-          return;
         }
 
         // TODO: Inject a NetworkDoctor as introduced in https://app.yinxiang.com/shard/s61/nl/13267014/5c575124-01db-419b-9c02-ec81f78c6ddc/.
@@ -728,6 +719,7 @@ cc.Class({
     self.applyRoomDownsyncFrameDynamics(rdf);
     self._dumpToRenderCache(rdf);
     self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"
+    self.lastRenderFrameIdTriggeredAt = performance.now();
     if (null != window.boundRoomId) {
       self.boundRoomIdLabel.string = window.boundRoomId;
     }
@@ -791,8 +783,9 @@ cc.Class({
   update(dt) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
-      if (dt < self.rollbackEstimatedDt-self.perFrameDtMaxTolerance) {
-        console.warn("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": dt=", dt);
+      const elapsedMillisSinceLastFrameIdTriggered = performance.now() - self.lastRenderFrameIdTriggeredAt;
+      if (elapsedMillisSinceLastFrameIdTriggered < (self.rollbackEstimatedDtMillis)) {      
+        // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
         return;
       }
       try {
@@ -842,6 +835,7 @@ cc.Class({
           self.countdownLabel.string = countdownSeconds;
         }
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
+        self.lastRenderFrameIdTriggeredAt = performance.now();
       }
     }
   },

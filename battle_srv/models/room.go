@@ -30,14 +30,15 @@ const (
 	DOWNSYNC_MSG_ACT_INPUT_BATCH   = int32(2)
 	DOWNSYNC_MSG_ACT_ROOM_FRAME    = int32(3)
 	DOWNSYNC_MSG_ACT_FORCED_RESYNC = int32(4)
+
+	DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = int32(-1)
+	DOWNSYNC_MSG_ACT_BATTLE_START          = int32(0)
+
+	DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED   = int32(-98)
+	DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED = int32(-97)
 )
 
 const (
-	MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START    = -1
-	MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_START             = 0
-	MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_ADDED_AND_ACKED   = -98
-	MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_READDED_AND_ACKED = -97
-
 	MAGIC_JOIN_INDEX_DEFAULT = 0
 	MAGIC_JOIN_INDEX_INVALID = -1
 )
@@ -380,9 +381,7 @@ func (pR *Room) StartBattle() {
 	pR.CurDynamicsRenderFrameId = 0
 	kickoffFrame := &pb.RoomDownsyncFrame{
 		Id:             pR.RenderFrameId,
-		RefFrameId:     MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_START, // Legacy frontend codes need this special "refFrameId" to remove the "3-2-1-countdown" logo
 		Players:        toPbPlayers(pR.Players),
-		SentAt:         utils.UnixtimeMilli(),
 		CountdownNanos: pR.BattleDurationNanos,
 	}
 	pR.RenderFrameBuffer.Put(kickoffFrame)
@@ -433,6 +432,10 @@ func (pR *Room) StartBattle() {
 				dynamicsStartedAt := utils.UnixtimeNano()
 				// Apply "all-confirmed inputFrames" to move forward "pR.CurDynamicsRenderFrameId"
 				nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
+                if nextDynamicsRenderFrameId > pR.RenderFrameId {
+                    // [WARNING] DON'T apply dynamics too fast, otherwise upon DOWNSYNC_MSG_ACT_FORCED_RESYNC the frontend would resync itself to a "too advanced frontend.renderFrameId", and then start upsyncing "too advanced inputFrameId". 
+                    nextDynamicsRenderFrameId = pR.RenderFrameId
+                }
 				Logger.Debug(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, LastAllConfirmedInputFrameId=%v, InputDelayFrames=%v, nextDynamicsRenderFrameId=%v", pR.Id, pR.RenderFrameId, pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames, nextDynamicsRenderFrameId))
 				pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId)
 				dynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
@@ -446,7 +449,7 @@ func (pR *Room) StartBattle() {
 				}
 				if 0 == pR.RenderFrameId {
 					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*pb.RoomDownsyncFrame)
-					pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, playerId)
+					pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_START, playerId)
 				} else {
 					// [WARNING] Websocket is TCP-based, thus no need to re-send a previously sent inputFrame to a same player!
 					toSendInputFrames := make([]*pb.InputFrameDownsync, 0, pR.AllPlayerInputsBuffer.Cnt)
@@ -484,10 +487,10 @@ func (pR *Room) StartBattle() {
 							continue
 						}
 						pR.sendSafely(nil, toSendInputFrames, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId)
-						if -1 != debugSendingInputFrameId {
-							Logger.Info("inputFrame lifecycle#4[sent]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", debugSendingInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)))
-						}
 					}
+                    if -1 != debugSendingInputFrameId {
+                        Logger.Info("inputFrame lifecycle#4[sent]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", debugSendingInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)))
+                    }
 					atomic.StoreInt32(&(pR.Players[playerId].LastSentInputFrameId), candidateToSendInputFrameId-1)
 				}
 			}
@@ -557,7 +560,7 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 		encodedInput := pR.EncodeUpsyncCmd(inputFrameUpsync)
 
 		if clientInputFrameId >= pR.AllPlayerInputsBuffer.EdFrameId {
-			Logger.Warn(fmt.Sprintf("inputFrame too advanced! is the player cheating?: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString(false)))
+			Logger.Warn(fmt.Sprintf("inputFrame too advanced! is the player cheating? roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString(false)))
 			return
 		}
 		tmp2 := pR.AllPlayerInputsBuffer.GetByFrameId(clientInputFrameId)
@@ -597,8 +600,8 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFrameDownsync, playerId int32) {
 	inputFrameId := inputFrameDownsync.InputFrameId
 	if -1 == pR.LastAllConfirmedInputFrameIdWithChange || false == pR.equalInputLists(inputFrameDownsync.InputList, pR.LastAllConfirmedInputList) {
-		atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), inputFrameId) // [WARNING] Different from the CAS in "battleMainLoop", it's safe to just update "pR.LastAllConfirmedInputFrameIdWithChange" here, because only monotonic increment is possible here!
-		Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, inputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.AllPlayerInputsBufferString(false)))
+		Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.AllPlayerInputsBufferString(false)))
+		atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), inputFrameId)
 	}
 	atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameId), inputFrameId) // [WARNING] It's IMPORTANT that "pR.LastAllConfirmedInputFrameId" is NOT NECESSARILY CONSECUTIVE, i.e. if one of the players disconnects and reconnects within a considerable amount of frame delays!
 	for i, v := range inputFrameDownsync.InputList {
@@ -636,9 +639,7 @@ func (pR *Room) StopBattleForSettlement() {
 	for playerId, _ := range pR.Players {
 		assembledFrame := pb.RoomDownsyncFrame{
 			Id:             pR.RenderFrameId,
-			RefFrameId:     pR.RenderFrameId, // Hardcoded for now.
 			Players:        toPbPlayers(pR.Players),
-			SentAt:         utils.UnixtimeMilli(),
 			CountdownNanos: -1, // TODO: Replace this magic constant!
 		}
 		pR.sendSafely(&assembledFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, playerId)
@@ -673,18 +674,16 @@ func (pR *Room) onBattlePrepare(cb BattleStartCbType) {
 		}
 	}
 
-	battleReadyToStartFrame := pb.RoomDownsyncFrame{
-		Id:             pR.RenderFrameId,
+	battleReadyToStartFrame := &pb.RoomDownsyncFrame{
+		Id:             DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START,
 		Players:        toPbPlayers(pR.Players),
-		SentAt:         utils.UnixtimeMilli(),
-		RefFrameId:     MAGIC_ROOM_DOWNSYNC_FRAME_ID_BATTLE_READY_TO_START,
 		PlayerMetas:    playerMetas,
 		CountdownNanos: pR.BattleDurationNanos,
 	}
 
 	Logger.Info("Sending out frame for RoomBattleState.PREPARE ", zap.Any("battleReadyToStartFrame", battleReadyToStartFrame))
 	for _, player := range pR.Players {
-		pR.sendSafely(&battleReadyToStartFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, player.Id)
+		pR.sendSafely(battleReadyToStartFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START, player.Id)
 	}
 
 	battlePreparationNanos := int64(6000000000)
@@ -902,58 +901,53 @@ func (pR *Room) onPlayerReAdded(playerId int32) {
 }
 
 func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
-	pPlayer, ok := pR.Players[playerId]
+	targetPlayer, ok := pR.Players[playerId]
 	if false == ok {
 		return false
 	}
 
 	playerMetas := make(map[int32]*pb.PlayerMeta, 0)
-	for _, player := range pR.Players {
-		playerMetas[player.Id] = &pb.PlayerMeta{
-			Id:          player.Id,
-			Name:        player.Name,
-			DisplayName: player.DisplayName,
-			Avatar:      player.Avatar,
-			JoinIndex:   player.JoinIndex,
+	for _, eachPlayer := range pR.Players {
+		playerMetas[eachPlayer.Id] = &pb.PlayerMeta{
+			Id:          eachPlayer.Id,
+			Name:        eachPlayer.Name,
+			DisplayName: eachPlayer.DisplayName,
+			Avatar:      eachPlayer.Avatar,
+			JoinIndex:   eachPlayer.JoinIndex,
 		}
 	}
 
-	var playerAckedFrame pb.RoomDownsyncFrame
-
-	switch pPlayer.BattleState {
-	case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
-		playerAckedFrame = pb.RoomDownsyncFrame{
-			Id:          pR.RenderFrameId,
-			Players:     toPbPlayers(pR.Players),
-			SentAt:      utils.UnixtimeMilli(),
-			RefFrameId:  MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_ADDED_AND_ACKED,
-			PlayerMetas: playerMetas,
-		}
-	case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
-		playerAckedFrame = pb.RoomDownsyncFrame{
-			Id:          pR.RenderFrameId,
-			Players:     toPbPlayers(pR.Players),
-			SentAt:      utils.UnixtimeMilli(),
-			RefFrameId:  MAGIC_ROOM_DOWNSYNC_FRAME_ID_PLAYER_READDED_AND_ACKED,
-			PlayerMetas: playerMetas,
-		}
-	default:
-	}
-
-	for _, player := range pR.Players {
+    // Broadcast added or readded player info to all players in the same room
+	for _, eachPlayer := range pR.Players {
 		/*
 		   [WARNING]
 		   This `playerAckedFrame` is the first ever "RoomDownsyncFrame" for every "PersistentSessionClient on the frontend", and it goes right after each "BattleColliderInfo".
 
 		   By making use of the sequential nature of each ws session, all later "RoomDownsyncFrame"s generated after `pRoom.StartBattle()` will be put behind this `playerAckedFrame`.
 		*/
-		pR.sendSafely(&playerAckedFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, player.Id)
+        switch targetPlayer.BattleState {
+        case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
+            playerAckedFrame := &pb.RoomDownsyncFrame{
+                Id:          pR.RenderFrameId,
+                Players:     toPbPlayers(pR.Players),
+                PlayerMetas: playerMetas,
+            }
+		    pR.sendSafely(playerAckedFrame, nil, DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED, eachPlayer.Id)
+        case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
+            playerAckedFrame := &pb.RoomDownsyncFrame{
+                Id:          pR.RenderFrameId,
+                Players:     toPbPlayers(pR.Players),
+                PlayerMetas: playerMetas,
+            }
+            pR.sendSafely(playerAckedFrame, nil, DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED, eachPlayer.Id)
+        default:
+        }
 	}
 
-	pPlayer.BattleState = PlayerBattleStateIns.ACTIVE
-	Logger.Info("OnPlayerBattleColliderAcked", zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("playerId", playerId), zap.Any("capacity", pR.Capacity), zap.Any("len(players)", len(pR.Players)))
+	targetPlayer.BattleState = PlayerBattleStateIns.ACTIVE
+	Logger.Info(fmt.Sprintf("OnPlayerBattleColliderAcked: roomId=%v, roomState=%v, targetPlayerId=%v, capacity=%v, EffectivePlayerCount=%v", pR.Id, pR.State, targetPlayer.Id, pR.Capacity, pR.EffectivePlayerCount))
 
-	if pR.Capacity == len(pR.Players) {
+	if pR.Capacity == int(pR.EffectivePlayerCount) {
 		allAcked := true
 		for _, p := range pR.Players {
 			if PlayerBattleStateIns.ACTIVE != p.BattleState {
@@ -1122,9 +1116,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 
 		newRenderFrame := pb.RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
-			RefFrameId:     collisionSysRenderFrameId,
 			Players:        toPbPlayers(pR.Players),
-			SentAt:         utils.UnixtimeMilli(),
 			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*int64(pR.RollbackEstimatedDt*1000000000)),
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)

@@ -78,11 +78,9 @@ message HeartbeatUpsync {
 
 message RoomDownsyncFrame {
   int32 id = 1;
-  int32 refFrameId = 2;
-  map<int32, Player> players = 3;
-  int64 sentAt = 4;
-  int64 countdownNanos = 5;
-  map<int32, PlayerMeta> playerMetas = 6;
+  map<int32, Player> players = 2;
+  int64 countdownNanos = 3;
+  map<int32, PlayerMeta> playerMetas = 4;
 }
 
 message WsReq {

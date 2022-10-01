@@ -2,10 +2,15 @@ window.UPSYNC_MSG_ACT_HB_PING = 1;
 window.UPSYNC_MSG_ACT_PLAYER_CMD = 2;
 window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK = 3;
 
+window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED = -98;
+window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED = -97;
+window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = -1;
+window.DOWNSYNC_MSG_ACT_BATTLE_START = 0;
 window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
 window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
 window.DOWNSYNC_MSG_ACT_ROOM_FRAME = 3;
 window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
+
 
 window.sendSafely = function(msgStr) {
   /**
@@ -154,6 +159,14 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
           window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
           break;
+        case window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED:
+          window.handlePlayerAdded(resp.rdf);
+          break;
+        case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
+          // Deliberately left blank for now
+          break;
+        case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
+        case window.DOWNSYNC_MSG_ACT_BATTLE_START:
         case window.DOWNSYNC_MSG_ACT_ROOM_FRAME:
           if (window.handleRoomDownsyncFrame) {
             window.handleRoomDownsyncFrame(resp.rdf);
@@ -166,7 +179,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
           if (window.handleInputFrameDownsyncBatch && window.handleRoomDownsyncFrame) {
-            console.warn("GOT forced resync:", resp);
+            console.warn("Got forced resync:", resp.toString(), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
             // The following order of execution is important, because "handleInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
             window.handleRoomDownsyncFrame(resp.rdf);
             window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);

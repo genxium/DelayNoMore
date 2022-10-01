@@ -3131,9 +3131,7 @@ $root.treasurehunterx = (function() {
          * @memberof treasurehunterx
          * @interface IRoomDownsyncFrame
          * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {number|null} [refFrameId] RoomDownsyncFrame refFrameId
          * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
-         * @property {number|Long|null} [sentAt] RoomDownsyncFrame sentAt
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
          * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
          */
@@ -3164,28 +3162,12 @@ $root.treasurehunterx = (function() {
         RoomDownsyncFrame.prototype.id = 0;
 
         /**
-         * RoomDownsyncFrame refFrameId.
-         * @member {number} refFrameId
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.refFrameId = 0;
-
-        /**
          * RoomDownsyncFrame players.
          * @member {Object.<string,treasurehunterx.Player>} players
          * @memberof treasurehunterx.RoomDownsyncFrame
          * @instance
          */
         RoomDownsyncFrame.prototype.players = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame sentAt.
-         * @member {number|Long} sentAt
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.sentAt = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * RoomDownsyncFrame countdownNanos.
@@ -3229,20 +3211,16 @@ $root.treasurehunterx = (function() {
                 writer = $Writer.create();
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.refFrameId != null && Object.hasOwnProperty.call(message, "refFrameId"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.refFrameId);
             if (message.players != null && Object.hasOwnProperty.call(message, "players"))
                 for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.sentAt != null && Object.hasOwnProperty.call(message, "sentAt"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.sentAt);
             if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.countdownNanos);
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
             if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
                 for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             return writer;
@@ -3284,10 +3262,6 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 2: {
-                        message.refFrameId = reader.int32();
-                        break;
-                    }
-                case 3: {
                         if (message.players === $util.emptyObject)
                             message.players = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -3310,15 +3284,11 @@ $root.treasurehunterx = (function() {
                         message.players[key] = value;
                         break;
                     }
-                case 4: {
-                        message.sentAt = reader.int64();
-                        break;
-                    }
-                case 5: {
+                case 3: {
                         message.countdownNanos = reader.int64();
                         break;
                     }
-                case 6: {
+                case 4: {
                         if (message.playerMetas === $util.emptyObject)
                             message.playerMetas = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -3379,9 +3349,6 @@ $root.treasurehunterx = (function() {
             if (message.id != null && message.hasOwnProperty("id"))
                 if (!$util.isInteger(message.id))
                     return "id: integer expected";
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                if (!$util.isInteger(message.refFrameId))
-                    return "refFrameId: integer expected";
             if (message.players != null && message.hasOwnProperty("players")) {
                 if (!$util.isObject(message.players))
                     return "players: object expected";
@@ -3396,9 +3363,6 @@ $root.treasurehunterx = (function() {
                     }
                 }
             }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (!$util.isInteger(message.sentAt) && !(message.sentAt && $util.isInteger(message.sentAt.low) && $util.isInteger(message.sentAt.high)))
-                    return "sentAt: integer|Long expected";
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 if (!$util.isInteger(message.countdownNanos) && !(message.countdownNanos && $util.isInteger(message.countdownNanos.low) && $util.isInteger(message.countdownNanos.high)))
                     return "countdownNanos: integer|Long expected";
@@ -3433,8 +3397,6 @@ $root.treasurehunterx = (function() {
             var message = new $root.treasurehunterx.RoomDownsyncFrame();
             if (object.id != null)
                 message.id = object.id | 0;
-            if (object.refFrameId != null)
-                message.refFrameId = object.refFrameId | 0;
             if (object.players) {
                 if (typeof object.players !== "object")
                     throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
@@ -3445,15 +3407,6 @@ $root.treasurehunterx = (function() {
                     message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
                 }
             }
-            if (object.sentAt != null)
-                if ($util.Long)
-                    (message.sentAt = $util.Long.fromValue(object.sentAt)).unsigned = false;
-                else if (typeof object.sentAt === "string")
-                    message.sentAt = parseInt(object.sentAt, 10);
-                else if (typeof object.sentAt === "number")
-                    message.sentAt = object.sentAt;
-                else if (typeof object.sentAt === "object")
-                    message.sentAt = new $util.LongBits(object.sentAt.low >>> 0, object.sentAt.high >>> 0).toNumber();
             if (object.countdownNanos != null)
                 if ($util.Long)
                     (message.countdownNanos = $util.Long.fromValue(object.countdownNanos)).unsigned = false;
@@ -3495,12 +3448,6 @@ $root.treasurehunterx = (function() {
             }
             if (options.defaults) {
                 object.id = 0;
-                object.refFrameId = 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.sentAt = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.sentAt = options.longs === String ? "0" : 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, false);
                     object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
@@ -3509,19 +3456,12 @@ $root.treasurehunterx = (function() {
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                object.refFrameId = message.refFrameId;
             var keys2;
             if (message.players && (keys2 = Object.keys(message.players)).length) {
                 object.players = {};
                 for (var j = 0; j < keys2.length; ++j)
                     object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
             }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (typeof message.sentAt === "number")
-                    object.sentAt = options.longs === String ? String(message.sentAt) : message.sentAt;
-                else
-                    object.sentAt = options.longs === String ? $util.Long.prototype.toString.call(message.sentAt) : options.longs === Number ? new $util.LongBits(message.sentAt.low >>> 0, message.sentAt.high >>> 0).toNumber() : message.sentAt;
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 if (typeof message.countdownNanos === "number")
                     object.countdownNanos = options.longs === String ? String(message.countdownNanos) : message.countdownNanos;
