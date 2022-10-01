@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"math/rand"
+    "math"
 	"os"
 	"path/filepath"
 	. "server/common"
@@ -28,6 +29,7 @@ const (
 	DOWNSYNC_MSG_ACT_HB_REQ      = int32(1)
 	DOWNSYNC_MSG_ACT_INPUT_BATCH = int32(2)
 	DOWNSYNC_MSG_ACT_ROOM_FRAME  = int32(3)
+	DOWNSYNC_MSG_ACT_FORCED_RESYNC = int32(4)
 )
 
 const (
@@ -315,8 +317,6 @@ func (pR *Room) ChooseStage() error {
 		   Logger.Info("ChooseStage printing polygon2D for barrierPolygon2DList", zap.Any("barrierLocalIdInBattle", barrierLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
 		*/
 		pR.Barriers[barrierLocalIdInBattle] = &Barrier{
-			X:        polygon2D.Anchor.X,
-			Y:        polygon2D.Anchor.Y,
 			Boundary: polygon2D,
 		}
 
@@ -416,7 +416,7 @@ func (pR *Room) StartBattle() {
 						*/
 						continue
 					}
-					pR.sendSafely(kickoffFrame, playerId)
+					pR.sendSafely(&kickoffFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, playerId)
 				}
 			}
 
@@ -481,19 +481,12 @@ func (pR *Room) StartBattle() {
                 var joinMask uint64 = (1 << indiceInJoinIndexBooleanArr)
                 if 0 < (unconfirmedMask & joinMask) {
                     refRenderFrame := pR.RenderFrameBuffer.GetByFrameId(pR.CurDynamicsRenderFrameId).(*pb.RoomDownsyncFrame) 
-                    resp := pb.WsResp {
-                        Ret:                     int32(Constants.RetCode.Ok),
-                        EchoedMsgId:             int32(0),
-                        Act:                     DOWNSYNC_MSG_ACT_ROOM_FRAME,
-                        InputFrameDownsyncBatch: toSendInputFrames,
-			            Rdf:                     refRenderFrame,
-                    }
-                    pR.sendSafely(resp, playerId)
+                    pR.sendSafely(refRenderFrame, toSendInputFrames, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId)
                 } else {
                     if 0 >= len(toSendInputFrames) {
                         continue
                     }
-                    pR.sendSafely(toSendInputFrames, playerId)
+                    pR.sendSafely(nil, toSendInputFrames, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId)
                     atomic.StoreInt32(&(pR.Players[playerId].LastSentInputFrameId), candidateToSendInputFrameId-1)
                     if -1 != debugSendingInputFrameId {
                         Logger.Info("inputFrame lifecycle#4[sent]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", debugSendingInputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString()))
@@ -644,7 +637,7 @@ func (pR *Room) StopBattleForSettlement() {
 			SentAt:         utils.UnixtimeMilli(),
 			CountdownNanos: -1, // TODO: Replace this magic constant!
 		}
-		pR.sendSafely(assembledFrame, playerId)
+		pR.sendSafely(&assembledFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, playerId)
 	}
 	// Note that `pR.onBattleStoppedForSettlement` will be called by `battleMainLoop`.
 }
@@ -687,7 +680,7 @@ func (pR *Room) onBattlePrepare(cb BattleStartCbType) {
 
 	Logger.Info("Sending out frame for RoomBattleState.PREPARE ", zap.Any("battleReadyToStartFrame", battleReadyToStartFrame))
 	for _, player := range pR.Players {
-		pR.sendSafely(battleReadyToStartFrame, player.Id)
+		pR.sendSafely(&battleReadyToStartFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, player.Id)
 	}
 
 	battlePreparationNanos := int64(6000000000)
@@ -950,7 +943,7 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 
 		   By making use of the sequential nature of each ws session, all later "RoomDownsyncFrame"s generated after `pRoom.StartBattle()` will be put behind this `playerAckedFrame`.
 		*/
-		pR.sendSafely(playerAckedFrame, player.Id)
+		pR.sendSafely(&playerAckedFrame, nil, DOWNSYNC_MSG_ACT_ROOM_FRAME, player.Id)
 	}
 
 	pPlayer.BattleState = PlayerBattleStateIns.ACTIVE
@@ -974,38 +967,19 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 	return true
 }
 
-func (pR *Room) sendSafely(s interface{}, playerId int32) {
+func (pR *Room) sendSafely(roomDownsyncFrame *pb.RoomDownsyncFrame, toSendFrames []*pb.InputFrameDownsync, act int32, playerId int32) {
 	defer func() {
 		if r := recover(); r != nil {
 			pR.PlayerSignalToCloseDict[playerId](Constants.RetCode.UnknownError, fmt.Sprintf("%v", r))
 		}
 	}()
 
-	var pResp *pb.WsResp = nil
-
-	switch v := s.(type) {
-    case pb.WsResp:
-        resp := s.(pb.WsResp)
-        pResp = &resp
-	case pb.RoomDownsyncFrame:
-		roomDownsyncFrame := s.(pb.RoomDownsyncFrame)
-		pResp = &pb.WsResp{
-			Ret:         int32(Constants.RetCode.Ok),
-			EchoedMsgId: int32(0),
-			Act:         DOWNSYNC_MSG_ACT_ROOM_FRAME,
-			Rdf:         &roomDownsyncFrame,
-		}
-	case []*pb.InputFrameDownsync:
-		toSendFrames := s.([]*pb.InputFrameDownsync)
-		pResp = &pb.WsResp{
-			Ret:                     int32(Constants.RetCode.Ok),
-			EchoedMsgId:             int32(0),
-			Act:                     DOWNSYNC_MSG_ACT_INPUT_BATCH,
-			InputFrameDownsyncBatch: toSendFrames,
-		}
-	default:
-		panic(fmt.Sprintf("Unknown downsync message type, roomId=%v, playerId=%v, roomState=%v, v=%v", pR.Id, playerId, v))
-	}
+    pResp := &pb.WsResp{
+        Ret:         int32(Constants.RetCode.Ok),
+        Act:         act,
+        Rdf:         roomDownsyncFrame,
+        InputFrameDownsyncBatch: toSendFrames,
+    }
 
 	theBytes, marshalErr := proto.Marshal(pResp)
 	if nil != marshalErr {
@@ -1151,8 +1125,44 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 }
 
 func (pR *Room) refreshColliders() {
+    // Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
+    space := resolv.NewSpace(int(pR.StageDiscreteW), int(pR.StageDiscreteH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
+        playerCollider := resolv.NewObject(player.X, player.Y, 12, 12) // Radius=12 is hardcoded
+        playerColliderShape := resolv.NewCircle(player.X, player.Y, 12)
+        playerCollider.SetShape(playerColliderShape)
+        space.Add(playerCollider) 
+        // Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
 		pR.PlayersArr[joinIndex-1] = player
+        collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+        pR.CollisionSysMap[collisionPlayerIndex] = playerCollider 
 	}
+    
+    for _, barrier := range pR.Barriers {
+        var w float64 = 0
+        var h float64 = 0
+        for i, pi := range barrier.Boundary.Points {
+            for j, pj := range barrier.Boundary.Points {
+                if i == j {
+                    continue
+                }
+                if math.Abs(pj.X - pi.X) > w {
+                    w = math.Abs(pj.X - pi.X)  
+                } 
+                if math.Abs(pj.Y - pi.Y) > h {
+                    h = math.Abs(pj.Y - pi.Y)  
+                } 
+            }
+        }
+
+        barrierColliderShape := resolv.NewConvexPolygon()
+        for _, p := range barrier.Boundary.Points {
+            barrierColliderShape.AddPoints(p.X+barrier.Boundary.Anchor.X, p.Y+barrier.Boundary.Anchor.Y)
+        }
+
+        barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X, barrier.Boundary.Anchor.Y, w, h, "Barrier")
+        barrierCollider.SetShape(barrierColliderShape)
+        space.Add(barrierCollider) 
+    }
 }

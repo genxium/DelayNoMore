@@ -222,11 +222,14 @@ cc.Class({
   
   shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, lastUpsyncInputFrameId, currInputFrameId) {
     /*
-    For a 2-player-battle, this "shouldUpsyncForEarlyAllConfirmedOnServer" can be omitted, however for more players in a same battle, to avoid a "long time non-moving player" jamming the downsync of other moving players, we should use this flag.
+    For a 2-player-battle, this "shouldUpsyncForEarlyAllConfirmedOnBackend" can be omitted, however for more players in a same battle, to avoid a "long time non-moving player" jamming the downsync of other moving players, we should use this flag.
+
+    When backend implements the "force confirmation" feature, we can have "false == shouldUpsyncForEarlyAllConfirmedOnBackend" all the time as well!
     */
     if (null == currSelfInput) return false;
-    const shouldUpsyncForEarlyAllConfirmedOnServer = (currInputFrameId - lastUpsyncInputFrameId >= this.inputFrameUpsyncDelayTolerance); 
-    return shouldUpsyncForEarlyAllConfirmedOnServer || (prevSelfInput != currSelfInput);
+
+    const shouldUpsyncForEarlyAllConfirmedOnBackend = (currInputFrameId - lastUpsyncInputFrameId >= this.inputFrameUpsyncDelayTolerance);   
+    return shouldUpsyncForEarlyAllConfirmedOnBackend || (prevSelfInput != currSelfInput);
   }, 
 
   sendInputFrameUpsyncBatch(inputFrameId) {
@@ -562,14 +565,11 @@ cc.Class({
           self.onBattleReadyToStart(rdf.playerMetas, false);
           return;
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START:
-          self.onBattleStarted(rdf); 
+          self.onBattleStartedOrResynced(rdf); 
           return; 
         case window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.PLAYER_READDED_AND_ACKED:
-          // [WARNING] The "frameId" from server could be quite fast-forwarding, don't assign it in other cases.
-          self.renderFrameId = frameId;
-          self.lastAllConfirmedRenderFrameId = frameId;  
           self.onBattleReadyToStart(rdf.playerMetas, true);
-          self.onBattleStarted(rdf);
+          self.onBattleStartedOrResynced(rdf);
           return;
         }
 
@@ -689,10 +689,14 @@ cc.Class({
     this._inputControlEnabled = false;
   },
 
-  onBattleStarted(rdf) {
+  onBattleStartedOrResynced(rdf) {
     // This function is also applicable to "re-joining".
-    console.log('On battle started!');
+    console.log('On battle started or resynced! renderFrameId=', rdf.id);
     const self = window.mapIns;
+    self.renderFrameId = rdf.id;
+    self.lastAllConfirmedRenderFrameId = rdf.id;  
+    self.chaserRenderFrameId = rdf.id;
+
     const players = rdf.players;
     const playerMetas = rdf.playerMetas;
     self._initPlayerRichInfoDict(players, playerMetas);
@@ -717,7 +721,6 @@ cc.Class({
       self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
     }
     self.transitToState(ALL_MAP_STATES.VISUAL);
-    self.chaserRenderFrameId = rdf.id;
     self.applyRoomDownsyncFrameDynamics(rdf);
     self._dumpToRenderCache(rdf);
     self.battleState = ALL_BATTLE_STATES.IN_BATTLE; // Starts the increment of "self.renderFrameId" in "self.update(dt)"

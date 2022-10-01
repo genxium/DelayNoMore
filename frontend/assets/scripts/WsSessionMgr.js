@@ -5,6 +5,7 @@ window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK = 3;
 window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
 window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
 window.DOWNSYNC_MSG_ACT_ROOM_FRAME = 3;
+window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
 
 window.sendSafely = function(msgStr) {
   /**
@@ -160,6 +161,13 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_INPUT_BATCH:
           if (window.handleInputFrameDownsyncBatch) {
+            window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
+          }
+          break;
+        case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
+          if (window.handleInputFrameDownsyncBatch && window.handleRoomDownsyncFrame) {
+            // The following order of execution is important, because "handleInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
+            window.handleRoomDownsyncFrame(resp.rdf);
             window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           }
           break;
