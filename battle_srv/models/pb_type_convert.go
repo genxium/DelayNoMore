@@ -33,6 +33,14 @@ func toPbVec2DList(modelInstance *Vec2DList) *pb.Vec2DList {
 	return toRet
 }
 
+func ToPbVec2DListMap(modelInstances map[string]*Vec2DList) map[string]*pb.Vec2DList {
+	toRet := make(map[string]*pb.Vec2DList, len(modelInstances))
+	for k, v := range modelInstances {
+		toRet[k] = toPbVec2DList(v)
+	}
+	return toRet
+}
+
 func toPbPolygon2DList(modelInstance *Polygon2DList) *pb.Polygon2DList {
 	toRet := &pb.Polygon2DList{
 		Polygon2DList: make([]*pb.Polygon2D, len(*modelInstance)),
@@ -43,24 +51,10 @@ func toPbPolygon2DList(modelInstance *Polygon2DList) *pb.Polygon2DList {
 	return toRet
 }
 
-func ToPbStrToBattleColliderInfo(intervalToPing int32, willKickIfInactiveFor int32, boundRoomId int32, stageName string, modelInstance1 StrToVec2DListMap, modelInstance2 StrToPolygon2DListMap, stageDiscreteW int32, stageDiscreteH int32, stageTileW int32, stageTileH int32) *pb.BattleColliderInfo {
-	toRet := &pb.BattleColliderInfo{
-		IntervalToPing:        intervalToPing,
-		WillKickIfInactiveFor: willKickIfInactiveFor,
-		BoundRoomId:           boundRoomId,
-		StageName:             stageName,
-		StrToVec2DListMap:     make(map[string]*pb.Vec2DList, 0),
-		StrToPolygon2DListMap: make(map[string]*pb.Polygon2DList, 0),
-		StageDiscreteW:        stageDiscreteW,
-		StageDiscreteH:        stageDiscreteH,
-		StageTileW:            stageTileW,
-		StageTileH:            stageTileH,
-	}
-	for k, v := range modelInstance1 {
-		toRet.StrToVec2DListMap[k] = toPbVec2DList(v)
-	}
-	for k, v := range modelInstance2 {
-		toRet.StrToPolygon2DListMap[k] = toPbPolygon2DList(v)
+func ToPbPolygon2DListMap(modelInstances map[string]*Polygon2DList) map[string]*pb.Polygon2DList {
+	toRet := make(map[string]*pb.Polygon2DList, len(modelInstances))
+	for k, v := range modelInstances {
+		toRet[k] = toPbPolygon2DList(v)
 	}
 	return toRet
 }

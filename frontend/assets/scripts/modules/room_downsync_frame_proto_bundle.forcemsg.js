@@ -1179,16 +1179,23 @@ $root.treasurehunterx = (function() {
          * Properties of a BattleColliderInfo.
          * @memberof treasurehunterx
          * @interface IBattleColliderInfo
-         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
-         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
-         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
          * @property {string|null} [stageName] BattleColliderInfo stageName
          * @property {Object.<string,treasurehunterx.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
          * @property {Object.<string,treasurehunterx.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
-         * @property {number|null} [StageDiscreteW] BattleColliderInfo StageDiscreteW
-         * @property {number|null} [StageDiscreteH] BattleColliderInfo StageDiscreteH
-         * @property {number|null} [StageTileW] BattleColliderInfo StageTileW
-         * @property {number|null} [StageTileH] BattleColliderInfo StageTileH
+         * @property {number|null} [stageDiscreteW] BattleColliderInfo stageDiscreteW
+         * @property {number|null} [stageDiscreteH] BattleColliderInfo stageDiscreteH
+         * @property {number|null} [stageTileW] BattleColliderInfo stageTileW
+         * @property {number|null} [stageTileH] BattleColliderInfo stageTileH
+         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
+         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
+         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
+         * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
+         * @property {number|null} [serverFps] BattleColliderInfo serverFps
+         * @property {number|null} [inputDelayFrames] BattleColliderInfo inputDelayFrames
+         * @property {number|null} [inputScaleFrames] BattleColliderInfo inputScaleFrames
+         * @property {number|null} [nstDelayFrames] BattleColliderInfo nstDelayFrames
+         * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
+         * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
          */
 
         /**
@@ -1207,30 +1214,6 @@ $root.treasurehunterx = (function() {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
-
-        /**
-         * BattleColliderInfo intervalToPing.
-         * @member {number} intervalToPing
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.intervalToPing = 0;
-
-        /**
-         * BattleColliderInfo willKickIfInactiveFor.
-         * @member {number} willKickIfInactiveFor
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
-
-        /**
-         * BattleColliderInfo boundRoomId.
-         * @member {number} boundRoomId
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.boundRoomId = 0;
 
         /**
          * BattleColliderInfo stageName.
@@ -1257,36 +1240,116 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.prototype.strToPolygon2DListMap = $util.emptyObject;
 
         /**
-         * BattleColliderInfo StageDiscreteW.
-         * @member {number} StageDiscreteW
+         * BattleColliderInfo stageDiscreteW.
+         * @member {number} stageDiscreteW
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageDiscreteW = 0;
+        BattleColliderInfo.prototype.stageDiscreteW = 0;
 
         /**
-         * BattleColliderInfo StageDiscreteH.
-         * @member {number} StageDiscreteH
+         * BattleColliderInfo stageDiscreteH.
+         * @member {number} stageDiscreteH
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageDiscreteH = 0;
+        BattleColliderInfo.prototype.stageDiscreteH = 0;
 
         /**
-         * BattleColliderInfo StageTileW.
-         * @member {number} StageTileW
+         * BattleColliderInfo stageTileW.
+         * @member {number} stageTileW
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageTileW = 0;
+        BattleColliderInfo.prototype.stageTileW = 0;
 
         /**
-         * BattleColliderInfo StageTileH.
-         * @member {number} StageTileH
+         * BattleColliderInfo stageTileH.
+         * @member {number} stageTileH
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageTileH = 0;
+        BattleColliderInfo.prototype.stageTileH = 0;
+
+        /**
+         * BattleColliderInfo intervalToPing.
+         * @member {number} intervalToPing
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.intervalToPing = 0;
+
+        /**
+         * BattleColliderInfo willKickIfInactiveFor.
+         * @member {number} willKickIfInactiveFor
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
+
+        /**
+         * BattleColliderInfo boundRoomId.
+         * @member {number} boundRoomId
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.boundRoomId = 0;
+
+        /**
+         * BattleColliderInfo battleDurationNanos.
+         * @member {number|Long} battleDurationNanos
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * BattleColliderInfo serverFps.
+         * @member {number} serverFps
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.serverFps = 0;
+
+        /**
+         * BattleColliderInfo inputDelayFrames.
+         * @member {number} inputDelayFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputDelayFrames = 0;
+
+        /**
+         * BattleColliderInfo inputScaleFrames.
+         * @member {number} inputScaleFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputScaleFrames = 0;
+
+        /**
+         * BattleColliderInfo nstDelayFrames.
+         * @member {number} nstDelayFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.nstDelayFrames = 0;
+
+        /**
+         * BattleColliderInfo inputFrameUpsyncDelayTolerance.
+         * @member {number} inputFrameUpsyncDelayTolerance
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputFrameUpsyncDelayTolerance = 0;
+
+        /**
+         * BattleColliderInfo maxChasingRenderFramesPerUpdate.
+         * @member {number} maxChasingRenderFramesPerUpdate
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
 
         /**
          * Creates a new BattleColliderInfo instance using the specified properties.
@@ -1312,32 +1375,46 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.intervalToPing);
-            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.willKickIfInactiveFor);
-            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.boundRoomId);
             if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
-                writer.uint32(/* id 4, wireType 2 =*/34).string(message.stageName);
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
             if (message.strToVec2DListMap != null && Object.hasOwnProperty.call(message, "strToVec2DListMap"))
                 for (var keys = Object.keys(message.strToVec2DListMap), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 5, wireType 2 =*/42).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.treasurehunterx.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.strToPolygon2DListMap != null && Object.hasOwnProperty.call(message, "strToPolygon2DListMap"))
                 for (var keys = Object.keys(message.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.treasurehunterx.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.StageDiscreteW != null && Object.hasOwnProperty.call(message, "StageDiscreteW"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.StageDiscreteW);
-            if (message.StageDiscreteH != null && Object.hasOwnProperty.call(message, "StageDiscreteH"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.StageDiscreteH);
-            if (message.StageTileW != null && Object.hasOwnProperty.call(message, "StageTileW"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.StageTileW);
-            if (message.StageTileH != null && Object.hasOwnProperty.call(message, "StageTileH"))
-                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.StageTileH);
+            if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageDiscreteW);
+            if (message.stageDiscreteH != null && Object.hasOwnProperty.call(message, "stageDiscreteH"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.stageDiscreteH);
+            if (message.stageTileW != null && Object.hasOwnProperty.call(message, "stageTileW"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.stageTileW);
+            if (message.stageTileH != null && Object.hasOwnProperty.call(message, "stageTileH"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.stageTileH);
+            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
+                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.intervalToPing);
+            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.willKickIfInactiveFor);
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.boundRoomId);
+            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
+                writer.uint32(/* id 11, wireType 0 =*/88).int64(message.battleDurationNanos);
+            if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
+                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.serverFps);
+            if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.inputDelayFrames);
+            if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
+                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.inputScaleFrames);
+            if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.nstDelayFrames);
+            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
+            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
             return writer;
         };
 
@@ -1373,22 +1450,10 @@ $root.treasurehunterx = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.intervalToPing = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.willKickIfInactiveFor = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.boundRoomId = reader.int32();
-                        break;
-                    }
-                case 4: {
                         message.stageName = reader.string();
                         break;
                     }
-                case 5: {
+                case 2: {
                         if (message.strToVec2DListMap === $util.emptyObject)
                             message.strToVec2DListMap = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -1411,7 +1476,7 @@ $root.treasurehunterx = (function() {
                         message.strToVec2DListMap[key] = value;
                         break;
                     }
-                case 6: {
+                case 3: {
                         if (message.strToPolygon2DListMap === $util.emptyObject)
                             message.strToPolygon2DListMap = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -1434,20 +1499,60 @@ $root.treasurehunterx = (function() {
                         message.strToPolygon2DListMap[key] = value;
                         break;
                     }
+                case 4: {
+                        message.stageDiscreteW = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.stageDiscreteH = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.stageTileW = reader.int32();
+                        break;
+                    }
                 case 7: {
-                        message.StageDiscreteW = reader.int32();
+                        message.stageTileH = reader.int32();
                         break;
                     }
                 case 8: {
-                        message.StageDiscreteH = reader.int32();
+                        message.intervalToPing = reader.int32();
                         break;
                     }
                 case 9: {
-                        message.StageTileW = reader.int32();
+                        message.willKickIfInactiveFor = reader.int32();
                         break;
                     }
                 case 10: {
-                        message.StageTileH = reader.int32();
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.battleDurationNanos = reader.int64();
+                        break;
+                    }
+                case 12: {
+                        message.serverFps = reader.int32();
+                        break;
+                    }
+                case 13: {
+                        message.inputDelayFrames = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.inputScaleFrames = reader.uint32();
+                        break;
+                    }
+                case 15: {
+                        message.nstDelayFrames = reader.int32();
+                        break;
+                    }
+                case 16: {
+                        message.inputFrameUpsyncDelayTolerance = reader.int32();
+                        break;
+                    }
+                case 17: {
+                        message.maxChasingRenderFramesPerUpdate = reader.int32();
                         break;
                     }
                 default:
@@ -1485,15 +1590,6 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                if (!$util.isInteger(message.intervalToPing))
-                    return "intervalToPing: integer expected";
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                if (!$util.isInteger(message.willKickIfInactiveFor))
-                    return "willKickIfInactiveFor: integer expected";
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                if (!$util.isInteger(message.boundRoomId))
-                    return "boundRoomId: integer expected";
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 if (!$util.isString(message.stageName))
                     return "stageName: string expected";
@@ -1517,18 +1613,48 @@ $root.treasurehunterx = (function() {
                         return "strToPolygon2DListMap." + error;
                 }
             }
-            if (message.StageDiscreteW != null && message.hasOwnProperty("StageDiscreteW"))
-                if (!$util.isInteger(message.StageDiscreteW))
-                    return "StageDiscreteW: integer expected";
-            if (message.StageDiscreteH != null && message.hasOwnProperty("StageDiscreteH"))
-                if (!$util.isInteger(message.StageDiscreteH))
-                    return "StageDiscreteH: integer expected";
-            if (message.StageTileW != null && message.hasOwnProperty("StageTileW"))
-                if (!$util.isInteger(message.StageTileW))
-                    return "StageTileW: integer expected";
-            if (message.StageTileH != null && message.hasOwnProperty("StageTileH"))
-                if (!$util.isInteger(message.StageTileH))
-                    return "StageTileH: integer expected";
+            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
+                if (!$util.isInteger(message.stageDiscreteW))
+                    return "stageDiscreteW: integer expected";
+            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
+                if (!$util.isInteger(message.stageDiscreteH))
+                    return "stageDiscreteH: integer expected";
+            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
+                if (!$util.isInteger(message.stageTileW))
+                    return "stageTileW: integer expected";
+            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
+                if (!$util.isInteger(message.stageTileH))
+                    return "stageTileH: integer expected";
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                if (!$util.isInteger(message.intervalToPing))
+                    return "intervalToPing: integer expected";
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                if (!$util.isInteger(message.willKickIfInactiveFor))
+                    return "willKickIfInactiveFor: integer expected";
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                if (!$util.isInteger(message.boundRoomId))
+                    return "boundRoomId: integer expected";
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
+                    return "battleDurationNanos: integer|Long expected";
+            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
+                if (!$util.isInteger(message.serverFps))
+                    return "serverFps: integer expected";
+            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
+                if (!$util.isInteger(message.inputDelayFrames))
+                    return "inputDelayFrames: integer expected";
+            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
+                if (!$util.isInteger(message.inputScaleFrames))
+                    return "inputScaleFrames: integer expected";
+            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
+                if (!$util.isInteger(message.nstDelayFrames))
+                    return "nstDelayFrames: integer expected";
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                if (!$util.isInteger(message.inputFrameUpsyncDelayTolerance))
+                    return "inputFrameUpsyncDelayTolerance: integer expected";
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
+                    return "maxChasingRenderFramesPerUpdate: integer expected";
             return null;
         };
 
@@ -1544,12 +1670,6 @@ $root.treasurehunterx = (function() {
             if (object instanceof $root.treasurehunterx.BattleColliderInfo)
                 return object;
             var message = new $root.treasurehunterx.BattleColliderInfo();
-            if (object.intervalToPing != null)
-                message.intervalToPing = object.intervalToPing | 0;
-            if (object.willKickIfInactiveFor != null)
-                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
-            if (object.boundRoomId != null)
-                message.boundRoomId = object.boundRoomId | 0;
             if (object.stageName != null)
                 message.stageName = String(object.stageName);
             if (object.strToVec2DListMap) {
@@ -1572,14 +1692,41 @@ $root.treasurehunterx = (function() {
                     message.strToPolygon2DListMap[keys[i]] = $root.treasurehunterx.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
                 }
             }
-            if (object.StageDiscreteW != null)
-                message.StageDiscreteW = object.StageDiscreteW | 0;
-            if (object.StageDiscreteH != null)
-                message.StageDiscreteH = object.StageDiscreteH | 0;
-            if (object.StageTileW != null)
-                message.StageTileW = object.StageTileW | 0;
-            if (object.StageTileH != null)
-                message.StageTileH = object.StageTileH | 0;
+            if (object.stageDiscreteW != null)
+                message.stageDiscreteW = object.stageDiscreteW | 0;
+            if (object.stageDiscreteH != null)
+                message.stageDiscreteH = object.stageDiscreteH | 0;
+            if (object.stageTileW != null)
+                message.stageTileW = object.stageTileW | 0;
+            if (object.stageTileH != null)
+                message.stageTileH = object.stageTileH | 0;
+            if (object.intervalToPing != null)
+                message.intervalToPing = object.intervalToPing | 0;
+            if (object.willKickIfInactiveFor != null)
+                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
+            if (object.boundRoomId != null)
+                message.boundRoomId = object.boundRoomId | 0;
+            if (object.battleDurationNanos != null)
+                if ($util.Long)
+                    (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
+                else if (typeof object.battleDurationNanos === "string")
+                    message.battleDurationNanos = parseInt(object.battleDurationNanos, 10);
+                else if (typeof object.battleDurationNanos === "number")
+                    message.battleDurationNanos = object.battleDurationNanos;
+                else if (typeof object.battleDurationNanos === "object")
+                    message.battleDurationNanos = new $util.LongBits(object.battleDurationNanos.low >>> 0, object.battleDurationNanos.high >>> 0).toNumber();
+            if (object.serverFps != null)
+                message.serverFps = object.serverFps | 0;
+            if (object.inputDelayFrames != null)
+                message.inputDelayFrames = object.inputDelayFrames | 0;
+            if (object.inputScaleFrames != null)
+                message.inputScaleFrames = object.inputScaleFrames >>> 0;
+            if (object.nstDelayFrames != null)
+                message.nstDelayFrames = object.nstDelayFrames | 0;
+            if (object.inputFrameUpsyncDelayTolerance != null)
+                message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
+            if (object.maxChasingRenderFramesPerUpdate != null)
+                message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
             return message;
         };
 
@@ -1601,21 +1748,26 @@ $root.treasurehunterx = (function() {
                 object.strToPolygon2DListMap = {};
             }
             if (options.defaults) {
+                object.stageName = "";
+                object.stageDiscreteW = 0;
+                object.stageDiscreteH = 0;
+                object.stageTileW = 0;
+                object.stageTileH = 0;
                 object.intervalToPing = 0;
                 object.willKickIfInactiveFor = 0;
                 object.boundRoomId = 0;
-                object.stageName = "";
-                object.StageDiscreteW = 0;
-                object.StageDiscreteH = 0;
-                object.StageTileW = 0;
-                object.StageTileH = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.battleDurationNanos = options.longs === String ? "0" : 0;
+                object.serverFps = 0;
+                object.inputDelayFrames = 0;
+                object.inputScaleFrames = 0;
+                object.nstDelayFrames = 0;
+                object.inputFrameUpsyncDelayTolerance = 0;
+                object.maxChasingRenderFramesPerUpdate = 0;
             }
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                object.intervalToPing = message.intervalToPing;
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                object.boundRoomId = message.boundRoomId;
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
             var keys2;
@@ -1629,14 +1781,37 @@ $root.treasurehunterx = (function() {
                 for (var j = 0; j < keys2.length; ++j)
                     object.strToPolygon2DListMap[keys2[j]] = $root.treasurehunterx.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
             }
-            if (message.StageDiscreteW != null && message.hasOwnProperty("StageDiscreteW"))
-                object.StageDiscreteW = message.StageDiscreteW;
-            if (message.StageDiscreteH != null && message.hasOwnProperty("StageDiscreteH"))
-                object.StageDiscreteH = message.StageDiscreteH;
-            if (message.StageTileW != null && message.hasOwnProperty("StageTileW"))
-                object.StageTileW = message.StageTileW;
-            if (message.StageTileH != null && message.hasOwnProperty("StageTileH"))
-                object.StageTileH = message.StageTileH;
+            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
+                object.stageDiscreteW = message.stageDiscreteW;
+            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
+                object.stageDiscreteH = message.stageDiscreteH;
+            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
+                object.stageTileW = message.stageTileW;
+            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
+                object.stageTileH = message.stageTileH;
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                object.intervalToPing = message.intervalToPing;
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                object.boundRoomId = message.boundRoomId;
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (typeof message.battleDurationNanos === "number")
+                    object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;
+                else
+                    object.battleDurationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.battleDurationNanos) : options.longs === Number ? new $util.LongBits(message.battleDurationNanos.low >>> 0, message.battleDurationNanos.high >>> 0).toNumber() : message.battleDurationNanos;
+            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
+                object.serverFps = message.serverFps;
+            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
+                object.inputDelayFrames = message.inputDelayFrames;
+            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
+                object.inputScaleFrames = message.inputScaleFrames;
+            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
+                object.nstDelayFrames = message.nstDelayFrames;
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
             return object;
         };
 

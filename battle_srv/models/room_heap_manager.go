@@ -3,8 +3,6 @@ package models
 import (
 	"container/heap"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	. "server/common"
 	"sync"
@@ -93,42 +91,13 @@ func InitRoomHeapManager() {
 
 	for i := 0; i < initialCountOfRooms; i++ {
 		roomCapacity := 2
-		joinIndexBooleanArr := make([]bool, roomCapacity)
-		for index, _ := range joinIndexBooleanArr {
-			joinIndexBooleanArr[index] = false
-		}
-		currentRoomBattleState := RoomBattleStateIns.IDLE
 		pq[i] = &Room{
-			Id:                        int32(i + 1),
-			Players:                   make(map[int32]*Player),
-			PlayersArr:                make([]*Player, roomCapacity),
-			CollisionSysMap:           make(map[int32]*resolv.Object),
-			PlayerDownsyncSessionDict: make(map[int32]*websocket.Conn),
-			PlayerSignalToCloseDict:   make(map[int32]SignalToCloseConnCbType),
-			Capacity:                  roomCapacity,
-			Score:                     calRoomScore(0, roomCapacity, currentRoomBattleState),
-			State:                     currentRoomBattleState,
-			Index:                     i,
-			RenderFrameId:             0,
-			CurDynamicsRenderFrameId:  0,
-			EffectivePlayerCount:      0,
-			//BattleDurationNanos:    int64(5 * 1000 * 1000 * 1000),
-			BattleDurationNanos:                    int64(30 * 1000 * 1000 * 1000),
-			ServerFPS:                              60,
-			Barriers:                               make(map[int32]*Barrier),
-			AllPlayerInputsBuffer:                  NewRingBuffer(1024),
-			RenderFrameBuffer:                      NewRingBuffer(1024),
-			LastAllConfirmedInputFrameId:           -1,
-			LastAllConfirmedInputFrameIdWithChange: -1,
-			LastAllConfirmedInputList:              make([]uint64, roomCapacity),
-			InputDelayFrames:                       4,
-			NstDelayFrames:                         8,
-			InputScaleFrames:                       2,
-			JoinIndexBooleanArr:                    joinIndexBooleanArr,
-			RollbackEstimatedDt:                    float64(1.0) / 60,
+			Id:       int32(i + 1),
+			Capacity: roomCapacity,
+			Index:    i,
 		}
 		roomMap[pq[i].Id] = pq[i]
-		pq[i].ChooseStage()
+		pq[i].OnDismissed()
 	}
 	heap.Init(&pq)
 	RoomHeapManagerIns = &pq

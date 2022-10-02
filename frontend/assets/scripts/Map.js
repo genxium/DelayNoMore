@@ -42,18 +42,6 @@ cc.Class({
       type: cc.Prefab,
       default: null,
     },
-    treasurePrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    trapPrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    speedShoePrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
     polygonBoundaryBarrierPrefab: {
       type: cc.Prefab,
       default: null,
@@ -82,10 +70,6 @@ cc.Class({
       type: cc.Label,
       default: null
     },
-    trapBulletPrefab: {
-      type: cc.Prefab,
-      default: null
-    },
     resultPanelPrefab: {
       type: cc.Prefab,
       default: null
@@ -106,32 +90,12 @@ cc.Class({
       type: cc.Prefab,
       default: null
     },
-    guardTowerPrefab: {
-      type: cc.Prefab,
-      default: null
-    },
     forceBigEndianFloatingNumDecoding: {
       default: false,
     },
     backgroundMapTiledIns: {
       type: cc.TiledMap,
       default: null
-    },
-    rollbackEstimatedDt: {
-      type: cc.Float,
-      default: 1.0/60 
-    },
-    rollbackEstimatedDtMillis: {
-      type: cc.Float,
-      default: 1000.0/60 
-    },
-    rollbackEstimatedDtToleranceMillis: {
-      type: cc.Float,
-      default: 1.0/60 
-    },
-    maxChasingRenderFramesPerUpdate: {
-      type: cc.Integer,
-      default: 10
     },
   },
     
@@ -352,12 +316,8 @@ cc.Class({
     self.renderFrameId = 0; // After battle started
     self.lastAllConfirmedRenderFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
-    self.chaserRenderFrameId = -1; // at any moment, "lastAllConfirmedRenderFrameId <= chaserRenderFrameId <= renderFrameId", but "chaserRenderFrameId" would fluctuate according to "handleInputFrameDownsyncBatch"
-
-    self.inputDelayFrames = 4;
-    self.inputScaleFrames = 2;
     self.lastUpsyncInputFrameId = -1;
-    self.inputFrameUpsyncDelayTolerance = 2;
+    self.chaserRenderFrameId = -1; // at any moment, "lastAllConfirmedRenderFrameId <= chaserRenderFrameId <= renderFrameId", but "chaserRenderFrameId" would fluctuate according to "handleInputFrameDownsyncBatch"
 
     self.recentRenderCache = new RingBuffer(1024);
 
@@ -455,10 +415,16 @@ cc.Class({
 
     /** Init required prefab ended. */
 
-    self.clientUpsyncFps = 60;
-
     window.handleBattleColliderInfo = function(parsedBattleColliderInfo) {
-      self.battleColliderInfo = parsedBattleColliderInfo; 
+      self.inputDelayFrames = parsedBattleColliderInfo.inputDelayFrames; 
+      self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
+      self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
+
+      self.rollbackEstimatedDt = 1.0/parsedBattleColliderInfo.serverFps;
+      self.rollbackEstimatedDtMillis = 1000.0*self.rollbackEstimatedDt; 
+      self.rollbackEstimatedDtToleranceMillis = self.rollbackEstimatedDtMillis/1000.0; 
+      self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
+
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
       const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", parsedBattleColliderInfo.stageName);

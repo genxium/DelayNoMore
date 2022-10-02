@@ -27,17 +27,24 @@ message Polygon2DList {
 }
 
 message BattleColliderInfo {
-  int32 intervalToPing        = 1;
-  int32 willKickIfInactiveFor = 2;
-  int32 boundRoomId           = 3;
+  string stageName = 1;
+  map<string, Vec2DList> strToVec2DListMap = 2; 
+  map<string, Polygon2DList> strToPolygon2DListMap = 3; 
+  int32 stageDiscreteW = 4;
+  int32 stageDiscreteH = 5;
+  int32 stageTileW = 6;
+  int32 stageTileH = 7;
 
-  string stageName = 4;
-  map<string, Vec2DList> strToVec2DListMap = 5; 
-  map<string, Polygon2DList> strToPolygon2DListMap = 6; 
-  int32 StageDiscreteW = 7;
-  int32 StageDiscreteH = 8;
-  int32 StageTileW = 9;
-  int32 StageTileH = 10;
+  int32 intervalToPing        = 8;
+  int32 willKickIfInactiveFor = 9;
+  int32 boundRoomId           = 10;
+  int64 battleDurationNanos   = 11;
+  int32 serverFps             = 12;
+  int32 inputDelayFrames      = 13;
+  uint32 inputScaleFrames     = 14;
+  int32 nstDelayFrames        = 15;
+  int32 inputFrameUpsyncDelayTolerance = 16;  
+  int32 maxChasingRenderFramesPerUpdate = 17;
 }
 
 message Player {

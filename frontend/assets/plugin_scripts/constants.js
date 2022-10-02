@@ -1,6 +1,5 @@
 "use strict";
 
-
 var _ROUTE_PATH;
 
 function _defineProperty(obj, key, value) {

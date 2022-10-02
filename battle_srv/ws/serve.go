@@ -240,13 +240,33 @@ func Serve(c *gin.Context) {
 			})
 		}()
 
-		playerBattleColliderInfo := models.ToPbStrToBattleColliderInfo(int32(Constants.Ws.IntervalToPing), int32(Constants.Ws.WillKickIfInactiveFor), pRoom.Id, pRoom.StageName, pRoom.RawBattleStrToVec2DListMap, pRoom.RawBattleStrToPolygon2DListMap, pRoom.StageDiscreteW, pRoom.StageDiscreteH, pRoom.StageTileW, pRoom.StageTileH)
+		// Construct "battleColliderInfo" to downsync
+		bciFrame := &pb.BattleColliderInfo{
+			BoundRoomId:           pRoom.Id,
+			StageName:             pRoom.StageName,
+			StrToVec2DListMap:     models.ToPbVec2DListMap(pRoom.RawBattleStrToVec2DListMap),
+			StrToPolygon2DListMap: models.ToPbPolygon2DListMap(pRoom.RawBattleStrToPolygon2DListMap),
+			StageDiscreteW:        pRoom.StageDiscreteW,
+			StageDiscreteH:        pRoom.StageDiscreteH,
+			StageTileW:            pRoom.StageTileW,
+			StageTileH:            pRoom.StageTileH,
+
+			IntervalToPing:                  int32(Constants.Ws.IntervalToPing),
+			WillKickIfInactiveFor:           int32(Constants.Ws.WillKickIfInactiveFor),
+			BattleDurationNanos:             pRoom.BattleDurationNanos,
+			ServerFps:                       pRoom.ServerFps,
+			InputDelayFrames:                pRoom.InputDelayFrames,
+			InputScaleFrames:                pRoom.InputScaleFrames,
+			NstDelayFrames:                  pRoom.NstDelayFrames,
+			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
+			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
+		}
 
 		resp := &pb.WsResp{
 			Ret:         int32(Constants.RetCode.Ok),
 			EchoedMsgId: int32(0),
 			Act:         models.DOWNSYNC_MSG_ACT_HB_REQ,
-			BciFrame:    playerBattleColliderInfo,
+			BciFrame:    bciFrame,
 		}
 
 		// Logger.Info("Sending downsync HeartbeatRequirements:", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("resp", resp))
