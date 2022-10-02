@@ -1,3 +1,5 @@
+const RingBuffer = require('./RingBuffer');
+
 window.UPSYNC_MSG_ACT_HB_PING = 1;
 window.UPSYNC_MSG_ACT_PLAYER_CMD = 2;
 window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK = 3;
@@ -8,7 +10,7 @@ window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = -1;
 window.DOWNSYNC_MSG_ACT_BATTLE_START = 0;
 window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
 window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
-window.DOWNSYNC_MSG_ACT_ROOM_FRAME = 3;
+window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED = 3;
 window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
 
 
@@ -160,30 +162,28 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED:
-          window.handlePlayerAdded(resp.rdf);
+          mapIns.onPlayerAdded(resp.rdf);
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
           // Deliberately left blank for now
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
+          mapIns.onBattleReadyToStart(resp.rdf.playerMetas, false);
+          break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_START:
-        case window.DOWNSYNC_MSG_ACT_ROOM_FRAME:
-          if (window.handleRoomDownsyncFrame) {
-            window.handleRoomDownsyncFrame(resp.rdf);
-          }
+          mapIns.onBattleStartedOrResynced(resp.rdf);
+          break;
+        case window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED:
+          mapIns.onBattleStopped();
           break;
         case window.DOWNSYNC_MSG_ACT_INPUT_BATCH:
-          if (window.handleInputFrameDownsyncBatch) {
-            window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
-          }
+          mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
-          if (window.handleInputFrameDownsyncBatch && window.handleRoomDownsyncFrame) {
-            console.warn("Got forced resync:", JSON.stringify(resp), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
-            // The following order of execution is important, because "handleInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
-            window.handleRoomDownsyncFrame(resp.rdf);
-            window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
-          }
+          console.warn("Got forced resync:", JSON.stringify(resp), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
+          // The following order of execution is important, because "onInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
+          const dumpRenderCacheRet = mapIns.onBattleStartedOrResynced(resp.rdf);
+          mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch, dumpRenderCacheRet);
           break;
         default:
           break;
