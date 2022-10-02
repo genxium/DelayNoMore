@@ -473,7 +473,7 @@ func (pR *Room) StartBattle() {
 						f := tmp.(*pb.InputFrameDownsync)
 						if pR.inputFrameIdDebuggable(candidateToSendInputFrameId) {
 							debugSendingInputFrameId = candidateToSendInputFrameId
-							Logger.Info("inputFrame lifecycle#3[sending]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", candidateToSendInputFrameId), zap.Any("inputFrameId-doublecheck", f.InputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)), zap.Any("ConfirmedList", f.ConfirmedList))
+							Logger.Debug("inputFrame lifecycle#3[sending]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", candidateToSendInputFrameId), zap.Any("inputFrameId-doublecheck", f.InputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)), zap.Any("ConfirmedList", f.ConfirmedList))
 						}
 						toSendInputFrames = append(toSendInputFrames, f)
 						candidateToSendInputFrameId++
@@ -511,7 +511,7 @@ func (pR *Room) StartBattle() {
 				f := pR.AllPlayerInputsBuffer.Pop().(*pb.InputFrameDownsync)
 				if pR.inputFrameIdDebuggable(f.InputFrameId) {
 					// Popping of an "inputFrame" would be AFTER its being all being confirmed, because it requires the "inputFrame" to be all acked
-					Logger.Info("inputFrame lifecycle#5[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)))
+					Logger.Debug("inputFrame lifecycle#5[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("AllPlayerInputsBuffer", pR.AllPlayerInputsBufferString(false)))
 				}
 			}
 
@@ -579,15 +579,14 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 		inputFrameDownsync := tmp2.(*pb.InputFrameDownsync)
 		oldConfirmedList := atomic.LoadUint64(&(inputFrameDownsync.ConfirmedList))
 		if (oldConfirmedList & joinMask) > 0 {
-			Logger.Warn(fmt.Sprintf("Cmd already confirmed but getting set attempt, omitting this upsync cmd: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Cmd already confirmed but getting set attempt, omitting this upsync cmd: roomId=%v, playerId=%v, clientInputFrameId=%v, AllPlayerInputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.AllPlayerInputsBufferString(false)))
 			return
 		}
 
 		// In Golang 1.12, there's no "compare-and-swap primitive" on a custom struct (or it's pointer, unless it's an unsafe pointer https://pkg.go.dev/sync/atomic@go1.12#CompareAndSwapPointer). Although CAS on custom struct is possible in Golang 1.19 https://pkg.go.dev/sync/atomic@go1.19.1#Value.CompareAndSwap, using a single word is still faster whenever possible.
-		if swapped := atomic.CompareAndSwapUint64(&inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr], uint64(0), encodedInput); !swapped {
-			Logger.Warn(fmt.Sprintf("Failed input CAS: roomId=%v, playerId=%v, clientInputFrameId=%v", pR.Id, playerId, clientInputFrameId))
-			return
-		}
+
+        // [WARNING] No need to use CAS for updating "inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr]", the upsync from frontend takes top priority.
+        atomic.StoreUint64(&inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr], encodedInput);
 
 		newConfirmedList := (oldConfirmedList | joinMask)
 		if swapped := atomic.CompareAndSwapUint64(&(inputFrameDownsync.ConfirmedList), oldConfirmedList, newConfirmedList); !swapped {

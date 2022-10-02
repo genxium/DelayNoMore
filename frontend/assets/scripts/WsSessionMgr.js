@@ -179,7 +179,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
           if (window.handleInputFrameDownsyncBatch && window.handleRoomDownsyncFrame) {
-            console.warn("Got forced resync:", resp.toString(), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
+            console.warn("Got forced resync:", JSON.stringify(resp), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
             // The following order of execution is important, because "handleInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
             window.handleRoomDownsyncFrame(resp.rdf);
             window.handleInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);

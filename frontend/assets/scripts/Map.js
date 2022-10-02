@@ -947,6 +947,7 @@ cc.Class({
       rdf.id > self.lastAllConfirmedRenderFrameId
     ) {
       self.lastAllConfirmedRenderFrameId = rdf.id; 
+      self.chaserRenderFrameId = rdf.id; // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"  
     }
     self._dumpToRenderCache(rdf); 
     return rdf;
@@ -978,7 +979,7 @@ cc.Class({
   },
 
   rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
-    if (renderFrameSt >= renderFrameIdEd) {
+    if (renderFrameIdSt >= renderFrameIdEd) {
       return;
     }
 
