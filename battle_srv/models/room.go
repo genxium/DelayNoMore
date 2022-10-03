@@ -1029,26 +1029,7 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *pb.InputFrameDowns
 			InputList:     currInputList,
 			ConfirmedList: uint64(0),
 		}
-	}
-
-	for _, player := range pR.Players {
-		// Enrich by already arrived player upsync commands
-		bufIndex := pR.toDiscreteInputsBufferIndex(currInputFrameDownsync.InputFrameId, player.JoinIndex)
-		tmp, loaded := pR.DiscreteInputsBuffer.LoadAndDelete(bufIndex)
-		if !loaded {
-			continue
-		}
-		inputFrameUpsync := tmp.(*pb.InputFrameUpsync)
-		indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
-		currInputFrameDownsync.InputList[indiceInJoinIndexBooleanArr] = pR.EncodeUpsyncCmd(inputFrameUpsync)
-		currInputFrameDownsync.ConfirmedList |= (1 << indiceInJoinIndexBooleanArr)
-	}
-
-	totPlayerCnt := uint32(pR.Capacity)
-	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
-	if currInputFrameDownsync.ConfirmedList == allConfirmedMask {
-		pR.onInputFrameDownsyncAllConfirmed(currInputFrameDownsync, -1)
-	}
+	}	
 
 	pR.InputsBuffer.Put(currInputFrameDownsync)
 	return currInputFrameDownsync
@@ -1077,21 +1058,28 @@ func (pR *Room) forceConfirmationIfApplicable() uint64 {
 		panic(fmt.Sprintf("inputFrameId2=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", inputFrameId2, pR.Id, pR.InputsBufferString(false)))
 	}
 	inputFrame2 := tmp.(*pb.InputFrameDownsync)
+    for _, player := range pR.Players {
+		// Enrich by already arrived player upsync commands
+		bufIndex := pR.toDiscreteInputsBufferIndex(inputFrame2.InputFrameId, player.JoinIndex)
+		tmp, loaded := pR.DiscreteInputsBuffer.LoadAndDelete(bufIndex)
+		if !loaded {
+			continue
+		}
+		inputFrameUpsync := tmp.(*pb.InputFrameUpsync)
+		indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
+		inputFrame2.InputList[indiceInJoinIndexBooleanArr] = pR.EncodeUpsyncCmd(inputFrameUpsync)
+		inputFrame2.ConfirmedList |= (1 << indiceInJoinIndexBooleanArr)
+	}
 
 	totPlayerCnt := uint32(pR.Capacity)
 	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
-	if swapped := atomic.CompareAndSwapUint64(&(inputFrame2.ConfirmedList), allConfirmedMask, allConfirmedMask); swapped {
-		// This could happen if the frontend upsync command arrived between type#1 and type#2 checks.
-		Logger.Debug(fmt.Sprintf("inputFrameId2=%v is already all-confirmed for roomId=%v[type#2], no need to force confirmation of it", inputFrameId2, pR.Id))
-		return 0
-	}
 
 	// Force confirmation of "inputFrame2"
-	oldConfirmedList := atomic.LoadUint64(&(inputFrame2.ConfirmedList))
-	atomic.StoreUint64(&(inputFrame2.ConfirmedList), allConfirmedMask)
+	oldConfirmedList := inputFrame2.ConfirmedList
+	unconfirmedMask := (oldConfirmedList ^ allConfirmedMask)
+	inputFrame2.ConfirmedList = allConfirmedMask
 	pR.onInputFrameDownsyncAllConfirmed(inputFrame2, -1)
 
-	unconfirmedMask := (oldConfirmedList ^ allConfirmedMask)
 	return unconfirmedMask
 }
 
