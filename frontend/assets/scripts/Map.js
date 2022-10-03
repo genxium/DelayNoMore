@@ -547,20 +547,23 @@ cc.Class({
     this._inputControlEnabled = false;
   },
 
-  onBattleStartedOrResynced(rdf) {
+  onRoomDownsyncFrame(rdf) {
     // This function is also applicable to "re-joining".
     const self = window.mapIns;
+    if (rdf.id < self.lastAllConfirmedRenderFrameId) {
+      return window.RING_BUFF_FAILED_TO_SET;
+    }
     const dumpRenderCacheRet = self.dumpToRenderCache(rdf);
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
       console.error("Something is wrong while setting the RingBuffer by frameId!");
       return dumpRenderCacheRet;
     }
     if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet) {
-      if (rdf.id < self.chaserRenderFrameId) {
-        // This "rdf.id = backend.refRenderFrameId" could be small, see comments around "room.go".
-        self.chaserRenderFrameId = rdf.id;
-      }
-      // In this case, we'll also got proper all-confirmed inputFrames for advancing the renderFrames in the coming "update(dt)" 
+      /*
+      Don't change 
+      - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase > _createRoomDownsyncFrameLocally" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
+      - chaserRenderFrameId, it's updated only in "onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
+      */
       return dumpRenderCacheRet;
     }
 
@@ -569,6 +572,7 @@ cc.Class({
 
     self.renderFrameId = rdf.id;
     self.lastRenderFrameIdTriggeredAt = performance.now();
+    // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
     self.lastAllConfirmedRenderFrameId = rdf.id;
     self.chaserRenderFrameId = rdf.id;
 
@@ -623,6 +627,9 @@ cc.Class({
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
       const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
+      if (inputFrameDownsyncId < self.lastAllConfirmedInputFrameId) {
+        continue;
+      }
       if (window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet) {
         // Deliberately left blank, in this case "chaserRenderFrameId" is already reset to proper value.
       } else {
@@ -767,8 +774,9 @@ cc.Class({
         // Use "fractional-frame-chasing" to guarantee that "self.update(dt)" is not jammed by a "large range of frame-chasing". See `<proj-root>/ConcerningEdgeCases.md` for the motivation. 
         const prevChaserRenderFrameId = self.chaserRenderFrameId;
         let nextChaserRenderFrameId = (prevChaserRenderFrameId + self.maxChasingRenderFramesPerUpdate);
-        if (nextChaserRenderFrameId > self.renderFrameId)
+        if (nextChaserRenderFrameId > self.renderFrameId) {
           nextChaserRenderFrameId = self.renderFrameId;
+        }
         self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
         self.chaserRenderFrameId = nextChaserRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
         let t2 = performance.now();
@@ -975,28 +983,26 @@ cc.Class({
   },
 
   rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
-    if (renderFrameIdSt >= renderFrameIdEd) {
-      return;
-    }
-
     const self = this;
-    const renderFrameSt = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
-    if (null == renderFrameSt) {
+    let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
+    if (null == latestRdf) {
       console.error("Couldn't find renderFrameId=", renderFrameIdSt, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
     }
+
+    if (renderFrameIdSt >= renderFrameIdEd) {
+      return latestRdf;
+    }
     /* 
-    Reset "position" of players in "collisionSys" according to "renderFrameSt". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
+    Reset "position" of players in "collisionSys" according to "renderFrameIdSt". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
     */
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const joinIndex = playerRichInfo.joinIndex;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const player = renderFrameSt.players[playerId];
+      const player = latestRdf.players[playerId];
       playerCollider.x = player.x;
       playerCollider.y = player.y;
     });
-
-    // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
 
     /*
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
@@ -1009,6 +1015,7 @@ cc.Class({
         console.error("Failed to get cached inputFrameDownsync for renderFrameId=", i, ", inputFrameId=", j, "lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
       }
       const inputList = inputFrameDownsync.inputList;
+      // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
         const playerId = self.playerRichInfoArr[j].id;
@@ -1038,9 +1045,11 @@ cc.Class({
           playerCollider.y -= result.overlap * result.overlap_y;
         }
       }
+
+      latestRdf = self._createRoomDownsyncFrameLocally(i+1, collisionSys, collisionSysMap);
     }
 
-    return self._createRoomDownsyncFrameLocally(renderFrameIdEd, collisionSys, collisionSysMap);
+    return latestRdf;
   },
 
   _initPlayerRichInfoDict(players, playerMetas) {

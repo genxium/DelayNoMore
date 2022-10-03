@@ -171,7 +171,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           mapIns.onBattleReadyToStart(resp.rdf.playerMetas, false);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_START:
-          mapIns.onBattleStartedOrResynced(resp.rdf);
+          mapIns.onRoomDownsyncFrame(resp.rdf);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED:
           mapIns.onBattleStopped();
@@ -180,9 +180,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
-          console.warn("Got forced resync:", JSON.stringify(resp), " @localRenderFrameId=", mapIns.renderFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false));
+          console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp));
           // The following order of execution is important, because "onInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
-          const dumpRenderCacheRet = mapIns.onBattleStartedOrResynced(resp.rdf);
+          const dumpRenderCacheRet = mapIns.onRoomDownsyncFrame(resp.rdf);
           mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch, dumpRenderCacheRet);
           break;
         default:

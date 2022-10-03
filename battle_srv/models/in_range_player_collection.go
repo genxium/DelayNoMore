@@ -86,7 +86,7 @@ func (p *InRangePlayerCollection) NextPlayerToAttack() *InRangePlayerNode {
 
 //TODO: 完成重构
 
-/// Doubly circular linked list Implement
+// / Doubly circular linked list Implement
 type InRangePlayerNode struct {
 	Prev   *InRangePlayerNode
 	Next   *InRangePlayerNode

@@ -94,7 +94,7 @@ func (w *wechat) GetJsConfig(uri string) (config *JsConfig, err error) {
 	return
 }
 
-//TODO add cache, getTicket 获取jsapi_ticket
+// TODO add cache, getTicket 获取jsapi_ticket
 func (w *wechat) getTicket() (ticketStr string, err error) {
 	var ticket resTicket
 	ticket, err = w.getTicketFromServer()
@@ -131,7 +131,7 @@ func (w *wechat) GetOauth2Basic(authcode string) (result resAccessToken, err err
 	return
 }
 
-//UserInfo 用户授权获取到用户信息
+// UserInfo 用户授权获取到用户信息
 type UserInfo struct {
 	CommonError
 	OpenID     string   `json:"openid"`
@@ -164,7 +164,7 @@ func (w *wechat) GetMoreInfo(accessToken string, openId string) (result UserInfo
 	return
 }
 
-//HTTPGet get 请求
+// HTTPGet get 请求
 func get(uri string) ([]byte, error) {
 	response, err := http.Get(uri)
 	if err != nil {
@@ -182,7 +182,7 @@ func get(uri string) ([]byte, error) {
 	return body, err
 }
 
-//PostJSON post json 数据请求
+// PostJSON post json 数据请求
 func post(uri string, obj interface{}) ([]byte, error) {
 	jsonData, err := json.Marshal(obj)
 	if err != nil {
@@ -206,7 +206,7 @@ func post(uri string, obj interface{}) ([]byte, error) {
 	return ioutil.ReadAll(response.Body)
 }
 
-//Signature sha1签名
+// Signature sha1签名
 func signature(params ...string) string {
 	sort.Strings(params)
 	h := sha1.New()
@@ -216,7 +216,7 @@ func signature(params ...string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-//RandomStr 随机生成字符串
+// RandomStr 随机生成字符串
 func randomStr(length int) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)
@@ -228,7 +228,7 @@ func randomStr(length int) string {
 	return string(result)
 }
 
-//getTicketFromServer 强制从服务器中获取ticket
+// getTicketFromServer 强制从服务器中获取ticket
 func (w *wechat) getTicketFromServer() (ticket resTicket, err error) {
 	var accessToken string
 	accessToken, err = w.getAccessTokenFromServer()
@@ -256,7 +256,7 @@ func (w *wechat) getTicketFromServer() (ticket resTicket, err error) {
 	return
 }
 
-//GetAccessTokenFromServer 强制从微信服务器获取token
+// GetAccessTokenFromServer 强制从微信服务器获取token
 func (w *wechat) getAccessTokenFromServer() (accessToken string, err error) {
 	AccessTokenURL := w.config.ApiProtocol + "://" + w.config.ApiGateway + "/cgi-bin/token"
 	url := fmt.Sprintf("%s?grant_type=client_credential&appid=%s&secret=%s", AccessTokenURL, w.config.AppID, w.config.AppSecret)

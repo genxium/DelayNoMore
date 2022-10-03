@@ -68,7 +68,7 @@ RingBuffer.prototype.getByFrameId = function(frameId) {
 // [WARNING] During a battle, frontend could receive non-consecutive frames (either renderFrame or inputFrame) due to resync, the buffer should handle these frames properly. 
 RingBuffer.prototype.setByFrameId = function(item, frameId) {
   if (frameId < this.stFrameId) {
-    console.error("Invalid putByFrameId#1: stFrameId=", stFrameId, ", edFrameId=", edFrameId, ", incoming item=", item);
+    console.error("Invalid putByFrameId#1: stFrameId=", this.stFrameId, ", edFrameId=", this.edFrameId, ", incoming item=", item);
     return window.RING_BUFF_FAILED_TO_SET;
   }
   const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
