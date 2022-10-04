@@ -66,7 +66,7 @@ func createMysqlData(rows *sqlx.Rows, v string) {
 	}
 }
 
-//加上tableName参数, 用于pre_conf_data.sqlite里bot_player表的复用 --kobako
+// 加上tableName参数, 用于pre_conf_data.sqlite里bot_player表的复用 --kobako
 func maybeCreateNewPlayerFromBotTable(db *sqlx.DB, tableName string) {
 	var ls []*dbBotPlayer
 	err := db.Select(&ls, "SELECT name, magic_phone_country_code, magic_phone_num, display_name FROM "+tableName)

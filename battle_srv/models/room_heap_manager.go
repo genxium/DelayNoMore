@@ -3,7 +3,6 @@ package models
 import (
 	"container/heap"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	. "server/common"
 	"sync"
@@ -92,43 +91,13 @@ func InitRoomHeapManager() {
 
 	for i := 0; i < initialCountOfRooms; i++ {
 		roomCapacity := 2
-		joinIndexBooleanArr := make([]bool, roomCapacity)
-		for index, _ := range joinIndexBooleanArr {
-			joinIndexBooleanArr[index] = false
-		}
-		currentRoomBattleState := RoomBattleStateIns.IDLE
 		pq[i] = &Room{
-			Id:                        int32(i + 1),
-			Players:                   make(map[int32]*Player),
-			PlayerDownsyncSessionDict: make(map[int32]*websocket.Conn),
-			PlayerSignalToCloseDict:   make(map[int32]SignalToCloseConnCbType),
-			Capacity:                  roomCapacity,
-			Score:                     calRoomScore(0, roomCapacity, currentRoomBattleState),
-			State:                     currentRoomBattleState,
-			Index:                     i,
-			Tick:                      0,
-			EffectivePlayerCount:      0,
-			//BattleDurationNanos:    int64(5 * 1000 * 1000 * 1000),
-			BattleDurationNanos:                    int64(30 * 1000 * 1000 * 1000),
-			ServerFPS:                              60,
-			Treasures:                              make(map[int32]*Treasure),
-			Traps:                                  make(map[int32]*Trap),
-			GuardTowers:                            make(map[int32]*GuardTower),
-			Bullets:                                make(map[int32]*Bullet),
-			SpeedShoes:                             make(map[int32]*SpeedShoe),
-			Barriers:                               make(map[int32]*Barrier),
-			Pumpkins:                               make(map[int32]*Pumpkin),
-			AccumulatedLocalIdForBullets:           0,
-			AllPlayerInputsBuffer:                  NewRingBuffer(1024),
-			LastAllConfirmedInputFrameId:           -1,
-			LastAllConfirmedInputFrameIdWithChange: -1,
-			LastAllConfirmedInputList:              make([]uint64, roomCapacity),
-			InputDelayFrames:                       4,
-			InputScaleFrames:                       2,
-			JoinIndexBooleanArr:                    joinIndexBooleanArr,
+			Id:       int32(i + 1),
+			Capacity: roomCapacity,
+			Index:    i,
 		}
 		roomMap[pq[i].Id] = pq[i]
-		pq[i].ChooseStage()
+		pq[i].OnDismissed()
 	}
 	heap.Init(&pq)
 	RoomHeapManagerIns = &pq

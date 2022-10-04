@@ -1179,16 +1179,24 @@ $root.treasurehunterx = (function() {
          * Properties of a BattleColliderInfo.
          * @memberof treasurehunterx
          * @interface IBattleColliderInfo
-         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
-         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
-         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
          * @property {string|null} [stageName] BattleColliderInfo stageName
          * @property {Object.<string,treasurehunterx.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
          * @property {Object.<string,treasurehunterx.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
-         * @property {number|null} [StageDiscreteW] BattleColliderInfo StageDiscreteW
-         * @property {number|null} [StageDiscreteH] BattleColliderInfo StageDiscreteH
-         * @property {number|null} [StageTileW] BattleColliderInfo StageTileW
-         * @property {number|null} [StageTileH] BattleColliderInfo StageTileH
+         * @property {number|null} [stageDiscreteW] BattleColliderInfo stageDiscreteW
+         * @property {number|null} [stageDiscreteH] BattleColliderInfo stageDiscreteH
+         * @property {number|null} [stageTileW] BattleColliderInfo stageTileW
+         * @property {number|null} [stageTileH] BattleColliderInfo stageTileH
+         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
+         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
+         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
+         * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
+         * @property {number|null} [serverFps] BattleColliderInfo serverFps
+         * @property {number|null} [inputDelayFrames] BattleColliderInfo inputDelayFrames
+         * @property {number|null} [inputScaleFrames] BattleColliderInfo inputScaleFrames
+         * @property {number|null} [nstDelayFrames] BattleColliderInfo nstDelayFrames
+         * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
+         * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
+         * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
          */
 
         /**
@@ -1207,30 +1215,6 @@ $root.treasurehunterx = (function() {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
-
-        /**
-         * BattleColliderInfo intervalToPing.
-         * @member {number} intervalToPing
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.intervalToPing = 0;
-
-        /**
-         * BattleColliderInfo willKickIfInactiveFor.
-         * @member {number} willKickIfInactiveFor
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
-
-        /**
-         * BattleColliderInfo boundRoomId.
-         * @member {number} boundRoomId
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.boundRoomId = 0;
 
         /**
          * BattleColliderInfo stageName.
@@ -1257,36 +1241,124 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.prototype.strToPolygon2DListMap = $util.emptyObject;
 
         /**
-         * BattleColliderInfo StageDiscreteW.
-         * @member {number} StageDiscreteW
+         * BattleColliderInfo stageDiscreteW.
+         * @member {number} stageDiscreteW
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageDiscreteW = 0;
+        BattleColliderInfo.prototype.stageDiscreteW = 0;
 
         /**
-         * BattleColliderInfo StageDiscreteH.
-         * @member {number} StageDiscreteH
+         * BattleColliderInfo stageDiscreteH.
+         * @member {number} stageDiscreteH
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageDiscreteH = 0;
+        BattleColliderInfo.prototype.stageDiscreteH = 0;
 
         /**
-         * BattleColliderInfo StageTileW.
-         * @member {number} StageTileW
+         * BattleColliderInfo stageTileW.
+         * @member {number} stageTileW
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageTileW = 0;
+        BattleColliderInfo.prototype.stageTileW = 0;
 
         /**
-         * BattleColliderInfo StageTileH.
-         * @member {number} StageTileH
+         * BattleColliderInfo stageTileH.
+         * @member {number} stageTileH
          * @memberof treasurehunterx.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.StageTileH = 0;
+        BattleColliderInfo.prototype.stageTileH = 0;
+
+        /**
+         * BattleColliderInfo intervalToPing.
+         * @member {number} intervalToPing
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.intervalToPing = 0;
+
+        /**
+         * BattleColliderInfo willKickIfInactiveFor.
+         * @member {number} willKickIfInactiveFor
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
+
+        /**
+         * BattleColliderInfo boundRoomId.
+         * @member {number} boundRoomId
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.boundRoomId = 0;
+
+        /**
+         * BattleColliderInfo battleDurationNanos.
+         * @member {number|Long} battleDurationNanos
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * BattleColliderInfo serverFps.
+         * @member {number} serverFps
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.serverFps = 0;
+
+        /**
+         * BattleColliderInfo inputDelayFrames.
+         * @member {number} inputDelayFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputDelayFrames = 0;
+
+        /**
+         * BattleColliderInfo inputScaleFrames.
+         * @member {number} inputScaleFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputScaleFrames = 0;
+
+        /**
+         * BattleColliderInfo nstDelayFrames.
+         * @member {number} nstDelayFrames
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.nstDelayFrames = 0;
+
+        /**
+         * BattleColliderInfo inputFrameUpsyncDelayTolerance.
+         * @member {number} inputFrameUpsyncDelayTolerance
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputFrameUpsyncDelayTolerance = 0;
+
+        /**
+         * BattleColliderInfo maxChasingRenderFramesPerUpdate.
+         * @member {number} maxChasingRenderFramesPerUpdate
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
+
+        /**
+         * BattleColliderInfo playerBattleState.
+         * @member {number} playerBattleState
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.playerBattleState = 0;
 
         /**
          * Creates a new BattleColliderInfo instance using the specified properties.
@@ -1312,32 +1384,48 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.intervalToPing);
-            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.willKickIfInactiveFor);
-            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.boundRoomId);
             if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
-                writer.uint32(/* id 4, wireType 2 =*/34).string(message.stageName);
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
             if (message.strToVec2DListMap != null && Object.hasOwnProperty.call(message, "strToVec2DListMap"))
                 for (var keys = Object.keys(message.strToVec2DListMap), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 5, wireType 2 =*/42).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.treasurehunterx.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.strToPolygon2DListMap != null && Object.hasOwnProperty.call(message, "strToPolygon2DListMap"))
                 for (var keys = Object.keys(message.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.treasurehunterx.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.StageDiscreteW != null && Object.hasOwnProperty.call(message, "StageDiscreteW"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.StageDiscreteW);
-            if (message.StageDiscreteH != null && Object.hasOwnProperty.call(message, "StageDiscreteH"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.StageDiscreteH);
-            if (message.StageTileW != null && Object.hasOwnProperty.call(message, "StageTileW"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.StageTileW);
-            if (message.StageTileH != null && Object.hasOwnProperty.call(message, "StageTileH"))
-                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.StageTileH);
+            if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageDiscreteW);
+            if (message.stageDiscreteH != null && Object.hasOwnProperty.call(message, "stageDiscreteH"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.stageDiscreteH);
+            if (message.stageTileW != null && Object.hasOwnProperty.call(message, "stageTileW"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.stageTileW);
+            if (message.stageTileH != null && Object.hasOwnProperty.call(message, "stageTileH"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.stageTileH);
+            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
+                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.intervalToPing);
+            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.willKickIfInactiveFor);
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.boundRoomId);
+            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
+                writer.uint32(/* id 11, wireType 0 =*/88).int64(message.battleDurationNanos);
+            if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
+                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.serverFps);
+            if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.inputDelayFrames);
+            if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
+                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.inputScaleFrames);
+            if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.nstDelayFrames);
+            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
+            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
+            if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
+                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
             return writer;
         };
 
@@ -1373,22 +1461,10 @@ $root.treasurehunterx = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.intervalToPing = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.willKickIfInactiveFor = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.boundRoomId = reader.int32();
-                        break;
-                    }
-                case 4: {
                         message.stageName = reader.string();
                         break;
                     }
-                case 5: {
+                case 2: {
                         if (message.strToVec2DListMap === $util.emptyObject)
                             message.strToVec2DListMap = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -1411,7 +1487,7 @@ $root.treasurehunterx = (function() {
                         message.strToVec2DListMap[key] = value;
                         break;
                     }
-                case 6: {
+                case 3: {
                         if (message.strToPolygon2DListMap === $util.emptyObject)
                             message.strToPolygon2DListMap = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -1434,20 +1510,64 @@ $root.treasurehunterx = (function() {
                         message.strToPolygon2DListMap[key] = value;
                         break;
                     }
+                case 4: {
+                        message.stageDiscreteW = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.stageDiscreteH = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.stageTileW = reader.int32();
+                        break;
+                    }
                 case 7: {
-                        message.StageDiscreteW = reader.int32();
+                        message.stageTileH = reader.int32();
                         break;
                     }
                 case 8: {
-                        message.StageDiscreteH = reader.int32();
+                        message.intervalToPing = reader.int32();
                         break;
                     }
                 case 9: {
-                        message.StageTileW = reader.int32();
+                        message.willKickIfInactiveFor = reader.int32();
                         break;
                     }
                 case 10: {
-                        message.StageTileH = reader.int32();
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.battleDurationNanos = reader.int64();
+                        break;
+                    }
+                case 12: {
+                        message.serverFps = reader.int32();
+                        break;
+                    }
+                case 13: {
+                        message.inputDelayFrames = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.inputScaleFrames = reader.uint32();
+                        break;
+                    }
+                case 15: {
+                        message.nstDelayFrames = reader.int32();
+                        break;
+                    }
+                case 16: {
+                        message.inputFrameUpsyncDelayTolerance = reader.int32();
+                        break;
+                    }
+                case 17: {
+                        message.maxChasingRenderFramesPerUpdate = reader.int32();
+                        break;
+                    }
+                case 18: {
+                        message.playerBattleState = reader.int32();
                         break;
                     }
                 default:
@@ -1485,15 +1605,6 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                if (!$util.isInteger(message.intervalToPing))
-                    return "intervalToPing: integer expected";
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                if (!$util.isInteger(message.willKickIfInactiveFor))
-                    return "willKickIfInactiveFor: integer expected";
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                if (!$util.isInteger(message.boundRoomId))
-                    return "boundRoomId: integer expected";
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 if (!$util.isString(message.stageName))
                     return "stageName: string expected";
@@ -1517,18 +1628,51 @@ $root.treasurehunterx = (function() {
                         return "strToPolygon2DListMap." + error;
                 }
             }
-            if (message.StageDiscreteW != null && message.hasOwnProperty("StageDiscreteW"))
-                if (!$util.isInteger(message.StageDiscreteW))
-                    return "StageDiscreteW: integer expected";
-            if (message.StageDiscreteH != null && message.hasOwnProperty("StageDiscreteH"))
-                if (!$util.isInteger(message.StageDiscreteH))
-                    return "StageDiscreteH: integer expected";
-            if (message.StageTileW != null && message.hasOwnProperty("StageTileW"))
-                if (!$util.isInteger(message.StageTileW))
-                    return "StageTileW: integer expected";
-            if (message.StageTileH != null && message.hasOwnProperty("StageTileH"))
-                if (!$util.isInteger(message.StageTileH))
-                    return "StageTileH: integer expected";
+            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
+                if (!$util.isInteger(message.stageDiscreteW))
+                    return "stageDiscreteW: integer expected";
+            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
+                if (!$util.isInteger(message.stageDiscreteH))
+                    return "stageDiscreteH: integer expected";
+            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
+                if (!$util.isInteger(message.stageTileW))
+                    return "stageTileW: integer expected";
+            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
+                if (!$util.isInteger(message.stageTileH))
+                    return "stageTileH: integer expected";
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                if (!$util.isInteger(message.intervalToPing))
+                    return "intervalToPing: integer expected";
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                if (!$util.isInteger(message.willKickIfInactiveFor))
+                    return "willKickIfInactiveFor: integer expected";
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                if (!$util.isInteger(message.boundRoomId))
+                    return "boundRoomId: integer expected";
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
+                    return "battleDurationNanos: integer|Long expected";
+            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
+                if (!$util.isInteger(message.serverFps))
+                    return "serverFps: integer expected";
+            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
+                if (!$util.isInteger(message.inputDelayFrames))
+                    return "inputDelayFrames: integer expected";
+            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
+                if (!$util.isInteger(message.inputScaleFrames))
+                    return "inputScaleFrames: integer expected";
+            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
+                if (!$util.isInteger(message.nstDelayFrames))
+                    return "nstDelayFrames: integer expected";
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                if (!$util.isInteger(message.inputFrameUpsyncDelayTolerance))
+                    return "inputFrameUpsyncDelayTolerance: integer expected";
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
+                    return "maxChasingRenderFramesPerUpdate: integer expected";
+            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
+                if (!$util.isInteger(message.playerBattleState))
+                    return "playerBattleState: integer expected";
             return null;
         };
 
@@ -1544,12 +1688,6 @@ $root.treasurehunterx = (function() {
             if (object instanceof $root.treasurehunterx.BattleColliderInfo)
                 return object;
             var message = new $root.treasurehunterx.BattleColliderInfo();
-            if (object.intervalToPing != null)
-                message.intervalToPing = object.intervalToPing | 0;
-            if (object.willKickIfInactiveFor != null)
-                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
-            if (object.boundRoomId != null)
-                message.boundRoomId = object.boundRoomId | 0;
             if (object.stageName != null)
                 message.stageName = String(object.stageName);
             if (object.strToVec2DListMap) {
@@ -1572,14 +1710,43 @@ $root.treasurehunterx = (function() {
                     message.strToPolygon2DListMap[keys[i]] = $root.treasurehunterx.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
                 }
             }
-            if (object.StageDiscreteW != null)
-                message.StageDiscreteW = object.StageDiscreteW | 0;
-            if (object.StageDiscreteH != null)
-                message.StageDiscreteH = object.StageDiscreteH | 0;
-            if (object.StageTileW != null)
-                message.StageTileW = object.StageTileW | 0;
-            if (object.StageTileH != null)
-                message.StageTileH = object.StageTileH | 0;
+            if (object.stageDiscreteW != null)
+                message.stageDiscreteW = object.stageDiscreteW | 0;
+            if (object.stageDiscreteH != null)
+                message.stageDiscreteH = object.stageDiscreteH | 0;
+            if (object.stageTileW != null)
+                message.stageTileW = object.stageTileW | 0;
+            if (object.stageTileH != null)
+                message.stageTileH = object.stageTileH | 0;
+            if (object.intervalToPing != null)
+                message.intervalToPing = object.intervalToPing | 0;
+            if (object.willKickIfInactiveFor != null)
+                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
+            if (object.boundRoomId != null)
+                message.boundRoomId = object.boundRoomId | 0;
+            if (object.battleDurationNanos != null)
+                if ($util.Long)
+                    (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
+                else if (typeof object.battleDurationNanos === "string")
+                    message.battleDurationNanos = parseInt(object.battleDurationNanos, 10);
+                else if (typeof object.battleDurationNanos === "number")
+                    message.battleDurationNanos = object.battleDurationNanos;
+                else if (typeof object.battleDurationNanos === "object")
+                    message.battleDurationNanos = new $util.LongBits(object.battleDurationNanos.low >>> 0, object.battleDurationNanos.high >>> 0).toNumber();
+            if (object.serverFps != null)
+                message.serverFps = object.serverFps | 0;
+            if (object.inputDelayFrames != null)
+                message.inputDelayFrames = object.inputDelayFrames | 0;
+            if (object.inputScaleFrames != null)
+                message.inputScaleFrames = object.inputScaleFrames >>> 0;
+            if (object.nstDelayFrames != null)
+                message.nstDelayFrames = object.nstDelayFrames | 0;
+            if (object.inputFrameUpsyncDelayTolerance != null)
+                message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
+            if (object.maxChasingRenderFramesPerUpdate != null)
+                message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
+            if (object.playerBattleState != null)
+                message.playerBattleState = object.playerBattleState | 0;
             return message;
         };
 
@@ -1601,21 +1768,27 @@ $root.treasurehunterx = (function() {
                 object.strToPolygon2DListMap = {};
             }
             if (options.defaults) {
+                object.stageName = "";
+                object.stageDiscreteW = 0;
+                object.stageDiscreteH = 0;
+                object.stageTileW = 0;
+                object.stageTileH = 0;
                 object.intervalToPing = 0;
                 object.willKickIfInactiveFor = 0;
                 object.boundRoomId = 0;
-                object.stageName = "";
-                object.StageDiscreteW = 0;
-                object.StageDiscreteH = 0;
-                object.StageTileW = 0;
-                object.StageTileH = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.battleDurationNanos = options.longs === String ? "0" : 0;
+                object.serverFps = 0;
+                object.inputDelayFrames = 0;
+                object.inputScaleFrames = 0;
+                object.nstDelayFrames = 0;
+                object.inputFrameUpsyncDelayTolerance = 0;
+                object.maxChasingRenderFramesPerUpdate = 0;
+                object.playerBattleState = 0;
             }
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                object.intervalToPing = message.intervalToPing;
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                object.boundRoomId = message.boundRoomId;
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
             var keys2;
@@ -1629,14 +1802,39 @@ $root.treasurehunterx = (function() {
                 for (var j = 0; j < keys2.length; ++j)
                     object.strToPolygon2DListMap[keys2[j]] = $root.treasurehunterx.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
             }
-            if (message.StageDiscreteW != null && message.hasOwnProperty("StageDiscreteW"))
-                object.StageDiscreteW = message.StageDiscreteW;
-            if (message.StageDiscreteH != null && message.hasOwnProperty("StageDiscreteH"))
-                object.StageDiscreteH = message.StageDiscreteH;
-            if (message.StageTileW != null && message.hasOwnProperty("StageTileW"))
-                object.StageTileW = message.StageTileW;
-            if (message.StageTileH != null && message.hasOwnProperty("StageTileH"))
-                object.StageTileH = message.StageTileH;
+            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
+                object.stageDiscreteW = message.stageDiscreteW;
+            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
+                object.stageDiscreteH = message.stageDiscreteH;
+            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
+                object.stageTileW = message.stageTileW;
+            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
+                object.stageTileH = message.stageTileH;
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                object.intervalToPing = message.intervalToPing;
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                object.boundRoomId = message.boundRoomId;
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (typeof message.battleDurationNanos === "number")
+                    object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;
+                else
+                    object.battleDurationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.battleDurationNanos) : options.longs === Number ? new $util.LongBits(message.battleDurationNanos.low >>> 0, message.battleDurationNanos.high >>> 0).toNumber() : message.battleDurationNanos;
+            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
+                object.serverFps = message.serverFps;
+            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
+                object.inputDelayFrames = message.inputDelayFrames;
+            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
+                object.inputScaleFrames = message.inputScaleFrames;
+            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
+                object.nstDelayFrames = message.nstDelayFrames;
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
+            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
+                object.playerBattleState = message.playerBattleState;
             return object;
         };
 
@@ -1815,7 +2013,7 @@ $root.treasurehunterx = (function() {
             if (message.dir != null && Object.hasOwnProperty.call(message, "dir"))
                 $root.treasurehunterx.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.speed);
+                writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
             if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.battleState);
             if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
@@ -1877,7 +2075,7 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 5: {
-                        message.speed = reader.int32();
+                        message.speed = reader.double();
                         break;
                     }
                 case 6: {
@@ -1950,8 +2148,8 @@ $root.treasurehunterx = (function() {
                     return "dir." + error;
             }
             if (message.speed != null && message.hasOwnProperty("speed"))
-                if (!$util.isInteger(message.speed))
-                    return "speed: integer expected";
+                if (typeof message.speed !== "number")
+                    return "speed: number expected";
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 if (!$util.isInteger(message.battleState))
                     return "battleState: integer expected";
@@ -1994,7 +2192,7 @@ $root.treasurehunterx = (function() {
                 message.dir = $root.treasurehunterx.Direction.fromObject(object.dir);
             }
             if (object.speed != null)
-                message.speed = object.speed | 0;
+                message.speed = Number(object.speed);
             if (object.battleState != null)
                 message.battleState = object.battleState | 0;
             if (object.lastMoveGmtMillis != null)
@@ -2042,7 +2240,7 @@ $root.treasurehunterx = (function() {
             if (message.dir != null && message.hasOwnProperty("dir"))
                 object.dir = $root.treasurehunterx.Direction.toObject(message.dir, options);
             if (message.speed != null && message.hasOwnProperty("speed"))
-                object.speed = message.speed;
+                object.speed = options.json && !isFinite(message.speed) ? String(message.speed) : message.speed;
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 object.battleState = message.battleState;
             if (message.lastMoveGmtMillis != null && message.hasOwnProperty("lastMoveGmtMillis"))
@@ -2379,2733 +2577,6 @@ $root.treasurehunterx = (function() {
         };
 
         return PlayerMeta;
-    })();
-
-    treasurehunterx.Treasure = (function() {
-
-        /**
-         * Properties of a Treasure.
-         * @memberof treasurehunterx
-         * @interface ITreasure
-         * @property {number|null} [id] Treasure id
-         * @property {number|null} [localIdInBattle] Treasure localIdInBattle
-         * @property {number|null} [score] Treasure score
-         * @property {number|null} [x] Treasure x
-         * @property {number|null} [y] Treasure y
-         * @property {boolean|null} [removed] Treasure removed
-         * @property {number|null} [type] Treasure type
-         */
-
-        /**
-         * Constructs a new Treasure.
-         * @memberof treasurehunterx
-         * @classdesc Represents a Treasure.
-         * @implements ITreasure
-         * @constructor
-         * @param {treasurehunterx.ITreasure=} [properties] Properties to set
-         */
-        function Treasure(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Treasure id.
-         * @member {number} id
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.id = 0;
-
-        /**
-         * Treasure localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.localIdInBattle = 0;
-
-        /**
-         * Treasure score.
-         * @member {number} score
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.score = 0;
-
-        /**
-         * Treasure x.
-         * @member {number} x
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.x = 0;
-
-        /**
-         * Treasure y.
-         * @member {number} y
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.y = 0;
-
-        /**
-         * Treasure removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.removed = false;
-
-        /**
-         * Treasure type.
-         * @member {number} type
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         */
-        Treasure.prototype.type = 0;
-
-        /**
-         * Creates a new Treasure instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {treasurehunterx.ITreasure=} [properties] Properties to set
-         * @returns {treasurehunterx.Treasure} Treasure instance
-         */
-        Treasure.create = function create(properties) {
-            return new Treasure(properties);
-        };
-
-        /**
-         * Encodes the specified Treasure message. Does not implicitly {@link treasurehunterx.Treasure.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {treasurehunterx.Treasure} message Treasure message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Treasure.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.localIdInBattle);
-            if (message.score != null && Object.hasOwnProperty.call(message, "score"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.score);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 5, wireType 1 =*/41).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.removed);
-            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.type);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Treasure message, length delimited. Does not implicitly {@link treasurehunterx.Treasure.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {treasurehunterx.Treasure} message Treasure message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Treasure.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Treasure message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Treasure} Treasure
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Treasure.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Treasure();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.score = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 6: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                case 7: {
-                        message.type = reader.int32();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Treasure message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Treasure} Treasure
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Treasure.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Treasure message.
-         * @function verify
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Treasure.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.score != null && message.hasOwnProperty("score"))
-                if (!$util.isInteger(message.score))
-                    return "score: integer expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            if (message.type != null && message.hasOwnProperty("type"))
-                if (!$util.isInteger(message.type))
-                    return "type: integer expected";
-            return null;
-        };
-
-        /**
-         * Creates a Treasure message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Treasure} Treasure
-         */
-        Treasure.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Treasure)
-                return object;
-            var message = new $root.treasurehunterx.Treasure();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.score != null)
-                message.score = object.score | 0;
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            if (object.type != null)
-                message.type = object.type | 0;
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Treasure message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {treasurehunterx.Treasure} message Treasure
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Treasure.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.id = 0;
-                object.localIdInBattle = 0;
-                object.score = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-                object.type = 0;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.score != null && message.hasOwnProperty("score"))
-                object.score = message.score;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            if (message.type != null && message.hasOwnProperty("type"))
-                object.type = message.type;
-            return object;
-        };
-
-        /**
-         * Converts this Treasure to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.Treasure
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Treasure.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Treasure
-         * @function getTypeUrl
-         * @memberof treasurehunterx.Treasure
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Treasure.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.Treasure";
-        };
-
-        return Treasure;
-    })();
-
-    treasurehunterx.Bullet = (function() {
-
-        /**
-         * Properties of a Bullet.
-         * @memberof treasurehunterx
-         * @interface IBullet
-         * @property {number|null} [localIdInBattle] Bullet localIdInBattle
-         * @property {number|null} [linearSpeed] Bullet linearSpeed
-         * @property {number|null} [x] Bullet x
-         * @property {number|null} [y] Bullet y
-         * @property {boolean|null} [removed] Bullet removed
-         * @property {treasurehunterx.Vec2D|null} [startAtPoint] Bullet startAtPoint
-         * @property {treasurehunterx.Vec2D|null} [endAtPoint] Bullet endAtPoint
-         */
-
-        /**
-         * Constructs a new Bullet.
-         * @memberof treasurehunterx
-         * @classdesc Represents a Bullet.
-         * @implements IBullet
-         * @constructor
-         * @param {treasurehunterx.IBullet=} [properties] Properties to set
-         */
-        function Bullet(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Bullet localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.localIdInBattle = 0;
-
-        /**
-         * Bullet linearSpeed.
-         * @member {number} linearSpeed
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.linearSpeed = 0;
-
-        /**
-         * Bullet x.
-         * @member {number} x
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.x = 0;
-
-        /**
-         * Bullet y.
-         * @member {number} y
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.y = 0;
-
-        /**
-         * Bullet removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.removed = false;
-
-        /**
-         * Bullet startAtPoint.
-         * @member {treasurehunterx.Vec2D|null|undefined} startAtPoint
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.startAtPoint = null;
-
-        /**
-         * Bullet endAtPoint.
-         * @member {treasurehunterx.Vec2D|null|undefined} endAtPoint
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         */
-        Bullet.prototype.endAtPoint = null;
-
-        /**
-         * Creates a new Bullet instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {treasurehunterx.IBullet=} [properties] Properties to set
-         * @returns {treasurehunterx.Bullet} Bullet instance
-         */
-        Bullet.create = function create(properties) {
-            return new Bullet(properties);
-        };
-
-        /**
-         * Encodes the specified Bullet message. Does not implicitly {@link treasurehunterx.Bullet.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {treasurehunterx.Bullet} message Bullet message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Bullet.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.localIdInBattle);
-            if (message.linearSpeed != null && Object.hasOwnProperty.call(message, "linearSpeed"))
-                writer.uint32(/* id 2, wireType 1 =*/17).double(message.linearSpeed);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 3, wireType 1 =*/25).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.removed);
-            if (message.startAtPoint != null && Object.hasOwnProperty.call(message, "startAtPoint"))
-                $root.treasurehunterx.Vec2D.encode(message.startAtPoint, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
-            if (message.endAtPoint != null && Object.hasOwnProperty.call(message, "endAtPoint"))
-                $root.treasurehunterx.Vec2D.encode(message.endAtPoint, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Bullet message, length delimited. Does not implicitly {@link treasurehunterx.Bullet.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {treasurehunterx.Bullet} message Bullet message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Bullet.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Bullet message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Bullet} Bullet
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Bullet.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Bullet();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.linearSpeed = reader.double();
-                        break;
-                    }
-                case 3: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 4: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                case 6: {
-                        message.startAtPoint = $root.treasurehunterx.Vec2D.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 7: {
-                        message.endAtPoint = $root.treasurehunterx.Vec2D.decode(reader, reader.uint32());
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Bullet message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Bullet} Bullet
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Bullet.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Bullet message.
-         * @function verify
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Bullet.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.linearSpeed != null && message.hasOwnProperty("linearSpeed"))
-                if (typeof message.linearSpeed !== "number")
-                    return "linearSpeed: number expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            if (message.startAtPoint != null && message.hasOwnProperty("startAtPoint")) {
-                var error = $root.treasurehunterx.Vec2D.verify(message.startAtPoint);
-                if (error)
-                    return "startAtPoint." + error;
-            }
-            if (message.endAtPoint != null && message.hasOwnProperty("endAtPoint")) {
-                var error = $root.treasurehunterx.Vec2D.verify(message.endAtPoint);
-                if (error)
-                    return "endAtPoint." + error;
-            }
-            return null;
-        };
-
-        /**
-         * Creates a Bullet message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Bullet} Bullet
-         */
-        Bullet.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Bullet)
-                return object;
-            var message = new $root.treasurehunterx.Bullet();
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.linearSpeed != null)
-                message.linearSpeed = Number(object.linearSpeed);
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            if (object.startAtPoint != null) {
-                if (typeof object.startAtPoint !== "object")
-                    throw TypeError(".treasurehunterx.Bullet.startAtPoint: object expected");
-                message.startAtPoint = $root.treasurehunterx.Vec2D.fromObject(object.startAtPoint);
-            }
-            if (object.endAtPoint != null) {
-                if (typeof object.endAtPoint !== "object")
-                    throw TypeError(".treasurehunterx.Bullet.endAtPoint: object expected");
-                message.endAtPoint = $root.treasurehunterx.Vec2D.fromObject(object.endAtPoint);
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Bullet message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {treasurehunterx.Bullet} message Bullet
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Bullet.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.localIdInBattle = 0;
-                object.linearSpeed = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-                object.startAtPoint = null;
-                object.endAtPoint = null;
-            }
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.linearSpeed != null && message.hasOwnProperty("linearSpeed"))
-                object.linearSpeed = options.json && !isFinite(message.linearSpeed) ? String(message.linearSpeed) : message.linearSpeed;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            if (message.startAtPoint != null && message.hasOwnProperty("startAtPoint"))
-                object.startAtPoint = $root.treasurehunterx.Vec2D.toObject(message.startAtPoint, options);
-            if (message.endAtPoint != null && message.hasOwnProperty("endAtPoint"))
-                object.endAtPoint = $root.treasurehunterx.Vec2D.toObject(message.endAtPoint, options);
-            return object;
-        };
-
-        /**
-         * Converts this Bullet to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.Bullet
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Bullet.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Bullet
-         * @function getTypeUrl
-         * @memberof treasurehunterx.Bullet
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Bullet.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.Bullet";
-        };
-
-        return Bullet;
-    })();
-
-    treasurehunterx.Trap = (function() {
-
-        /**
-         * Properties of a Trap.
-         * @memberof treasurehunterx
-         * @interface ITrap
-         * @property {number|null} [id] Trap id
-         * @property {number|null} [localIdInBattle] Trap localIdInBattle
-         * @property {number|null} [type] Trap type
-         * @property {number|null} [x] Trap x
-         * @property {number|null} [y] Trap y
-         * @property {boolean|null} [removed] Trap removed
-         */
-
-        /**
-         * Constructs a new Trap.
-         * @memberof treasurehunterx
-         * @classdesc Represents a Trap.
-         * @implements ITrap
-         * @constructor
-         * @param {treasurehunterx.ITrap=} [properties] Properties to set
-         */
-        function Trap(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Trap id.
-         * @member {number} id
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.id = 0;
-
-        /**
-         * Trap localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.localIdInBattle = 0;
-
-        /**
-         * Trap type.
-         * @member {number} type
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.type = 0;
-
-        /**
-         * Trap x.
-         * @member {number} x
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.x = 0;
-
-        /**
-         * Trap y.
-         * @member {number} y
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.y = 0;
-
-        /**
-         * Trap removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.Trap
-         * @instance
-         */
-        Trap.prototype.removed = false;
-
-        /**
-         * Creates a new Trap instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {treasurehunterx.ITrap=} [properties] Properties to set
-         * @returns {treasurehunterx.Trap} Trap instance
-         */
-        Trap.create = function create(properties) {
-            return new Trap(properties);
-        };
-
-        /**
-         * Encodes the specified Trap message. Does not implicitly {@link treasurehunterx.Trap.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {treasurehunterx.Trap} message Trap message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Trap.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.localIdInBattle);
-            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.type);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 5, wireType 1 =*/41).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.removed);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Trap message, length delimited. Does not implicitly {@link treasurehunterx.Trap.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {treasurehunterx.Trap} message Trap message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Trap.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Trap message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Trap} Trap
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Trap.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Trap();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.type = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 6: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Trap message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Trap} Trap
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Trap.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Trap message.
-         * @function verify
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Trap.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.type != null && message.hasOwnProperty("type"))
-                if (!$util.isInteger(message.type))
-                    return "type: integer expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            return null;
-        };
-
-        /**
-         * Creates a Trap message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Trap} Trap
-         */
-        Trap.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Trap)
-                return object;
-            var message = new $root.treasurehunterx.Trap();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.type != null)
-                message.type = object.type | 0;
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Trap message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {treasurehunterx.Trap} message Trap
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Trap.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.id = 0;
-                object.localIdInBattle = 0;
-                object.type = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.type != null && message.hasOwnProperty("type"))
-                object.type = message.type;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            return object;
-        };
-
-        /**
-         * Converts this Trap to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.Trap
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Trap.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Trap
-         * @function getTypeUrl
-         * @memberof treasurehunterx.Trap
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Trap.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.Trap";
-        };
-
-        return Trap;
-    })();
-
-    treasurehunterx.SpeedShoe = (function() {
-
-        /**
-         * Properties of a SpeedShoe.
-         * @memberof treasurehunterx
-         * @interface ISpeedShoe
-         * @property {number|null} [id] SpeedShoe id
-         * @property {number|null} [localIdInBattle] SpeedShoe localIdInBattle
-         * @property {number|null} [x] SpeedShoe x
-         * @property {number|null} [y] SpeedShoe y
-         * @property {boolean|null} [removed] SpeedShoe removed
-         * @property {number|null} [type] SpeedShoe type
-         */
-
-        /**
-         * Constructs a new SpeedShoe.
-         * @memberof treasurehunterx
-         * @classdesc Represents a SpeedShoe.
-         * @implements ISpeedShoe
-         * @constructor
-         * @param {treasurehunterx.ISpeedShoe=} [properties] Properties to set
-         */
-        function SpeedShoe(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * SpeedShoe id.
-         * @member {number} id
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.id = 0;
-
-        /**
-         * SpeedShoe localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.localIdInBattle = 0;
-
-        /**
-         * SpeedShoe x.
-         * @member {number} x
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.x = 0;
-
-        /**
-         * SpeedShoe y.
-         * @member {number} y
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.y = 0;
-
-        /**
-         * SpeedShoe removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.removed = false;
-
-        /**
-         * SpeedShoe type.
-         * @member {number} type
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         */
-        SpeedShoe.prototype.type = 0;
-
-        /**
-         * Creates a new SpeedShoe instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {treasurehunterx.ISpeedShoe=} [properties] Properties to set
-         * @returns {treasurehunterx.SpeedShoe} SpeedShoe instance
-         */
-        SpeedShoe.create = function create(properties) {
-            return new SpeedShoe(properties);
-        };
-
-        /**
-         * Encodes the specified SpeedShoe message. Does not implicitly {@link treasurehunterx.SpeedShoe.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {treasurehunterx.SpeedShoe} message SpeedShoe message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        SpeedShoe.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.localIdInBattle);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 3, wireType 1 =*/25).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.removed);
-            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.type);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified SpeedShoe message, length delimited. Does not implicitly {@link treasurehunterx.SpeedShoe.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {treasurehunterx.SpeedShoe} message SpeedShoe message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        SpeedShoe.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a SpeedShoe message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.SpeedShoe} SpeedShoe
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        SpeedShoe.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.SpeedShoe();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 4: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                case 6: {
-                        message.type = reader.int32();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a SpeedShoe message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.SpeedShoe} SpeedShoe
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        SpeedShoe.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a SpeedShoe message.
-         * @function verify
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        SpeedShoe.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            if (message.type != null && message.hasOwnProperty("type"))
-                if (!$util.isInteger(message.type))
-                    return "type: integer expected";
-            return null;
-        };
-
-        /**
-         * Creates a SpeedShoe message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.SpeedShoe} SpeedShoe
-         */
-        SpeedShoe.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.SpeedShoe)
-                return object;
-            var message = new $root.treasurehunterx.SpeedShoe();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            if (object.type != null)
-                message.type = object.type | 0;
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a SpeedShoe message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {treasurehunterx.SpeedShoe} message SpeedShoe
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        SpeedShoe.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.id = 0;
-                object.localIdInBattle = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-                object.type = 0;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            if (message.type != null && message.hasOwnProperty("type"))
-                object.type = message.type;
-            return object;
-        };
-
-        /**
-         * Converts this SpeedShoe to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.SpeedShoe
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        SpeedShoe.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for SpeedShoe
-         * @function getTypeUrl
-         * @memberof treasurehunterx.SpeedShoe
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        SpeedShoe.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.SpeedShoe";
-        };
-
-        return SpeedShoe;
-    })();
-
-    treasurehunterx.Pumpkin = (function() {
-
-        /**
-         * Properties of a Pumpkin.
-         * @memberof treasurehunterx
-         * @interface IPumpkin
-         * @property {number|null} [localIdInBattle] Pumpkin localIdInBattle
-         * @property {number|null} [linearSpeed] Pumpkin linearSpeed
-         * @property {number|null} [x] Pumpkin x
-         * @property {number|null} [y] Pumpkin y
-         * @property {boolean|null} [removed] Pumpkin removed
-         */
-
-        /**
-         * Constructs a new Pumpkin.
-         * @memberof treasurehunterx
-         * @classdesc Represents a Pumpkin.
-         * @implements IPumpkin
-         * @constructor
-         * @param {treasurehunterx.IPumpkin=} [properties] Properties to set
-         */
-        function Pumpkin(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Pumpkin localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         */
-        Pumpkin.prototype.localIdInBattle = 0;
-
-        /**
-         * Pumpkin linearSpeed.
-         * @member {number} linearSpeed
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         */
-        Pumpkin.prototype.linearSpeed = 0;
-
-        /**
-         * Pumpkin x.
-         * @member {number} x
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         */
-        Pumpkin.prototype.x = 0;
-
-        /**
-         * Pumpkin y.
-         * @member {number} y
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         */
-        Pumpkin.prototype.y = 0;
-
-        /**
-         * Pumpkin removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         */
-        Pumpkin.prototype.removed = false;
-
-        /**
-         * Creates a new Pumpkin instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {treasurehunterx.IPumpkin=} [properties] Properties to set
-         * @returns {treasurehunterx.Pumpkin} Pumpkin instance
-         */
-        Pumpkin.create = function create(properties) {
-            return new Pumpkin(properties);
-        };
-
-        /**
-         * Encodes the specified Pumpkin message. Does not implicitly {@link treasurehunterx.Pumpkin.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {treasurehunterx.Pumpkin} message Pumpkin message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Pumpkin.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.localIdInBattle);
-            if (message.linearSpeed != null && Object.hasOwnProperty.call(message, "linearSpeed"))
-                writer.uint32(/* id 2, wireType 1 =*/17).double(message.linearSpeed);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 3, wireType 1 =*/25).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 5, wireType 0 =*/40).bool(message.removed);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Pumpkin message, length delimited. Does not implicitly {@link treasurehunterx.Pumpkin.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {treasurehunterx.Pumpkin} message Pumpkin message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Pumpkin.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Pumpkin message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Pumpkin} Pumpkin
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Pumpkin.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Pumpkin();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.linearSpeed = reader.double();
-                        break;
-                    }
-                case 3: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 4: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Pumpkin message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Pumpkin} Pumpkin
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Pumpkin.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Pumpkin message.
-         * @function verify
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Pumpkin.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.linearSpeed != null && message.hasOwnProperty("linearSpeed"))
-                if (typeof message.linearSpeed !== "number")
-                    return "linearSpeed: number expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            return null;
-        };
-
-        /**
-         * Creates a Pumpkin message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Pumpkin} Pumpkin
-         */
-        Pumpkin.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Pumpkin)
-                return object;
-            var message = new $root.treasurehunterx.Pumpkin();
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.linearSpeed != null)
-                message.linearSpeed = Number(object.linearSpeed);
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Pumpkin message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {treasurehunterx.Pumpkin} message Pumpkin
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Pumpkin.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.localIdInBattle = 0;
-                object.linearSpeed = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-            }
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.linearSpeed != null && message.hasOwnProperty("linearSpeed"))
-                object.linearSpeed = options.json && !isFinite(message.linearSpeed) ? String(message.linearSpeed) : message.linearSpeed;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            return object;
-        };
-
-        /**
-         * Converts this Pumpkin to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.Pumpkin
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Pumpkin.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Pumpkin
-         * @function getTypeUrl
-         * @memberof treasurehunterx.Pumpkin
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Pumpkin.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.Pumpkin";
-        };
-
-        return Pumpkin;
-    })();
-
-    treasurehunterx.GuardTower = (function() {
-
-        /**
-         * Properties of a GuardTower.
-         * @memberof treasurehunterx
-         * @interface IGuardTower
-         * @property {number|null} [id] GuardTower id
-         * @property {number|null} [localIdInBattle] GuardTower localIdInBattle
-         * @property {number|null} [type] GuardTower type
-         * @property {number|null} [x] GuardTower x
-         * @property {number|null} [y] GuardTower y
-         * @property {boolean|null} [removed] GuardTower removed
-         */
-
-        /**
-         * Constructs a new GuardTower.
-         * @memberof treasurehunterx
-         * @classdesc Represents a GuardTower.
-         * @implements IGuardTower
-         * @constructor
-         * @param {treasurehunterx.IGuardTower=} [properties] Properties to set
-         */
-        function GuardTower(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * GuardTower id.
-         * @member {number} id
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.id = 0;
-
-        /**
-         * GuardTower localIdInBattle.
-         * @member {number} localIdInBattle
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.localIdInBattle = 0;
-
-        /**
-         * GuardTower type.
-         * @member {number} type
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.type = 0;
-
-        /**
-         * GuardTower x.
-         * @member {number} x
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.x = 0;
-
-        /**
-         * GuardTower y.
-         * @member {number} y
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.y = 0;
-
-        /**
-         * GuardTower removed.
-         * @member {boolean} removed
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         */
-        GuardTower.prototype.removed = false;
-
-        /**
-         * Creates a new GuardTower instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {treasurehunterx.IGuardTower=} [properties] Properties to set
-         * @returns {treasurehunterx.GuardTower} GuardTower instance
-         */
-        GuardTower.create = function create(properties) {
-            return new GuardTower(properties);
-        };
-
-        /**
-         * Encodes the specified GuardTower message. Does not implicitly {@link treasurehunterx.GuardTower.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {treasurehunterx.GuardTower} message GuardTower message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        GuardTower.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.localIdInBattle != null && Object.hasOwnProperty.call(message, "localIdInBattle"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.localIdInBattle);
-            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.type);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 4, wireType 1 =*/33).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 5, wireType 1 =*/41).double(message.y);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.removed);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified GuardTower message, length delimited. Does not implicitly {@link treasurehunterx.GuardTower.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {treasurehunterx.GuardTower} message GuardTower message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        GuardTower.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a GuardTower message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.GuardTower} GuardTower
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        GuardTower.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.GuardTower();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.localIdInBattle = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.type = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 5: {
-                        message.y = reader.double();
-                        break;
-                    }
-                case 6: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a GuardTower message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.GuardTower} GuardTower
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        GuardTower.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a GuardTower message.
-         * @function verify
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        GuardTower.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                if (!$util.isInteger(message.localIdInBattle))
-                    return "localIdInBattle: integer expected";
-            if (message.type != null && message.hasOwnProperty("type"))
-                if (!$util.isInteger(message.type))
-                    return "type: integer expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                if (typeof message.removed !== "boolean")
-                    return "removed: boolean expected";
-            return null;
-        };
-
-        /**
-         * Creates a GuardTower message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.GuardTower} GuardTower
-         */
-        GuardTower.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.GuardTower)
-                return object;
-            var message = new $root.treasurehunterx.GuardTower();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.localIdInBattle != null)
-                message.localIdInBattle = object.localIdInBattle | 0;
-            if (object.type != null)
-                message.type = object.type | 0;
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            if (object.removed != null)
-                message.removed = Boolean(object.removed);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a GuardTower message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {treasurehunterx.GuardTower} message GuardTower
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        GuardTower.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.id = 0;
-                object.localIdInBattle = 0;
-                object.type = 0;
-                object.x = 0;
-                object.y = 0;
-                object.removed = false;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.localIdInBattle != null && message.hasOwnProperty("localIdInBattle"))
-                object.localIdInBattle = message.localIdInBattle;
-            if (message.type != null && message.hasOwnProperty("type"))
-                object.type = message.type;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            if (message.removed != null && message.hasOwnProperty("removed"))
-                object.removed = message.removed;
-            return object;
-        };
-
-        /**
-         * Converts this GuardTower to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.GuardTower
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        GuardTower.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for GuardTower
-         * @function getTypeUrl
-         * @memberof treasurehunterx.GuardTower
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        GuardTower.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.GuardTower";
-        };
-
-        return GuardTower;
-    })();
-
-    treasurehunterx.RoomDownsyncFrame = (function() {
-
-        /**
-         * Properties of a RoomDownsyncFrame.
-         * @memberof treasurehunterx
-         * @interface IRoomDownsyncFrame
-         * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {number|null} [refFrameId] RoomDownsyncFrame refFrameId
-         * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
-         * @property {number|Long|null} [sentAt] RoomDownsyncFrame sentAt
-         * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
-         * @property {Object.<string,treasurehunterx.Treasure>|null} [treasures] RoomDownsyncFrame treasures
-         * @property {Object.<string,treasurehunterx.Trap>|null} [traps] RoomDownsyncFrame traps
-         * @property {Object.<string,treasurehunterx.Bullet>|null} [bullets] RoomDownsyncFrame bullets
-         * @property {Object.<string,treasurehunterx.SpeedShoe>|null} [speedShoes] RoomDownsyncFrame speedShoes
-         * @property {Object.<string,treasurehunterx.GuardTower>|null} [guardTowers] RoomDownsyncFrame guardTowers
-         * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
-         */
-
-        /**
-         * Constructs a new RoomDownsyncFrame.
-         * @memberof treasurehunterx
-         * @classdesc Represents a RoomDownsyncFrame.
-         * @implements IRoomDownsyncFrame
-         * @constructor
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
-         */
-        function RoomDownsyncFrame(properties) {
-            this.players = {};
-            this.treasures = {};
-            this.traps = {};
-            this.bullets = {};
-            this.speedShoes = {};
-            this.guardTowers = {};
-            this.playerMetas = {};
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * RoomDownsyncFrame id.
-         * @member {number} id
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.id = 0;
-
-        /**
-         * RoomDownsyncFrame refFrameId.
-         * @member {number} refFrameId
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.refFrameId = 0;
-
-        /**
-         * RoomDownsyncFrame players.
-         * @member {Object.<string,treasurehunterx.Player>} players
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.players = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame sentAt.
-         * @member {number|Long} sentAt
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.sentAt = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * RoomDownsyncFrame countdownNanos.
-         * @member {number|Long} countdownNanos
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.countdownNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * RoomDownsyncFrame treasures.
-         * @member {Object.<string,treasurehunterx.Treasure>} treasures
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.treasures = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame traps.
-         * @member {Object.<string,treasurehunterx.Trap>} traps
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.traps = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame bullets.
-         * @member {Object.<string,treasurehunterx.Bullet>} bullets
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.bullets = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame speedShoes.
-         * @member {Object.<string,treasurehunterx.SpeedShoe>} speedShoes
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.speedShoes = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame guardTowers.
-         * @member {Object.<string,treasurehunterx.GuardTower>} guardTowers
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.guardTowers = $util.emptyObject;
-
-        /**
-         * RoomDownsyncFrame playerMetas.
-         * @member {Object.<string,treasurehunterx.PlayerMeta>} playerMetas
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.playerMetas = $util.emptyObject;
-
-        /**
-         * Creates a new RoomDownsyncFrame instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame instance
-         */
-        RoomDownsyncFrame.create = function create(properties) {
-            return new RoomDownsyncFrame(properties);
-        };
-
-        /**
-         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
-         * @function encode
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        RoomDownsyncFrame.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.refFrameId != null && Object.hasOwnProperty.call(message, "refFrameId"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.refFrameId);
-            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
-                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.sentAt != null && Object.hasOwnProperty.call(message, "sentAt"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.sentAt);
-            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.countdownNanos);
-            if (message.treasures != null && Object.hasOwnProperty.call(message, "treasures"))
-                for (var keys = Object.keys(message.treasures), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 6, wireType 2 =*/50).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Treasure.encode(message.treasures[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.traps != null && Object.hasOwnProperty.call(message, "traps"))
-                for (var keys = Object.keys(message.traps), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 7, wireType 2 =*/58).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Trap.encode(message.traps[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.bullets != null && Object.hasOwnProperty.call(message, "bullets"))
-                for (var keys = Object.keys(message.bullets), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 8, wireType 2 =*/66).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Bullet.encode(message.bullets[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.speedShoes != null && Object.hasOwnProperty.call(message, "speedShoes"))
-                for (var keys = Object.keys(message.speedShoes), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 9, wireType 2 =*/74).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.SpeedShoe.encode(message.speedShoes[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.guardTowers != null && Object.hasOwnProperty.call(message, "guardTowers"))
-                for (var keys = Object.keys(message.guardTowers), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 10, wireType 2 =*/82).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.GuardTower.encode(message.guardTowers[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
-                for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 11, wireType 2 =*/90).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
-            return writer;
-        };
-
-        /**
-         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        RoomDownsyncFrame.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a RoomDownsyncFrame message from the specified reader or buffer.
-         * @function decode
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        RoomDownsyncFrame.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.RoomDownsyncFrame(), key, value;
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.refFrameId = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        if (message.players === $util.emptyObject)
-                            message.players = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Player.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.players[key] = value;
-                        break;
-                    }
-                case 4: {
-                        message.sentAt = reader.int64();
-                        break;
-                    }
-                case 5: {
-                        message.countdownNanos = reader.int64();
-                        break;
-                    }
-                case 6: {
-                        if (message.treasures === $util.emptyObject)
-                            message.treasures = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Treasure.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.treasures[key] = value;
-                        break;
-                    }
-                case 7: {
-                        if (message.traps === $util.emptyObject)
-                            message.traps = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Trap.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.traps[key] = value;
-                        break;
-                    }
-                case 8: {
-                        if (message.bullets === $util.emptyObject)
-                            message.bullets = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.Bullet.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.bullets[key] = value;
-                        break;
-                    }
-                case 9: {
-                        if (message.speedShoes === $util.emptyObject)
-                            message.speedShoes = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.SpeedShoe.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.speedShoes[key] = value;
-                        break;
-                    }
-                case 10: {
-                        if (message.guardTowers === $util.emptyObject)
-                            message.guardTowers = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.GuardTower.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.guardTowers[key] = value;
-                        break;
-                    }
-                case 11: {
-                        if (message.playerMetas === $util.emptyObject)
-                            message.playerMetas = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.treasurehunterx.PlayerMeta.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.playerMetas[key] = value;
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a RoomDownsyncFrame message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        RoomDownsyncFrame.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a RoomDownsyncFrame message.
-         * @function verify
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        RoomDownsyncFrame.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.id != null && message.hasOwnProperty("id"))
-                if (!$util.isInteger(message.id))
-                    return "id: integer expected";
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                if (!$util.isInteger(message.refFrameId))
-                    return "refFrameId: integer expected";
-            if (message.players != null && message.hasOwnProperty("players")) {
-                if (!$util.isObject(message.players))
-                    return "players: object expected";
-                var key = Object.keys(message.players);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "players: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Player.verify(message.players[key[i]]);
-                        if (error)
-                            return "players." + error;
-                    }
-                }
-            }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (!$util.isInteger(message.sentAt) && !(message.sentAt && $util.isInteger(message.sentAt.low) && $util.isInteger(message.sentAt.high)))
-                    return "sentAt: integer|Long expected";
-            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
-                if (!$util.isInteger(message.countdownNanos) && !(message.countdownNanos && $util.isInteger(message.countdownNanos.low) && $util.isInteger(message.countdownNanos.high)))
-                    return "countdownNanos: integer|Long expected";
-            if (message.treasures != null && message.hasOwnProperty("treasures")) {
-                if (!$util.isObject(message.treasures))
-                    return "treasures: object expected";
-                var key = Object.keys(message.treasures);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "treasures: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Treasure.verify(message.treasures[key[i]]);
-                        if (error)
-                            return "treasures." + error;
-                    }
-                }
-            }
-            if (message.traps != null && message.hasOwnProperty("traps")) {
-                if (!$util.isObject(message.traps))
-                    return "traps: object expected";
-                var key = Object.keys(message.traps);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "traps: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Trap.verify(message.traps[key[i]]);
-                        if (error)
-                            return "traps." + error;
-                    }
-                }
-            }
-            if (message.bullets != null && message.hasOwnProperty("bullets")) {
-                if (!$util.isObject(message.bullets))
-                    return "bullets: object expected";
-                var key = Object.keys(message.bullets);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "bullets: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.Bullet.verify(message.bullets[key[i]]);
-                        if (error)
-                            return "bullets." + error;
-                    }
-                }
-            }
-            if (message.speedShoes != null && message.hasOwnProperty("speedShoes")) {
-                if (!$util.isObject(message.speedShoes))
-                    return "speedShoes: object expected";
-                var key = Object.keys(message.speedShoes);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "speedShoes: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.SpeedShoe.verify(message.speedShoes[key[i]]);
-                        if (error)
-                            return "speedShoes." + error;
-                    }
-                }
-            }
-            if (message.guardTowers != null && message.hasOwnProperty("guardTowers")) {
-                if (!$util.isObject(message.guardTowers))
-                    return "guardTowers: object expected";
-                var key = Object.keys(message.guardTowers);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "guardTowers: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.GuardTower.verify(message.guardTowers[key[i]]);
-                        if (error)
-                            return "guardTowers." + error;
-                    }
-                }
-            }
-            if (message.playerMetas != null && message.hasOwnProperty("playerMetas")) {
-                if (!$util.isObject(message.playerMetas))
-                    return "playerMetas: object expected";
-                var key = Object.keys(message.playerMetas);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "playerMetas: integer key{k:int32} expected";
-                    {
-                        var error = $root.treasurehunterx.PlayerMeta.verify(message.playerMetas[key[i]]);
-                        if (error)
-                            return "playerMetas." + error;
-                    }
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a RoomDownsyncFrame message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
-         */
-        RoomDownsyncFrame.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.RoomDownsyncFrame)
-                return object;
-            var message = new $root.treasurehunterx.RoomDownsyncFrame();
-            if (object.id != null)
-                message.id = object.id | 0;
-            if (object.refFrameId != null)
-                message.refFrameId = object.refFrameId | 0;
-            if (object.players) {
-                if (typeof object.players !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
-                message.players = {};
-                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
-                    if (typeof object.players[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
-                }
-            }
-            if (object.sentAt != null)
-                if ($util.Long)
-                    (message.sentAt = $util.Long.fromValue(object.sentAt)).unsigned = false;
-                else if (typeof object.sentAt === "string")
-                    message.sentAt = parseInt(object.sentAt, 10);
-                else if (typeof object.sentAt === "number")
-                    message.sentAt = object.sentAt;
-                else if (typeof object.sentAt === "object")
-                    message.sentAt = new $util.LongBits(object.sentAt.low >>> 0, object.sentAt.high >>> 0).toNumber();
-            if (object.countdownNanos != null)
-                if ($util.Long)
-                    (message.countdownNanos = $util.Long.fromValue(object.countdownNanos)).unsigned = false;
-                else if (typeof object.countdownNanos === "string")
-                    message.countdownNanos = parseInt(object.countdownNanos, 10);
-                else if (typeof object.countdownNanos === "number")
-                    message.countdownNanos = object.countdownNanos;
-                else if (typeof object.countdownNanos === "object")
-                    message.countdownNanos = new $util.LongBits(object.countdownNanos.low >>> 0, object.countdownNanos.high >>> 0).toNumber();
-            if (object.treasures) {
-                if (typeof object.treasures !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.treasures: object expected");
-                message.treasures = {};
-                for (var keys = Object.keys(object.treasures), i = 0; i < keys.length; ++i) {
-                    if (typeof object.treasures[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.treasures: object expected");
-                    message.treasures[keys[i]] = $root.treasurehunterx.Treasure.fromObject(object.treasures[keys[i]]);
-                }
-            }
-            if (object.traps) {
-                if (typeof object.traps !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.traps: object expected");
-                message.traps = {};
-                for (var keys = Object.keys(object.traps), i = 0; i < keys.length; ++i) {
-                    if (typeof object.traps[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.traps: object expected");
-                    message.traps[keys[i]] = $root.treasurehunterx.Trap.fromObject(object.traps[keys[i]]);
-                }
-            }
-            if (object.bullets) {
-                if (typeof object.bullets !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.bullets: object expected");
-                message.bullets = {};
-                for (var keys = Object.keys(object.bullets), i = 0; i < keys.length; ++i) {
-                    if (typeof object.bullets[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.bullets: object expected");
-                    message.bullets[keys[i]] = $root.treasurehunterx.Bullet.fromObject(object.bullets[keys[i]]);
-                }
-            }
-            if (object.speedShoes) {
-                if (typeof object.speedShoes !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.speedShoes: object expected");
-                message.speedShoes = {};
-                for (var keys = Object.keys(object.speedShoes), i = 0; i < keys.length; ++i) {
-                    if (typeof object.speedShoes[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.speedShoes: object expected");
-                    message.speedShoes[keys[i]] = $root.treasurehunterx.SpeedShoe.fromObject(object.speedShoes[keys[i]]);
-                }
-            }
-            if (object.guardTowers) {
-                if (typeof object.guardTowers !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.guardTowers: object expected");
-                message.guardTowers = {};
-                for (var keys = Object.keys(object.guardTowers), i = 0; i < keys.length; ++i) {
-                    if (typeof object.guardTowers[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.guardTowers: object expected");
-                    message.guardTowers[keys[i]] = $root.treasurehunterx.GuardTower.fromObject(object.guardTowers[keys[i]]);
-                }
-            }
-            if (object.playerMetas) {
-                if (typeof object.playerMetas !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
-                message.playerMetas = {};
-                for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
-                    if (typeof object.playerMetas[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
-                    message.playerMetas[keys[i]] = $root.treasurehunterx.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a RoomDownsyncFrame message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        RoomDownsyncFrame.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.objects || options.defaults) {
-                object.players = {};
-                object.treasures = {};
-                object.traps = {};
-                object.bullets = {};
-                object.speedShoes = {};
-                object.guardTowers = {};
-                object.playerMetas = {};
-            }
-            if (options.defaults) {
-                object.id = 0;
-                object.refFrameId = 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.sentAt = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.sentAt = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.countdownNanos = options.longs === String ? "0" : 0;
-            }
-            if (message.id != null && message.hasOwnProperty("id"))
-                object.id = message.id;
-            if (message.refFrameId != null && message.hasOwnProperty("refFrameId"))
-                object.refFrameId = message.refFrameId;
-            var keys2;
-            if (message.players && (keys2 = Object.keys(message.players)).length) {
-                object.players = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
-            }
-            if (message.sentAt != null && message.hasOwnProperty("sentAt"))
-                if (typeof message.sentAt === "number")
-                    object.sentAt = options.longs === String ? String(message.sentAt) : message.sentAt;
-                else
-                    object.sentAt = options.longs === String ? $util.Long.prototype.toString.call(message.sentAt) : options.longs === Number ? new $util.LongBits(message.sentAt.low >>> 0, message.sentAt.high >>> 0).toNumber() : message.sentAt;
-            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
-                if (typeof message.countdownNanos === "number")
-                    object.countdownNanos = options.longs === String ? String(message.countdownNanos) : message.countdownNanos;
-                else
-                    object.countdownNanos = options.longs === String ? $util.Long.prototype.toString.call(message.countdownNanos) : options.longs === Number ? new $util.LongBits(message.countdownNanos.low >>> 0, message.countdownNanos.high >>> 0).toNumber() : message.countdownNanos;
-            if (message.treasures && (keys2 = Object.keys(message.treasures)).length) {
-                object.treasures = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.treasures[keys2[j]] = $root.treasurehunterx.Treasure.toObject(message.treasures[keys2[j]], options);
-            }
-            if (message.traps && (keys2 = Object.keys(message.traps)).length) {
-                object.traps = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.traps[keys2[j]] = $root.treasurehunterx.Trap.toObject(message.traps[keys2[j]], options);
-            }
-            if (message.bullets && (keys2 = Object.keys(message.bullets)).length) {
-                object.bullets = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.bullets[keys2[j]] = $root.treasurehunterx.Bullet.toObject(message.bullets[keys2[j]], options);
-            }
-            if (message.speedShoes && (keys2 = Object.keys(message.speedShoes)).length) {
-                object.speedShoes = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.speedShoes[keys2[j]] = $root.treasurehunterx.SpeedShoe.toObject(message.speedShoes[keys2[j]], options);
-            }
-            if (message.guardTowers && (keys2 = Object.keys(message.guardTowers)).length) {
-                object.guardTowers = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.guardTowers[keys2[j]] = $root.treasurehunterx.GuardTower.toObject(message.guardTowers[keys2[j]], options);
-            }
-            if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
-                object.playerMetas = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.playerMetas[keys2[j]] = $root.treasurehunterx.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this RoomDownsyncFrame to JSON.
-         * @function toJSON
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        RoomDownsyncFrame.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for RoomDownsyncFrame
-         * @function getTypeUrl
-         * @memberof treasurehunterx.RoomDownsyncFrame
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/treasurehunterx.RoomDownsyncFrame";
-        };
-
-        return RoomDownsyncFrame;
     })();
 
     treasurehunterx.InputFrameUpsync = (function() {
@@ -5849,6 +3320,386 @@ $root.treasurehunterx = (function() {
         };
 
         return HeartbeatUpsync;
+    })();
+
+    treasurehunterx.RoomDownsyncFrame = (function() {
+
+        /**
+         * Properties of a RoomDownsyncFrame.
+         * @memberof treasurehunterx
+         * @interface IRoomDownsyncFrame
+         * @property {number|null} [id] RoomDownsyncFrame id
+         * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
+         * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
+         * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
+         */
+
+        /**
+         * Constructs a new RoomDownsyncFrame.
+         * @memberof treasurehunterx
+         * @classdesc Represents a RoomDownsyncFrame.
+         * @implements IRoomDownsyncFrame
+         * @constructor
+         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
+         */
+        function RoomDownsyncFrame(properties) {
+            this.players = {};
+            this.playerMetas = {};
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * RoomDownsyncFrame id.
+         * @member {number} id
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.id = 0;
+
+        /**
+         * RoomDownsyncFrame players.
+         * @member {Object.<string,treasurehunterx.Player>} players
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.players = $util.emptyObject;
+
+        /**
+         * RoomDownsyncFrame countdownNanos.
+         * @member {number|Long} countdownNanos
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.countdownNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * RoomDownsyncFrame playerMetas.
+         * @member {Object.<string,treasurehunterx.PlayerMeta>} playerMetas
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.playerMetas = $util.emptyObject;
+
+        /**
+         * Creates a new RoomDownsyncFrame instance using the specified properties.
+         * @function create
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame instance
+         */
+        RoomDownsyncFrame.create = function create(properties) {
+            return new RoomDownsyncFrame(properties);
+        };
+
+        /**
+         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * @function encode
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoomDownsyncFrame.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
+            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
+                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                }
+            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
+            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
+                for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                }
+            return writer;
+        };
+
+        /**
+         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        RoomDownsyncFrame.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a RoomDownsyncFrame message from the specified reader or buffer.
+         * @function decode
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoomDownsyncFrame.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.RoomDownsyncFrame(), key, value;
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        if (message.players === $util.emptyObject)
+                            message.players = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.treasurehunterx.Player.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.players[key] = value;
+                        break;
+                    }
+                case 3: {
+                        message.countdownNanos = reader.int64();
+                        break;
+                    }
+                case 4: {
+                        if (message.playerMetas === $util.emptyObject)
+                            message.playerMetas = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.treasurehunterx.PlayerMeta.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.playerMetas[key] = value;
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a RoomDownsyncFrame message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        RoomDownsyncFrame.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a RoomDownsyncFrame message.
+         * @function verify
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        RoomDownsyncFrame.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isInteger(message.id))
+                    return "id: integer expected";
+            if (message.players != null && message.hasOwnProperty("players")) {
+                if (!$util.isObject(message.players))
+                    return "players: object expected";
+                var key = Object.keys(message.players);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "players: integer key{k:int32} expected";
+                    {
+                        var error = $root.treasurehunterx.Player.verify(message.players[key[i]]);
+                        if (error)
+                            return "players." + error;
+                    }
+                }
+            }
+            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
+                if (!$util.isInteger(message.countdownNanos) && !(message.countdownNanos && $util.isInteger(message.countdownNanos.low) && $util.isInteger(message.countdownNanos.high)))
+                    return "countdownNanos: integer|Long expected";
+            if (message.playerMetas != null && message.hasOwnProperty("playerMetas")) {
+                if (!$util.isObject(message.playerMetas))
+                    return "playerMetas: object expected";
+                var key = Object.keys(message.playerMetas);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "playerMetas: integer key{k:int32} expected";
+                    {
+                        var error = $root.treasurehunterx.PlayerMeta.verify(message.playerMetas[key[i]]);
+                        if (error)
+                            return "playerMetas." + error;
+                    }
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a RoomDownsyncFrame message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         */
+        RoomDownsyncFrame.fromObject = function fromObject(object) {
+            if (object instanceof $root.treasurehunterx.RoomDownsyncFrame)
+                return object;
+            var message = new $root.treasurehunterx.RoomDownsyncFrame();
+            if (object.id != null)
+                message.id = object.id | 0;
+            if (object.players) {
+                if (typeof object.players !== "object")
+                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
+                message.players = {};
+                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
+                    if (typeof object.players[keys[i]] !== "object")
+                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
+                    message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
+                }
+            }
+            if (object.countdownNanos != null)
+                if ($util.Long)
+                    (message.countdownNanos = $util.Long.fromValue(object.countdownNanos)).unsigned = false;
+                else if (typeof object.countdownNanos === "string")
+                    message.countdownNanos = parseInt(object.countdownNanos, 10);
+                else if (typeof object.countdownNanos === "number")
+                    message.countdownNanos = object.countdownNanos;
+                else if (typeof object.countdownNanos === "object")
+                    message.countdownNanos = new $util.LongBits(object.countdownNanos.low >>> 0, object.countdownNanos.high >>> 0).toNumber();
+            if (object.playerMetas) {
+                if (typeof object.playerMetas !== "object")
+                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
+                message.playerMetas = {};
+                for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
+                    if (typeof object.playerMetas[keys[i]] !== "object")
+                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
+                    message.playerMetas[keys[i]] = $root.treasurehunterx.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a RoomDownsyncFrame message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        RoomDownsyncFrame.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.objects || options.defaults) {
+                object.players = {};
+                object.playerMetas = {};
+            }
+            if (options.defaults) {
+                object.id = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.countdownNanos = options.longs === String ? "0" : 0;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            var keys2;
+            if (message.players && (keys2 = Object.keys(message.players)).length) {
+                object.players = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
+            }
+            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
+                if (typeof message.countdownNanos === "number")
+                    object.countdownNanos = options.longs === String ? String(message.countdownNanos) : message.countdownNanos;
+                else
+                    object.countdownNanos = options.longs === String ? $util.Long.prototype.toString.call(message.countdownNanos) : options.longs === Number ? new $util.LongBits(message.countdownNanos.low >>> 0, message.countdownNanos.high >>> 0).toNumber() : message.countdownNanos;
+            if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
+                object.playerMetas = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.playerMetas[keys2[j]] = $root.treasurehunterx.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this RoomDownsyncFrame to JSON.
+         * @function toJSON
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        RoomDownsyncFrame.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoomDownsyncFrame
+         * @function getTypeUrl
+         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/treasurehunterx.RoomDownsyncFrame";
+        };
+
+        return RoomDownsyncFrame;
     })();
 
     treasurehunterx.WsReq = (function() {

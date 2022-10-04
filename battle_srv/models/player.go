@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"github.com/ByteArena/box2d"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
@@ -37,7 +36,7 @@ type Player struct {
 	X                 float64    `json:"x,omitempty"`
 	Y                 float64    `json:"y,omitempty"`
 	Dir               *Direction `json:"dir,omitempty"`
-	Speed             int32      `json:"speed,omitempty"`
+	Speed             float64    `json:"speed,omitempty"`
 	BattleState       int32      `json:"battleState,omitempty"`
 	LastMoveGmtMillis int32      `json:"lastMoveGmtMillis,omitempty"`
 	Score             int32      `json:"score,omitempty"`
@@ -48,16 +47,15 @@ type Player struct {
 	DisplayName string `json:"displayName,omitempty" db:"display_name"`
 	Avatar      string `json:"avatar,omitempty"`
 
-	FrozenAtGmtMillis    int64         `json:"-" db:"-"`
-	AddSpeedAtGmtMillis  int64         `json:"-" db:"-"`
-	CreatedAt            int64         `json:"-" db:"created_at"`
-	UpdatedAt            int64         `json:"-" db:"updated_at"`
-	DeletedAt            NullInt64     `json:"-" db:"deleted_at"`
-	TutorialStage        int           `json:"-" db:"tutorial_stage"`
-	CollidableBody       *box2d.B2Body `json:"-"`
-	AckingFrameId        int32         `json:"ackingFrameId"`
-	AckingInputFrameId   int32         `json:"-"`
-	LastSentInputFrameId int32         `json:"-"`
+	FrozenAtGmtMillis    int64     `json:"-" db:"-"`
+	AddSpeedAtGmtMillis  int64     `json:"-" db:"-"`
+	CreatedAt            int64     `json:"-" db:"created_at"`
+	UpdatedAt            int64     `json:"-" db:"updated_at"`
+	DeletedAt            NullInt64 `json:"-" db:"deleted_at"`
+	TutorialStage        int       `json:"-" db:"tutorial_stage"`
+	AckingFrameId        int32     `json:"ackingFrameId"`
+	AckingInputFrameId   int32     `json:"-"`
+	LastSentInputFrameId int32     `json:"-"`
 }
 
 func ExistPlayerByName(name string) (bool, error) {

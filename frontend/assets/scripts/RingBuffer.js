@@ -1,3 +1,7 @@
+window.RING_BUFF_CONSECUTIVE_SET = 0;
+window.RING_BUFF_NON_CONSECUTIVE_SET = 1;
+window.RING_BUFF_FAILED_TO_SET = 2;
+
 var RingBuffer = function(capacity) {
   this.ed = 0; // write index, open index
   this.st = 0; // read index, closed index
@@ -32,15 +36,15 @@ RingBuffer.prototype.pop = function() {
   return item;
 };
 
-RingBuffer.prototype.getByOffset = function(offsetFromSt) {
-  if (0 == this.cnt) {
+RingBuffer.prototype.getArrIdxByOffset = function(offsetFromSt) {
+  if (0 > offsetFromSt || 0 == this.cnt) {
     return null;
   }
   let arrIdx = this.st + offsetFromSt;
   if (this.st < this.ed) {
     // case#1: 0...st...ed...n-1
     if (this.st <= arrIdx && arrIdx < this.ed) {
-      return this.eles[arrIdx];
+      return arrIdx;
     }
   } else {
     // if this.st >= this.sd
@@ -49,7 +53,7 @@ RingBuffer.prototype.getByOffset = function(offsetFromSt) {
       arrIdx -= this.n
     }
     if (arrIdx >= this.st || arrIdx < this.ed) {
-      return this.eles[arrIdx];
+      return arrIdx;
     }
   }
 
@@ -57,7 +61,40 @@ RingBuffer.prototype.getByOffset = function(offsetFromSt) {
 };
 
 RingBuffer.prototype.getByFrameId = function(frameId) {
-  return this.getByOffset(frameId - this.stFrameId);
+  const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
+  return (null == arrIdx ? null : this.eles[arrIdx]);
+};
+
+// [WARNING] During a battle, frontend could receive non-consecutive frames (either renderFrame or inputFrame) due to resync, the buffer should handle these frames properly. 
+RingBuffer.prototype.setByFrameId = function(item, frameId) {
+  if (frameId < this.stFrameId) {
+    console.error("Invalid putByFrameId#1: stFrameId=", this.stFrameId, ", edFrameId=", this.edFrameId, ", incoming item=", item);
+    return window.RING_BUFF_FAILED_TO_SET;
+  }
+  const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
+  if (null != arrIdx) {
+    this.eles[arrIdx] = item; 
+    return window.RING_BUFF_CONSECUTIVE_SET;
+  }
+
+  // When "null == arrIdx", should it still be deemed consecutive if "frameId == edFrameId" prior to the reset?
+  let ret = window.RING_BUFF_CONSECUTIVE_SET;
+  if (this.edFrameId < frameId) {
+    this.st = this.ed = 0;
+    this.stFrameId = this.edFrameId = frameId;
+    this.cnt = 0;
+    ret = window.RING_BUFF_NON_CONSECUTIVE_SET;
+  }
+
+  this.eles[this.ed] = item
+  this.edFrameId++;
+  this.cnt++;
+  this.ed++;
+  if (this.ed >= this.n) {
+    this.ed -= this.n; // Deliberately not using "%" operator for performance concern
+  }
+
+  return ret;
 };
 
 module.exports = RingBuffer;
