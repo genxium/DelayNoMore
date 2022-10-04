@@ -22,6 +22,16 @@ window.MAGIC_ROOM_DOWNSYNC_FRAME_ID = {
   BATTLE_START: 0
 };
 
+window.PlayerBattleState = {
+  ADDED_PENDING_BATTLE_COLLIDER_ACK: 0,
+  READDED_PENDING_BATTLE_COLLIDER_ACK: 1,
+  ACTIVE: 2,
+  DISCONNECTED: 3,
+  LOST: 4,
+  EXPELLED_DURING_GAME: 5,
+  EXPELLED_IN_DISMISSAL: 6
+};
+
 cc.Class({
   extends: cc.Component,
 
@@ -96,6 +106,10 @@ cc.Class({
     backgroundMapTiledIns: {
       type: cc.TiledMap,
       default: null
+    },
+    renderFrameIdLagTolerance: {
+      type: cc.Integer,
+      default: 4 // implies (renderFrameIdLagTolerance >> inputScaleFrames) count of inputFrameIds
     },
   },
 
@@ -334,10 +348,10 @@ cc.Class({
     window.handleClientSessionCloseOrError = function() {
       console.warn('+++++++ Common handleClientSessionCloseOrError()');
 
-      if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) { //如果是游戏时间结束引起的断连
-        console.log("游戏结束引起的断连, 不需要回到登录页面");
+      if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
+        console.log("Battled ended by settlement");
       } else {
-        console.warn("意外断连，即将回到登录页面");
+        console.warn("Connection lost, going back to login page");
         window.clearLocalStorageAndBackToLoginScene(true);
       }
     };
@@ -510,7 +524,7 @@ cc.Class({
     } else if (null != boundRoomId) {
       self.disableGameRuleNode();
       self.battleState = ALL_BATTLE_STATES.WAITING;
-      window.initPersistentSessionClient(self.initAfterWSConnected, expectedRoomId);
+      window.initPersistentSessionClient(self.initAfterWSConnected, boundRoomId);
     } else {
       self.showPopupInCanvas(self.gameRuleNode);
     // Deliberately left blank. -- YFLu
@@ -633,10 +647,11 @@ cc.Class({
       if (window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet) {
         // Deliberately left blank, in this case "chaserRenderFrameId" is already reset to proper value.
       } else {
+        const inputFrameIdConsecutive = (inputFrameDownsyncId == self.lastAllConfirmedInputFrameId + 1);
         const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
-        if (null == localInputFrame) {
-          console.warn("localInputFrame not existing: recentInputCache is NOT having inputFrameDownsyncId=", inputFrameDownsyncId, "; now recentInputCache=", self._stringifyRecentInputCache(false));
-        } else if (null == firstPredictedYetIncorrectInputFrameId && !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)) {
+        if (null == localInputFrame && false == inputFrameIdConsecutive) {
+          throw "localInputFrame not existing and is NOT CONSECUTIVELY EXTENDING recentInputCache: inputFrameDownsyncId=" + inputFrameDownsyncId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId + ", recentInputCache=" + self._stringifyRecentInputCache(false);
+        } else if (null == firstPredictedYetIncorrectInputFrameId && null != localInputFrame && !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)) {
           firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
         }
       }
@@ -687,7 +702,7 @@ cc.Class({
   logBattleStats() {
     const self = this;
     let s = [];
-    s.push("Battle stats: lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId);
+    s.push("Battle stats: renderFrameId=" + self.renderFrameId + ", lastAllConfirmedRenderFrameId=" + self.lastAllConfirmedRenderFrameId + ", lastUpsyncInputFrameId=" + self.lastUpsyncInputFrameId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId);
 
     for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
       const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
@@ -790,7 +805,7 @@ cc.Class({
       } finally {
         // Update countdown
         if (null != self.countdownNanos) {
-          self.countdownNanos -= self.rollbackEstimatedDt * 1000000000;
+          self.countdownNanos -= (performance.now() - self.lastRenderFrameIdTriggeredAt) * 1000000;
           if (self.countdownNanos <= 0) {
             self.onBattleStopped(self.playerRichInfoDict);
             return;
@@ -879,29 +894,26 @@ cc.Class({
     setLocalZOrder(toShowNode, 10);
   },
 
-  onBattleReadyToStart(playerMetas, isSelfRejoining) {
+  hideFindingPlayersGUI() {
+    const self = this;
+    if (null == self.findingPlayerNode.parent) return;
+    self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
+  },
+
+  onBattleReadyToStart(playerMetas) {
     console.log("Calling `onBattleReadyToStart` with:", playerMetas);
     const self = this;
     const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
     findingPlayerScriptIns.hideExitButton();
     findingPlayerScriptIns.updatePlayersInfo(playerMetas);
 
-    const hideFindingPlayersGUI = function() {
-      if (null == self.findingPlayerNode.parent) return;
-      self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
-    };
-
-    if (true == isSelfRejoining) {
-      hideFindingPlayersGUI();
-    } else {
-      // Delay to hide the "finding player" GUI, then show a countdown clock
-      window.setTimeout(() => {
-        hideFindingPlayersGUI();
-        const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
-        countDownScriptIns.setData();
-        self.showPopupInCanvas(self.countdownToBeginGameNode);
-      }, 1500);
-    }
+    // Delay to hide the "finding player" GUI, then show a countdown clock
+    window.setTimeout(() => {
+      self.hideFindingPlayersGUI();
+      const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
+      countDownScriptIns.setData();
+      self.showPopupInCanvas(self.countdownToBeginGameNode);
+    }, 1500);
   },
 
   _createRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
@@ -1046,7 +1058,7 @@ cc.Class({
         }
       }
 
-      latestRdf = self._createRoomDownsyncFrameLocally(i+1, collisionSys, collisionSysMap);
+      latestRdf = self._createRoomDownsyncFrameLocally(i + 1, collisionSys, collisionSysMap);
     }
 
     return latestRdf;

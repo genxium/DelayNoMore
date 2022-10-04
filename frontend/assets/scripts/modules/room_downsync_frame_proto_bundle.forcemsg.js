@@ -1196,6 +1196,7 @@ $root.treasurehunterx = (function() {
          * @property {number|null} [nstDelayFrames] BattleColliderInfo nstDelayFrames
          * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
          * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
+         * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
          */
 
         /**
@@ -1352,6 +1353,14 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
 
         /**
+         * BattleColliderInfo playerBattleState.
+         * @member {number} playerBattleState
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.playerBattleState = 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof treasurehunterx.BattleColliderInfo
@@ -1415,6 +1424,8 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
             if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
+            if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
+                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
             return writer;
         };
 
@@ -1555,6 +1566,10 @@ $root.treasurehunterx = (function() {
                         message.maxChasingRenderFramesPerUpdate = reader.int32();
                         break;
                     }
+                case 18: {
+                        message.playerBattleState = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1655,6 +1670,9 @@ $root.treasurehunterx = (function() {
             if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
                 if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
                     return "maxChasingRenderFramesPerUpdate: integer expected";
+            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
+                if (!$util.isInteger(message.playerBattleState))
+                    return "playerBattleState: integer expected";
             return null;
         };
 
@@ -1727,6 +1745,8 @@ $root.treasurehunterx = (function() {
                 message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
             if (object.maxChasingRenderFramesPerUpdate != null)
                 message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
+            if (object.playerBattleState != null)
+                message.playerBattleState = object.playerBattleState | 0;
             return message;
         };
 
@@ -1767,6 +1787,7 @@ $root.treasurehunterx = (function() {
                 object.nstDelayFrames = 0;
                 object.inputFrameUpsyncDelayTolerance = 0;
                 object.maxChasingRenderFramesPerUpdate = 0;
+                object.playerBattleState = 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -1812,6 +1833,8 @@ $root.treasurehunterx = (function() {
                 object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
             if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
                 object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
+            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
+                object.playerBattleState = message.playerBattleState;
             return object;
         };
 

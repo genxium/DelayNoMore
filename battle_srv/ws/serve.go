@@ -260,6 +260,7 @@ func Serve(c *gin.Context) {
 			NstDelayFrames:                  pRoom.NstDelayFrames,
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
+			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
 		}
 
 		resp := &pb.WsResp{
@@ -269,7 +270,7 @@ func Serve(c *gin.Context) {
 			BciFrame:    bciFrame,
 		}
 
-		// Logger.Info("Sending downsync HeartbeatRequirements:", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("resp", resp))
+		Logger.Debug("Sending downsync HeartbeatRequirements:", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("resp", resp))
 
 		theBytes, marshalErr := proto.Marshal(resp)
 		if nil != marshalErr {

@@ -166,9 +166,10 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
           // Deliberately left blank for now
+          mapIns.hideFindingPlayersGUI();
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
-          mapIns.onBattleReadyToStart(resp.rdf.playerMetas, false);
+          mapIns.onBattleReadyToStart(resp.rdf.playerMetas);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_START:
           mapIns.onRoomDownsyncFrame(resp.rdf);
@@ -180,10 +181,22 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
-          console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp));
-          // The following order of execution is important, because "onInputFrameDownsyncBatch" is only available when state is IN_BATTLE 
-          const dumpRenderCacheRet = mapIns.onRoomDownsyncFrame(resp.rdf);
-          mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch, dumpRenderCacheRet);
+          if (null == resp.inputFrameDownsyncBatch || 0 >= resp.inputFrameDownsyncBatch.length) {
+            console.error("Got empty inputFrameDownsyncBatch upon resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp, null, 2));
+            return;
+          }
+          // Unless upon ws session lost and reconnected, it's maintained true that "inputFrameDownsyncBatch[0].inputFrameId == frontend.lastAllConfirmedInputFrameId+1", and in this case we should try to keep frontend moving only by "frontend.recentInputCache" to avoid jiggling of synced positions 
+          const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
+          const renderFrameIdConsecutive = (resp.rdf.id <= mapIns.renderFrameId + mapIns.renderFrameIdLagTolerance);
+          if (inputFrameIdConsecutive && renderFrameIdConsecutive) {
+            console.log("Got consecutive resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp));
+            mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
+          } else {
+            console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp, null, 2));
+            // The following order of execution is important 
+            const dumpRenderCacheRet = mapIns.onRoomDownsyncFrame(resp.rdf);
+            mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch, dumpRenderCacheRet);
+          }
           break;
         default:
           break;
