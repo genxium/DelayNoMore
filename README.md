@@ -37,7 +37,7 @@ On `Windows 10/11`, you can compile `skeema` from source and config the host to 
 
 ### Backend/Golang
 ```
-user@proj-root/battle_srv/configs> cp ./configs.template ./configs
+user@proj-root/battle_srv/configs> cp -r ./configs.template ./configs
 ```
 
 ### Frontend
