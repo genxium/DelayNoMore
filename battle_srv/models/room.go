@@ -176,6 +176,7 @@ type Room struct {
 	InputScaleFrames                       uint32 // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	JoinIndexBooleanArr                    []bool
 	RollbackEstimatedDt                    float64
+	RollbackEstimatedDtMillis              float64
 	RollbackEstimatedDtNanos               int64
 	LastRenderFrameIdTriggeredAt           int64
 
@@ -788,7 +789,8 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDt = 0.016667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDtMillis = 16.667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
@@ -1167,7 +1169,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		newRenderFrame := pb.RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
 			Players:        toPbPlayers(pR.Players),
-			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos), // TODO: Make this number more synced with frontend!
+			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos), 
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)
 		pR.CurDynamicsRenderFrameId++

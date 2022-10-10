@@ -1198,6 +1198,8 @@ $root.treasurehunterx = (function() {
          * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
          * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
          * @property {number|null} [rollbackEstimatedDt] BattleColliderInfo rollbackEstimatedDt
+         * @property {number|null} [rollbackEstimatedDtMillis] BattleColliderInfo rollbackEstimatedDtMillis
+         * @property {number|Long|null} [rollbackEstimatedDtNanos] BattleColliderInfo rollbackEstimatedDtNanos
          */
 
         /**
@@ -1370,6 +1372,22 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.prototype.rollbackEstimatedDt = 0;
 
         /**
+         * BattleColliderInfo rollbackEstimatedDtMillis.
+         * @member {number} rollbackEstimatedDtMillis
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.rollbackEstimatedDtMillis = 0;
+
+        /**
+         * BattleColliderInfo rollbackEstimatedDtNanos.
+         * @member {number|Long} rollbackEstimatedDtNanos
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.rollbackEstimatedDtNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof treasurehunterx.BattleColliderInfo
@@ -1437,6 +1455,10 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
             if (message.rollbackEstimatedDt != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDt"))
                 writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDt);
+            if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
+                writer.uint32(/* id 20, wireType 1 =*/161).double(message.rollbackEstimatedDtMillis);
+            if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
+                writer.uint32(/* id 21, wireType 0 =*/168).int64(message.rollbackEstimatedDtNanos);
             return writer;
         };
 
@@ -1585,6 +1607,14 @@ $root.treasurehunterx = (function() {
                         message.rollbackEstimatedDt = reader.double();
                         break;
                     }
+                case 20: {
+                        message.rollbackEstimatedDtMillis = reader.double();
+                        break;
+                    }
+                case 21: {
+                        message.rollbackEstimatedDtNanos = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1691,6 +1721,12 @@ $root.treasurehunterx = (function() {
             if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
                 if (typeof message.rollbackEstimatedDt !== "number")
                     return "rollbackEstimatedDt: number expected";
+            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
+                if (typeof message.rollbackEstimatedDtMillis !== "number")
+                    return "rollbackEstimatedDtMillis: number expected";
+            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
+                if (!$util.isInteger(message.rollbackEstimatedDtNanos) && !(message.rollbackEstimatedDtNanos && $util.isInteger(message.rollbackEstimatedDtNanos.low) && $util.isInteger(message.rollbackEstimatedDtNanos.high)))
+                    return "rollbackEstimatedDtNanos: integer|Long expected";
             return null;
         };
 
@@ -1767,6 +1803,17 @@ $root.treasurehunterx = (function() {
                 message.playerBattleState = object.playerBattleState | 0;
             if (object.rollbackEstimatedDt != null)
                 message.rollbackEstimatedDt = Number(object.rollbackEstimatedDt);
+            if (object.rollbackEstimatedDtMillis != null)
+                message.rollbackEstimatedDtMillis = Number(object.rollbackEstimatedDtMillis);
+            if (object.rollbackEstimatedDtNanos != null)
+                if ($util.Long)
+                    (message.rollbackEstimatedDtNanos = $util.Long.fromValue(object.rollbackEstimatedDtNanos)).unsigned = false;
+                else if (typeof object.rollbackEstimatedDtNanos === "string")
+                    message.rollbackEstimatedDtNanos = parseInt(object.rollbackEstimatedDtNanos, 10);
+                else if (typeof object.rollbackEstimatedDtNanos === "number")
+                    message.rollbackEstimatedDtNanos = object.rollbackEstimatedDtNanos;
+                else if (typeof object.rollbackEstimatedDtNanos === "object")
+                    message.rollbackEstimatedDtNanos = new $util.LongBits(object.rollbackEstimatedDtNanos.low >>> 0, object.rollbackEstimatedDtNanos.high >>> 0).toNumber();
             return message;
         };
 
@@ -1809,6 +1856,12 @@ $root.treasurehunterx = (function() {
                 object.maxChasingRenderFramesPerUpdate = 0;
                 object.playerBattleState = 0;
                 object.rollbackEstimatedDt = 0;
+                object.rollbackEstimatedDtMillis = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.rollbackEstimatedDtNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.rollbackEstimatedDtNanos = options.longs === String ? "0" : 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -1858,6 +1911,13 @@ $root.treasurehunterx = (function() {
                 object.playerBattleState = message.playerBattleState;
             if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
                 object.rollbackEstimatedDt = options.json && !isFinite(message.rollbackEstimatedDt) ? String(message.rollbackEstimatedDt) : message.rollbackEstimatedDt;
+            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
+                object.rollbackEstimatedDtMillis = options.json && !isFinite(message.rollbackEstimatedDtMillis) ? String(message.rollbackEstimatedDtMillis) : message.rollbackEstimatedDtMillis;
+            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
+                if (typeof message.rollbackEstimatedDtNanos === "number")
+                    object.rollbackEstimatedDtNanos = options.longs === String ? String(message.rollbackEstimatedDtNanos) : message.rollbackEstimatedDtNanos;
+                else
+                    object.rollbackEstimatedDtNanos = options.longs === String ? $util.Long.prototype.toString.call(message.rollbackEstimatedDtNanos) : options.longs === Number ? new $util.LongBits(message.rollbackEstimatedDtNanos.low >>> 0, message.rollbackEstimatedDtNanos.high >>> 0).toNumber() : message.rollbackEstimatedDtNanos;
             return object;
         };
 

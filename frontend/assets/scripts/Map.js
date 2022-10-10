@@ -111,6 +111,10 @@ cc.Class({
       type: cc.Integer,
       default: 4 // implies (renderFrameIdLagTolerance >> inputScaleFrames) count of inputFrameIds
     },
+    teleportEps1D: {
+      type: cc.Float,
+      default: 1e-3
+    },
   },
 
   _inputFrameIdDebuggable(inputFrameId) {
@@ -415,8 +419,10 @@ cc.Class({
       self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
       self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
 
+      self.battleDurationNanos = parsedBattleColliderInfo.battleDurationNanos;
       self.rollbackEstimatedDt = parsedBattleColliderInfo.rollbackEstimatedDt;
-      self.rollbackEstimatedDtMillis = 1000.0 * self.rollbackEstimatedDt;
+      self.rollbackEstimatedDtMillis = parsedBattleColliderInfo.rollbackEstimatedDtMillis;
+      self.rollbackEstimatedDtNanos = parsedBattleColliderInfo.rollbackEstimatedDtNanos;
       self.rollbackEstimatedDtToleranceMillis = self.rollbackEstimatedDtMillis / 1000.0;
       self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
 
@@ -799,6 +805,12 @@ cc.Class({
 
         // Inside "self.rollbackAndChase", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
         const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.latestCollisionSys, self.latestCollisionSysMap);
+        /*
+        const nonTrivialChaseEnded = (prevChaserRenderFrameId < nextChaserRenderFrameId && nextChaserRenderFrameId == self.renderFrameId); 
+        if (nonTrivialChaseEnded) {
+            console.debug("Non-trivial chase ended, prevChaserRenderFrameId=" + prevChaserRenderFrameId + ", nextChaserRenderFrameId=" + nextChaserRenderFrameId);
+        }  
+        */
         self.applyRoomDownsyncFrameDynamics(rdf);
         let t3 = performance.now();
       } catch (err) {
@@ -806,7 +818,7 @@ cc.Class({
       } finally {
         // Update countdown
         if (null != self.countdownNanos) {
-          self.countdownNanos -= (performance.now() - self.lastRenderFrameIdTriggeredAt) * 1000000;
+          self.countdownNanos = self.battleDurationNanos - self.renderFrameId*self.rollbackEstimatedDtNanos;
           if (self.countdownNanos <= 0) {
             self.onBattleStopped(self.playerRichInfoDict);
             return;
@@ -975,8 +987,15 @@ cc.Class({
 
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const immediatePlayerInfo = rdf.players[playerId];
-      playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
-      playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, true);
+      const dx = (immediatePlayerInfo.x-playerRichInfo.node.x); 
+      const dy = (immediatePlayerInfo.y-playerRichInfo.node.y);
+      const selfJiggling = (playerId == self.selfPlayerInfo.playerId && (0 != dx && self.teleportEps1D >= Math.abs(dx) && 0 != dy && self.teleportEps1D >= Math.abs(dy))); 
+      if (!selfJiggling) {
+        playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
+      } else {
+        console.log("selfJiggling: dx = ", dx, ", dy = ", dy);
+      }
+      playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
     });
   },

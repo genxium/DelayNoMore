@@ -47,6 +47,8 @@ message BattleColliderInfo {
   int32 maxChasingRenderFramesPerUpdate = 17;
   int32 playerBattleState = 18;
   double rollbackEstimatedDt = 19;
+  double rollbackEstimatedDtMillis = 20;
+  int64 rollbackEstimatedDtNanos = 21;
 }
 
 message Player {

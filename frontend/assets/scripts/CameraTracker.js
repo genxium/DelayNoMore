@@ -6,7 +6,10 @@ cc.Class({
         type: cc.Node,
         default: null
       },
-      
+      speed: {
+        type: cc.Float,
+        default: 500
+      }, 
     },
 
     onLoad () {
@@ -26,6 +29,9 @@ cc.Class({
       if (!selfPlayerRichInfo) return;
       const selfPlayerNode = selfPlayerRichInfo.node; 
       if (!selfPlayerNode) return;
-      self.mainCamera.node.setPosition(selfPlayerNode.position);
+      const pDiff = selfPlayerNode.position.sub(self.mainCamera.node.position); 
+      pDiff.normalizeSelf();
+      const newCamPos = self.mainCamera.node.position.add(pDiff.mul(dt*self.speed));
+      self.mainCamera.node.setPosition(newCamPos);
     }
 });

@@ -262,6 +262,8 @@ func Serve(c *gin.Context) {
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
 			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
 			RollbackEstimatedDt:             pRoom.RollbackEstimatedDt,
+			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
+			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
 		}
 
 		resp := &pb.WsResp{

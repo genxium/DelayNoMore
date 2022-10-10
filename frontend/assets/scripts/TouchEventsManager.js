@@ -1,23 +1,19 @@
 window.DIRECTION_DECODER = [
-    [0, 0, null],
-    [0, +1, null],
-    [0, -1, null],
-    [+2, 0, null],
-    [-2, 0, null],
-    [+2, +1, null],
-    [-2, -1, null],
-    [+2, -1, null],
-    [-2, +1, null],
-    [+2, 0, null],
-    [-2, 0, null],
-    [0, +1, null],
-    [0, -1, null],
+    // The 3rd value matches low-precision constants in backend.
+    [0, 0, 0.0],
+    [0, +1, 1.0],
+    [0, -1, 1.0],
+    [+2, 0, 0.5],
+    [-2, 0, 0.5],
+    [+2, +1, 0.4472],
+    [-2, -1, 0.4472],
+    [+2, -1, 0.4472],
+    [-2, +1, 0.4472],
+    [+2, 0, 0.5],
+    [-2, 0, 0.5],
+    [0, +1, 1.0],
+    [0, -1, 1.0],
 ];
-
-for (let k in window.DIRECTION_DECODER) {
-  const length = Math.sqrt(window.DIRECTION_DECODER[k][0]*window.DIRECTION_DECODER[k][0] + window.DIRECTION_DECODER[k][1]*window.DIRECTION_DECODER[k][1]);
-  window.DIRECTION_DECODER[k][2] = (0 == length ? 0 : (1.0/length));
-}
 
 cc.Class({
   extends: cc.Component,
