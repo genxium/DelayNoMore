@@ -473,6 +473,7 @@ cc.Class({
             pts.push([boundaryObj[i].x - x0, boundaryObj[i].y - y0]);
           }
           const newBarrierLatest = self.latestCollisionSys.createPolygon(x0, y0, pts);
+          console.log("Created barrier: ", newBarrierLatest);
           const newBarrierChaser = self.chaserCollisionSys.createPolygon(x0, y0, pts);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);

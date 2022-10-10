@@ -623,9 +623,9 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
 	inputFrameId := inputFrameDownsync.InputFrameId
 	if -1 == pR.LastAllConfirmedInputFrameIdWithChange || false == pR.equalInputLists(inputFrameDownsync.InputList, pR.LastAllConfirmedInputList) {
 		if -1 == playerId {
-			Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Key inputFrame change: roomId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
 		} else {
-			Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
 		}
 		atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), inputFrameId)
 	}
@@ -637,7 +637,7 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
 	if -1 == playerId {
 		Logger.Debug(fmt.Sprintf("inputFrame lifecycle#2[forced-allconfirmed]: roomId=%v, InputsBuffer=%v", pR.Id, pR.InputsBufferString(false)))
 	} else {
-		Logger.Info(fmt.Sprintf("inputFrame lifecycle#2[allconfirmed]: roomId=%v, playerId=%v, InputsBuffer=%v", pR.Id, playerId, pR.InputsBufferString(false)))
+		Logger.Debug(fmt.Sprintf("inputFrame lifecycle#2[allconfirmed]: roomId=%v, playerId=%v, InputsBuffer=%v", pR.Id, playerId, pR.InputsBufferString(false)))
 	}
 }
 
@@ -1142,15 +1142,18 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				encodedInput := inputList[joinIndex-1]
 				decodedInput := DIRECTION_DECODER[encodedInput]
 				decodedInputSpeedFactor := DIRECTION_DECODER_INVERSE_LENGTH[encodedInput]
+                if 0.0 == decodedInputSpeedFactor {
+                    continue
+                }
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
 				dx := baseChange * float64(decodedInput[0])
 				dy := baseChange * float64(decodedInput[1])
 
-				// The collision lib seems very slow at worst cases, omitting for now
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
 					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
+                    Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, new dx =%v, new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
 					dx = changeWithCollision.X()
 					dy = changeWithCollision.Y()
 				}
@@ -1181,11 +1184,18 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 }
 
 func (pR *Room) refreshColliders() {
+    playerColliderRadius := float64(12) // hardcoded
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
-	space := resolv.NewSpace(int(pR.StageDiscreteW), int(pR.StageDiscreteH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
+    spaceW := pR.StageDiscreteW*pR.StageTileW
+    spaceH := pR.StageDiscreteH*pR.StageTileH
+
+    spaceOffsetX := float64(spaceW)*0.5
+    spaceOffsetY := float64(spaceH)*0.5
+
+	space := resolv.NewSpace(int(spaceW), int(spaceH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X, player.Y, 12, 12) // Radius=12 is hardcoded
-		playerColliderShape := resolv.NewCircle(player.X, player.Y, 12)
+		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)		
+        playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
 		playerCollider.SetShape(playerColliderShape)
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
@@ -1214,10 +1224,10 @@ func (pR *Room) refreshColliders() {
 
 		barrierColliderShape := resolv.NewConvexPolygon()
 		for _, p := range barrier.Boundary.Points {
-			barrierColliderShape.AddPoints(p.X+barrier.Boundary.Anchor.X, p.Y+barrier.Boundary.Anchor.Y)
+			barrierColliderShape.AddPoints(p.X, p.Y)   
 		}
 
-		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X, barrier.Boundary.Anchor.Y, w, h, "Barrier")
+		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")
 		barrierCollider.SetShape(barrierColliderShape)
 		space.Add(barrierCollider)
 		pR.printBarrier(barrierCollider)
