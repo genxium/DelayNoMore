@@ -158,6 +158,7 @@ type Room struct {
 	RenderFrameId                          int32
 	CurDynamicsRenderFrameId               int32 // [WARNING] The dynamics of backend is ALWAYS MOVING FORWARD BY ALL-CONFIRMED INPUTFRAMES (either by upsync or forced), i.e. no rollback
 	ServerFps                              int32
+	BattleDurationFrames                   int32
 	BattleDurationNanos                    int64
 	InputFrameUpsyncDelayTolerance         int32
 	MaxChasingRenderFramesPerUpdate        int32
@@ -175,6 +176,8 @@ type Room struct {
 	InputScaleFrames                       uint32 // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	JoinIndexBooleanArr                    []bool
 	RollbackEstimatedDt                    float64
+	RollbackEstimatedDtNanos               int64
+	LastRenderFrameIdTriggeredAt           int64
 
 	StageName                      string
 	StageDiscreteW                 int32
@@ -422,16 +425,22 @@ func (pR *Room) StartBattle() {
 			pR.onBattleStoppedForSettlement()
 		}()
 
-		battleMainLoopStartedNanos := utils.UnixtimeNano()
-		totalElapsedNanos := int64(0)
+		pR.LastRenderFrameIdTriggeredAt = utils.UnixtimeNano()
 
 		Logger.Info("The `battleMainLoop` is started for:", zap.Any("roomId", pR.Id))
 		for {
 			stCalculation := utils.UnixtimeNano()
 
-			if totalElapsedNanos > pR.BattleDurationNanos {
-				Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped:\n%v", pR.Id, pR.InputsBufferString(true)))
+			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
+			if elapsedNanosSinceLastFrameIdTriggered < pR.RollbackEstimatedDtNanos {
+				Logger.Debug(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, elapsedNanosSinceLastFrameIdTriggered))
+                continue
+			}
+
+			if pR.RenderFrameId > pR.BattleDurationFrames {
+				Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(true)))
 				pR.StopBattleForSettlement()
+                return
 			}
 
 			if swapped := atomic.CompareAndSwapInt32(&pR.State, RoomBattleStateIns.IN_BATTLE, RoomBattleStateIns.IN_BATTLE); !swapped {
@@ -554,7 +563,6 @@ func (pR *Room) StartBattle() {
 
 			pR.RenderFrameId++
 			elapsedInCalculation := (utils.UnixtimeNano() - stCalculation)
-			totalElapsedNanos = (utils.UnixtimeNano() - battleMainLoopStartedNanos)
 			if elapsedInCalculation > nanosPerFrame {
 				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v, dynamicsDuration=%v, nanosPerFrame=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, nanosPerFrame))
 			}
@@ -780,8 +788,10 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = float64(1.0) / float64(pR.ServerFps)
-	pR.BattleDurationNanos = int64(30 * 1000 * 1000 * 1000)
+	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
+	pR.BattleDurationFrames = 30 * pR.ServerFps
+	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
 	pR.MaxChasingRenderFramesPerUpdate = 10
 
@@ -945,12 +955,12 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 	// Broadcast added or readded player info to all players in the same room
 	for _, eachPlayer := range pR.Players {
 		/*
-				   [WARNING]
-				   This `playerAckedFrame` is the first ever "RoomDownsyncFrame" for every "PersistentSessionClient on the frontend", and it goes right after each "BattleColliderInfo".
+					   [WARNING]
+					   This `playerAckedFrame` is the first ever "RoomDownsyncFrame" for every "PersistentSessionClient on the frontend", and it goes right after each "BattleColliderInfo".
 
-				   By making use of the sequential nature of each ws session, all later "RoomDownsyncFrame"s generated after `pRoom.StartBattle()` will be put behind this `playerAckedFrame`.
+					   By making use of the sequential nature of each ws session, all later "RoomDownsyncFrame"s generated after `pRoom.StartBattle()` will be put behind this `playerAckedFrame`.
 
-		           This function is triggered by an upsync message via WebSocket, thus downsync sending is also available by now.
+			           This function is triggered by an upsync message via WebSocket, thus downsync sending is also available by now.
 		*/
 		switch targetPlayer.BattleState {
 		case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
@@ -1134,20 +1144,18 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				dx := baseChange * float64(decodedInput[0])
 				dy := baseChange * float64(decodedInput[1])
 
-				/*
-					// The collision lib seems very slow at worst cases, omitting for now
-					collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-					playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
-					if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
-						changeWithCollision := collision.ContactWithObject(collision.Objects[0])
-						dx = changeWithCollision.X()
-						dy = changeWithCollision.Y()
-					}
-					playerCollider.X += dx
-					playerCollider.Y += dy
-					// Update in "collision space"
-					playerCollider.Update()
-				*/
+				// The collision lib seems very slow at worst cases, omitting for now
+				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
+				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
+					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
+					dx = changeWithCollision.X()
+					dy = changeWithCollision.Y()
+				}
+				playerCollider.X += dx
+				playerCollider.Y += dy
+				// Update in "collision space"
+				playerCollider.Update()
 
 				player.Dir.Dx = decodedInput[0]
 				player.Dir.Dy = decodedInput[1]
@@ -1159,7 +1167,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		newRenderFrame := pb.RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
 			Players:        toPbPlayers(pR.Players),
-			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*int64(pR.RollbackEstimatedDt*1000000000)), // TODO: Make this number more synced with frontend!
+			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos), // TODO: Make this number more synced with frontend!
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)
 		pR.CurDynamicsRenderFrameId++
@@ -1210,5 +1218,10 @@ func (pR *Room) refreshColliders() {
 		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X, barrier.Boundary.Anchor.Y, w, h, "Barrier")
 		barrierCollider.SetShape(barrierColliderShape)
 		space.Add(barrierCollider)
+		pR.printBarrier(barrierCollider)
 	}
+}
+
+func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
+	Logger.Info(fmt.Sprintf("Barrier in roomId=%v: w=%v, h=%v, shape=%v", pR.Id, barrierCollider.W, barrierCollider.H, barrierCollider.Shape))
 }

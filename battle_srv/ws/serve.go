@@ -261,6 +261,7 @@ func Serve(c *gin.Context) {
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
 			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
+			RollbackEstimatedDt:             pRoom.RollbackEstimatedDt,
 		}
 
 		resp := &pb.WsResp{

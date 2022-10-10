@@ -1197,6 +1197,7 @@ $root.treasurehunterx = (function() {
          * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
          * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
          * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
+         * @property {number|null} [rollbackEstimatedDt] BattleColliderInfo rollbackEstimatedDt
          */
 
         /**
@@ -1361,6 +1362,14 @@ $root.treasurehunterx = (function() {
         BattleColliderInfo.prototype.playerBattleState = 0;
 
         /**
+         * BattleColliderInfo rollbackEstimatedDt.
+         * @member {number} rollbackEstimatedDt
+         * @memberof treasurehunterx.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.rollbackEstimatedDt = 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof treasurehunterx.BattleColliderInfo
@@ -1426,6 +1435,8 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
             if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
+            if (message.rollbackEstimatedDt != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDt"))
+                writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDt);
             return writer;
         };
 
@@ -1570,6 +1581,10 @@ $root.treasurehunterx = (function() {
                         message.playerBattleState = reader.int32();
                         break;
                     }
+                case 19: {
+                        message.rollbackEstimatedDt = reader.double();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1673,6 +1688,9 @@ $root.treasurehunterx = (function() {
             if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
                 if (!$util.isInteger(message.playerBattleState))
                     return "playerBattleState: integer expected";
+            if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
+                if (typeof message.rollbackEstimatedDt !== "number")
+                    return "rollbackEstimatedDt: number expected";
             return null;
         };
 
@@ -1747,6 +1765,8 @@ $root.treasurehunterx = (function() {
                 message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
             if (object.playerBattleState != null)
                 message.playerBattleState = object.playerBattleState | 0;
+            if (object.rollbackEstimatedDt != null)
+                message.rollbackEstimatedDt = Number(object.rollbackEstimatedDt);
             return message;
         };
 
@@ -1788,6 +1808,7 @@ $root.treasurehunterx = (function() {
                 object.inputFrameUpsyncDelayTolerance = 0;
                 object.maxChasingRenderFramesPerUpdate = 0;
                 object.playerBattleState = 0;
+                object.rollbackEstimatedDt = 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -1835,6 +1856,8 @@ $root.treasurehunterx = (function() {
                 object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
             if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
                 object.playerBattleState = message.playerBattleState;
+            if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
+                object.rollbackEstimatedDt = options.json && !isFinite(message.rollbackEstimatedDt) ? String(message.rollbackEstimatedDt) : message.rollbackEstimatedDt;
             return object;
         };
 

@@ -410,11 +410,12 @@ cc.Class({
     /** Init required prefab ended. */
 
     window.handleBattleColliderInfo = function(parsedBattleColliderInfo) {
+      console.log("Colliders=", parsedBattleColliderInfo);
       self.inputDelayFrames = parsedBattleColliderInfo.inputDelayFrames;
       self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
       self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
 
-      self.rollbackEstimatedDt = 1.0 / parsedBattleColliderInfo.serverFps;
+      self.rollbackEstimatedDt = parsedBattleColliderInfo.rollbackEstimatedDt;
       self.rollbackEstimatedDtMillis = 1000.0 * self.rollbackEstimatedDt;
       self.rollbackEstimatedDtToleranceMillis = self.rollbackEstimatedDtMillis / 1000.0;
       self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;

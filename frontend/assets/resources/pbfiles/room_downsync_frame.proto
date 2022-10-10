@@ -46,6 +46,7 @@ message BattleColliderInfo {
   int32 inputFrameUpsyncDelayTolerance = 16;  
   int32 maxChasingRenderFramesPerUpdate = 17;
   int32 playerBattleState = 18;
+  double rollbackEstimatedDt = 19;
 }
 
 message Player {
