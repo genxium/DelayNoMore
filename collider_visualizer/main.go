@@ -85,16 +85,26 @@ type Game struct {
 
 func NewGame() *Game {
 
+	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, playerPosMap, barrierMap, err := parseStage("richsoil")
+	if nil != err {
+		panic(err)
+	}
+
+	Logger.Info("Parsed variables", zap.Any("stageDiscreteW", stageDiscreteW), zap.Any("stageDiscreteH", stageDiscreteH), zap.Any("stageTileW", stageTileW), zap.Any("stageTileH", stageTileH), zap.Any("playerPosMap", playerPosMap), zap.Any("barrierMap", barrierMap))
+
+	spaceW := stageDiscreteW * stageTileW
+	spaceH := stageDiscreteH * stageTileH
+
 	ebiten.SetWindowResizable(true)
 	ebiten.SetWindowTitle("resolv test")
 
 	g := &Game{
-		Width:        640,
-		Height:       360,
+		Width:        int(spaceW),
+		Height:       int(spaceH),
 		ShowHelpText: true,
 	}
 
-	g.World = NewWorldLineTest(g)
+	g.World = NewWorldColliderDisplay(g, stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, playerPosMap, barrierMap)
 
 	fontData, _ := truetype.Parse(excelFont)
 
@@ -157,12 +167,5 @@ func (g *Game) Layout(w, h int) (int, int) {
 }
 
 func main() {
-	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, toRetStrToVec2DListMap, toRetStrToPolygon2DListMap, err := parseStage("richsoil")
-	if nil != err {
-		panic(err)
-	}
-
-	Logger.Info("Parsed variables", zap.Any("stageDiscreteW", stageDiscreteW), zap.Any("stageDiscreteH", stageDiscreteH), zap.Any("stageTileW", stageTileW), zap.Any("stageTileH", stageTileH), zap.Any("toRetStrToVec2DListMap", toRetStrToVec2DListMap), zap.Any("toRetStrToPolygon2DListMap", toRetStrToPolygon2DListMap))
-
 	ebiten.RunGame(NewGame())
 }
