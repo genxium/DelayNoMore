@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.3" orientation="isometric" renderorder="right-down" width="50" height="50" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="214">
+ <tileset firstgid="1" source="Tile_W64_H64_S01.tsx"/>
+ <tileset firstgid="17" source="Tile_W300_H300_S01.tsx"/>
+ <layer id="1" name="GroundFloor" width="50" height="50" locked="1">
+  <data encoding="base64" compression="zlib">
+   eJztz0ENACAMALGR4F8zNspyjwronZm7xPlcD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPy7bHBg/ldQwR
+  </data>
+ </layer>
+ <objectgroup id="2" name="PlayerStartingPos">
+  <object id="135" x="1689.33" y="1872">
+   <point/>
+  </object>
+  <object id="137" x="2200" y="1800">
+   <point/>
+  </object>
+ </objectgroup>
+ <layer id="3" name="FirsrtFloor" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   eJztmd0OwiAMRheNv/P9n9eY2BtCgVJbvs6em8WauJ64wQdsW5L4cq7ULu5d6Ni/11vlu1oNkb34HNGldCDugzUETkydc0OmfF4iOhDkEtmBuK5uIAk3x7VAnxckHMnF+j2P+AzX8uaHSP97K2+26kiM5M1WHQEuC0Ry6eUZLicjufQcImS2dMDgCA7cGpKI4EBw40wkByLXw5iM5GS0rKvpx3rulvam6cfaRfr7/+DyMriXFK2LZNx6CO8lZdYFceyVujxNuvgNSGscLStduD2XWVa49PZcZvF0Gd1zmcXDRXLGp8HSxfuMz9LFe03j4eI1r1rmijzjSxIdb64rAxM=
+  </data>
+ </layer>
+ <objectgroup id="4" name="Barrier">
+  <properties>
+   <property name="type" value="barrier_and_shelter"/>
+  </properties>
+  <object id="1" x="234" y="730">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -74,78 178,330 250,258"/>
+  </object>
+  <object id="2" x="804" y="156">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -74,78 178,330 250,258"/>
+  </object>
+  <object id="3" x="230" y="410">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="250,-258 -74,78 178,330 504,0"/>
+  </object>
+  <object id="4" x="2470" y="2650">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="250,-258 -74,78 178,330 504,0"/>
+  </object>
+  <object id="5" x="1082.23" y="1537.08">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="548.339,-547.082 -94.2284,95.4898 230.657,408.918 867.772,-230"/>
+  </object>
+  <object id="9" x="311.741" y="1916">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="-22,30 -93.7407,98.1818 867.593,1062 938.259,992.909"/>
+  </object>
+  <object id="11" x="1015.74" y="1852">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="-26,26 -93.7407,98.1818 304.26,489.333 364.259,426.909"/>
+  </object>
+  <object id="14" x="1975.74" y="896">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="-26,26 -93.7407,98.1818 296.26,480 362.926,414.909"/>
+  </object>
+  <object id="15" x="1917.74" y="1798">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="-26,26 -93.7407,98.1818 285.593,472 352.259,402.909"/>
+  </object>
+  <object id="213" x="1044" y="1852">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="511.333,246 276.926,484.848 336.26,537.333 570.926,302.909"/>
+  </object>
+ </objectgroup>
+</map>

@@ -35,16 +35,16 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetX := float64(spaceW) * 0.5
 	spaceOffsetY := float64(spaceH) * 0.5
 
+    // TODO: Move collider y-axis transformation to a "dnmshared"
 	playerColliderRadius := float64(12) // hardcoded
 	space := resolv.NewSpace(int(spaceW), int(spaceH), int(stageTileW), int(stageTileH))
     for _, player := range playerList {
-        playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2, "Player")
+        playerCollider := resolv.NewObject(player.X+spaceOffsetX, -player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2, "Player")
         playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
         playerCollider.SetShape(playerColliderShape)
 	    Logger.Info("player shape added:", zap.Any("shape", playerColliderShape))
         space.Add(playerCollider)
     }
-
 
     barrierLocalId := 0
     for _, barrier := range barrierList {
@@ -66,12 +66,12 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
         }
 
         barrierColliderShape := resolv.NewConvexPolygon()
-        for i := len(barrier.Points)-1; i >= 0; i-- {
+        for i := 0; i < len(barrier.Points); i++ {
             p := barrier.Points[i]
             barrierColliderShape.AddPoints(p.X, p.Y)
         }
 
-        barrierCollider := resolv.NewObject(barrier.Anchor.X+spaceOffsetX, barrier.Anchor.Y+spaceOffsetY, w, h, "Barrier")
+        barrierCollider := resolv.NewObject(barrier.Anchor.X+spaceOffsetX, -barrier.Anchor.Y+spaceOffsetY, w, h, "Barrier")
         barrierCollider.SetShape(barrierColliderShape)
 
 	    Logger.Info("barrier shape added:", zap.Any("barrierLocalId", barrierLocalId), zap.Any("shape", barrierColliderShape))
@@ -98,7 +98,7 @@ func (world *WorldColliderDisplay) Draw(screen *ebiten.Image) {
 		ebitenutil.DrawRect(screen, o.X, o.Y, o.W, o.H, drawColor)
 	}
 
-    world.Game.DebugDraw(screen, world.Space)
+    // world.Game.DebugDraw(screen, world.Space)
 
 	if world.Game.ShowHelpText {
 

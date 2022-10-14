@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.3" orientation="isometric" renderorder="right-down" width="46" height="46" tilewidth="256" tileheight="128" infinite="0" nextlayerid="19" nextobjectid="167">
+ <tileset firstgid="1" source="Tile_W256_H256_S01.tsx"/>
+ <tileset firstgid="21" source="Tile_W256_H256_S02.tsx"/>
+ <layer id="11" name="GroundFloor" width="46" height="46">
+  <data encoding="base64" compression="zlib">
+   eJztmNsOAyEIRNXem97+/2urSU0MEbs2A9XIwzwtuocJLrjBORdMJpPJtIyeUZeKHhtiaJwWW9I+alfRuVh/ZWJoHJqZY2tpK/dJyPfWOxHcUvxa3Oi6eUUdmHd4sLLv0p570P6h4NbwfHRuzvMZuGuez8Bd83wWbur5LNyZ/fbRyNypz3PfUzR39uPesYZ7lmo692AqNDdyTatHo7mR88m3Po/ktj4/L3fr3jAyt+a5NG7974nN33y9SNzTJObvPD9wdYOS1D+VMgcujyOJaYmuR/bMWj1yefTMdNz5kfIceSZruffk/U9uLRn3etzoO5JxG/cq3P7H/bfu/QamEBWW
+  </data>
+ </layer>
+ <layer id="13" name="FirstFloor" width="46" height="46">
+  <data encoding="base64" compression="zlib">
+   eJztmdEKwyAMRfsXjv7/h449CEWSNNFrvMoOlIHdktMsWtddl8xtHNb7NKx4nhhW7DaHRAk6eK9Lyh/5bCR+SxHyIvB6M+LpQUbevFmR1oP6ankX41wP0XjWOsaM5o3kA473Q+uTmTkRvHkzot2nmdH6mGlOSmtMpjdyjuxQb4mIN9OaYnkzs5t3uyduiXij9ygedqv3k6g3y/xE1zvruk7rEzZ36Xvs3X+vWEueZPxumMHfO5dTvOsYm7tnTaljbO4t1rNaZvcTnxHW82zuXic294gLwh21P4i6MNU96oF0H9mz9zr0+ve6tj02UruVfTOad5U7Iifi/0JtTOsrVL2y647MleU+I8+ddMwge55+AUD0Fwk=
+  </data>
+ </layer>
+ <objectgroup id="14" name="PlayerStartingPos">
+  <object id="104" x="1310" y="4034">
+   <point/>
+  </object>
+  <object id="105" x="3752" y="1312">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="15" name="Barrier">
+  <properties>
+   <property name="type" value="barrier_and_shelter"/>
+  </properties>
+  <object id="103" x="-216" y="3488">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="106" x="-168" y="3560">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="107" x="-230" y="3518">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 2552,2504 3028,2476 150,-326"/>
+  </object>
+  <object id="108" x="-340" y="3508">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 630,610 616,624 1194,-3762 -56,-3784"/>
+  </object>
+  <object id="109" x="-184" y="-136">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 4,452 6116,524 6088,-72"/>
+  </object>
+  <object id="110" x="1586" y="5406">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 402,582 4556,708 4516,-36 250,-106"/>
+  </object>
+  <object id="111" x="4958" y="-342">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 294,6626 1488,6640 1138,70"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="16" name="LowScoreTreasure">
+  <object id="144" gid="21" x="1342" y="1786" width="256" height="256"/>
+  <object id="145" gid="21" x="1186" y="2158" width="256" height="256"/>
+  <object id="146" gid="21" x="2714" y="3198" width="256" height="256"/>
+  <object id="147" gid="21" x="2616" y="3680" width="256" height="256"/>
+  <object id="148" gid="21" x="3172" y="3676" width="256" height="256"/>
+  <object id="149" gid="21" x="3526" y="3498" width="256" height="256"/>
+  <object id="150" gid="21" x="3834" y="3150" width="256" height="256"/>
+  <object id="151" gid="21" x="2826" y="2318" width="256" height="256"/>
+  <object id="152" gid="21" x="2960" y="3056" width="256" height="256"/>
+  <object id="153" gid="21" x="3336" y="2752" width="256" height="256"/>
+  <object id="154" gid="21" x="1730" y="2294" width="256" height="256"/>
+  <object id="155" gid="21" x="1480" y="632" width="256" height="256"/>
+  <object id="156" gid="21" x="1116" y="1100" width="256" height="256"/>
+  <object id="157" gid="21" x="3952" y="2528" width="256" height="256"/>
+  <object id="158" gid="21" x="4942" y="3562" width="256" height="256"/>
+  <object id="159" gid="21" x="5032" y="2896" width="256" height="256"/>
+  <object id="160" gid="21" x="2606" y="722" width="256" height="256"/>
+  <object id="161" gid="21" x="3026" y="710" width="256" height="256"/>
+  <object id="162" gid="21" x="1828" y="740" width="256" height="256"/>
+  <object id="163" gid="21" x="1678" y="890" width="256" height="256"/>
+  <object id="164" gid="21" x="1060" y="1324" width="256" height="256"/>
+  <object id="165" gid="21" x="4606" y="2242" width="256" height="256"/>
+  <object id="166" gid="21" x="3848" y="1936" width="256" height="256"/>
+ </objectgroup>
+ <objectgroup id="17" name="HighScoreTreasure">
+  <object id="125" gid="22" x="1926" y="4586" width="256" height="256"/>
+  <object id="126" gid="22" x="2274" y="4990" width="256" height="256"/>
+  <object id="127" gid="22" x="1326" y="3410" width="256" height="256"/>
+  <object id="128" gid="22" x="704" y="3696" width="256" height="256"/>
+  <object id="129" gid="22" x="1520" y="2944" width="256" height="256"/>
+  <object id="130" gid="22" x="886" y="3058" width="256" height="256"/>
+  <object id="131" gid="22" x="3120" y="4968" width="256" height="256"/>
+  <object id="132" gid="22" x="2584" y="4504" width="256" height="256"/>
+  <object id="133" gid="22" x="4344" y="4472" width="256" height="256"/>
+  <object id="134" gid="22" x="4504" y="4208" width="256" height="256"/>
+  <object id="135" gid="22" x="3490" y="1982" width="256" height="256"/>
+  <object id="136" gid="22" x="4068" y="2916" width="256" height="256"/>
+  <object id="137" gid="22" x="4578" y="3150" width="256" height="256"/>
+  <object id="138" gid="22" x="2326" y="762" width="256" height="256"/>
+  <object id="139" gid="22" x="2276" y="1348" width="256" height="256"/>
+  <object id="140" gid="22" x="3366" y="2418" width="256" height="256"/>
+  <object id="141" gid="22" x="4526" y="2586" width="256" height="256"/>
+  <object id="142" gid="22" x="4586" y="1174" width="256" height="256"/>
+  <object id="143" gid="22" x="4126" y="666" width="256" height="256"/>
+ </objectgroup>
+ <objectgroup id="18" name="GuardTower">
+  <object id="112" gid="25" x="904" y="3384" width="256" height="256"/>
+  <object id="113" gid="25" x="1714" y="4158" width="256" height="256"/>
+  <object id="114" gid="25" x="2734" y="5074" width="256" height="256"/>
+  <object id="115" gid="25" x="2180" y="3324" width="256" height="256"/>
+  <object id="116" gid="25" x="3108" y="4076" width="256" height="256"/>
+  <object id="117" gid="25" x="4634" y="4934" width="256" height="256"/>
+  <object id="118" gid="25" x="1094" y="1690" width="256" height="256"/>
+  <object id="119" gid="25" x="2004" y="884" width="256" height="256"/>
+  <object id="120" gid="25" x="2956" y="892" width="256" height="256"/>
+  <object id="121" gid="25" x="3488" y="624" width="256" height="256"/>
+  <object id="122" gid="25" x="4798" y="2626" width="256" height="256"/>
+  <object id="123" gid="25" x="4842" y="4494" width="256" height="256"/>
+  <object id="124" gid="25" x="4632" y="3624" width="256" height="256"/>
+ </objectgroup>
+</map>
