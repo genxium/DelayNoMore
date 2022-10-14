@@ -90,8 +90,6 @@ func NewGame() *Game {
 		panic(err)
 	}
 
-	Logger.Info("Parsed variables", zap.Any("stageDiscreteW", stageDiscreteW), zap.Any("stageDiscreteH", stageDiscreteH), zap.Any("stageTileW", stageTileW), zap.Any("stageTileH", stageTileH), zap.Any("playerPosMap", playerPosMap), zap.Any("barrierMap", barrierMap))
-
 	spaceW := stageDiscreteW * stageTileW
 	spaceH := stageDiscreteH * stageTileH
 

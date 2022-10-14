@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-    "math"
 	"image/color"
+	"go.uber.org/zap"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/solarlune/resolv"
     . "dnmshared"
+
+    "math"
 )
 
 type WorldColliderDisplay struct {
@@ -19,7 +21,13 @@ func (world *WorldColliderDisplay) Init() {
 }
 
 func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTileW, stageTileH int32, playerPosMap StrToVec2DListMap, barrierMap StrToPolygon2DListMap) *WorldColliderDisplay {
-	w := &WorldColliderDisplay{Game: game}
+
+    playerList := *(playerPosMap["PlayerStartingPos"])
+	barrierList := *(barrierMap["Barrier"])
+
+	world := &WorldColliderDisplay{Game: game}
+
+	Logger.Info("Parsed variables", zap.Any("stageDiscreteW", stageDiscreteW), zap.Any("stageDiscreteH", stageDiscreteH), zap.Any("stageTileW", stageTileW), zap.Any("stageTileH", stageTileH))
 
 	spaceW := stageDiscreteW * stageTileW
 	spaceH := stageDiscreteH * stageTileH
@@ -28,19 +36,21 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetY := float64(spaceH) * 0.5
 
 	playerColliderRadius := float64(12) // hardcoded
-    playerList := *(playerPosMap["PlayerStartingPos"])
 	space := resolv.NewSpace(int(spaceW), int(spaceH), int(stageTileW), int(stageTileH))
     for _, player := range playerList {
         playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2, "Player")
         playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
         playerCollider.SetShape(playerColliderShape)
+	    Logger.Info("player shape added:", zap.Any("shape", playerColliderShape))
         space.Add(playerCollider)
     }
 
-	barrierList := *(barrierMap["Barrier"])
+
+    barrierLocalId := 0
     for _, barrier := range barrierList {
         var w float64 = 0
         var h float64 = 0
+
         for i, pi := range barrier.Points {
             for j, pj := range barrier.Points {
                 if i == j {
@@ -56,17 +66,22 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
         }
 
         barrierColliderShape := resolv.NewConvexPolygon()
-        for _, p := range barrier.Points {
+        for i := len(barrier.Points)-1; i >= 0; i-- {
+            p := barrier.Points[i]
             barrierColliderShape.AddPoints(p.X, p.Y)
         }
 
         barrierCollider := resolv.NewObject(barrier.Anchor.X+spaceOffsetX, barrier.Anchor.Y+spaceOffsetY, w, h, "Barrier")
         barrierCollider.SetShape(barrierColliderShape)
+
+	    Logger.Info("barrier shape added:", zap.Any("barrierLocalId", barrierLocalId), zap.Any("shape", barrierColliderShape))
         space.Add(barrierCollider)
+
+        barrierLocalId++
     }
 
-	w.Space = space
-    return w
+	world.Space = space
+    return world
 }
 
 func (world *WorldColliderDisplay) Update() {
