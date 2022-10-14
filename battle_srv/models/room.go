@@ -435,13 +435,13 @@ func (pR *Room) StartBattle() {
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
 			if elapsedNanosSinceLastFrameIdTriggered < pR.RollbackEstimatedDtNanos {
 				Logger.Debug(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, elapsedNanosSinceLastFrameIdTriggered))
-                continue
+				continue
 			}
 
 			if pR.RenderFrameId > pR.BattleDurationFrames {
 				Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(true)))
 				pR.StopBattleForSettlement()
-                return
+				return
 			}
 
 			if swapped := atomic.CompareAndSwapInt32(&pR.State, RoomBattleStateIns.IN_BATTLE, RoomBattleStateIns.IN_BATTLE); !swapped {
@@ -789,8 +789,8 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = 0.016667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
-	pR.RollbackEstimatedDtMillis = 16.667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
@@ -1142,9 +1142,9 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				encodedInput := inputList[joinIndex-1]
 				decodedInput := DIRECTION_DECODER[encodedInput]
 				decodedInputSpeedFactor := DIRECTION_DECODER_INVERSE_LENGTH[encodedInput]
-                if 0.0 == decodedInputSpeedFactor {
-                    continue
-                }
+				if 0.0 == decodedInputSpeedFactor {
+					continue
+				}
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
 				dx := baseChange * float64(decodedInput[0])
 				dy := baseChange * float64(decodedInput[1])
@@ -1153,7 +1153,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
 					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
-                    Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, new dx =%v, new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
+					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, new dx =%v, new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
 					dx = changeWithCollision.X()
 					dy = changeWithCollision.Y()
 				}
@@ -1172,7 +1172,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		newRenderFrame := pb.RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
 			Players:        toPbPlayers(pR.Players),
-			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos), 
+			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos),
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)
 		pR.CurDynamicsRenderFrameId++
@@ -1184,18 +1184,18 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 }
 
 func (pR *Room) refreshColliders() {
-    playerColliderRadius := float64(12) // hardcoded
+	playerColliderRadius := float64(12) // hardcoded
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
-    spaceW := pR.StageDiscreteW*pR.StageTileW
-    spaceH := pR.StageDiscreteH*pR.StageTileH
+	spaceW := pR.StageDiscreteW * pR.StageTileW
+	spaceH := pR.StageDiscreteH * pR.StageTileH
 
-    spaceOffsetX := float64(spaceW)*0.5
-    spaceOffsetY := float64(spaceH)*0.5
+	spaceOffsetX := float64(spaceW) * 0.5
+	spaceOffsetY := float64(spaceH) * 0.5
 
 	space := resolv.NewSpace(int(spaceW), int(spaceH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)		
-        playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
+		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
+		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
 		playerCollider.SetShape(playerColliderShape)
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
@@ -1224,7 +1224,7 @@ func (pR *Room) refreshColliders() {
 
 		barrierColliderShape := resolv.NewConvexPolygon()
 		for _, p := range barrier.Boundary.Points {
-			barrierColliderShape.AddPoints(p.X, p.Y)   
+			barrierColliderShape.AddPoints(p.X, p.Y)
 		}
 
 		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")

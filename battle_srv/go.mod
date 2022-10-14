@@ -3,7 +3,6 @@ module server
 go 1.19
 
 require (
-	github.com/ByteArena/box2d v1.0.2
 	github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gin-contrib/cors v0.0.0-20180514151808-6f0a820f94be
