@@ -17,7 +17,9 @@ func loadTMX(fp string, pTmxMapIns *models.TmxMap) {
 	}
 
 	byteArr, err := ioutil.ReadFile(fp)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	models.DeserializeToTmxMapIns(byteArr, pTmxMapIns)
 	for _, info := range pTmxMapIns.TreasuresInfo {
 		fmt.Printf("treasuresInfo: %v\n", info)
@@ -33,7 +35,9 @@ func loadTSX(fp string, pTsxIns *models.Tsx) {
 	}
 
 	byteArr, err := ioutil.ReadFile(fp)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	models.DeserializeToTsxIns(byteArr, pTsxIns)
 	for _, Pos := range pTsxIns.TrapPolyLineList {
 		fmt.Printf("%v\n", Pos)
@@ -43,10 +47,14 @@ func loadTSX(fp string, pTsxIns *models.Tsx) {
 func getTMXInfo() {
 	relativePath = "../frontend/assets/resources/map/treasurehunter.tmx"
 	execPath, err := os.Executable()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	pwd, err := os.Getwd()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	fmt.Printf("execPath = %v, pwd = %s, returning...\n", execPath, pwd)
 
@@ -61,10 +69,14 @@ func getTSXInfo() {
 
 	relativePath = "../frontend/assets/resources/map/tile_1.tsx"
 	execPath, err := os.Executable()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	pwd, err := os.Getwd()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	fmt.Printf("execPath = %v, pwd = %s, returning...\n", execPath, pwd)
 	tsxIns := models.Tsx{}

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"crypto/sha1"
+	. "dnmshared"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"

@@ -1,16 +1,15 @@
 package common
 
 import (
+	. "dnmshared"
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"go.uber.org/zap"
 )
 
-// 隐式导入
 var Conf *config
 
 const (
@@ -72,11 +71,15 @@ func MustParseConfig() {
 		BotServer: new(botServerConf),
 	}
 	execPath, err := os.Executable()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	pwd, err := os.Getwd()
 	Logger.Debug("os.GetWd", zap.String("pwd", pwd))
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	appRoot := pwd
 	confDir := filepath.Join(appRoot, "configs")
@@ -129,22 +132,21 @@ func loadJSON(fp string, v interface{}) {
 		fp = filepath.Join(Conf.General.ConfDir, fp)
 	}
 	_, err := os.Stat(fp)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	fd, err := os.Open(fp)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	defer fd.Close()
 	Logger.Info("Opened json file successfully.", zap.String("fp", fp))
 	err = json.NewDecoder(fd).Decode(v)
-	ErrFatal(err)
-	Logger.Info("Loaded json file successfully.", zap.String("fp", fp))
-}
-
-// Please only use this auxiliary function before server is fully started up, but not afterwards (启动过程可以使用，运行时不准使用).
-func ErrFatal(err error) {
-	if err != nil {
-		Logger.Fatal("ErrFatal", zap.NamedError("err", err))
+	if nil != err {
+		panic(err)
 	}
+	Logger.Info("Loaded json file successfully.", zap.String("fp", fp))
 }
 
 func isNotExist(p string) bool {

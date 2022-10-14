@@ -6,6 +6,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+
+	. "dnmshared"
 )
 
 var (
@@ -15,8 +17,12 @@ var (
 func initMySQL() {
 	var err error
 	MySQLManagerIns, err = sqlx.Connect("mysql", Conf.MySQL.DSN+"?charset=utf8mb4")
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	err = MySQLManagerIns.Ping()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	Logger.Info("MySQLManagerIns", zap.Any("mysql", MySQLManagerIns))
 }

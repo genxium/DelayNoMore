@@ -16,6 +16,8 @@ import (
 	"server/models"
 	"server/storage"
 	"strconv"
+
+	. "dnmshared"
 )
 
 var Player = playerController{}

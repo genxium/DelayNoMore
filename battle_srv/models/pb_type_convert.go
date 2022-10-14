@@ -1,6 +1,7 @@
 package models
 
 import (
+	. "dnmshared"
 	pb "server/pb_output"
 )
 

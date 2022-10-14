@@ -1,6 +1,7 @@
 package env_tools
 
 import (
+	. "dnmshared"
 	. "server/common"
 	"server/common/utils"
 	"server/models"
@@ -15,7 +16,9 @@ func MergeTestPlayerAccounts() {
 	fp := Conf.General.TestEnvSQLitePath
 	Logger.Info(`Initializing TestPlayerAccounts in runtime MySQLServer from SQLite file:`, zap.String("fp", fp))
 	db, err := sqlx.Connect("sqlite3", fp)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	defer db.Close()
 	maybeCreateNewPlayer(db, "test_player")
 }
@@ -29,31 +32,35 @@ type dbTestPlayer struct {
 func maybeCreateNewPlayer(db *sqlx.DB, tableName string) {
 	var ls []*dbTestPlayer
 	err := db.Select(&ls, "SELECT name, magic_phone_country_code, magic_phone_num FROM "+tableName)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	names := make([]string, len(ls), len(ls))
 	for i, v := range ls {
 		names[i] = v.Name
 	}
 	sql := "SELECT name FROM `player` WHERE name in (?)"
 	query, args, err := sqlx.In(sql, names)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	query = storage.MySQLManagerIns.Rebind(query)
 	// existNames := make([]string, len(ls), len(ls))
 	var existPlayers []*models.Player
 	err = storage.MySQLManagerIns.Select(&existPlayers, query, args...)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	for _, testPlayer := range ls {
 		var flag bool
 		for _, v := range existPlayers {
 			if testPlayer.Name == v.Name {
-				// 已有数据，合并处理
 				flag = true
 				break
 			}
 		}
 		if !flag {
-			// 找不到，新增
 			Logger.Debug("create", zap.Any(tableName, testPlayer))
 			err := createNewPlayer(testPlayer)
 			if err != nil {

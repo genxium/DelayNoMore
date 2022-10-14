@@ -1,4 +1,4 @@
-package models
+package dnmshared
 
 import (
 	"math"

@@ -17,6 +17,8 @@ import (
 	"syscall"
 	"time"
 
+	. "dnmshared"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"

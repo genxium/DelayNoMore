@@ -5,9 +5,10 @@ import (
 
 	"github.com/imdario/mergo"
 	"go.uber.org/zap"
+
+	. "dnmshared"
 )
 
-// 隐式导入
 var Constants *constants
 
 func MustParseConstants() {
@@ -24,13 +25,11 @@ func MustParseConstants() {
 		if !isNotExist(fp) {
 			testConstants := new(constants)
 			loadJSON(fp, testConstants)
-			//Logger.Debug(spew.Sdump(Constants))
-			//Logger.Debug(spew.Sdump(testConstants))
 			err := mergo.Merge(testConstants, Constants)
-			ErrFatal(err)
+			if nil != err {
+				panic(err)
+			}
 			Constants = testConstants
-			//Logger.Debug("mergo.Merge", zap.Error(err))
-			//Logger.Debug(spew.Sdump(testConstants))
 		}
 	}
 	constantsPost()

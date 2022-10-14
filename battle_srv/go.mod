@@ -20,6 +20,8 @@ require (
 	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713
 	go.uber.org/zap v1.9.1
 	google.golang.org/protobuf v1.28.1
+
+    dnmshared v0.0.0
 )
 
 require (
@@ -42,4 +44,8 @@ require (
 	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
+)
+
+replace (
+	dnmshared => ../dnmshared
 )

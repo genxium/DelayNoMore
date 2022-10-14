@@ -1,17 +1,14 @@
 package models
 
 import (
-	"encoding/xml"
+	. "dnmshared"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
-	"io/ioutil"
 	"math"
 	"math/rand"
-	"os"
-	"path/filepath"
 	. "server/common"
 	"server/common/utils"
 	pb "server/pb_output"
@@ -19,6 +16,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"encoding/xml"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -261,7 +263,9 @@ func (pR *Room) ChooseStage() error {
 	 * -- YFLu, 2019-09-04
 	 */
 	pwd, err := os.Getwd()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	rand.Seed(time.Now().Unix())
 	stageNameList := []string{ /*"pacman" ,*/ "richsoil"}

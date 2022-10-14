@@ -2,10 +2,10 @@ package api
 
 import (
 	"bytes"
+	. "dnmshared"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
-	. "server/common"
 )
 
 func RequestLogger() gin.HandlerFunc {

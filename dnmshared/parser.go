@@ -1,4 +1,4 @@
-package models
+package dnmshared
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"math"
-	. "server/common"
 	"strconv"
 	"strings"
 )

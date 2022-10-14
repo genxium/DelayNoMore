@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	. "server/common"
+	. "dnmshared"
 	"server/storage"
 
 	sq "github.com/Masterminds/squirrel"
