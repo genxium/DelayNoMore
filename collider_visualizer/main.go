@@ -85,12 +85,13 @@ type Game struct {
 
 func NewGame() *Game {
 
-    stageName := "simple" // Use this for calibration
-    // stageName := "richsoil"
+	// stageName := "simple" // Use this for calibration
+	stageName := "simple2"
 	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, playerPosMap, barrierMap, err := parseStage(stageName)
 	if nil != err {
 		panic(err)
 	}
+	PolygonFillerImage.Fill(color.RGBA{60, 60, 60, 255}) // Required to init color of the polygons!
 
 	spaceW := stageDiscreteW * stageTileW
 	spaceH := stageDiscreteH * stageTileH

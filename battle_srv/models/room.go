@@ -1152,19 +1152,17 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
 				dx := baseChange * float64(decodedInput[0])
 				dy := baseChange * float64(decodedInput[1])
-				dyInResolv := -dy 
 
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
-				if collision := playerCollider.Check(dx, dyInResolv, "Barrier"); collision != nil {
+				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
 					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
 					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, new dx =%v, new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
 					dx = changeWithCollision.X()
-					dyInResolv = changeWithCollision.Y()
-                    dy = -dyInResolv
+					dy = changeWithCollision.Y()
 				}
 				playerCollider.X += dx
-				playerCollider.Y += dyInResolv
+				playerCollider.Y += dy
 				// Update in "collision space"
 				playerCollider.Update()
 
@@ -1200,7 +1198,7 @@ func (pR *Room) refreshColliders() {
 
 	space := resolv.NewSpace(int(spaceW), int(spaceH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X+spaceOffsetX, -player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
+		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
 		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
 		playerCollider.SetShape(playerColliderShape)
 		space.Add(playerCollider)
@@ -1233,7 +1231,7 @@ func (pR *Room) refreshColliders() {
 			barrierColliderShape.AddPoints(p.X, p.Y)
 		}
 
-		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, -barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")
+		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")
 		barrierCollider.SetShape(barrierColliderShape)
 		space.Add(barrierCollider)
 	}
