@@ -268,7 +268,7 @@ func (pR *Room) ChooseStage() error {
 	}
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{ /*"pacman" ,*/ "richsoil"}
+	stageNameList := []string{ /*"simple" ,*/ "richsoil"}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]
@@ -328,7 +328,8 @@ func (pR *Room) ChooseStage() error {
 	barrierPolygon2DList := *(toRetStrToPolygon2DListMap["Barrier"])
 
 	var barrierLocalIdInBattle int32 = 0
-	for _, polygon2D := range barrierPolygon2DList {
+	for _, polygon2DUnaligned := range barrierPolygon2DList {
+        polygon2D := AlignPolygon2DToBoundingBox(polygon2DUnaligned)  
 		/*
 		   // For debug-printing only.
 		   Logger.Info("ChooseStage printing polygon2D for barrierPolygon2DList", zap.Any("barrierLocalIdInBattle", barrierLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
@@ -1157,9 +1158,12 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
 					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
-					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, new dx =%v, new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
-					dx = changeWithCollision.X()
-					dy = changeWithCollision.Y()
+					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, proposed new dx =%v, proposed new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
+                    // FIXME: Use a mechanism equivalent to that of the frontend!
+					// dx = changeWithCollision.X()
+					// dy = changeWithCollision.Y()
+					dx = 0
+					dy = 0
 				}
 				playerCollider.X += dx
 				playerCollider.Y += dy
@@ -1196,7 +1200,8 @@ func (pR *Room) refreshColliders() {
 	spaceOffsetX := float64(spaceW) * 0.5
 	spaceOffsetY := float64(spaceH) * 0.5
 
-	space := resolv.NewSpace(int(spaceW), int(spaceH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
+    minStep := int(3) // the approx minimum distance a player can move per frame
+	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
 		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
@@ -1210,8 +1215,10 @@ func (pR *Room) refreshColliders() {
 	}
 
 	for _, barrier := range pR.Barriers {
+
 		var w float64 = 0
 		var h float64 = 0
+
 		for i, pi := range barrier.Boundary.Points {
 			for j, pj := range barrier.Boundary.Points {
 				if i == j {

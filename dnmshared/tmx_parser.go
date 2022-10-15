@@ -175,8 +175,8 @@ func (l *TmxLayer) decodeBase64() ([]uint32, error) {
 
 type Vec2DList []*Vec2D
 type Polygon2DList []*Polygon2D
-type StrToVec2DListMap map[string]*Vec2DList         // Note that it's deliberately NOT using "map[string]Vec2DList", for the easy of passing return value to "models/room.go".
-type StrToPolygon2DListMap map[string]*Polygon2DList // Note that it's deliberately NOT using "map[string]Polygon2DList", for the easy of passing return value to "models/room.go".
+type StrToVec2DListMap map[string]*Vec2DList
+type StrToPolygon2DListMap map[string]*Polygon2DList
 
 func tmxPolylineToPolygon2D(pTmxMapIns *TmxMap, singleObjInTmxFile *TmxOrTsxObject, targetPolyline *TmxOrTsxPolyline) (*Polygon2D, error) {
 	if nil == targetPolyline {
@@ -442,3 +442,40 @@ func (pTmxMapIns *TmxMap) continuousObjLayerOffsetToContinuousMapNodePos(continu
 
 	return toRet
 }
+
+func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
+    // Transform again to put "anchor" at the top-left point of the bounding box for "resolv"
+    float64Max := float64(99999999999999.9)
+    boundingBoxTL := &Vec2D{
+        X: float64Max, 
+        Y: float64Max,
+    } 
+    for _, p := range input.Points {
+        if p.X < boundingBoxTL.X {
+            boundingBoxTL.X = p.X
+        } 
+        if p.Y < boundingBoxTL.Y {
+            boundingBoxTL.Y = p.Y
+        } 
+    }    
+
+    // Now "input.Anchor" should move to "input.Anchor+boundingBoxTL", thus "boundingBoxTL" is also the value of the negative diff for all "input.Points" 
+    output := &Polygon2D{
+            Anchor: &Vec2D{
+                X: input.Anchor.X+boundingBoxTL.X, 
+                Y: input.Anchor.Y+boundingBoxTL.Y,
+            },
+            Points:     make([]*Vec2D, len(input.Points)),
+            TileWidth:  input.TileWidth,
+            TileHeight: input.TileHeight,
+	} 
+
+    for i, p := range input.Points {
+        output.Points[i] = &Vec2D{
+            X: p.X-boundingBoxTL.X,
+            Y: p.Y-boundingBoxTL.Y,
+        }
+    }    
+    
+    return output 
+} 

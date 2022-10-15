@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "b6b4c575-6690-4f1d-8165-a0098509066c",
+  "uuid": "c30bd4d7-efdc-410c-8bdf-4a3dfc77bebd",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "Tile_W300_H300_S01": {
       "ver": "1.0.4",
-      "uuid": "8844352b-c6ac-4f30-8c8a-83955b2241b1",
-      "rawTextureUuid": "b6b4c575-6690-4f1d-8165-a0098509066c",
+      "uuid": "66b49304-7b5b-442c-92a5-d2b368abf659",
+      "rawTextureUuid": "c30bd4d7-efdc-410c-8bdf-4a3dfc77bebd",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

@@ -46,7 +46,9 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	}
 
 	barrierLocalId := 0
-	for _, barrier := range barrierList {
+	for _, barrierUnaligned := range barrierList {
+        barrier := AlignPolygon2DToBoundingBox(barrierUnaligned)
+
 		var w float64 = 0
 		var h float64 = 0
 
@@ -99,7 +101,7 @@ func (world *WorldColliderDisplay) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	// world.Game.DebugDraw(screen, world.Space)
+	world.Game.DebugDraw(screen, world.Space)
 
 	if world.Game.ShowHelpText {
 

@@ -414,7 +414,6 @@ cc.Class({
     /** Init required prefab ended. */
 
     window.handleBattleColliderInfo = function(parsedBattleColliderInfo) {
-      console.log("Colliders=", parsedBattleColliderInfo);
       self.inputDelayFrames = parsedBattleColliderInfo.inputDelayFrames;
       self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
       self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
