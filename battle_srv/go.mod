@@ -3,7 +3,6 @@ module server
 go 1.19
 
 require (
-	github.com/ByteArena/box2d v1.0.2
 	github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gin-contrib/cors v0.0.0-20180514151808-6f0a820f94be
@@ -21,6 +20,8 @@ require (
 	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713
 	go.uber.org/zap v1.9.1
 	google.golang.org/protobuf v1.28.1
+
+    dnmshared v0.0.0
 )
 
 require (
@@ -43,4 +44,8 @@ require (
 	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
+)
+
+replace (
+	dnmshared => ../dnmshared
 )

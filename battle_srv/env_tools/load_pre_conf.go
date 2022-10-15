@@ -1,6 +1,7 @@
 package env_tools
 
 import (
+	. "dnmshared"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -15,7 +16,9 @@ func LoadPreConf() {
 	Logger.Info(`Merging PreConfSQLite data into MySQL`,
 		zap.String("PreConfSQLitePath", Conf.General.PreConfSQLitePath))
 	db, err := sqlx.Connect("sqlite3", Conf.General.PreConfSQLitePath)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	defer db.Close()
 
 	loadPreConfToMysql(db)
@@ -39,7 +42,9 @@ func loadPreConfToMysql(db *sqlx.DB) {
 func loadSqlite(db *sqlx.DB, tbs []string) {
 	for _, v := range tbs {
 		result, err := storage.MySQLManagerIns.Exec("truncate " + v)
-		ErrFatal(err)
+		if nil != err {
+			panic(err)
+		}
 		Logger.Info("truncate", zap.Any("truncate "+v, result))
 		query, args, err := sq.Select("*").From(v).ToSql()
 		if err != nil {
@@ -70,19 +75,25 @@ func createMysqlData(rows *sqlx.Rows, v string) {
 func maybeCreateNewPlayerFromBotTable(db *sqlx.DB, tableName string) {
 	var ls []*dbBotPlayer
 	err := db.Select(&ls, "SELECT name, magic_phone_country_code, magic_phone_num, display_name FROM "+tableName)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	names := make([]string, len(ls), len(ls))
 	for i, v := range ls {
 		names[i] = v.Name
 	}
 	sql := "SELECT name FROM `player` WHERE name in (?)"
 	query, args, err := sqlx.In(sql, names)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	query = storage.MySQLManagerIns.Rebind(query)
 	// existNames := make([]string, len(ls), len(ls))
 	var existPlayers []*models.Player
 	err = storage.MySQLManagerIns.Select(&existPlayers, query, args...)
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	for _, botPlayer := range ls {
 		var flag bool

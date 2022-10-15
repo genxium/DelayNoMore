@@ -2,9 +2,9 @@ package models
 
 import (
 	"container/heap"
+	. "dnmshared"
 	"fmt"
 	"go.uber.org/zap"
-	. "server/common"
 	"sync"
 )
 

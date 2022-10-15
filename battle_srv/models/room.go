@@ -1,17 +1,14 @@
 package models
 
 import (
-	"encoding/xml"
+	. "dnmshared"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
-	"io/ioutil"
 	"math"
 	"math/rand"
-	"os"
-	"path/filepath"
 	. "server/common"
 	"server/common/utils"
 	pb "server/pb_output"
@@ -19,6 +16,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"encoding/xml"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -261,10 +263,12 @@ func (pR *Room) ChooseStage() error {
 	 * -- YFLu, 2019-09-04
 	 */
 	pwd, err := os.Getwd()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{ /*"pacman" ,*/ "richsoil"}
+	stageNameList := []string{ /*"simple" ,*/ "richsoil"}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]
@@ -324,7 +328,8 @@ func (pR *Room) ChooseStage() error {
 	barrierPolygon2DList := *(toRetStrToPolygon2DListMap["Barrier"])
 
 	var barrierLocalIdInBattle int32 = 0
-	for _, polygon2D := range barrierPolygon2DList {
+	for _, polygon2DUnaligned := range barrierPolygon2DList {
+        polygon2D := AlignPolygon2DToBoundingBox(polygon2DUnaligned)  
 		/*
 		   // For debug-printing only.
 		   Logger.Info("ChooseStage printing polygon2D for barrierPolygon2DList", zap.Any("barrierLocalIdInBattle", barrierLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
@@ -435,13 +440,13 @@ func (pR *Room) StartBattle() {
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
 			if elapsedNanosSinceLastFrameIdTriggered < pR.RollbackEstimatedDtNanos {
 				Logger.Debug(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, elapsedNanosSinceLastFrameIdTriggered))
-                continue
+				continue
 			}
 
 			if pR.RenderFrameId > pR.BattleDurationFrames {
 				Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(true)))
 				pR.StopBattleForSettlement()
-                return
+				return
 			}
 
 			if swapped := atomic.CompareAndSwapInt32(&pR.State, RoomBattleStateIns.IN_BATTLE, RoomBattleStateIns.IN_BATTLE); !swapped {
@@ -623,9 +628,9 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
 	inputFrameId := inputFrameDownsync.InputFrameId
 	if -1 == pR.LastAllConfirmedInputFrameIdWithChange || false == pR.equalInputLists(inputFrameDownsync.InputList, pR.LastAllConfirmedInputList) {
 		if -1 == playerId {
-			Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Key inputFrame change: roomId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
 		} else {
-			Logger.Info(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Key inputFrame change: roomId=%v, playerId=%v, newInputFrameId=%v, lastInputFrameId=%v, newInputList=%v, lastInputList=%v, InputsBuffer=%v", pR.Id, playerId, inputFrameId, pR.LastAllConfirmedInputFrameId, inputFrameDownsync.InputList, pR.LastAllConfirmedInputList, pR.InputsBufferString(false)))
 		}
 		atomic.StoreInt32(&(pR.LastAllConfirmedInputFrameIdWithChange), inputFrameId)
 	}
@@ -637,7 +642,7 @@ func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFra
 	if -1 == playerId {
 		Logger.Debug(fmt.Sprintf("inputFrame lifecycle#2[forced-allconfirmed]: roomId=%v, InputsBuffer=%v", pR.Id, pR.InputsBufferString(false)))
 	} else {
-		Logger.Info(fmt.Sprintf("inputFrame lifecycle#2[allconfirmed]: roomId=%v, playerId=%v, InputsBuffer=%v", pR.Id, playerId, pR.InputsBufferString(false)))
+		Logger.Debug(fmt.Sprintf("inputFrame lifecycle#2[allconfirmed]: roomId=%v, playerId=%v, InputsBuffer=%v", pR.Id, playerId, pR.InputsBufferString(false)))
 	}
 }
 
@@ -789,8 +794,8 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = 0.016667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
-	pR.RollbackEstimatedDtMillis = 16.667 // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
+	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
@@ -1142,17 +1147,23 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				encodedInput := inputList[joinIndex-1]
 				decodedInput := DIRECTION_DECODER[encodedInput]
 				decodedInputSpeedFactor := DIRECTION_DECODER_INVERSE_LENGTH[encodedInput]
+				if 0.0 == decodedInputSpeedFactor {
+					continue
+				}
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
 				dx := baseChange * float64(decodedInput[0])
 				dy := baseChange * float64(decodedInput[1])
 
-				// The collision lib seems very slow at worst cases, omitting for now
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
 					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
-					dx = changeWithCollision.X()
-					dy = changeWithCollision.Y()
+					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, proposed new dx =%v, proposed new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
+                    // FIXME: Use a mechanism equivalent to that of the frontend!
+					// dx = changeWithCollision.X()
+					// dy = changeWithCollision.Y()
+					dx = 0
+					dy = 0
 				}
 				playerCollider.X += dx
 				playerCollider.Y += dy
@@ -1169,7 +1180,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		newRenderFrame := pb.RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
 			Players:        toPbPlayers(pR.Players),
-			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos), 
+			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos),
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)
 		pR.CurDynamicsRenderFrameId++
@@ -1181,11 +1192,19 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 }
 
 func (pR *Room) refreshColliders() {
+	playerColliderRadius := float64(12) // hardcoded
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
-	space := resolv.NewSpace(int(pR.StageDiscreteW), int(pR.StageDiscreteH), int(pR.StageTileW), int(pR.StageTileH)) // allocate a new collision space everytime after a battle is settled
+	spaceW := pR.StageDiscreteW * pR.StageTileW
+	spaceH := pR.StageDiscreteH * pR.StageTileH
+
+	spaceOffsetX := float64(spaceW) * 0.5
+	spaceOffsetY := float64(spaceH) * 0.5
+
+    minStep := int(3) // the approx minimum distance a player can move per frame
+	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X, player.Y, 12, 12) // Radius=12 is hardcoded
-		playerColliderShape := resolv.NewCircle(player.X, player.Y, 12)
+		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
+		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
 		playerCollider.SetShape(playerColliderShape)
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
@@ -1196,8 +1215,10 @@ func (pR *Room) refreshColliders() {
 	}
 
 	for _, barrier := range pR.Barriers {
+
 		var w float64 = 0
 		var h float64 = 0
+
 		for i, pi := range barrier.Boundary.Points {
 			for j, pj := range barrier.Boundary.Points {
 				if i == j {
@@ -1214,13 +1235,12 @@ func (pR *Room) refreshColliders() {
 
 		barrierColliderShape := resolv.NewConvexPolygon()
 		for _, p := range barrier.Boundary.Points {
-			barrierColliderShape.AddPoints(p.X+barrier.Boundary.Anchor.X, p.Y+barrier.Boundary.Anchor.Y)
+			barrierColliderShape.AddPoints(p.X, p.Y)
 		}
 
-		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X, barrier.Boundary.Anchor.Y, w, h, "Barrier")
+		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")
 		barrierCollider.SetShape(barrierColliderShape)
 		space.Add(barrierCollider)
-		pR.printBarrier(barrierCollider)
 	}
 }
 

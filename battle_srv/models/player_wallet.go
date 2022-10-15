@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	. "dnmshared"
 	"errors"
 	. "server/common"
 	"server/common/utils"

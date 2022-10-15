@@ -1,4 +1,4 @@
-package common
+package dnmshared
 
 import (
 	"go.uber.org/zap"
@@ -19,5 +19,7 @@ func init() {
 	LoggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	var err error
 	Logger, err = LoggerConfig.Build()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 }

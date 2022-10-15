@@ -7,6 +7,8 @@ import (
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
+
+	. "dnmshared"
 )
 
 var (
@@ -20,6 +22,8 @@ func initRedis() {
 		DB:       Conf.Redis.Dbname,   // use default DB
 	})
 	pong, err := RedisManagerIns.Ping().Result()
-	ErrFatal(err)
+	if nil != err {
+		panic(err)
+	}
 	Logger.Info("Redis", zap.String("ping", pong))
 }

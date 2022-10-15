@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.3" orientation="isometric" renderorder="right-down" width="50" height="50" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="214">
+ <tileset firstgid="1" source="Tile_W64_H64_S01.tsx"/>
+ <tileset firstgid="17" source="Tile_W300_H300_S01.tsx"/>
+ <layer id="1" name="GroundFloor" width="50" height="50" locked="1">
+  <data encoding="base64" compression="zlib">
+   eJztz0ENACAMALGR4F8zNspyjwronZm7xPlcD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPSw9LD0sPy7bHBg/ldQwR
+  </data>
+ </layer>
+ <objectgroup id="2" name="PlayerStartingPos">
+  <object id="135" x="1442.33" y="2063">
+   <point/>
+  </object>
+  <object id="137" x="2270" y="1640">
+   <point/>
+  </object>
+ </objectgroup>
+ <layer id="3" name="FirsrtFloor" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   eJztwQENAAAAwqD3T20ON6AAAAAAAAAAAADg3wAnEAAB
+  </data>
+ </layer>
+ <objectgroup id="4" name="Barrier">
+  <properties>
+   <property name="type" value="barrier_and_shelter"/>
+  </properties>
+  <object id="5" x="1082.23" y="1537.08">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="548.339,-547.082 -94.2284,95.4898 230.657,408.918 867.772,-230"/>
+  </object>
+  <object id="213" x="1044" y="1852">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="1101.33,-342 470.926,284.848 526.26,339.333 1152.93,-285.091"/>
+  </object>
+ </objectgroup>
+</map>

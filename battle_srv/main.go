@@ -10,14 +10,14 @@ import (
 	"server/api"
 	"server/api/v1"
 	. "server/common"
-	"server/common/utils"
-	"server/configs"
 	"server/env_tools"
 	"server/models"
 	"server/storage"
 	"server/ws"
 	"syscall"
 	"time"
+
+	. "dnmshared"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -30,8 +30,6 @@ func main() {
 	MustParseConstants()
 	storage.Init()
 	env_tools.LoadPreConf()
-	utils.InitWechat(configs.WechatConfigIns)
-	utils.InitWechatGame(configs.WechatGameConfigIns)
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
 		env_tools.MergeTestPlayerAccounts()
 	}
