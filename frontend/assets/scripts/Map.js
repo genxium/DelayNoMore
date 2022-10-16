@@ -133,7 +133,7 @@ cc.Class({
 
   dumpToInputCache: function(inputFrameDownsync) {
     const self = this;
-    let minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames); // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding inputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
+    let minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames); // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding delayedInputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
     if (minToKeepInputFrameId > self.lastAllConfirmedInputFrameId) {
       minToKeepInputFrameId = self.lastAllConfirmedInputFrameId;
     }
@@ -637,7 +637,7 @@ cc.Class({
     return true;
   },
 
-  onInputFrameDownsyncBatch(batch, dumpRenderCacheRet /* second param is default to null */ ) {
+  onInputFrameDownsyncBatch(batch) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState
       && ALL_BATTLE_STATES.IN_SETTLEMENT != self.battleState) {
@@ -651,49 +651,42 @@ cc.Class({
       if (inputFrameDownsyncId < self.lastAllConfirmedInputFrameId) {
         continue;
       }
-      if (window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet) {
-        // Deliberately left blank, in this case "chaserRenderFrameId" is already reset to proper value.
-      } else {
-        const inputFrameIdConsecutive = (inputFrameDownsyncId == self.lastAllConfirmedInputFrameId + 1);
-        const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
-        if (null == localInputFrame && false == inputFrameIdConsecutive) {
-          throw "localInputFrame not existing and is NOT CONSECUTIVELY EXTENDING recentInputCache: inputFrameDownsyncId=" + inputFrameDownsyncId + ", lastAllConfirmedInputFrameId=" + self.lastAllConfirmedInputFrameId + ", recentInputCache=" + self._stringifyRecentInputCache(false);
-        } else if (null == firstPredictedYetIncorrectInputFrameId && null != localInputFrame && !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)) {
-          firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
-        }
+      const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
+      if (null != localInputFrame
+        &&
+        null == firstPredictedYetIncorrectInputFrameId
+        &&
+        !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)
+      ) {
+        firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
       self.dumpToInputCache(inputFrameDownsync);
     }
 
-    if (null != firstPredictedYetIncorrectInputFrameId) {
-      const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
-      const renderFrameId1 = self._convertToFirstUsedRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
-      if (renderFrameId1 < self.renderFrameId) {
-        /*
-        A typical case is as follows.
-        --------------------------------------------------------
-        [self.lastAllConfirmedRenderFrameId]       :              22
+    if (null == firstPredictedYetIncorrectInputFrameId) return;
+    const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
+    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
+    if (renderFrameId1 >= self.renderFrameId) return; // No need to rollback when "renderFrameId1 == self.renderFrameId", because the "corresponding delayedInputFrame for renderFrameId1" is NOT YET EXECUTED BY NOW, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range.
 
-        <renderFrameId1>                           :              36
+    if (renderFrameId1 >= self.chaserRenderFrameId) return;
+
+    /*
+    A typical case is as follows.
+    --------------------------------------------------------
+    [self.lastAllConfirmedRenderFrameId]       :              22
+
+    <renderFrameId1>                           :              36
 
 
-        <self.chaserRenderFrameId>                 :              62
+    <self.chaserRenderFrameId>                 :              62
 
-        [self.renderFrameId]                       :              64
-        --------------------------------------------------------
-        */
-        if (renderFrameId1 < self.chaserRenderFrameId) {
-          // The actual rollback-and-chase would later be executed in update(dt). 
-          console.warn("Mismatched input detected, resetting chaserRenderFrameId: inputFrameId1:", inputFrameId1, ", renderFrameId1:", renderFrameId1, ", chaserRenderFrameId before reset: ", self.chaserRenderFrameId);
-          self.chaserRenderFrameId = renderFrameId1;
-        } else {
-          // Deliberately left blank, chasing is ongoing.
-        }
-      } else {
-        // No need to rollback when "renderFrameId1 == self.renderFrameId", because the "corresponding delayedInputFrame for renderFrameId2" is NOT YET EXECUTED BY NOW, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range. 
-      }
-    }
+    [self.renderFrameId]                       :              64
+    --------------------------------------------------------
+    */
+    // The actual rollback-and-chase would later be executed in update(dt). 
+    console.warn("Mismatched input detected, resetting chaserRenderFrameId: inputFrameId1:", inputFrameId1, ", renderFrameId1:", renderFrameId1, ", chaserRenderFrameId before reset: ", self.chaserRenderFrameId);
+    self.chaserRenderFrameId = renderFrameId1;
   },
 
   onPlayerAdded(rdf) {
@@ -803,7 +796,7 @@ cc.Class({
         self.chaserRenderFrameId = nextChaserRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
         let t2 = performance.now();
 
-        // Inside "self.rollbackAndChase", the "self.latestCollisionSys" is ALWAYS ROLLED BACK to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding inputFrameDownsync, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
+        // Inside the following "self.rollbackAndChase" (which actually ROLLS FORWARD), the "self.latestCollisionSys" is ALWAYS "ROLLED BACK" to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
         const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.latestCollisionSys, self.latestCollisionSysMap);
         /*
         const nonTrivialChaseEnded = (prevChaserRenderFrameId < nextChaserRenderFrameId && nextChaserRenderFrameId == self.renderFrameId); 
@@ -818,7 +811,7 @@ cc.Class({
       } finally {
         // Update countdown
         if (null != self.countdownNanos) {
-          self.countdownNanos = self.battleDurationNanos - self.renderFrameId*self.rollbackEstimatedDtNanos;
+          self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
           if (self.countdownNanos <= 0) {
             self.onBattleStopped(self.playerRichInfoDict);
             return;
@@ -987,9 +980,9 @@ cc.Class({
 
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const immediatePlayerInfo = rdf.players[playerId];
-      const dx = (immediatePlayerInfo.x-playerRichInfo.node.x); 
-      const dy = (immediatePlayerInfo.y-playerRichInfo.node.y);
-      const selfJiggling = (playerId == self.selfPlayerInfo.playerId && (0 != dx && self.teleportEps1D >= Math.abs(dx) && 0 != dy && self.teleportEps1D >= Math.abs(dy))); 
+      const dx = (immediatePlayerInfo.x - playerRichInfo.node.x);
+      const dy = (immediatePlayerInfo.y - playerRichInfo.node.y);
+      const selfJiggling = (playerId == self.selfPlayerInfo.playerId && (0 != dx && self.teleportEps1D >= Math.abs(dx) && 0 != dy && self.teleportEps1D >= Math.abs(dy)));
       if (!selfJiggling) {
         playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
       } else {

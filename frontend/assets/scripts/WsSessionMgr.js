@@ -194,8 +194,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           } else {
             console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp, null, 2));
             // The following order of execution is important 
-            const dumpRenderCacheRet = mapIns.onRoomDownsyncFrame(resp.rdf);
-            mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch, dumpRenderCacheRet);
+            mapIns.onRoomDownsyncFrame(resp.rdf);
+            mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           }
           break;
         default:
