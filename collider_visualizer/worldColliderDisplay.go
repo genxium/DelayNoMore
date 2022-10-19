@@ -56,7 +56,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
     moveToCollide := true 
     if moveToCollide {
         toTestPlayerCollider := playerColliders[0] 
-        oldDx := 0.0
+        oldDx := 135.0
         oldDy := 135.0
         dx := oldDx
         dy := oldDy
