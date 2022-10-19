@@ -15,6 +15,10 @@ type Vec2D struct {
 	Y float64 `json:"y,omitempty"`
 }
 
+func NormVec2D(dx, dy float64) Vec2D {
+    return Vec2D{dy, -dx}
+}
+
 type Polygon2D struct {
 	Anchor *Vec2D   `json:"-"` // This "Polygon2D.Anchor" is used to be assigned to "B2BodyDef.Position", which in turn is used as the position of the FIRST POINT of the polygon.
 	Points []*Vec2D `json:"-"`

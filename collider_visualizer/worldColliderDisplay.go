@@ -4,6 +4,7 @@ import (
 	. "dnmshared"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	"image/color"
@@ -56,7 +57,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
     if moveToCollide {
         toTestPlayerCollider := playerColliders[0] 
         oldDx := 0.0
-        oldDy := 180.0
+        oldDy := 135.0
         dx := oldDx
         dy := oldDy
         if collision := toTestPlayerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
@@ -64,11 +65,26 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
             barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)
             origX, origY := playerShape.Position() 
             playerShape.SetPosition(origX+oldDx, origY+oldDy)
-            if mtv := CalculateMTVForConvexPolygon(playerShape, barrierShape); mtv != nil {
-                Logger.Info(fmt.Sprintf("Collided: shape=%v, oldDx=%v, oldDy=%v, MTV=%v", toTestPlayerCollider.Shape, oldDx, oldDy, mtv))
-                //dx, dy = mtv[0], mtv[1]
+            if colliding := IsPolygonPairColliding(playerShape, barrierShape, nil); colliding {
+                Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v", playerShape, oldDx, oldDy))
+                overlapResult := &SatResult{
+                    Overlap: 0,
+                    OverlapX: 0, 
+                    OverlapY: 0, 
+                    AContainedInB: true,
+                    BContainedInA: true,
+                    Axis: vector.Vector{0, 0},
+                }
+                e := vector.Vector{oldDx, oldDy}.Unit()
+                if separatableAlongMovement := IsPolygonPairSeparatedByDir(playerShape, barrierShape, e, overlapResult); !separatableAlongMovement {
+                    pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY  
+                    Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerShape, oldDx, oldDy, barrierShape, pushbackX, pushbackY))
+                    dx, dy = oldDx-pushbackX, oldDy-pushbackY 
+                } else {
+                    Logger.Info(fmt.Sprintf("Not Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, e=%v", playerShape, oldDx, oldDy, barrierShape, e))
+                }
             } else {
-                Logger.Info(fmt.Sprintf("Collided: shape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, not intersecting", toTestPlayerCollider.Shape, oldDx, oldDy, barrierShape))
+                Logger.Info(fmt.Sprintf("Not collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v", playerShape, oldDx, oldDy, barrierShape))
             }  
 
             playerShape.SetPosition(origX, origY)
