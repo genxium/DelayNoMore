@@ -1203,8 +1203,8 @@ func (pR *Room) refreshColliders() {
     minStep := int(3) // the approx minimum distance a player can move per frame
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
-		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
+		playerCollider := resolv.NewObject(player.X-playerColliderRadius+spaceOffsetX, player.Y-playerColliderRadius+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
+		playerColliderShape := resolv.NewCircle(+playerColliderRadius, +playerColliderRadius, playerColliderRadius)
 		playerCollider.SetShape(playerColliderShape)
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"

@@ -85,8 +85,8 @@ type Game struct {
 
 func NewGame() *Game {
 
-	// stageName := "simple" // Use this for calibration
-	stageName := "richsoil"
+    stageName := "simple" // Use this for calibration
+	// stageName := "richsoil"
 	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, playerPosMap, barrierMap, err := parseStage(stageName)
 	if nil != err {
 		panic(err)
@@ -160,7 +160,6 @@ func (g *Game) DebugDraw(screen *ebiten.Image, space *resolv.Space) {
 			ebitenutil.DrawLine(screen, cx, cy+ch, cx, cy, drawColor)
 		}
 	}
-
 }
 
 func (g *Game) Layout(w, h int) (int, int) {

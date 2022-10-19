@@ -4,7 +4,6 @@ import (
 	. "dnmshared"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	"image/color"
@@ -36,12 +35,15 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetY := float64(spaceH) * 0.5
 
 	// TODO: Move collider y-axis transformation to a "dnmshared"
-	playerColliderRadius := float64(12) // hardcoded
+	playerColliderRadius := float64(32)
+    playerColliders := make([]*resolv.Object, len(playerList))
 	space := resolv.NewSpace(int(spaceW), int(spaceH), 16, 16)
-	for _, player := range playerList {
-		playerCollider := resolv.NewObject(player.X+spaceOffsetX, player.Y+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2, "Player")
-		playerColliderShape := resolv.NewCircle(0, 0, playerColliderRadius*2)
+	for i, player := range playerList {
+		playerCollider := resolv.NewObject(player.X-playerColliderRadius+spaceOffsetX, player.Y-playerColliderRadius+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2, "Player")
+		playerColliderShape := resolv.NewRectangle(0, 0, playerColliderRadius*2, playerColliderRadius*2) // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset" 
 		playerCollider.SetShape(playerColliderShape)
+        Logger.Info(fmt.Sprintf("Player Collider#%d: player.X=%v, player.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v; calibrationCheckX=player.X-radius+spaceOffsetX=%v", i, player.X, player.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape, player.X-playerColliderRadius+spaceOffsetX))
+        playerColliders[i] = playerCollider
 		space.Add(playerCollider)
 	}
 
@@ -76,11 +78,28 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		barrierCollider.SetShape(barrierColliderShape)
 
 		space.Add(barrierCollider)
-
+        Logger.Info(fmt.Sprintf("Added barrier: shape=%v", barrierCollider.Shape))
 		barrierLocalId++
 	}
 
 	world.Space = space
+
+    toTestPlayerCollider := playerColliders[0] 
+    oldDx := 0.0
+    oldDy := 180.0
+    if collision := toTestPlayerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
+        toCheckBarrier := collision.Objects[0].Shape
+        if intersection := toTestPlayerCollider.Shape.Intersection(oldDx, oldDy, toCheckBarrier); nil != intersection {
+            Logger.Info(fmt.Sprintf("Collided: shape=%v, oldDx=%v, oldDy=%v, intersection.MTV=%v", toTestPlayerCollider.Shape, oldDx, oldDy, intersection.MTV))
+        } else {
+            Logger.Info(fmt.Sprintf("Collided: shape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, no intersecting points", toTestPlayerCollider.Shape, oldDx, oldDy, toCheckBarrier))
+        }  
+    } else {
+        Logger.Info(fmt.Sprintf("Collision Test: shape=%v, oldDx=%v, oldDy=%v, not colliding with any Barrier", toTestPlayerCollider.Shape, oldDx, oldDy))
+    }
+
+    toTestPlayerCollider.Update()
+
 	return world
 }
 
@@ -92,9 +111,8 @@ func (world *WorldColliderDisplay) Draw(screen *ebiten.Image) {
 
 	for _, o := range world.Space.Objects() {
 		if o.HasTags("Player") {
-			circle := o.Shape.(*resolv.Circle)
 			drawColor := color.RGBA{0, 255, 0, 255}
-			ebitenutil.DrawCircle(screen, circle.X, circle.Y, circle.Radius, drawColor)
+			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
 		} else {
 			drawColor := color.RGBA{60, 60, 60, 255}
 			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
