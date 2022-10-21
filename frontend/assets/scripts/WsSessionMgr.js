@@ -189,10 +189,11 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
           const renderFrameIdConsecutive = (resp.rdf.id <= mapIns.renderFrameId + mapIns.renderFrameIdLagTolerance);
           if (inputFrameIdConsecutive && renderFrameIdConsecutive) {
-            console.log("Got consecutive resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp));
+            // console.log("Got consecutive resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp));
             mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
           } else {
-            console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp, null, 2));
+            // console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", the incoming resp=\n", JSON.stringify(resp, null, 2));
+            console.warn("Got forced resync@localRenderFrameId=", mapIns.renderFrameId, ", @lastAllConfirmedRenderFrameId=", mapIns.lastAllConfirmedRenderFrameId, "@lastAllConfirmedInputFrameId=", mapIns.lastAllConfirmedInputFrameId, ", @localRecentInputCache=", mapIns._stringifyRecentInputCache(false), ", inputFrameIdConsecutive=", inputFrameIdConsecutive, ", renderFrameIdConsecutive=", renderFrameIdConsecutive);
             // The following order of execution is important 
             mapIns.onRoomDownsyncFrame(resp.rdf);
             mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
