@@ -56,10 +56,8 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
     moveToCollide := true 
     if moveToCollide {
         toTestPlayerCollider := playerColliders[0] 
-        oldDx := 135.0
-        oldDy := 135.0
-        dx := oldDx
-        dy := oldDy
+        oldDx, oldDy := 135.0, 135.0
+        dx, dy := oldDx, oldDy
         if collision := toTestPlayerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
             playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
             barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)

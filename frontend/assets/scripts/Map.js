@@ -740,9 +740,13 @@ cc.Class({
     newPlayerNode.setPosition(cc.v2(x, y));
     newPlayerNode.getComponent("SelfPlayer").mapNode = self.node;
     const currentSelfColliderCircle = newPlayerNode.getComponent(cc.CircleCollider);
+	const r = currentSelfColliderCircle.radius, d = 2*r;
+	// The collision box of an individual player is a polygon instead of a circle, because the backend collision engine doesn't handle circle alignment well.
+	const x0 = x-r, y0 = y-r;
+	let pts = [[0, 0], [d, 0], [d, d], [0, d]]; 
 
-    const newPlayerColliderLatest = self.latestCollisionSys.createCircle(x, y, currentSelfColliderCircle.radius);
-    const newPlayerColliderChaser = self.chaserCollisionSys.createCircle(x, y, currentSelfColliderCircle.radius);
+    const newPlayerColliderLatest = self.latestCollisionSys.createPolygon(x0, y0, pts);
+    const newPlayerColliderChaser = self.chaserCollisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     self.latestCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderLatest);
     self.chaserCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderChaser);
@@ -952,10 +956,12 @@ cc.Class({
       const joinIndex = playerRichInfo.joinIndex;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+      const currentSelfColliderCircle = playerRichInfo.node.getComponent(cc.CircleCollider);
+	  const r = currentSelfColliderCircle.radius;
       rdf.players[playerRichInfo.id] = {
         id: playerRichInfo.id,
-        x: playerCollider.x,
-        y: playerCollider.y,
+        x: playerCollider.x + r, // [WARNING] the (x, y) of "playerCollider" is offset to the anchor (i.e. first point of all points) of the polygon shape
+        y: playerCollider.y + r,
         dir: self.ctrl.decodeDirection(null == inputFrameAppliedOnPrevRenderFrame ? 0 : inputFrameAppliedOnPrevRenderFrame.inputList[joinIndex - 1]),
         speed: (null == speedRefRenderFrame ? playerRichInfo.speed : speedRefRenderFrame.players[playerRichInfo.id].speed),
         joinIndex: joinIndex
@@ -1025,8 +1031,11 @@ cc.Class({
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       const player = latestRdf.players[playerId];
-      playerCollider.x = player.x;
-      playerCollider.y = player.y;
+
+      const currentSelfColliderCircle = playerRichInfo.node.getComponent(cc.CircleCollider);
+	  const r = currentSelfColliderCircle.radius;
+      playerCollider.x = player.x - r;
+      playerCollider.y = player.y - r;
     });
 
     /*

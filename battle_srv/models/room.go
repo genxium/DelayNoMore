@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
-	"math"
 	"math/rand"
 	. "server/common"
 	"server/common/utils"
@@ -1151,19 +1151,35 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 					continue
 				}
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
-				dx := baseChange * float64(decodedInput[0])
-				dy := baseChange * float64(decodedInput[1])
+				oldDx, oldDy := baseChange * float64(decodedInput[0]), baseChange * float64(decodedInput[1])  
+				dx, dy := oldDx, oldDy 
 
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
-				if collision := playerCollider.Check(dx, dy, "Barrier"); collision != nil {
-					changeWithCollision := collision.ContactWithObject(collision.Objects[0])
-					Logger.Info(fmt.Sprintf("Collided: roomId=%v, playerId=%v, orig dx=%v, orig dy=%v, proposed new dx =%v, proposed new dy=%v", pR.Id, player.Id, dx, dy, changeWithCollision.X(), changeWithCollision.Y()))
-                    // FIXME: Use a mechanism equivalent to that of the frontend!
-					// dx = changeWithCollision.X()
-					// dy = changeWithCollision.Y()
-					dx = 0
-					dy = 0
+				if collision := playerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
+					playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
+					barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)
+					origX, origY := playerShape.Position() 
+					playerShape.SetPosition(origX+oldDx, origY+oldDy) 
+					if colliding := IsPolygonPairColliding(playerShape, barrierShape, nil); colliding {
+						Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v", playerShape, oldDx, oldDy))
+						overlapResult := &SatResult{
+							Overlap: 0,
+							OverlapX: 0, 
+							OverlapY: 0, 
+							AContainedInB: true,
+							BContainedInA: true,
+							Axis: vector.Vector{0, 0},
+						}
+						e := vector.Vector{oldDx, oldDy}.Unit()
+						if separatableAlongMovement := IsPolygonPairSeparatedByDir(playerShape, barrierShape, e, overlapResult); !separatableAlongMovement {
+							pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY  
+							Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerShape, oldDx, oldDy, barrierShape, pushbackX, pushbackY))
+							dx, dy = oldDx-pushbackX, oldDy-pushbackY 
+						} 
+					}   
+
+					playerShape.SetPosition(origX, origY)
 				}
 				playerCollider.X += dx
 				playerCollider.Y += dy
@@ -1203,9 +1219,7 @@ func (pR *Room) refreshColliders() {
     minStep := int(3) // the approx minimum distance a player can move per frame
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := resolv.NewObject(player.X-playerColliderRadius+spaceOffsetX, player.Y-playerColliderRadius+spaceOffsetY, playerColliderRadius*2, playerColliderRadius*2)
-		playerColliderShape := resolv.NewCircle(+playerColliderRadius, +playerColliderRadius, playerColliderRadius)
-		playerCollider.SetShape(playerColliderShape)
+		playerCollider := GenerateRectCollider(player.X, player.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
@@ -1215,31 +1229,8 @@ func (pR *Room) refreshColliders() {
 	}
 
 	for _, barrier := range pR.Barriers {
-
-		var w float64 = 0
-		var h float64 = 0
-
-		for i, pi := range barrier.Boundary.Points {
-			for j, pj := range barrier.Boundary.Points {
-				if i == j {
-					continue
-				}
-				if math.Abs(pj.X-pi.X) > w {
-					w = math.Abs(pj.X - pi.X)
-				}
-				if math.Abs(pj.Y-pi.Y) > h {
-					h = math.Abs(pj.Y - pi.Y)
-				}
-			}
-		}
-
-		barrierColliderShape := resolv.NewConvexPolygon()
-		for _, p := range barrier.Boundary.Points {
-			barrierColliderShape.AddPoints(p.X, p.Y)
-		}
-
-		barrierCollider := resolv.NewObject(barrier.Boundary.Anchor.X+spaceOffsetX, barrier.Boundary.Anchor.Y+spaceOffsetY, w, h, "Barrier")
-		barrierCollider.SetShape(barrierColliderShape)
+		boundaryUnaligned := barrier.Boundary
+		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
 		space.Add(barrierCollider)
 	}
 }
