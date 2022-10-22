@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
-	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	"math/rand"
@@ -329,7 +328,7 @@ func (pR *Room) ChooseStage() error {
 
 	var barrierLocalIdInBattle int32 = 0
 	for _, polygon2DUnaligned := range barrierPolygon2DList {
-        polygon2D := AlignPolygon2DToBoundingBox(polygon2DUnaligned)  
+		polygon2D := AlignPolygon2DToBoundingBox(polygon2DUnaligned)
 		/*
 		   // For debug-printing only.
 		   Logger.Info("ChooseStage printing polygon2D for barrierPolygon2DList", zap.Any("barrierLocalIdInBattle", barrierLocalIdInBattle), zap.Any("polygon2D.Anchor", polygon2D.Anchor), zap.Any("polygon2D.Points", polygon2D.Points))
@@ -1151,35 +1150,21 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 					continue
 				}
 				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
-				oldDx, oldDy := baseChange * float64(decodedInput[0]), baseChange * float64(decodedInput[1])  
-				dx, dy := oldDx, oldDy 
+				oldDx, oldDy := baseChange*float64(decodedInput[0]), baseChange*float64(decodedInput[1])
+				dx, dy := oldDx, oldDy
 
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
 					playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 					barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)
-					origX, origY := playerShape.Position() 
-					playerShape.SetPosition(origX+oldDx, origY+oldDy) 
-					if colliding := IsPolygonPairColliding(playerShape, barrierShape, nil); colliding {
-						Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v", playerShape, oldDx, oldDy))
-						overlapResult := &SatResult{
-							Overlap: 0,
-							OverlapX: 0, 
-							OverlapY: 0, 
-							AContainedInB: true,
-							BContainedInA: true,
-							Axis: vector.Vector{0, 0},
-						}
-						e := vector.Vector{oldDx, oldDy}.Unit()
-						if separatableAlongMovement := IsPolygonPairSeparatedByDir(playerShape, barrierShape, e, overlapResult); !separatableAlongMovement {
-							pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY  
-							Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerShape, oldDx, oldDy, barrierShape, pushbackX, pushbackY))
-							dx, dy = oldDx-pushbackX, oldDy-pushbackY 
-						} 
-					}   
-
-					playerShape.SetPosition(origX, origY)
+					if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
+						Logger.Info(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+						dx -= pushbackX
+						dy -= pushbackY
+					} else {
+						Logger.Info(fmt.Sprintf("Collider BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
+					}
 				}
 				playerCollider.X += dx
 				playerCollider.Y += dy
@@ -1216,7 +1201,7 @@ func (pR *Room) refreshColliders() {
 	spaceOffsetX := float64(spaceW) * 0.5
 	spaceOffsetY := float64(spaceH) * 0.5
 
-    minStep := int(3) // the approx minimum distance a player can move per frame
+	minStep := int(3)                                                    // the approx minimum distance a player can move per frame
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		playerCollider := GenerateRectCollider(player.X, player.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")

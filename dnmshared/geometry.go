@@ -16,7 +16,7 @@ type Vec2D struct {
 }
 
 func NormVec2D(dx, dy float64) Vec2D {
-    return Vec2D{dy, -dx}
+	return Vec2D{dy, -dx}
 }
 
 type Polygon2D struct {
