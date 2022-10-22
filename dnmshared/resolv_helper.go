@@ -1,10 +1,21 @@
 package dnmshared
 
 import (
+	"fmt"
 	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"math"
+	"strings"
 )
+
+func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
+	var s []string = make([]string, len(body.Points))
+	for i, p := range body.Points {
+		s[i] = fmt.Sprintf("[%v, %v]", p[0]+body.X, p[1]+body.Y)
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
+}
 
 func GenerateRectCollider(origX, origY, w, h, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
 	collider := resolv.NewObject(origX-w*0.5+spaceOffsetX, origY-h*0.5+spaceOffsetY, w, h, tag)
@@ -43,16 +54,38 @@ func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceO
 	return collider
 }
 
-type SatResult struct {
-	Overlap  float64
-	OverlapX float64
-	OverlapY float64
-	AContainedInB     bool
-	BContainedInA     bool
-    Axis vector.Vector
+func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64) {
+	origX, origY := playerShape.Position()
+	defer func() {
+		playerShape.SetPosition(origX, origY)
+	}()
+	playerShape.SetPosition(origX+oldDx, origY+oldDy)
+	overlapResult := &SatResult{
+		Overlap:       0,
+		OverlapX:      0,
+		OverlapY:      0,
+		AContainedInB: true,
+		BContainedInA: true,
+		Axis:          vector.Vector{0, 0},
+	}
+	if overlapped := IsPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
+		pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY
+		return true, pushbackX, pushbackY
+	} else {
+		return false, 0, 0
+	}
 }
 
-func IsPolygonPairColliding(a, b *resolv.ConvexPolygon, result *SatResult) bool {
+type SatResult struct {
+	Overlap       float64
+	OverlapX      float64
+	OverlapY      float64
+	AContainedInB bool
+	BContainedInA bool
+	Axis          vector.Vector
+}
+
+func IsPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool {
 	aCnt, bCnt := len(a.Points), len(b.Points)
 	// Single point case
 	if 1 == aCnt && 1 == bCnt {
@@ -64,7 +97,7 @@ func IsPolygonPairColliding(a, b *resolv.ConvexPolygon, result *SatResult) bool 
 
 	if 1 < aCnt {
 		for _, axis := range a.SATAxes() {
-			if IsPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
+			if isPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
 				return false
 			}
 		}
@@ -72,7 +105,7 @@ func IsPolygonPairColliding(a, b *resolv.ConvexPolygon, result *SatResult) bool 
 
 	if 1 < bCnt {
 		for _, axis := range b.SATAxes() {
-			if IsPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
+			if isPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
 				return false
 			}
 		}
@@ -81,10 +114,26 @@ func IsPolygonPairColliding(a, b *resolv.ConvexPolygon, result *SatResult) bool 
 	return true
 }
 
-func IsPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, result *SatResult) bool {
+func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, result *SatResult) bool {
+	/*
+		[WARNING] This function is deliberately made private, it shouldn't be used alone (i.e. not along the norms of a polygon), otherwise the pushbacks calculated would be meaningless.
+
+		Consider the following example
+		a: {
+			anchor: [1337.19 1696.74]
+			points: [[0 0] [24 0] [24 24] [0 24]]
+		},
+		b: {
+			anchor: [1277.72 1570.56]
+			points: [[642.57 319.16] [0 319.16] [5.73 0] [643.75 0.90]]
+		}
+
+		e = (-2.98, 1.49).Unit()
+	*/
+
 	var aStart, aEnd, bStart, bEnd float64 = math.MaxFloat64, -math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64
 	for _, p := range a.Points {
-		dot := p.X()*e.X() + p.Y()*e.Y()
+		dot := (p.X()+a.X)*e.X() + (p.Y()+a.Y)*e.Y()
 
 		if aStart > dot {
 			aStart = dot
@@ -96,7 +145,7 @@ func IsPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 	}
 
 	for _, p := range b.Points {
-		dot := p.X()*e.X() + p.Y()*e.Y()
+		dot := (p.X()+b.X)*e.X() + (p.Y()+b.Y)*e.Y()
 
 		if bStart > dot {
 			bStart = dot
@@ -113,7 +162,7 @@ func IsPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 	}
 
 	if nil != result {
-        result.Axis = e
+		result.Axis = e
 		overlap := float64(0)
 
 		if aStart < bStart {

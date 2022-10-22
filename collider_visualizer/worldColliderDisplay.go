@@ -4,7 +4,6 @@ import (
 	. "dnmshared"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	"image/color"
@@ -34,69 +33,46 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetY := float64(spaceH) * 0.5
 
 	playerColliderRadius := float64(32)
-    playerColliders := make([]*resolv.Object, len(playerList))
+	playerColliders := make([]*resolv.Object, len(playerList))
 	space := resolv.NewSpace(int(spaceW), int(spaceH), 16, 16)
 	for i, player := range playerList {
 		playerCollider := GenerateRectCollider(player.X, player.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
-        Logger.Info(fmt.Sprintf("Player Collider#%d: player.X=%v, player.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v; calibrationCheckX=player.X-radius+spaceOffsetX=%v", i, player.X, player.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape, player.X-playerColliderRadius+spaceOffsetX))
-        playerColliders[i] = playerCollider
+		Logger.Info(fmt.Sprintf("Player Collider#%d: player.X=%v, player.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v; calibrationCheckX=player.X-radius+spaceOffsetX=%v", i, player.X, player.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape, player.X-playerColliderRadius+spaceOffsetX))
+		playerColliders[i] = playerCollider
 		space.Add(playerCollider)
 	}
 
 	barrierLocalId := 0
 	for _, barrierUnaligned := range barrierList {
 		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
-        Logger.Info(fmt.Sprintf("Added barrier: shape=%v", barrierCollider.Shape))
+		Logger.Info(fmt.Sprintf("Added barrier: shape=%v", barrierCollider.Shape))
 		space.Add(barrierCollider)
 		barrierLocalId++
 	}
 
 	world.Space = space
 
-    moveToCollide := true 
-    if moveToCollide {
-        toTestPlayerCollider := playerColliders[0] 
-        oldDx := 135.0
-        oldDy := 135.0
-        dx := oldDx
-        dy := oldDy
-        if collision := toTestPlayerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
-            playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
-            barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)
-            origX, origY := playerShape.Position() 
-            playerShape.SetPosition(origX+oldDx, origY+oldDy)
-            if colliding := IsPolygonPairColliding(playerShape, barrierShape, nil); colliding {
-                Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v", playerShape, oldDx, oldDy))
-                overlapResult := &SatResult{
-                    Overlap: 0,
-                    OverlapX: 0, 
-                    OverlapY: 0, 
-                    AContainedInB: true,
-                    BContainedInA: true,
-                    Axis: vector.Vector{0, 0},
-                }
-                e := vector.Vector{oldDx, oldDy}.Unit()
-                if separatableAlongMovement := IsPolygonPairSeparatedByDir(playerShape, barrierShape, e, overlapResult); !separatableAlongMovement {
-                    pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY  
-                    Logger.Info(fmt.Sprintf("Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerShape, oldDx, oldDy, barrierShape, pushbackX, pushbackY))
-                    dx, dy = oldDx-pushbackX, oldDy-pushbackY 
-                } else {
-                    Logger.Info(fmt.Sprintf("Not Collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v, e=%v", playerShape, oldDx, oldDy, barrierShape, e))
-                }
-            } else {
-                Logger.Info(fmt.Sprintf("Not collided: playerShape=%v, oldDx=%v, oldDy=%v, toCheckBarrier=%v", playerShape, oldDx, oldDy, barrierShape))
-            }  
+	moveToCollide := true
+	if moveToCollide {
+		toTestPlayerCollider := playerColliders[0]
+		oldDx, oldDy := -2.98, -50.0
+		dx, dy := oldDx, oldDy
+		if collision := toTestPlayerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
+			playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
+			barrierShape := collision.Objects[0].Shape.(*resolv.ConvexPolygon)
+			if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
+				Logger.Info(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", toTestPlayerCollider.X, toTestPlayerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+				dx -= pushbackX
+				dy -= pushbackY
+			} else {
+				Logger.Info(fmt.Sprintf("Collider BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", toTestPlayerCollider.X, toTestPlayerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
+			}
+		}
 
-            playerShape.SetPosition(origX, origY)
-
-            toTestPlayerCollider.X += dx
-            toTestPlayerCollider.Y += dy
-        } else {
-            Logger.Info(fmt.Sprintf("Collision Test: shape=%v, oldDx=%v, oldDy=%v, not colliding with any Barrier", toTestPlayerCollider.Shape, oldDx, oldDy))
-        }
-
-        toTestPlayerCollider.Update()
-    } 
+		toTestPlayerCollider.X += dx
+		toTestPlayerCollider.Y += dy
+		toTestPlayerCollider.Update()
+	}
 
 	return world
 }
