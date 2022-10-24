@@ -67,19 +67,6 @@ cc.Class({
 
   onLoad() {
 
-    //kobako: 腾讯统计代码
-    //WARN: 打包到微信小游戏的时候会导致出错
-    /*
-    (function() {
-        var mta = document.createElement("script");
-        mta.src = "//pingjs.qq.com/h5/stats.js?v2.0.4";
-        mta.setAttribute("name", "MTAH5");
-        mta.setAttribute("sid", "500674632");
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(mta, s);
-    })();
-    */
-
     window.atFirstLocationHref = window.location.href.split('#')[0];
     const self = this;
     self.getRetCodeList();
@@ -97,10 +84,8 @@ cc.Class({
     self.smsLoginCaptchaLabel.active = true;
 
     self.loginButton.active = true;
-    self.checkPhoneNumber = self.checkPhoneNumber.bind(self);
-    self.checkIntAuthTokenExpire = self.checkIntAuthTokenExpire.bind(self);
-    self.checkCaptcha = self.checkCaptcha.bind(self);
-    self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
+	self.onLoginButtonClicked = self.onLoginButtonClicked.bind(self);
+	self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
     self.smsLoginCaptchaButton.on('click', self.onSMSCaptchaGetButtonClicked);
 
     self.loadingNode = cc.instantiate(this.loadingPrefab);
@@ -125,11 +110,12 @@ cc.Class({
       window.WsReq = protoRoot.lookupType("treasurehunterx.WsReq"); 
       window.WsResp = protoRoot.lookupType("treasurehunterx.WsResp"); 
       self.checkIntAuthTokenExpire().then(
-        () => {
-          const intAuthToken = JSON.parse(cc.sys.localStorage.getItem('selfPlayer')).intAuthToken;
+        (intAuthToken) => {
+	 	  console.log("Successfully found `intAuthToken` in local cache");
           self.useTokenLogin(intAuthToken);
         },
         () => {
+	 	  console.warn("Failed to find `intAuthToken` in local cache");
           window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
         }
       );
@@ -221,11 +207,28 @@ cc.Class({
   checkIntAuthTokenExpire() {
     return new Promise((resolve, reject) => {
       if (!cc.sys.localStorage.getItem('selfPlayer')) {
+		console.warn("Couldn't find selfPlayer key in local cache");
         reject();
         return;
       }
       const selfPlayer = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
-      (selfPlayer.intAuthToken && new Date().getTime() < selfPlayer.expiresAt) ? resolve() : reject();
+	  if (null == selfPlayer) {
+		console.warn("Couldn't find selfPlayer object in local cache");
+		reject();
+		return;
+	  } 
+
+	  if (null == selfPlayer.intAuthToken) {
+		console.warn("Couldn't find selfPlayer object with key `intAuthToken` in local cache");
+		reject();
+		return;
+	  } 
+      if (new Date().getTime() > selfPlayer.expiresAt) {
+		console.warn("Couldn't find unexpired selfPlayer `intAuthToken` in local cache");
+		reject();
+		return;
+      }
+	  resolve(selfPlayer.intAuthToken);
     })
   },
 
@@ -278,13 +281,15 @@ cc.Class({
         intAuthToken: _intAuthToken
       },
       success: function(resp) {
+        console.log("Login attempt `useTokenLogin` succeeded.");
         self.onLoggedIn(resp);
       },
       error: function(xhr, status, errMsg) {
-        console.log("Login attempt `useTokenLogin` failed, about to execute `clearBoundRoomIdInBothVolatileAndPersistentStorage`.");
+        console.warn("Login attempt `useTokenLogin` failed, about to execute `clearBoundRoomIdInBothVolatileAndPersistentStorage`.");
         window.clearBoundRoomIdInBothVolatileAndPersistentStorage()
       },
       timeout: function() {
+        console.warn("Login attempt `useTokenLogin` timed out, about to enable interactive controls.");
         self.enableInteractiveControls(true);
       },
     });
@@ -335,7 +340,7 @@ cc.Class({
 
   onLoggedIn(res) {
     const self = this;
-    cc.log(`OnLoggedIn ${JSON.stringify(res)}.`)
+    console.log("OnLoggedIn ", JSON.stringify(res))
     if (res.ret === self.retCodeDict.OK) {
       self.enableInteractiveControls(false);
       const date = Number(res.expiresAt);
@@ -360,6 +365,7 @@ cc.Class({
       );
       cc.director.loadScene('default_map');
     } else {
+   	  console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")
       cc.sys.localStorage.removeItem("selfPlayer");
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       self.enableInteractiveControls(true);

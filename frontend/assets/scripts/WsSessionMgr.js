@@ -104,18 +104,6 @@ window.getExpectedRoomIdSync = function() {
   return null;
 };
 
-window.unsetClientSessionCloseOrErrorFlag = function() {
-  cc.sys.localStorage.removeItem("ClientSessionCloseOrErrorFlag");
-  return;
-}
-
-window.setClientSessionCloseOrErrorFlag = function() {
-  const oldVal = cc.sys.localStorage.getItem("ClientSessionCloseOrErrorFlag");
-  if (true == oldVal) return false;
-  cc.sys.localStorage.setItem("ClientSessionCloseOrErrorFlag", true);
-  return true;
-}
-
 window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   if (window.clientSession && window.clientSession.readyState == WebSocket.OPEN) {
     if (null != onopenCb) {
@@ -123,8 +111,10 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
     return;
   }
-
-  const intAuthToken = cc.sys.localStorage.getItem("selfPlayer") ? JSON.parse(cc.sys.localStorage.getItem('selfPlayer')).intAuthToken : "";
+ 
+  const selfPlayerStr = cc.sys.localStorage.getItem("selfPlayer");
+  const selfPlayer = null == selfPlayerStr ? null : JSON.parse(selfPlayerStr);  
+  const intAuthToken = null == selfPlayer ? "" : selfPlayer.intAuthToken;
 
   let urlToConnect = backendAddress.PROTOCOL.replace('http', 'ws') + '://' + backendAddress.HOST + ":" + backendAddress.PORT + backendAddress.WS_PATH_PREFIX + "?intAuthToken=" + intAuthToken;
 
@@ -141,11 +131,12 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 
   const currentHistoryState = window.history && window.history.state ? window.history.state : {};
 
+  window.clientSession = null; // Important for checking whether the "onclose" event is still relevant!
   const clientSession = new WebSocket(urlToConnect);
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
 
   clientSession.onopen = function(event) {
-    console.log("The WS clientSession is opened.");
+    console.log("The WS clientSession is opened. clientSession.id=", clientSession.id);
     window.clientSession = clientSession;
     if (null == onopenCb) return;
     onopenCb();
@@ -208,9 +199,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   };
 
   clientSession.onerror = function(event) {
-    if (!window.setClientSessionCloseOrErrorFlag()) {
-      return;
-    }
     console.error("Error caught on the WS clientSession: ", event);
     if (window.clientSessionPingInterval) {
       clearInterval(window.clientSessionPingInterval);
@@ -218,14 +206,14 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     if (window.handleClientSessionCloseOrError) {
       window.handleClientSessionCloseOrError();
     }
-    window.unsetClientSessionCloseOrErrorFlag();
   };
 
   clientSession.onclose = function(event) {
-    if (!window.setClientSessionCloseOrErrorFlag()) {
-      return;
-    }
-    console.warn("The WS clientSession is closed: ", event);
+    if (null == window.clientSession) {
+	  console.log("Received an outdated WS clientSession onclose event: ", event, clientSession);	
+	  return;
+	}
+    console.warn("The WS clientSession is closed: ", event, clientSession);
     if (window.clientSessionPingInterval) {
       clearInterval(window.clientSessionPingInterval);
     }
@@ -248,7 +236,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         window.handleClientSessionCloseOrError();
       }
     }
-    window.unsetClientSessionCloseOrErrorFlag();
   };
 };
 
