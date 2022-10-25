@@ -224,6 +224,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         case constants.RET_CODE.MYSQL_ERROR:
         case constants.RET_CODE.PLAYER_NOT_FOUND:
         case constants.RET_CODE.PLAYER_CHEATING:
+		case 1006: // Peer(i.e. the backend) gone unexpectedly 
           if (window.handleClientSessionError) {
             window.handleClientSessionError();
           }  

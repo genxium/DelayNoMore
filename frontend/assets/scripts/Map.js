@@ -253,8 +253,8 @@ cc.Class({
     if (null != window.handleBattleColliderInfo) {
       window.handleBattleColliderInfo = null;
     }
-    if (null != window.handleClientSessionCloseOrError) {
-      window.handleClientSessionCloseOrError = null;
+    if (null != window.handleClientSessionError) {
+      window.handleClientSessionError = null;
     }
   },
 
@@ -349,8 +349,8 @@ cc.Class({
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
     console.warn("+++++++ Map onLoad()");
-    window.handleClientSessionCloseOrError = function() {
-      console.warn('+++++++ Common handleClientSessionCloseOrError()');
+    window.handleClientSessionError = function() {
+      console.warn('+++++++ Common handleClientSessionError()');
 
       if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
         console.log("Battled ended by settlement");
