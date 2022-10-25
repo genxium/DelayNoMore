@@ -111,9 +111,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
     return;
   }
- 
+
   const selfPlayerStr = cc.sys.localStorage.getItem("selfPlayer");
-  const selfPlayer = null == selfPlayerStr ? null : JSON.parse(selfPlayerStr);  
+  const selfPlayer = null == selfPlayerStr ? null : JSON.parse(selfPlayerStr);
   const intAuthToken = null == selfPlayer ? "" : selfPlayer.intAuthToken;
 
   let urlToConnect = backendAddress.PROTOCOL.replace('http', 'ws') + '://' + backendAddress.HOST + ":" + backendAddress.PORT + backendAddress.WS_PATH_PREFIX + "?intAuthToken=" + intAuthToken;
@@ -224,10 +224,10 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         case constants.RET_CODE.MYSQL_ERROR:
         case constants.RET_CODE.PLAYER_NOT_FOUND:
         case constants.RET_CODE.PLAYER_CHEATING:
-		case 1006: // Peer(i.e. the backend) gone unexpectedly 
+        case 1006: // Peer(i.e. the backend) gone unexpectedly 
           if (window.handleClientSessionError) {
             window.handleClientSessionError();
-          }  
+          }
           break;
         default:
           break;
