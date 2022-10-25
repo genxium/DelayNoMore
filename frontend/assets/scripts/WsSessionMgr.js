@@ -131,23 +131,22 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 
   const currentHistoryState = window.history && window.history.state ? window.history.state : {};
 
-  window.clientSession = null; // Important for checking whether the "onclose" event is still relevant!
   const clientSession = new WebSocket(urlToConnect);
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
 
-  clientSession.onopen = function(event) {
+  clientSession.onopen = function(evt) {
     console.log("The WS clientSession is opened. clientSession.id=", clientSession.id);
     window.clientSession = clientSession;
     if (null == onopenCb) return;
     onopenCb();
   };
 
-  clientSession.onmessage = function(event) {
-    if (null == event || null == event.data) {
+  clientSession.onmessage = function(evt) {
+    if (null == evt || null == evt.data) {
       return;
     }
     try {
-      const resp = window.WsResp.decode(new Uint8Array(event.data));
+      const resp = window.WsResp.decode(new Uint8Array(evt.data));
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
           window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
@@ -194,46 +193,43 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
       }
     } catch (e) {
-      console.error("Unexpected error when parsing data of:", event.data, e);
+      console.error("Unexpected error when parsing data of:", evt.data, e);
     }
   };
 
-  clientSession.onerror = function(event) {
-    console.error("Error caught on the WS clientSession: ", event);
-    if (window.clientSessionPingInterval) {
-      clearInterval(window.clientSessionPingInterval);
-    }
-    if (window.handleClientSessionCloseOrError) {
-      window.handleClientSessionCloseOrError();
+  clientSession.onerror = function(evt) {
+    console.error("Error caught on the WS clientSession: ", evt);
+    if (window.handleClientSessionError) {
+      window.handleClientSessionError();
     }
   };
 
-  clientSession.onclose = function(event) {
-    if (null == window.clientSession) {
-	  console.log("Received an outdated WS clientSession onclose event: ", event, clientSession);	
-	  return;
-	}
-    console.warn("The WS clientSession is closed: ", event, clientSession);
-    if (window.clientSessionPingInterval) {
-      clearInterval(window.clientSessionPingInterval);
-    }
-    if (false == event.wasClean) {
-      // Chrome doesn't allow the use of "CustomCloseCode"s (yet) and will callback with a "WebsocketStdCloseCode 1006" and "false == event.wasClean" here. See https://tools.ietf.org/html/rfc6455#section-7.4 for more information.
-      if (window.handleClientSessionCloseOrError) {
-        window.handleClientSessionCloseOrError();
+  clientSession.onclose = function(evt) {
+    // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
+    console.warn("The WS clientSession is closed: ", evt, clientSession);
+    if (false == evt.wasClean) {
+      /*
+      Chrome doesn't allow the use of "CustomCloseCode"s (yet) and will callback with a "WebsocketStdCloseCode 1006" and "false == evt.wasClean" here. See https://tools.ietf.org/html/rfc6455#section-7.4 for more information.
+      */
+      if (window.handleClientSessionError) {
+        window.handleClientSessionError();
       }
     } else {
-      switch (event.code) {
+      switch (evt.code) {
+        case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
+        case constants.RET_CODE.PLAYER_NOT_READDABLE_TO_ROOM:
+          window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+          break;
+        case constants.RET_CODE.UNKNOWN_ERROR:
+        case constants.RET_CODE.MYSQL_ERROR:
         case constants.RET_CODE.PLAYER_NOT_FOUND:
         case constants.RET_CODE.PLAYER_CHEATING:
-          window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+          if (window.handleClientSessionError) {
+            window.handleClientSessionError();
+          }  
           break;
         default:
           break;
-      }
-
-      if (window.handleClientSessionCloseOrError) {
-        window.handleClientSessionCloseOrError();
       }
     }
   };
@@ -246,17 +242,17 @@ window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdIn
     window.mapIns.musicEffectManagerScriptIns.stopAllMusic();
   }
   /**
-   * Here I deliberately removed the callback in the "common `handleClientSessionCloseOrError` callback"
+   * Here I deliberately removed the callback in the "common `handleClientSessionError` callback"
    * within which another invocation to `clearLocalStorageAndBackToLoginScene` will be made.
    *
    * It'll be re-assigned to the common one upon reentrance of `Map.onLoad`.
    *
    * -- YFLu 2019-04-06
    */
-  window.handleClientSessionCloseOrError = () => {
-    console.warn("+++++++ Special handleClientSessionCloseOrError() assigned within `clearLocalStorageAndBackToLoginScene`");
+  window.handleClientSessionError = () => {
+    console.warn("+++++++ Special handleClientSessionError() assigned within `clearLocalStorageAndBackToLoginScene`");
     // TBD.
-    window.handleClientSessionCloseOrError = null; // To ensure that it's called at most once. 
+    window.handleClientSessionError = null; // To ensure that it's called at most once. 
   };
   window.closeWSConnection();
   window.clearSelfPlayer();
