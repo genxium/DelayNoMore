@@ -3,9 +3,12 @@
 This project is a demo for a websocket-based input synchronization method inspired by [GGPO](https://www.ggpo.net/).   
 ![screenshot-1](./screenshot-1.png)
 
-Please checkout [this demo video](https://pan.baidu.com/s/1aM6e8IWaJszFCYAsRjt19g?pwd=z02c) to see whether the source codes are doing what you expect for synchronization.
+Please checkout [this demo video](https://pan.baidu.com/s/123LlWcT9X-wbcYybqYnvmA?pwd=qrlw) to see whether the source codes are doing what you expect for synchronization.
 
-The video mainly shows the following feature (yet I'm not surprised if they're not obvious): when a player didn't have its input arrived at the backend in time (e.g. due to local lag, network delay or reconnection), backend forces confirmation of a prediction of its own and sends the confirmed input together w/ a reference render frame to that player.
+The video mainly shows the following features.
+- The backend receives inputs from frontend peers and [by a GGPO-alike manner](https://github.com/pond3r/ggpo/blob/master/doc/README.md) broadcasts back for synchronization.
+- The game is recovered for a player upon reconnection.
+- Both backend(Golang) and frontend(JavaScript) execute collision detection and handle collision contacts by the same algorithm. The backend dynamics can be toggled off by [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.5.2/battle_srv/models/room.go#L813), but **when turned off the game couldn't support recovery upon reconnection**.
 
 # 1. Building & running
 
