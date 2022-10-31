@@ -2,12 +2,17 @@ package models
 
 import (
 	. "dnmshared"
+	"encoding/xml"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"math"
 	"math/rand"
+	"os"
+	"path/filepath"
 	. "server/common"
 	"server/common/utils"
 	pb "server/pb_output"
@@ -15,11 +20,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"encoding/xml"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -459,9 +459,9 @@ func (pR *Room) StartBattle() {
 				pR.prefabInputFrameDownsync(noDelayInputFrameId)
 			}
 
-			// Force setting all-confirmed of buffered inputFrames periodically
 			unconfirmedMask := uint64(0)
 			if pR.BackendDynamicsEnabled {
+				// Force setting all-confirmed of buffered inputFrames periodically
 				unconfirmedMask = pR.forceConfirmationIfApplicable()
 			} else {
 				pR.markConfirmationIfApplicable()
@@ -474,7 +474,7 @@ func (pR *Room) StartBattle() {
 
 			   If "NstDelayFrames" becomes larger, "pR.RenderFrameId - refRenderFrameId" possibly becomes larger because the force confirmation is delayed more.
 
-			   Hence even upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId".
+			   Upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId" -- and this is allowed.
 			*/
 			refRenderFrameId := pR.ConvertToGeneratingRenderFrameId(upperToSendInputFrameId) + (1 << pR.InputScaleFrames) - 1
 			if refRenderFrameId > pR.RenderFrameId {
@@ -539,7 +539,7 @@ func (pR *Room) StartBattle() {
 						// [WARNING] When sending DOWNSYNC_MSG_ACT_FORCED_RESYNC, there MUST BE accompanying "toSendInputFrames" for calculating "refRenderFrameId"!
 
 						if MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId {
-							Logger.Warn(fmt.Sprintf("Not sending due to empty toSendInputFrames: roomId=%v, playerId=%v, refRenderFrameId=%v, candidateToSendInputFrameId=%v, upperToSendInputFrameId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v", pR.Id, playerId, refRenderFrameId, candidateToSendInputFrameId, upperToSendInputFrameId, player.LastSentInputFrameId, player.AckingInputFrameId))
+							Logger.Warn(fmt.Sprintf("Not sending due to empty toSendInputFrames: roomId=%v, playerId=%v, refRenderFrameId=%v, upperToSendInputFrameId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v", pR.Id, playerId, refRenderFrameId, upperToSendInputFrameId, player.LastSentInputFrameId, player.AckingInputFrameId))
 						}
 						continue
 					}
@@ -567,6 +567,17 @@ func (pR *Room) StartBattle() {
 			}
 
 			toApplyInputFrameId := pR.ConvertToInputFrameId(refRenderFrameId, pR.InputDelayFrames)
+			if false == pR.BackendDynamicsEnabled {
+				// When "false == pR.BackendDynamicsEnabled", the variable "refRenderFrameId" is not well defined
+				minLastSentInputFrameId := int32(math.MaxInt32)
+				for _, player := range pR.Players {
+					if player.LastSentInputFrameId >= minLastSentInputFrameId {
+						continue
+					}
+					minLastSentInputFrameId = player.LastSentInputFrameId
+				}
+				toApplyInputFrameId = minLastSentInputFrameId
+			}
 			for pR.InputsBuffer.N < pR.InputsBuffer.Cnt || (0 < pR.InputsBuffer.Cnt && pR.InputsBuffer.StFrameId < toApplyInputFrameId) {
 				f := pR.InputsBuffer.Pop().(*pb.InputFrameDownsync)
 				if pR.inputFrameIdDebuggable(f.InputFrameId) {
