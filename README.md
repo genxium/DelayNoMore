@@ -1,7 +1,14 @@
 # Preface 
 
-This project is a demo for a websocket-based input synchronization method inspired by [GGPO](https://www.ggpo.net/).   
-![screenshot-1](./screenshot-1.png)
+This project is a demo for a websocket-based input synchronization method inspired by [GGPO](https://www.ggpo.net/).
+
+_(how input delay roughly works)_
+
+![input_delay_intro](./charts/InputDelayIntro.jpg)
+
+_(in game screenshot)_
+
+![screenshot-1](./charts/screenshot-1.png)
 
 Please checkout [this demo video](https://pan.baidu.com/s/123LlWcT9X-wbcYybqYnvmA?pwd=qrlw) to see whether the source codes are doing what you expect for synchronization.
 
@@ -67,7 +74,7 @@ The easy way is to try out 2 players with test accounts on a same machine.
 - Open one browser instance, visit _http://localhost:7456?expectedRoomId=1_, input `add`on the username box and click to request a captcha, this is a test account so a captcha would be returned by the backend and filled automatically (as shown in the figure below), then click and click to proceed to a matching scene.
 - Open another browser instance, visit _http://localhost:7456?expectedRoomId=1_, input `bdd`on the username box and click to request a captcha, this is another test account so a captcha would be returned by the backend and filled automatically, then click and click to proceed, when matched a `battle`(but no competition rule yet) would start.
 - Try out the onscreen virtual joysticks to move the cars and see if their movements are in-sync.
-![screenshot-2](./screenshot-2.png)
+![screenshot-2](./charts/screenshot-2.png)
 
 ## 2 Troubleshooting
 
