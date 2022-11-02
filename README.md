@@ -6,6 +6,10 @@ _(how input delay roughly works)_
 
 ![input_delay_intro](./charts/InputDelayIntro.jpg)
 
+_(how rollback-and-chase in this project roughly works)_
+
+![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)
+
 _(in game screenshot)_
 
 ![screenshot-1](./charts/screenshot-1.png)
