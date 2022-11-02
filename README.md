@@ -29,7 +29,7 @@ The video mainly shows the following features.
 - [protobuf CLI](https://developers.google.com/protocol-buffers/docs/downloads) (optional, only for development)
 
 ### Frontend
-- [CocosCreator v2.2.1](https://www.cocos.com/en/cocos-creator-2-2-1-released-with-performance-improvements) (mandatory, **ONLY AVAILABLE on Windows or OSX and should be exactly this version**, DON'T use any other version because CocosCreator is well-known for new versions not being backward incompatible)
+- [CocosCreator v2.2.1](https://www.cocos.com/en/cocos-creator-2-2-1-released-with-performance-improvements) (mandatory, **ONLY AVAILABLE on Windows or OSX and should be exactly this version**, DON'T use any other version because CocosCreator is well-known for new versions not being backward compatible)
 - [protojs](https://www.npmjs.com/package/protojs) (optional, only for development)
 
 ## 1.2 Provisioning
