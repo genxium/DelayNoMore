@@ -128,11 +128,12 @@ func calRoomScore(inRoomPlayerCount int32, roomPlayerCnt int, currentRoomBattleS
 }
 
 type Room struct {
-	Id              int32
-	Capacity        int
-	Players         map[int32]*Player
-	PlayersArr      []*Player // ordered by joinIndex
-	CollisionSysMap map[int32]*resolv.Object
+	Id                   int32
+	Capacity             int
+	playerColliderRadius float64
+	Players              map[int32]*Player
+	PlayersArr           []*Player // ordered by joinIndex
+	CollisionSysMap      map[int32]*resolv.Object
 	/**
 		 * The following `PlayerDownsyncSessionDict` is NOT individually put
 		 * under `type Player struct` for a reason.
@@ -415,7 +416,12 @@ func (pR *Room) StartBattle() {
 	pR.RenderFrameBuffer.Put(kickoffFrame)
 
 	// Refresh "Colliders"
-	pR.refreshColliders()
+	spaceW := pR.StageDiscreteW * pR.StageTileW
+	spaceH := pR.StageDiscreteH * pR.StageTileH
+
+	spaceOffsetX := float64(spaceW) * 0.5
+	spaceOffsetY := float64(spaceH) * 0.5
+	pR.refreshColliders(spaceW, spaceH, spaceOffsetX, spaceOffsetY)
 
 	/**
 	 * Will be triggered from a goroutine which executes the critical `Room.AddPlayerIfPossible`, thus the `battleMainLoop` should be detached.
@@ -488,7 +494,7 @@ func (pR *Room) StartBattle() {
 					// Apply "all-confirmed inputFrames" to move forward "pR.CurDynamicsRenderFrameId"
 					nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
 					Logger.Debug(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, LastAllConfirmedInputFrameId=%v, InputDelayFrames=%v, nextDynamicsRenderFrameId=%v", pR.Id, pR.RenderFrameId, pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames, nextDynamicsRenderFrameId))
-					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId)
+					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, spaceOffsetX, spaceOffsetY)
 					dynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
 				}
 
@@ -792,6 +798,7 @@ func (pR *Room) Dismiss() {
 func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
+	pR.playerColliderRadius = float64(12) // hardcoded
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -1175,7 +1182,7 @@ func (pR *Room) forceConfirmationIfApplicable() uint64 {
 	return unconfirmedMask
 }
 
-func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRenderFrameId int32) {
+func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRenderFrameId int32, spaceOffsetX, spaceOffsetY float64) {
 	if fromRenderFrameId >= toRenderFrameId {
 		return
 	}
@@ -1216,26 +1223,27 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
 				if collision := playerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
 					playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-                    for _, obj := range collision.Objects {
-                        barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-                        if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
-                            Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
-                            dx -= pushbackX
-                            dy -= pushbackY
-                        } else {
-                            Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
-                        }
-                    } 
+					for _, obj := range collision.Objects {
+						barrierShape := obj.Shape.(*resolv.ConvexPolygon)
+						if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
+							Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+							dx -= pushbackX
+							dy -= pushbackY
+						} else {
+							Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
+						}
+					}
 				}
 				playerCollider.X += dx
 				playerCollider.Y += dy
+
 				// Update in "collision space"
 				playerCollider.Update()
 
 				player.Dir.Dx = decodedInput[0]
 				player.Dir.Dy = decodedInput[1]
-				player.X += dx
-				player.Y += dy
+				player.X = playerCollider.X + pR.playerColliderRadius - spaceOffsetX
+				player.Y = playerCollider.Y + pR.playerColliderRadius - spaceOffsetY
 			}
 		}
 
@@ -1253,19 +1261,13 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 	return 0 == (inputFrameId % 10)
 }
 
-func (pR *Room) refreshColliders() {
-	playerColliderRadius := float64(12) // hardcoded
+func (pR *Room) refreshColliders(spaceW, spaceH int32, spaceOffsetX, spaceOffsetY float64) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
-	spaceW := pR.StageDiscreteW * pR.StageTileW
-	spaceH := pR.StageDiscreteH * pR.StageTileH
-
-	spaceOffsetX := float64(spaceW) * 0.5
-	spaceOffsetY := float64(spaceH) * 0.5
 
 	minStep := int(3)                                                    // the approx minimum distance a player can move per frame
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := GenerateRectCollider(player.X, player.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")
+		playerCollider := GenerateRectCollider(player.X, player.Y, pR.playerColliderRadius*2, pR.playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex

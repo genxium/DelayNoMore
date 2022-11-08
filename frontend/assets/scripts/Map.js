@@ -121,13 +121,19 @@ cc.Class({
     return (0 == inputFrameId % 10);
   },
 
-  dumpToRenderCache: function(roomDownsyncFrame) {
+  dumpToRenderCache: function(rdf) {
     const self = this;
+    // round player position to lower precision
+    for (let playerId in rdf.players) {
+      const immediatePlayerInfo = rdf.players[playerId];
+      rdf.players[playerId].x = parseFloat(parseInt(immediatePlayerInfo.x * 100)) / 100.0;
+      rdf.players[playerId].y = parseFloat(parseInt(immediatePlayerInfo.y * 100)) / 100.0;
+    }
     const minToKeepRenderFrameId = self.lastAllConfirmedRenderFrameId;
     while (0 < self.recentRenderCache.cnt && self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
       self.recentRenderCache.pop();
     }
-    const ret = self.recentRenderCache.setByFrameId(roomDownsyncFrame, roomDownsyncFrame.id);
+    const ret = self.recentRenderCache.setByFrameId(rdf, rdf.id);
     return ret;
   },
 
@@ -382,8 +388,7 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {
-    };
+    resultPanelScriptIns.onCloseDelegate = () => {};
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -575,6 +580,7 @@ cc.Class({
     if (rdf.id < self.lastAllConfirmedRenderFrameId) {
       return window.RING_BUFF_FAILED_TO_SET;
     }
+
     const dumpRenderCacheRet = self.dumpToRenderCache(rdf);
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
       console.error("Something is wrong while setting the RingBuffer by frameId!");
@@ -589,8 +595,12 @@ cc.Class({
       return dumpRenderCacheRet;
     }
 
-    // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    console.log('On battle started or resynced! renderFrameId=', rdf.id);
+    // The logic below applies to ( || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
+    if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
+      console.log('On battle resynced! renderFrameId=', rdf.id);
+    } else {
+      console.log('On battle resynced! renderFrameId=', rdf.id);
+    }
 
     self.renderFrameId = rdf.id;
     self.lastRenderFrameIdTriggeredAt = performance.now();
@@ -973,12 +983,14 @@ cc.Class({
     if (
       null != inputFrameAppliedOnPrevRenderFrame && self._allConfirmed(inputFrameAppliedOnPrevRenderFrame.confirmedList)
       &&
-      self.lastAllConfirmedRenderFrameId >= prevRenderFrameId
-      &&
       rdf.id > self.lastAllConfirmedRenderFrameId
     ) {
+      // We got a more up-to-date "all-confirmed-render-frame".
       self.lastAllConfirmedRenderFrameId = rdf.id;
-      self.chaserRenderFrameId = rdf.id; // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"  
+      if (rdf.id > self.chaserRenderFrameId) {
+        // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
+        self.chaserRenderFrameId = rdf.id;
+      }
     }
     self.dumpToRenderCache(rdf);
     return rdf;
@@ -991,11 +1003,10 @@ cc.Class({
       const immediatePlayerInfo = rdf.players[playerId];
       const dx = (immediatePlayerInfo.x - playerRichInfo.node.x);
       const dy = (immediatePlayerInfo.y - playerRichInfo.node.y);
-      const selfJiggling = (playerId == self.selfPlayerInfo.playerId && (0 != dx && self.teleportEps1D >= Math.abs(dx) && 0 != dy && self.teleportEps1D >= Math.abs(dy)));
-      if (!selfJiggling) {
+      const justJiggling = (self.teleportEps1D >= Math.abs(dx) && self.teleportEps1D >= Math.abs(dy));
+      if (!justJiggling) {
+        console.log("@renderFrameId=" + self.renderFrameId + ", teleporting playerId=" + playerId + ": '(" + playerRichInfo.node.x + ", " + playerRichInfo.node.y, ")' to '(" + immediatePlayerInfo.x + ", " + immediatePlayerInfo.y + ")'");
         playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
-      } else {
-        console.log("selfJiggling: dx = ", dx, ", dy = ", dy);
       }
       playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
@@ -1074,9 +1085,9 @@ cc.Class({
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const potentials = playerCollider.potentials();
-        for (const barrier of potentials) {
+        for (const potential of potentials) {
           // Test if the player collides with the wall
-          if (!playerCollider.collides(barrier, result)) continue;
+          if (!playerCollider.collides(potential, result)) continue;
           // Push the player out of the wall
           playerCollider.x -= result.overlap * result.overlap_x;
           playerCollider.y -= result.overlap * result.overlap_y;
