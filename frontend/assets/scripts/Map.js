@@ -1042,19 +1042,6 @@ cc.Class({
     if (renderFrameIdSt >= renderFrameIdEd) {
       return latestRdf;
     }
-    /* 
-    Reset "position" of players in "collisionSys" according to "renderFrameIdSt". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
-    */
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      const joinIndex = playerRichInfo.joinIndex;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const player = latestRdf.players[playerId];
-
-      const cpos = self.virtualGridToPlayerColliderPos(player.virtualGridX, player.virtualGridY, playerRichInfo);
-      playerCollider.x = cpos[0];
-      playerCollider.y = cpos[1];
-    });
 
     /*
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
@@ -1074,6 +1061,14 @@ cc.Class({
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = renderFrame.players[playerId];
+
+        /* 
+        Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
+        */
+        const cpos = self.virtualGridToPlayerColliderPos(player.virtualGridX, player.virtualGridY, self.playerRichInfoArr[j]);
+        playerCollider.x = cpos[0];
+        playerCollider.y = cpos[1];
+
         const encodedInput = inputList[joinIndex - 1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
         const baseChange = player.speed * self.virtualGridToWorldRatio * decodedInput.speedFactor;
