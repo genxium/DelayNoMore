@@ -146,7 +146,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       return;
     }
     try {
-      const resp = window.WsResp.decode(new Uint8Array(evt.data));
+      const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
           window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
@@ -159,7 +159,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           mapIns.hideFindingPlayersGUI();
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
-          mapIns.onBattleReadyToStart(resp.rdf.playerMetas);
+          mapIns.onBattleReadyToStart(resp.rdf);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_START:
           mapIns.onRoomDownsyncFrame(resp.rdf);

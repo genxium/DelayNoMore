@@ -1251,9 +1251,11 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
+        pbPlayers := toPbPlayers(pR.Players)
+
 		newRenderFrame := RoomDownsyncFrame{
 			Id:             collisionSysRenderFrameId + 1,
-			Players:        toPbPlayers(pR.Players),
+			Players:        pbPlayers,
 			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos),
 		}
 		pR.RenderFrameBuffer.Put(&newRenderFrame)
@@ -1292,10 +1294,10 @@ func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
 	Logger.Info(fmt.Sprintf("Barrier in roomId=%v: w=%v, h=%v, shape=%v", pR.Id, barrierCollider.W, barrierCollider.H, barrierCollider.Shape))
 }
 
-func (pR *Room) worldToVirtualGridPos(x, y float64) (int32, int32) {
+func (pR *Room) worldToVirtualGridPos(wx, wy float64) (int32, int32) {
 	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-	var virtualGridX int32 = int32(x * pR.WorldToVirtualGridRatio)
-	var virtualGridY int32 = int32(y * pR.WorldToVirtualGridRatio)
+	var virtualGridX int32 = int32(wx * pR.WorldToVirtualGridRatio)
+	var virtualGridY int32 = int32(wy * pR.WorldToVirtualGridRatio)
 	return virtualGridX, virtualGridY
 }
 

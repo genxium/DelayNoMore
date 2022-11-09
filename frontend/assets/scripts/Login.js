@@ -1,6 +1,8 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
+window.pb = require("./modules/room_downsync_frame_proto_bundle.forcemsg");
+
 cc.Class({
   extends: cc.Component,
 
@@ -96,30 +98,6 @@ cc.Class({
     if (null != qDict && qDict["expectedRoomId"]) {
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     }
-
-    cc.loader.loadRes("pbfiles/room_downsync_frame", function(err, textAsset /* cc.TextAsset */ ) {
-      if (err) {
-        cc.error(err.message || err);
-        return;
-      }
-      // Otherwise, `window.RoomDownsyncFrame` is already assigned.
-      let protoRoot = new protobuf.Root;
-      window.protobuf.parse(textAsset.text, protoRoot);
-      window.RoomDownsyncFrame = protoRoot.lookupType("treasurehunterx.RoomDownsyncFrame"); 
-      window.BattleColliderInfo = protoRoot.lookupType("treasurehunterx.BattleColliderInfo"); 
-      window.WsReq = protoRoot.lookupType("treasurehunterx.WsReq"); 
-      window.WsResp = protoRoot.lookupType("treasurehunterx.WsResp"); 
-      self.checkIntAuthTokenExpire().then(
-        (intAuthToken) => {
-	 	  console.log("Successfully found `intAuthToken` in local cache");
-          self.useTokenLogin(intAuthToken);
-        },
-        () => {
-	 	  console.warn("Failed to find `intAuthToken` in local cache");
-          window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-        }
-      );
-    });
   },
 
   getRetCodeList() {

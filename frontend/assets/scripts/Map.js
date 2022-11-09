@@ -223,7 +223,7 @@ cc.Class({
         inputFrameUpsyncBatch.push(inputFrameUpsync);
       }
     }
-    const reqData = window.WsReq.encode({
+    const reqData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
       playerId: self.selfPlayerInfo.id,
       act: window.UPSYNC_MSG_ACT_PLAYER_CMD,
@@ -502,7 +502,7 @@ cc.Class({
           self.backgroundMapTiledIns.node.setContentSize(newBackgroundMapSize.width * newBackgroundMapTileSize.width, newBackgroundMapSize.height * newBackgroundMapTileSize.height);
           self.backgroundMapTiledIns.node.setPosition(cc.v2(0, 0));
 
-          const reqData = window.WsReq.encode({
+          const reqData = window.pb.protos.WsReq.encode({
             msgId: Date.now(),
             act: window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK,
           }).finish();
@@ -598,12 +598,6 @@ cc.Class({
       console.log('On battle resynced! renderFrameId=', rdf.id);
     }
 
-    self.renderFrameId = rdf.id;
-    self.lastRenderFrameIdTriggeredAt = performance.now();
-    // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
-    self.lastAllConfirmedRenderFrameId = rdf.id;
-    self.chaserRenderFrameId = rdf.id;
-
     const players = rdf.players;
     const playerMetas = rdf.playerMetas;
     self._initPlayerRichInfoDict(players, playerMetas);
@@ -614,6 +608,12 @@ cc.Class({
       const playerMeta = playerMetas[i];
       playersInfoScriptIns.updateData(playerMeta);
     }
+
+    self.renderFrameId = rdf.id;
+    self.lastRenderFrameIdTriggeredAt = performance.now();
+    // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
+    self.lastAllConfirmedRenderFrameId = rdf.id;
+    self.chaserRenderFrameId = rdf.id;
 
     if (null != rdf.countdownNanos) {
       self.countdownNanos = rdf.countdownNanos;
@@ -741,17 +741,16 @@ cc.Class({
     self.playersInfoNode.getComponent("PlayersInfo").clearInfo();
   },
 
-  spawnPlayerNode(joinIndex, x, y) {
+  spawnPlayerNode(joinIndex, vx, vy, playerRichInfo) {
     const self = this;
     const newPlayerNode = 1 == joinIndex ? cc.instantiate(self.player1Prefab) : cc.instantiate(self.player2Prefab); // hardcoded for now, car color determined solely by joinIndex
-    newPlayerNode.setPosition(cc.v2(x, y));
+    const wpos = self.virtualGridToWorldPos(vx, vy);
+
+    newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
     newPlayerNode.getComponent("SelfPlayer").mapNode = self.node;
-    const currentSelfColliderCircle = newPlayerNode.getComponent(cc.CircleCollider);
-    const r = currentSelfColliderCircle.radius,
-      d = 2 * r;
-    // The collision box of an individual player is a polygon instead of a circle, because the backend collision engine doesn't handle circle alignment well.
-    const x0 = x - r,
-      y0 = y - r;
+    const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerRichInfo);
+    const d = playerRichInfo.colliderRadius*2, x0 = cpos[0],
+      y0 = cpos[1];
     let pts = [[0, 0], [d, 0], [d, d], [0, d]];
 
     const newPlayerColliderLatest = self.latestCollisionSys.createPolygon(x0, y0, pts);
@@ -919,9 +918,19 @@ cc.Class({
     self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
   },
 
-  onBattleReadyToStart(playerMetas) {
-    console.log("Calling `onBattleReadyToStart` with:", playerMetas);
+  onBattleReadyToStart(rdf) {
     const self = this;
+    const players = rdf.players;
+    const playerMetas = rdf.playerMetas;
+    self._initPlayerRichInfoDict(players, playerMetas);
+
+    // Show the top status indicators for IN_BATTLE 
+    const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
+    for (let i in playerMetas) {
+      const playerMeta = playerMetas[i];
+      playersInfoScriptIns.updateData(playerMeta);
+    }
+    console.log("Calling `onBattleReadyToStart` with:", playerMetas);
     const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
     findingPlayerScriptIns.hideExitButton();
     findingPlayerScriptIns.updatePlayersInfo(playerMetas);
@@ -965,9 +974,7 @@ cc.Class({
       const joinIndex = playerRichInfo.joinIndex;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const currentSelfColliderCircle = playerRichInfo.node.getComponent(cc.CircleCollider);
       const vpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, playerRichInfo);
-      const r = currentSelfColliderCircle.radius;
       rdf.players[playerRichInfo.id] = {
         id: playerRichInfo.id,
         virtualGridX: vpos[0],
@@ -1044,7 +1051,7 @@ cc.Class({
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       const player = latestRdf.players[playerId];
 
-      const cpos = self.worldToVirtualGridPos(player.virtualGridX, player.virtualGridY);
+      const cpos = self.virtualGridToPlayerColliderPos(player.virtualGridX, player.virtualGridY, playerRichInfo);
       playerCollider.x = cpos[0];
       playerCollider.y = cpos[1];
     });
@@ -1069,7 +1076,7 @@ cc.Class({
         const player = renderFrame.players[playerId];
         const encodedInput = inputList[joinIndex - 1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
-        const baseChange = player.speed * decodedInput.speedFactor;
+        const baseChange = player.speed * self.virtualGridToWorldRatio * decodedInput.speedFactor;
         playerCollider.x += baseChange * decodedInput.dx;
         playerCollider.y += baseChange * decodedInput.dy;
       }
@@ -1104,15 +1111,15 @@ cc.Class({
       if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
       const immediatePlayerInfo = players[playerId];
       const immediatePlayerMeta = playerMetas[playerId];
-      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.x, immediatePlayerInfo.y);
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
+      Object.assign(self.playerRichInfoDict.get(playerId), immediatePlayerMeta);
+
+      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, self.playerRichInfoDict.get(playerId));
 
       Object.assign(self.playerRichInfoDict.get(playerId), {
         node: nodeAndScriptIns[0],
         scriptIns: nodeAndScriptIns[1]
       });
-
-      Object.assign(self.playerRichInfoDict.get(playerId), immediatePlayerMeta);
 
       if (self.selfPlayerInfo.id == playerId) {
         self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
@@ -1177,12 +1184,12 @@ cc.Class({
   playerColliderAnchorToVirtualGridPos(cx, cy, playerRichInfo) {
     const self = this;
     const wpos = self.playerColliderAnchorToWorldPos(cx, cy, playerRichInfo);
-    return pR.worldToVirtualGridPos(wpos[0], wpos[1])
+    return self.worldToVirtualGridPos(wpos[0], wpos[1])
   },
 
   virtualGridToPlayerColliderPos(vx, vy, playerRichInfo) {
     const self = this;
     const wpos = self.virtualGridToWorldPos(vx, vy);
-    return playerWorldToCollisionPos(wpos[0], wpos[1], playerRichInfo)
+    return self.playerWorldToCollisionPos(wpos[0], wpos[1], playerRichInfo)
   },
 });
