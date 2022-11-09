@@ -1,12 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
-	"path/filepath"
 	"battle_srv/api"
 	"battle_srv/api/v1"
 	. "battle_srv/common"
@@ -14,6 +8,12 @@ import (
 	"battle_srv/models"
 	"battle_srv/storage"
 	"battle_srv/ws"
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 

@@ -3,6 +3,7 @@ package dnmshared
 import (
 	"bytes"
 	"compress/zlib"
+	. "dnmshared/sharedprotos"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
@@ -11,7 +12,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	. "dnmshared/protos"
 )
 
 const (
@@ -232,8 +232,8 @@ func tsxPolylineToOffsetsWrtTileCenter(pTmxMapIns *TmxMap, singleObjInTsxFile *T
 	pointsCount := len(singleValueArray)
 
 	thePolygon2DFromPolyline := &Polygon2D{
-		Anchor:     nil,
-		Points:     make([]*Vec2D, pointsCount),
+		Anchor: nil,
+		Points: make([]*Vec2D, pointsCount),
 	}
 
 	/*
@@ -324,16 +324,17 @@ func DeserializeTsxToColliderDict(pTmxMapIns *TmxMap, byteArrOfTsxFile []byte, f
 			if _, ok := theStrToPolygon2DListMap[key]; ok {
 				pThePolygon2DList = theStrToPolygon2DListMap[key]
 			} else {
-				thePolygon2DListEles := make([]*Polygon2D, 0)
-				theStrToPolygon2DListMap[key] = &thePolygon2DList
-				pThePolygon2DList = theStrToPolygon2DListMap[key]
+				pThePolygon2DList = &Polygon2DList{
+					Eles: make([]*Polygon2D, 0),
+				}
+				theStrToPolygon2DListMap[key] = pThePolygon2DList
 			}
 
 			thePolygon2DFromPolyline, err := tsxPolylineToOffsetsWrtTileCenter(pTmxMapIns, singleObj, singleObj.Polyline, pTsxIns)
 			if nil != err {
 				panic(err)
 			}
-			*pThePolygon2DList = append(*pThePolygon2DList, thePolygon2DFromPolyline)
+			pThePolygon2DList.Eles = append(pThePolygon2DList.Eles, thePolygon2DFromPolyline)
 		}
 	}
 	return nil
@@ -349,8 +350,10 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 			var pTheVec2DListToCache *Vec2DList
 			_, ok := toRetStrToVec2DListMap[objGroup.Name]
 			if false == ok {
-				theVec2DListToCache := make(Vec2DList, 0)
-				toRetStrToVec2DListMap[objGroup.Name] = &theVec2DListToCache
+				pTheVec2DListToCache = &Vec2DList{
+					Eles: make([]*Vec2D, 0),
+				}
+				toRetStrToVec2DListMap[objGroup.Name] = pTheVec2DListToCache
 			}
 			pTheVec2DListToCache = toRetStrToVec2DListMap[objGroup.Name]
 			for _, singleObjInTmxFile := range objGroup.Objects {
@@ -359,17 +362,18 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 					Y: singleObjInTmxFile.Y,
 				}
 				thePosInWorld := pTmxMapIns.continuousObjLayerOffsetToContinuousMapNodePos(theUntransformedPos)
-				*pTheVec2DListToCache = append(*pTheVec2DListToCache, &thePosInWorld)
+				pTheVec2DListToCache.Eles = append(pTheVec2DListToCache.Eles, &thePosInWorld)
 			}
 		case "Barrier":
 			// Note that in this case, the "Polygon2D.Anchor" of each "TmxOrTsxObject" is exactly overlapping with "Polygon2D.Points[0]".
 			var pThePolygon2DListToCache *Polygon2DList
 			_, ok := toRetStrToPolygon2DListMap[objGroup.Name]
 			if false == ok {
-				thePolygon2DListToCache := make(Polygon2DList, 0)
-				toRetStrToPolygon2DListMap[objGroup.Name] = &thePolygon2DListToCache
+				pThePolygon2DListToCache = &Polygon2DList{
+					Eles: make([]*Polygon2D, 0),
+				}
+				toRetStrToPolygon2DListMap[objGroup.Name] = pThePolygon2DListToCache
 			}
-			pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
 
 			for _, singleObjInTmxFile := range objGroup.Objects {
 				if nil == singleObjInTmxFile.Polyline {
@@ -383,7 +387,7 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 				if nil != err {
 					panic(err)
 				}
-				*pThePolygon2DListToCache = append(*pThePolygon2DListToCache, thePolygon2DInWorld)
+				pThePolygon2DListToCache.Eles = append(pThePolygon2DListToCache.Eles, thePolygon2DInWorld)
 			}
 		default:
 		}

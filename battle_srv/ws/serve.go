@@ -1,6 +1,9 @@
 package ws
 
 import (
+	. "battle_srv/common"
+	"battle_srv/models"
+	pb "battle_srv/protos"
 	"container/heap"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -8,9 +11,6 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
-	. "battle_srv/common"
-	"battle_srv/models"
-	pb "battle_srv/protos"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -246,8 +246,8 @@ func Serve(c *gin.Context) {
 		bciFrame := &pb.BattleColliderInfo{
 			BoundRoomId:           pRoom.Id,
 			StageName:             pRoom.StageName,
-			StrToVec2DListMap:     models.ToPbVec2DListMap(pRoom.RawBattleStrToVec2DListMap),
-			StrToPolygon2DListMap: models.ToPbPolygon2DListMap(pRoom.RawBattleStrToPolygon2DListMap),
+			StrToVec2DListMap:     pRoom.RawBattleStrToVec2DListMap,
+			StrToPolygon2DListMap: pRoom.RawBattleStrToPolygon2DListMap,
 			StageDiscreteW:        pRoom.StageDiscreteW,
 			StageDiscreteH:        pRoom.StageDiscreteH,
 			StageTileW:            pRoom.StageTileW,

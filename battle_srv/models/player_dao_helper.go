@@ -1,9 +1,9 @@
 package models
 
 import (
+	"battle_srv/storage"
 	"database/sql"
 	. "dnmshared"
-	"server/storage"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"

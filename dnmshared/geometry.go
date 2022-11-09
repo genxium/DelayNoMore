@@ -1,12 +1,12 @@
 package dnmshared
 
 import (
+	. "dnmshared/sharedprotos"
 	"math"
-	. "dnmshared/protos"
 )
 
 func NormVec2D(dx, dy float64) Vec2D {
-	return Vec2D{X: dy, Y:-dx}
+	return Vec2D{X: dy, Y: -dx}
 }
 
 func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
@@ -30,7 +30,7 @@ func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
 			X: input.Anchor.X + boundingBoxTL.X,
 			Y: input.Anchor.Y + boundingBoxTL.Y,
 		},
-		Points:     make([]*Vec2D, len(input.Points)),
+		Points: make([]*Vec2D, len(input.Points)),
 	}
 
 	for i, p := range input.Points {

@@ -1,10 +1,10 @@
 package models
 
 import (
+	. "battle_srv/common"
+	"battle_srv/common/utils"
+	"battle_srv/storage"
 	"database/sql"
-	. "server/common"
-	"server/common/utils"
-	"server/storage"
 
 	sq "github.com/Masterminds/squirrel"
 )

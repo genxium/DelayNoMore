@@ -19,7 +19,7 @@ func (world *WorldColliderDisplay) Init() {
 
 func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTileW, stageTileH int32, playerPosMap StrToVec2DListMap, barrierMap StrToPolygon2DListMap) *WorldColliderDisplay {
 
-	playerList := *(playerPosMap["PlayerStartingPos"])
+	playerPosList := *(playerPosMap["PlayerStartingPos"])
 	barrierList := *(barrierMap["Barrier"])
 
 	world := &WorldColliderDisplay{Game: game}
@@ -33,17 +33,17 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetY := float64(spaceH) * 0.5
 
 	playerColliderRadius := float64(32)
-	playerColliders := make([]*resolv.Object, len(playerList))
+	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
 	space := resolv.NewSpace(int(spaceW), int(spaceH), 16, 16)
-	for i, player := range playerList {
-		playerCollider := GenerateRectCollider(player.X, player.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
-		Logger.Info(fmt.Sprintf("Player Collider#%d: player.X=%v, player.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v; calibrationCheckX=player.X-radius+spaceOffsetX=%v", i, player.X, player.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape, player.X-playerColliderRadius+spaceOffsetX))
+	for i, playerPos := range playerPosList.Eles {
+		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
+		Logger.Info(fmt.Sprintf("Player Collider#%d: playerPos.X=%v, playerPos.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v; calibrationCheckX=playerPos.X-radius+spaceOffsetX=%v", i, playerPos.X, playerPos.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape, playerPos.X-playerColliderRadius+spaceOffsetX))
 		playerColliders[i] = playerCollider
 		space.Add(playerCollider)
 	}
 
 	barrierLocalId := 0
-	for _, barrierUnaligned := range barrierList {
+	for _, barrierUnaligned := range barrierList.Eles {
 		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
 		Logger.Info(fmt.Sprintf("Added barrier: shape=%v", barrierCollider.Shape))
 		space.Add(barrierCollider)

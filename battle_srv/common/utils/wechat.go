@@ -1,6 +1,8 @@
 package utils
 
 import (
+	. "battle_srv/common"
+	. "battle_srv/configs"
 	"bytes"
 	"crypto/sha1"
 	. "dnmshared"
@@ -11,8 +13,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	. "server/common"
-	. "server/configs"
 	"sort"
 	"time"
 )
@@ -250,10 +250,6 @@ func (w *wechat) getTicketFromServer() (ticket resTicket, err error) {
 		return
 	}
 
-	//jsAPITicketCacheKey := fmt.Sprintf("jsapi_ticket_%s", w.config.AppID)
-	//expires := ticket.ExpiresIn - 1500
-	//set
-	//err = js.Cache.Set(jsAPITicketCacheKey, ticket.Ticket, time.Duration(expires)*time.Second)
 	return
 }
 
@@ -276,9 +272,6 @@ func (w *wechat) getAccessTokenFromServer() (accessToken string, err error) {
 		return
 	}
 
-	//accessTokenCacheKey := fmt.Sprintf("access_token_%s", w.config.AppID)
-	//expires := r.ExpiresIn - 1500
-	//set to redis err = ctx.Cache.Set(accessTokenCacheKey, r.AccessToken, time.Duration(expires)*time.Second)
 	accessToken = r.AccessToken
 	return
 }

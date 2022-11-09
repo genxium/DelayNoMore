@@ -1,8 +1,8 @@
 package storage
 
 import (
+	. "battle_srv/common"
 	"fmt"
-	. "server/common"
 
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"

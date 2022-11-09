@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	. "dnmshared"
+	. "dnmshared/sharedprotos"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"

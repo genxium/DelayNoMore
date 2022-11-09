@@ -25,8 +25,8 @@ $root.protos = (function() {
          * @memberof protos
          * @interface IBattleColliderInfo
          * @property {string|null} [stageName] BattleColliderInfo stageName
-         * @property {Object.<string,protos.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
-         * @property {Object.<string,protos.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
+         * @property {Object.<string,sharedprotos.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
+         * @property {Object.<string,sharedprotos.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
          * @property {number|null} [stageDiscreteW] BattleColliderInfo stageDiscreteW
          * @property {number|null} [stageDiscreteH] BattleColliderInfo stageDiscreteH
          * @property {number|null} [stageTileW] BattleColliderInfo stageTileW
@@ -75,7 +75,7 @@ $root.protos = (function() {
 
         /**
          * BattleColliderInfo strToVec2DListMap.
-         * @member {Object.<string,protos.Vec2DList>} strToVec2DListMap
+         * @member {Object.<string,sharedprotos.Vec2DList>} strToVec2DListMap
          * @memberof protos.BattleColliderInfo
          * @instance
          */
@@ -83,7 +83,7 @@ $root.protos = (function() {
 
         /**
          * BattleColliderInfo strToPolygon2DListMap.
-         * @member {Object.<string,protos.Polygon2DList>} strToPolygon2DListMap
+         * @member {Object.<string,sharedprotos.Polygon2DList>} strToPolygon2DListMap
          * @memberof protos.BattleColliderInfo
          * @instance
          */
@@ -265,55 +265,55 @@ $root.protos = (function() {
         BattleColliderInfo.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.stageName != null && message.hasOwnProperty("stageName"))
+            if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
-            if (message.strToVec2DListMap != null && message.hasOwnProperty("strToVec2DListMap"))
+            if (message.strToVec2DListMap != null && Object.hasOwnProperty.call(message, "strToVec2DListMap"))
                 for (var keys = Object.keys(message.strToVec2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
-                    $root.protos.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.sharedprotos.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.strToPolygon2DListMap != null && message.hasOwnProperty("strToPolygon2DListMap"))
+            if (message.strToPolygon2DListMap != null && Object.hasOwnProperty.call(message, "strToPolygon2DListMap"))
                 for (var keys = Object.keys(message.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
-                    $root.protos.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.sharedprotos.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
+            if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageDiscreteW);
-            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
+            if (message.stageDiscreteH != null && Object.hasOwnProperty.call(message, "stageDiscreteH"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.stageDiscreteH);
-            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
+            if (message.stageTileW != null && Object.hasOwnProperty.call(message, "stageTileW"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.stageTileW);
-            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
+            if (message.stageTileH != null && Object.hasOwnProperty.call(message, "stageTileH"))
                 writer.uint32(/* id 7, wireType 0 =*/56).int32(message.stageTileH);
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
                 writer.uint32(/* id 8, wireType 0 =*/64).int32(message.intervalToPing);
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
                 writer.uint32(/* id 9, wireType 0 =*/72).int32(message.willKickIfInactiveFor);
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.boundRoomId);
-            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
                 writer.uint32(/* id 11, wireType 0 =*/88).int64(message.battleDurationNanos);
-            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
+            if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
                 writer.uint32(/* id 12, wireType 0 =*/96).int32(message.serverFps);
-            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
+            if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
                 writer.uint32(/* id 13, wireType 0 =*/104).int32(message.inputDelayFrames);
-            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
+            if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
                 writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.inputScaleFrames);
-            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
+            if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
                 writer.uint32(/* id 15, wireType 0 =*/120).int32(message.nstDelayFrames);
-            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
                 writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
-            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
-            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
+            if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
-            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
+            if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
                 writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDtMillis);
-            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
+            if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
                 writer.uint32(/* id 20, wireType 0 =*/160).int64(message.rollbackEstimatedDtNanos);
-            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
+            if (message.worldToVirtualGridRatio != null && Object.hasOwnProperty.call(message, "worldToVirtualGridRatio"))
                 writer.uint32(/* id 21, wireType 1 =*/169).double(message.worldToVirtualGridRatio);
-            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
+            if (message.virtualGridToWorldRatio != null && Object.hasOwnProperty.call(message, "virtualGridToWorldRatio"))
                 writer.uint32(/* id 22, wireType 1 =*/177).double(message.virtualGridToWorldRatio);
             return writer;
         };
@@ -345,86 +345,136 @@ $root.protos = (function() {
         BattleColliderInfo.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key, value;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.stageName = reader.string();
-                    break;
-                case 2:
-                    reader.skip().pos++;
-                    if (message.strToVec2DListMap === $util.emptyObject)
-                        message.strToVec2DListMap = {};
-                    key = reader.string();
-                    reader.pos++;
-                    message.strToVec2DListMap[key] = $root.protos.Vec2DList.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    reader.skip().pos++;
-                    if (message.strToPolygon2DListMap === $util.emptyObject)
-                        message.strToPolygon2DListMap = {};
-                    key = reader.string();
-                    reader.pos++;
-                    message.strToPolygon2DListMap[key] = $root.protos.Polygon2DList.decode(reader, reader.uint32());
-                    break;
-                case 4:
-                    message.stageDiscreteW = reader.int32();
-                    break;
-                case 5:
-                    message.stageDiscreteH = reader.int32();
-                    break;
-                case 6:
-                    message.stageTileW = reader.int32();
-                    break;
-                case 7:
-                    message.stageTileH = reader.int32();
-                    break;
-                case 8:
-                    message.intervalToPing = reader.int32();
-                    break;
-                case 9:
-                    message.willKickIfInactiveFor = reader.int32();
-                    break;
-                case 10:
-                    message.boundRoomId = reader.int32();
-                    break;
-                case 11:
-                    message.battleDurationNanos = reader.int64();
-                    break;
-                case 12:
-                    message.serverFps = reader.int32();
-                    break;
-                case 13:
-                    message.inputDelayFrames = reader.int32();
-                    break;
-                case 14:
-                    message.inputScaleFrames = reader.uint32();
-                    break;
-                case 15:
-                    message.nstDelayFrames = reader.int32();
-                    break;
-                case 16:
-                    message.inputFrameUpsyncDelayTolerance = reader.int32();
-                    break;
-                case 17:
-                    message.maxChasingRenderFramesPerUpdate = reader.int32();
-                    break;
-                case 18:
-                    message.playerBattleState = reader.int32();
-                    break;
-                case 19:
-                    message.rollbackEstimatedDtMillis = reader.double();
-                    break;
-                case 20:
-                    message.rollbackEstimatedDtNanos = reader.int64();
-                    break;
-                case 21:
-                    message.worldToVirtualGridRatio = reader.double();
-                    break;
-                case 22:
-                    message.virtualGridToWorldRatio = reader.double();
-                    break;
+                case 1: {
+                        message.stageName = reader.string();
+                        break;
+                    }
+                case 2: {
+                        if (message.strToVec2DListMap === $util.emptyObject)
+                            message.strToVec2DListMap = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.sharedprotos.Vec2DList.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.strToVec2DListMap[key] = value;
+                        break;
+                    }
+                case 3: {
+                        if (message.strToPolygon2DListMap === $util.emptyObject)
+                            message.strToPolygon2DListMap = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.sharedprotos.Polygon2DList.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.strToPolygon2DListMap[key] = value;
+                        break;
+                    }
+                case 4: {
+                        message.stageDiscreteW = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.stageDiscreteH = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.stageTileW = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        message.stageTileH = reader.int32();
+                        break;
+                    }
+                case 8: {
+                        message.intervalToPing = reader.int32();
+                        break;
+                    }
+                case 9: {
+                        message.willKickIfInactiveFor = reader.int32();
+                        break;
+                    }
+                case 10: {
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.battleDurationNanos = reader.int64();
+                        break;
+                    }
+                case 12: {
+                        message.serverFps = reader.int32();
+                        break;
+                    }
+                case 13: {
+                        message.inputDelayFrames = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.inputScaleFrames = reader.uint32();
+                        break;
+                    }
+                case 15: {
+                        message.nstDelayFrames = reader.int32();
+                        break;
+                    }
+                case 16: {
+                        message.inputFrameUpsyncDelayTolerance = reader.int32();
+                        break;
+                    }
+                case 17: {
+                        message.maxChasingRenderFramesPerUpdate = reader.int32();
+                        break;
+                    }
+                case 18: {
+                        message.playerBattleState = reader.int32();
+                        break;
+                    }
+                case 19: {
+                        message.rollbackEstimatedDtMillis = reader.double();
+                        break;
+                    }
+                case 20: {
+                        message.rollbackEstimatedDtNanos = reader.int64();
+                        break;
+                    }
+                case 21: {
+                        message.worldToVirtualGridRatio = reader.double();
+                        break;
+                    }
+                case 22: {
+                        message.virtualGridToWorldRatio = reader.double();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -468,7 +518,7 @@ $root.protos = (function() {
                     return "strToVec2DListMap: object expected";
                 var key = Object.keys(message.strToVec2DListMap);
                 for (var i = 0; i < key.length; ++i) {
-                    var error = $root.protos.Vec2DList.verify(message.strToVec2DListMap[key[i]]);
+                    var error = $root.sharedprotos.Vec2DList.verify(message.strToVec2DListMap[key[i]]);
                     if (error)
                         return "strToVec2DListMap." + error;
                 }
@@ -478,7 +528,7 @@ $root.protos = (function() {
                     return "strToPolygon2DListMap: object expected";
                 var key = Object.keys(message.strToPolygon2DListMap);
                 for (var i = 0; i < key.length; ++i) {
-                    var error = $root.protos.Polygon2DList.verify(message.strToPolygon2DListMap[key[i]]);
+                    var error = $root.sharedprotos.Polygon2DList.verify(message.strToPolygon2DListMap[key[i]]);
                     if (error)
                         return "strToPolygon2DListMap." + error;
                 }
@@ -564,7 +614,7 @@ $root.protos = (function() {
                 for (var keys = Object.keys(object.strToVec2DListMap), i = 0; i < keys.length; ++i) {
                     if (typeof object.strToVec2DListMap[keys[i]] !== "object")
                         throw TypeError(".protos.BattleColliderInfo.strToVec2DListMap: object expected");
-                    message.strToVec2DListMap[keys[i]] = $root.protos.Vec2DList.fromObject(object.strToVec2DListMap[keys[i]]);
+                    message.strToVec2DListMap[keys[i]] = $root.sharedprotos.Vec2DList.fromObject(object.strToVec2DListMap[keys[i]]);
                 }
             }
             if (object.strToPolygon2DListMap) {
@@ -574,7 +624,7 @@ $root.protos = (function() {
                 for (var keys = Object.keys(object.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
                     if (typeof object.strToPolygon2DListMap[keys[i]] !== "object")
                         throw TypeError(".protos.BattleColliderInfo.strToPolygon2DListMap: object expected");
-                    message.strToPolygon2DListMap[keys[i]] = $root.protos.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
+                    message.strToPolygon2DListMap[keys[i]] = $root.sharedprotos.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
                 }
             }
             if (object.stageDiscreteW != null)
@@ -685,12 +735,12 @@ $root.protos = (function() {
             if (message.strToVec2DListMap && (keys2 = Object.keys(message.strToVec2DListMap)).length) {
                 object.strToVec2DListMap = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.strToVec2DListMap[keys2[j]] = $root.protos.Vec2DList.toObject(message.strToVec2DListMap[keys2[j]], options);
+                    object.strToVec2DListMap[keys2[j]] = $root.sharedprotos.Vec2DList.toObject(message.strToVec2DListMap[keys2[j]], options);
             }
             if (message.strToPolygon2DListMap && (keys2 = Object.keys(message.strToPolygon2DListMap)).length) {
                 object.strToPolygon2DListMap = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.strToPolygon2DListMap[keys2[j]] = $root.protos.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
+                    object.strToPolygon2DListMap[keys2[j]] = $root.sharedprotos.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
             }
             if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
                 object.stageDiscreteW = message.stageDiscreteW;
@@ -750,36 +800,51 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for BattleColliderInfo
+         * @function getTypeUrl
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        BattleColliderInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.BattleColliderInfo";
+        };
+
         return BattleColliderInfo;
     })();
 
-    protos.Player = (function() {
+    protos.PlayerDownsync = (function() {
 
         /**
-         * Properties of a Player.
+         * Properties of a PlayerDownsync.
          * @memberof protos
-         * @interface IPlayer
-         * @property {number|null} [id] Player id
-         * @property {number|null} [virtualGridX] Player virtualGridX
-         * @property {number|null} [virtualGridY] Player virtualGridY
-         * @property {protos.Direction|null} [dir] Player dir
-         * @property {number|null} [speed] Player speed
-         * @property {number|null} [battleState] Player battleState
-         * @property {number|null} [lastMoveGmtMillis] Player lastMoveGmtMillis
-         * @property {number|null} [score] Player score
-         * @property {boolean|null} [removed] Player removed
-         * @property {number|null} [joinIndex] Player joinIndex
+         * @interface IPlayerDownsync
+         * @property {number|null} [id] PlayerDownsync id
+         * @property {number|null} [virtualGridX] PlayerDownsync virtualGridX
+         * @property {number|null} [virtualGridY] PlayerDownsync virtualGridY
+         * @property {sharedprotos.Direction|null} [dir] PlayerDownsync dir
+         * @property {number|null} [speed] PlayerDownsync speed
+         * @property {number|null} [battleState] PlayerDownsync battleState
+         * @property {number|null} [lastMoveGmtMillis] PlayerDownsync lastMoveGmtMillis
+         * @property {number|null} [score] PlayerDownsync score
+         * @property {boolean|null} [removed] PlayerDownsync removed
+         * @property {number|null} [joinIndex] PlayerDownsync joinIndex
          */
 
         /**
-         * Constructs a new Player.
+         * Constructs a new PlayerDownsync.
          * @memberof protos
-         * @classdesc Represents a Player.
-         * @implements IPlayer
+         * @classdesc Represents a PlayerDownsync.
+         * @implements IPlayerDownsync
          * @constructor
-         * @param {protos.IPlayer=} [properties] Properties to set
+         * @param {protos.IPlayerDownsync=} [properties] Properties to set
          */
-        function Player(properties) {
+        function PlayerDownsync(properties) {
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -787,193 +852,203 @@ $root.protos = (function() {
         }
 
         /**
-         * Player id.
+         * PlayerDownsync id.
          * @member {number} id
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.id = 0;
+        PlayerDownsync.prototype.id = 0;
 
         /**
-         * Player virtualGridX.
+         * PlayerDownsync virtualGridX.
          * @member {number} virtualGridX
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.virtualGridX = 0;
+        PlayerDownsync.prototype.virtualGridX = 0;
 
         /**
-         * Player virtualGridY.
+         * PlayerDownsync virtualGridY.
          * @member {number} virtualGridY
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.virtualGridY = 0;
+        PlayerDownsync.prototype.virtualGridY = 0;
 
         /**
-         * Player dir.
-         * @member {protos.Direction|null|undefined} dir
-         * @memberof protos.Player
+         * PlayerDownsync dir.
+         * @member {sharedprotos.Direction|null|undefined} dir
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.dir = null;
+        PlayerDownsync.prototype.dir = null;
 
         /**
-         * Player speed.
+         * PlayerDownsync speed.
          * @member {number} speed
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.speed = 0;
+        PlayerDownsync.prototype.speed = 0;
 
         /**
-         * Player battleState.
+         * PlayerDownsync battleState.
          * @member {number} battleState
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.battleState = 0;
+        PlayerDownsync.prototype.battleState = 0;
 
         /**
-         * Player lastMoveGmtMillis.
+         * PlayerDownsync lastMoveGmtMillis.
          * @member {number} lastMoveGmtMillis
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.lastMoveGmtMillis = 0;
+        PlayerDownsync.prototype.lastMoveGmtMillis = 0;
 
         /**
-         * Player score.
+         * PlayerDownsync score.
          * @member {number} score
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.score = 0;
+        PlayerDownsync.prototype.score = 0;
 
         /**
-         * Player removed.
+         * PlayerDownsync removed.
          * @member {boolean} removed
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.removed = false;
+        PlayerDownsync.prototype.removed = false;
 
         /**
-         * Player joinIndex.
+         * PlayerDownsync joinIndex.
          * @member {number} joinIndex
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.joinIndex = 0;
+        PlayerDownsync.prototype.joinIndex = 0;
 
         /**
-         * Creates a new Player instance using the specified properties.
+         * Creates a new PlayerDownsync instance using the specified properties.
          * @function create
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {protos.IPlayer=} [properties] Properties to set
-         * @returns {protos.Player} Player instance
+         * @param {protos.IPlayerDownsync=} [properties] Properties to set
+         * @returns {protos.PlayerDownsync} PlayerDownsync instance
          */
-        Player.create = function create(properties) {
-            return new Player(properties);
+        PlayerDownsync.create = function create(properties) {
+            return new PlayerDownsync(properties);
         };
 
         /**
-         * Encodes the specified Player message. Does not implicitly {@link protos.Player.verify|verify} messages.
+         * Encodes the specified PlayerDownsync message. Does not implicitly {@link protos.PlayerDownsync.verify|verify} messages.
          * @function encode
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {protos.Player} message Player message or plain object to encode
+         * @param {protos.PlayerDownsync} message PlayerDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Player.encode = function encode(message, writer) {
+        PlayerDownsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && message.hasOwnProperty("id"))
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
+            if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.virtualGridX);
-            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
+            if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.virtualGridY);
-            if (message.dir != null && message.hasOwnProperty("dir"))
-                $root.protos.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.speed != null && message.hasOwnProperty("speed"))
+            if (message.dir != null && Object.hasOwnProperty.call(message, "dir"))
+                $root.sharedprotos.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.speed);
-            if (message.battleState != null && message.hasOwnProperty("battleState"))
+            if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.battleState);
-            if (message.lastMoveGmtMillis != null && message.hasOwnProperty("lastMoveGmtMillis"))
+            if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
                 writer.uint32(/* id 7, wireType 0 =*/56).int32(message.lastMoveGmtMillis);
-            if (message.score != null && message.hasOwnProperty("score"))
+            if (message.score != null && Object.hasOwnProperty.call(message, "score"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.score);
-            if (message.removed != null && message.hasOwnProperty("removed"))
+            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
                 writer.uint32(/* id 11, wireType 0 =*/88).bool(message.removed);
-            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 12, wireType 0 =*/96).int32(message.joinIndex);
             return writer;
         };
 
         /**
-         * Encodes the specified Player message, length delimited. Does not implicitly {@link protos.Player.verify|verify} messages.
+         * Encodes the specified PlayerDownsync message, length delimited. Does not implicitly {@link protos.PlayerDownsync.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {protos.Player} message Player message or plain object to encode
+         * @param {protos.PlayerDownsync} message PlayerDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Player.encodeDelimited = function encodeDelimited(message, writer) {
+        PlayerDownsync.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a Player message from the specified reader or buffer.
+         * Decodes a PlayerDownsync message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Player.decode = function decode(reader, length) {
+        PlayerDownsync.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Player();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PlayerDownsync();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.id = reader.int32();
-                    break;
-                case 2:
-                    message.virtualGridX = reader.int32();
-                    break;
-                case 3:
-                    message.virtualGridY = reader.int32();
-                    break;
-                case 4:
-                    message.dir = $root.protos.Direction.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    message.speed = reader.int32();
-                    break;
-                case 6:
-                    message.battleState = reader.int32();
-                    break;
-                case 7:
-                    message.lastMoveGmtMillis = reader.int32();
-                    break;
-                case 10:
-                    message.score = reader.int32();
-                    break;
-                case 11:
-                    message.removed = reader.bool();
-                    break;
-                case 12:
-                    message.joinIndex = reader.int32();
-                    break;
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.virtualGridX = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.virtualGridY = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.dir = $root.sharedprotos.Direction.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.speed = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.battleState = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        message.lastMoveGmtMillis = reader.int32();
+                        break;
+                    }
+                case 10: {
+                        message.score = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.removed = reader.bool();
+                        break;
+                    }
+                case 12: {
+                        message.joinIndex = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -983,30 +1058,30 @@ $root.protos = (function() {
         };
 
         /**
-         * Decodes a Player message from the specified reader or buffer, length delimited.
+         * Decodes a PlayerDownsync message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Player.decodeDelimited = function decodeDelimited(reader) {
+        PlayerDownsync.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a Player message.
+         * Verifies a PlayerDownsync message.
          * @function verify
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        Player.verify = function verify(message) {
+        PlayerDownsync.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.id != null && message.hasOwnProperty("id"))
@@ -1019,7 +1094,7 @@ $root.protos = (function() {
                 if (!$util.isInteger(message.virtualGridY))
                     return "virtualGridY: integer expected";
             if (message.dir != null && message.hasOwnProperty("dir")) {
-                var error = $root.protos.Direction.verify(message.dir);
+                var error = $root.sharedprotos.Direction.verify(message.dir);
                 if (error)
                     return "dir." + error;
             }
@@ -1045,17 +1120,17 @@ $root.protos = (function() {
         };
 
         /**
-         * Creates a Player message from a plain object. Also converts values to their respective internal types.
+         * Creates a PlayerDownsync message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          */
-        Player.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Player)
+        PlayerDownsync.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.PlayerDownsync)
                 return object;
-            var message = new $root.protos.Player();
+            var message = new $root.protos.PlayerDownsync();
             if (object.id != null)
                 message.id = object.id | 0;
             if (object.virtualGridX != null)
@@ -1064,8 +1139,8 @@ $root.protos = (function() {
                 message.virtualGridY = object.virtualGridY | 0;
             if (object.dir != null) {
                 if (typeof object.dir !== "object")
-                    throw TypeError(".protos.Player.dir: object expected");
-                message.dir = $root.protos.Direction.fromObject(object.dir);
+                    throw TypeError(".protos.PlayerDownsync.dir: object expected");
+                message.dir = $root.sharedprotos.Direction.fromObject(object.dir);
             }
             if (object.speed != null)
                 message.speed = object.speed | 0;
@@ -1083,15 +1158,15 @@ $root.protos = (function() {
         };
 
         /**
-         * Creates a plain object from a Player message. Also converts values to other types if specified.
+         * Creates a plain object from a PlayerDownsync message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {protos.Player} message Player
+         * @param {protos.PlayerDownsync} message PlayerDownsync
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        Player.toObject = function toObject(message, options) {
+        PlayerDownsync.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
@@ -1114,7 +1189,7 @@ $root.protos = (function() {
             if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
                 object.virtualGridY = message.virtualGridY;
             if (message.dir != null && message.hasOwnProperty("dir"))
-                object.dir = $root.protos.Direction.toObject(message.dir, options);
+                object.dir = $root.sharedprotos.Direction.toObject(message.dir, options);
             if (message.speed != null && message.hasOwnProperty("speed"))
                 object.speed = message.speed;
             if (message.battleState != null && message.hasOwnProperty("battleState"))
@@ -1131,41 +1206,56 @@ $root.protos = (function() {
         };
 
         /**
-         * Converts this Player to JSON.
+         * Converts this PlayerDownsync to JSON.
          * @function toJSON
-         * @memberof protos.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        Player.prototype.toJSON = function toJSON() {
+        PlayerDownsync.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        return Player;
+        /**
+         * Gets the default type url for PlayerDownsync
+         * @function getTypeUrl
+         * @memberof protos.PlayerDownsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PlayerDownsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.PlayerDownsync";
+        };
+
+        return PlayerDownsync;
     })();
 
-    protos.PlayerMeta = (function() {
+    protos.PlayerDownsyncMeta = (function() {
 
         /**
-         * Properties of a PlayerMeta.
+         * Properties of a PlayerDownsyncMeta.
          * @memberof protos
-         * @interface IPlayerMeta
-         * @property {number|null} [id] PlayerMeta id
-         * @property {string|null} [name] PlayerMeta name
-         * @property {string|null} [displayName] PlayerMeta displayName
-         * @property {string|null} [avatar] PlayerMeta avatar
-         * @property {number|null} [joinIndex] PlayerMeta joinIndex
+         * @interface IPlayerDownsyncMeta
+         * @property {number|null} [id] PlayerDownsyncMeta id
+         * @property {string|null} [name] PlayerDownsyncMeta name
+         * @property {string|null} [displayName] PlayerDownsyncMeta displayName
+         * @property {string|null} [avatar] PlayerDownsyncMeta avatar
+         * @property {number|null} [joinIndex] PlayerDownsyncMeta joinIndex
          */
 
         /**
-         * Constructs a new PlayerMeta.
+         * Constructs a new PlayerDownsyncMeta.
          * @memberof protos
-         * @classdesc Represents a PlayerMeta.
-         * @implements IPlayerMeta
+         * @classdesc Represents a PlayerDownsyncMeta.
+         * @implements IPlayerDownsyncMeta
          * @constructor
-         * @param {protos.IPlayerMeta=} [properties] Properties to set
+         * @param {protos.IPlayerDownsyncMeta=} [properties] Properties to set
          */
-        function PlayerMeta(properties) {
+        function PlayerDownsyncMeta(properties) {
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1173,128 +1263,133 @@ $root.protos = (function() {
         }
 
         /**
-         * PlayerMeta id.
+         * PlayerDownsyncMeta id.
          * @member {number} id
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.id = 0;
+        PlayerDownsyncMeta.prototype.id = 0;
 
         /**
-         * PlayerMeta name.
+         * PlayerDownsyncMeta name.
          * @member {string} name
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.name = "";
+        PlayerDownsyncMeta.prototype.name = "";
 
         /**
-         * PlayerMeta displayName.
+         * PlayerDownsyncMeta displayName.
          * @member {string} displayName
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.displayName = "";
+        PlayerDownsyncMeta.prototype.displayName = "";
 
         /**
-         * PlayerMeta avatar.
+         * PlayerDownsyncMeta avatar.
          * @member {string} avatar
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.avatar = "";
+        PlayerDownsyncMeta.prototype.avatar = "";
 
         /**
-         * PlayerMeta joinIndex.
+         * PlayerDownsyncMeta joinIndex.
          * @member {number} joinIndex
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.joinIndex = 0;
+        PlayerDownsyncMeta.prototype.joinIndex = 0;
 
         /**
-         * Creates a new PlayerMeta instance using the specified properties.
+         * Creates a new PlayerDownsyncMeta instance using the specified properties.
          * @function create
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {protos.IPlayerMeta=} [properties] Properties to set
-         * @returns {protos.PlayerMeta} PlayerMeta instance
+         * @param {protos.IPlayerDownsyncMeta=} [properties] Properties to set
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta instance
          */
-        PlayerMeta.create = function create(properties) {
-            return new PlayerMeta(properties);
+        PlayerDownsyncMeta.create = function create(properties) {
+            return new PlayerDownsyncMeta(properties);
         };
 
         /**
-         * Encodes the specified PlayerMeta message. Does not implicitly {@link protos.PlayerMeta.verify|verify} messages.
+         * Encodes the specified PlayerDownsyncMeta message. Does not implicitly {@link protos.PlayerDownsyncMeta.verify|verify} messages.
          * @function encode
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {protos.PlayerMeta} message PlayerMeta message or plain object to encode
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        PlayerMeta.encode = function encode(message, writer) {
+        PlayerDownsyncMeta.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && message.hasOwnProperty("id"))
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.name != null && message.hasOwnProperty("name"))
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
-            if (message.displayName != null && message.hasOwnProperty("displayName"))
+            if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.displayName);
-            if (message.avatar != null && message.hasOwnProperty("avatar"))
+            if (message.avatar != null && Object.hasOwnProperty.call(message, "avatar"))
                 writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatar);
-            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.joinIndex);
             return writer;
         };
 
         /**
-         * Encodes the specified PlayerMeta message, length delimited. Does not implicitly {@link protos.PlayerMeta.verify|verify} messages.
+         * Encodes the specified PlayerDownsyncMeta message, length delimited. Does not implicitly {@link protos.PlayerDownsyncMeta.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {protos.PlayerMeta} message PlayerMeta message or plain object to encode
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        PlayerMeta.encodeDelimited = function encodeDelimited(message, writer) {
+        PlayerDownsyncMeta.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a PlayerMeta message from the specified reader or buffer.
+         * Decodes a PlayerDownsyncMeta message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        PlayerMeta.decode = function decode(reader, length) {
+        PlayerDownsyncMeta.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PlayerMeta();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PlayerDownsyncMeta();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.id = reader.int32();
-                    break;
-                case 2:
-                    message.name = reader.string();
-                    break;
-                case 3:
-                    message.displayName = reader.string();
-                    break;
-                case 4:
-                    message.avatar = reader.string();
-                    break;
-                case 5:
-                    message.joinIndex = reader.int32();
-                    break;
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.displayName = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.avatar = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.joinIndex = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1304,30 +1399,30 @@ $root.protos = (function() {
         };
 
         /**
-         * Decodes a PlayerMeta message from the specified reader or buffer, length delimited.
+         * Decodes a PlayerDownsyncMeta message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        PlayerMeta.decodeDelimited = function decodeDelimited(reader) {
+        PlayerDownsyncMeta.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a PlayerMeta message.
+         * Verifies a PlayerDownsyncMeta message.
          * @function verify
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        PlayerMeta.verify = function verify(message) {
+        PlayerDownsyncMeta.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.id != null && message.hasOwnProperty("id"))
@@ -1349,17 +1444,17 @@ $root.protos = (function() {
         };
 
         /**
-         * Creates a PlayerMeta message from a plain object. Also converts values to their respective internal types.
+         * Creates a PlayerDownsyncMeta message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          */
-        PlayerMeta.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.PlayerMeta)
+        PlayerDownsyncMeta.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.PlayerDownsyncMeta)
                 return object;
-            var message = new $root.protos.PlayerMeta();
+            var message = new $root.protos.PlayerDownsyncMeta();
             if (object.id != null)
                 message.id = object.id | 0;
             if (object.name != null)
@@ -1374,15 +1469,15 @@ $root.protos = (function() {
         };
 
         /**
-         * Creates a plain object from a PlayerMeta message. Also converts values to other types if specified.
+         * Creates a plain object from a PlayerDownsyncMeta message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {protos.PlayerMeta} message PlayerMeta
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        PlayerMeta.toObject = function toObject(message, options) {
+        PlayerDownsyncMeta.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
@@ -1407,17 +1502,32 @@ $root.protos = (function() {
         };
 
         /**
-         * Converts this PlayerMeta to JSON.
+         * Converts this PlayerDownsyncMeta to JSON.
          * @function toJSON
-         * @memberof protos.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        PlayerMeta.prototype.toJSON = function toJSON() {
+        PlayerDownsyncMeta.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        return PlayerMeta;
+        /**
+         * Gets the default type url for PlayerDownsyncMeta
+         * @function getTypeUrl
+         * @memberof protos.PlayerDownsyncMeta
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PlayerDownsyncMeta.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.PlayerDownsyncMeta";
+        };
+
+        return PlayerDownsyncMeta;
     })();
 
     protos.InputFrameUpsync = (function() {
@@ -1485,9 +1595,9 @@ $root.protos = (function() {
         InputFrameUpsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.inputFrameId != null && message.hasOwnProperty("inputFrameId"))
+            if (message.inputFrameId != null && Object.hasOwnProperty.call(message, "inputFrameId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.inputFrameId);
-            if (message.encodedDir != null && message.hasOwnProperty("encodedDir"))
+            if (message.encodedDir != null && Object.hasOwnProperty.call(message, "encodedDir"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.encodedDir);
             return writer;
         };
@@ -1523,12 +1633,14 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.inputFrameId = reader.int32();
-                    break;
-                case 6:
-                    message.encodedDir = reader.int32();
-                    break;
+                case 1: {
+                        message.inputFrameId = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.encodedDir = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1627,6 +1739,21 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for InputFrameUpsync
+         * @function getTypeUrl
+         * @memberof protos.InputFrameUpsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        InputFrameUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.InputFrameUpsync";
+        };
+
         return InputFrameUpsync;
     })();
 
@@ -1705,7 +1832,7 @@ $root.protos = (function() {
         InputFrameDownsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.inputFrameId != null && message.hasOwnProperty("inputFrameId"))
+            if (message.inputFrameId != null && Object.hasOwnProperty.call(message, "inputFrameId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.inputFrameId);
             if (message.inputList != null && message.inputList.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
@@ -1713,7 +1840,7 @@ $root.protos = (function() {
                     writer.uint64(message.inputList[i]);
                 writer.ldelim();
             }
-            if (message.confirmedList != null && message.hasOwnProperty("confirmedList"))
+            if (message.confirmedList != null && Object.hasOwnProperty.call(message, "confirmedList"))
                 writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.confirmedList);
             return writer;
         };
@@ -1749,22 +1876,25 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.inputFrameId = reader.int32();
-                    break;
-                case 2:
-                    if (!(message.inputList && message.inputList.length))
-                        message.inputList = [];
-                    if ((tag & 7) === 2) {
-                        var end2 = reader.uint32() + reader.pos;
-                        while (reader.pos < end2)
+                case 1: {
+                        message.inputFrameId = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        if (!(message.inputList && message.inputList.length))
+                            message.inputList = [];
+                        if ((tag & 7) === 2) {
+                            var end2 = reader.uint32() + reader.pos;
+                            while (reader.pos < end2)
+                                message.inputList.push(reader.uint64());
+                        } else
                             message.inputList.push(reader.uint64());
-                    } else
-                        message.inputList.push(reader.uint64());
-                    break;
-                case 3:
-                    message.confirmedList = reader.uint64();
-                    break;
+                        break;
+                    }
+                case 3: {
+                        message.confirmedList = reader.uint64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1908,6 +2038,21 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for InputFrameDownsync
+         * @function getTypeUrl
+         * @memberof protos.InputFrameDownsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        InputFrameDownsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.InputFrameDownsync";
+        };
+
         return InputFrameDownsync;
     })();
 
@@ -1967,7 +2112,7 @@ $root.protos = (function() {
         HeartbeatUpsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.clientTimestamp != null && message.hasOwnProperty("clientTimestamp"))
+            if (message.clientTimestamp != null && Object.hasOwnProperty.call(message, "clientTimestamp"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int64(message.clientTimestamp);
             return writer;
         };
@@ -2003,9 +2148,10 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.clientTimestamp = reader.int64();
-                    break;
+                case 1: {
+                        message.clientTimestamp = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2109,6 +2255,21 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for HeartbeatUpsync
+         * @function getTypeUrl
+         * @memberof protos.HeartbeatUpsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        HeartbeatUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.HeartbeatUpsync";
+        };
+
         return HeartbeatUpsync;
     })();
 
@@ -2119,9 +2280,9 @@ $root.protos = (function() {
          * @memberof protos
          * @interface IRoomDownsyncFrame
          * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {Object.<string,protos.Player>|null} [players] RoomDownsyncFrame players
+         * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
-         * @property {Object.<string,protos.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
+         * @property {Object.<string,protos.PlayerDownsyncMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
          */
 
         /**
@@ -2151,7 +2312,7 @@ $root.protos = (function() {
 
         /**
          * RoomDownsyncFrame players.
-         * @member {Object.<string,protos.Player>} players
+         * @member {Object.<string,protos.PlayerDownsync>} players
          * @memberof protos.RoomDownsyncFrame
          * @instance
          */
@@ -2167,7 +2328,7 @@ $root.protos = (function() {
 
         /**
          * RoomDownsyncFrame playerMetas.
-         * @member {Object.<string,protos.PlayerMeta>} playerMetas
+         * @member {Object.<string,protos.PlayerDownsyncMeta>} playerMetas
          * @memberof protos.RoomDownsyncFrame
          * @instance
          */
@@ -2197,19 +2358,19 @@ $root.protos = (function() {
         RoomDownsyncFrame.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && message.hasOwnProperty("id"))
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.players != null && message.hasOwnProperty("players"))
+            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
                 for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.protos.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
+            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
-            if (message.playerMetas != null && message.hasOwnProperty("playerMetas"))
+            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
                 for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.protos.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.protos.PlayerDownsyncMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             return writer;
         };
@@ -2241,32 +2402,64 @@ $root.protos = (function() {
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.id = reader.int32();
-                    break;
-                case 2:
-                    reader.skip().pos++;
-                    if (message.players === $util.emptyObject)
-                        message.players = {};
-                    key = reader.int32();
-                    reader.pos++;
-                    message.players[key] = $root.protos.Player.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.countdownNanos = reader.int64();
-                    break;
-                case 4:
-                    reader.skip().pos++;
-                    if (message.playerMetas === $util.emptyObject)
-                        message.playerMetas = {};
-                    key = reader.int32();
-                    reader.pos++;
-                    message.playerMetas[key] = $root.protos.PlayerMeta.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        if (message.players === $util.emptyObject)
+                            message.players = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.protos.PlayerDownsync.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.players[key] = value;
+                        break;
+                    }
+                case 3: {
+                        message.countdownNanos = reader.int64();
+                        break;
+                    }
+                case 4: {
+                        if (message.playerMetas === $util.emptyObject)
+                            message.playerMetas = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = $root.protos.PlayerDownsyncMeta.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.playerMetas[key] = value;
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2313,7 +2506,7 @@ $root.protos = (function() {
                     if (!$util.key32Re.test(key[i]))
                         return "players: integer key{k:int32} expected";
                     {
-                        var error = $root.protos.Player.verify(message.players[key[i]]);
+                        var error = $root.protos.PlayerDownsync.verify(message.players[key[i]]);
                         if (error)
                             return "players." + error;
                     }
@@ -2330,7 +2523,7 @@ $root.protos = (function() {
                     if (!$util.key32Re.test(key[i]))
                         return "playerMetas: integer key{k:int32} expected";
                     {
-                        var error = $root.protos.PlayerMeta.verify(message.playerMetas[key[i]]);
+                        var error = $root.protos.PlayerDownsyncMeta.verify(message.playerMetas[key[i]]);
                         if (error)
                             return "playerMetas." + error;
                     }
@@ -2360,7 +2553,7 @@ $root.protos = (function() {
                 for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
                     if (typeof object.players[keys[i]] !== "object")
                         throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.protos.Player.fromObject(object.players[keys[i]]);
+                    message.players[keys[i]] = $root.protos.PlayerDownsync.fromObject(object.players[keys[i]]);
                 }
             }
             if (object.countdownNanos != null)
@@ -2379,7 +2572,7 @@ $root.protos = (function() {
                 for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
                     if (typeof object.playerMetas[keys[i]] !== "object")
                         throw TypeError(".protos.RoomDownsyncFrame.playerMetas: object expected");
-                    message.playerMetas[keys[i]] = $root.protos.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
+                    message.playerMetas[keys[i]] = $root.protos.PlayerDownsyncMeta.fromObject(object.playerMetas[keys[i]]);
                 }
             }
             return message;
@@ -2416,7 +2609,7 @@ $root.protos = (function() {
             if (message.players && (keys2 = Object.keys(message.players)).length) {
                 object.players = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.protos.Player.toObject(message.players[keys2[j]], options);
+                    object.players[keys2[j]] = $root.protos.PlayerDownsync.toObject(message.players[keys2[j]], options);
             }
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 if (typeof message.countdownNanos === "number")
@@ -2426,7 +2619,7 @@ $root.protos = (function() {
             if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
                 object.playerMetas = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.playerMetas[keys2[j]] = $root.protos.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
+                    object.playerMetas[keys2[j]] = $root.protos.PlayerDownsyncMeta.toObject(message.playerMetas[keys2[j]], options);
             }
             return object;
         };
@@ -2440,6 +2633,21 @@ $root.protos = (function() {
          */
         RoomDownsyncFrame.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for RoomDownsyncFrame
+         * @function getTypeUrl
+         * @memberof protos.RoomDownsyncFrame
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.RoomDownsyncFrame";
         };
 
         return RoomDownsyncFrame;
@@ -2565,22 +2773,22 @@ $root.protos = (function() {
         WsReq.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.msgId != null && message.hasOwnProperty("msgId"))
+            if (message.msgId != null && Object.hasOwnProperty.call(message, "msgId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.msgId);
-            if (message.playerId != null && message.hasOwnProperty("playerId"))
+            if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.playerId);
-            if (message.act != null && message.hasOwnProperty("act"))
+            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
-            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.joinIndex);
-            if (message.ackingFrameId != null && message.hasOwnProperty("ackingFrameId"))
+            if (message.ackingFrameId != null && Object.hasOwnProperty.call(message, "ackingFrameId"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.ackingFrameId);
-            if (message.ackingInputFrameId != null && message.hasOwnProperty("ackingInputFrameId"))
+            if (message.ackingInputFrameId != null && Object.hasOwnProperty.call(message, "ackingInputFrameId"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.ackingInputFrameId);
             if (message.inputFrameUpsyncBatch != null && message.inputFrameUpsyncBatch.length)
                 for (var i = 0; i < message.inputFrameUpsyncBatch.length; ++i)
                     $root.protos.InputFrameUpsync.encode(message.inputFrameUpsyncBatch[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
-            if (message.hb != null && message.hasOwnProperty("hb"))
+            if (message.hb != null && Object.hasOwnProperty.call(message, "hb"))
                 $root.protos.HeartbeatUpsync.encode(message.hb, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
@@ -2616,32 +2824,40 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.msgId = reader.int32();
-                    break;
-                case 2:
-                    message.playerId = reader.int32();
-                    break;
-                case 3:
-                    message.act = reader.int32();
-                    break;
-                case 4:
-                    message.joinIndex = reader.int32();
-                    break;
-                case 5:
-                    message.ackingFrameId = reader.int32();
-                    break;
-                case 6:
-                    message.ackingInputFrameId = reader.int32();
-                    break;
-                case 7:
-                    if (!(message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length))
-                        message.inputFrameUpsyncBatch = [];
-                    message.inputFrameUpsyncBatch.push($root.protos.InputFrameUpsync.decode(reader, reader.uint32()));
-                    break;
-                case 8:
-                    message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.msgId = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.playerId = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.act = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.joinIndex = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.ackingFrameId = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.ackingInputFrameId = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        if (!(message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length))
+                            message.inputFrameUpsyncBatch = [];
+                        message.inputFrameUpsyncBatch.push($root.protos.InputFrameUpsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 8: {
+                        message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2811,6 +3027,21 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for WsReq
+         * @function getTypeUrl
+         * @memberof protos.WsReq
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        WsReq.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.WsReq";
+        };
+
         return WsReq;
     })();
 
@@ -2916,18 +3147,18 @@ $root.protos = (function() {
         WsResp.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.ret != null && message.hasOwnProperty("ret"))
+            if (message.ret != null && Object.hasOwnProperty.call(message, "ret"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.ret);
-            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
+            if (message.echoedMsgId != null && Object.hasOwnProperty.call(message, "echoedMsgId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.echoedMsgId);
-            if (message.act != null && message.hasOwnProperty("act"))
+            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
-            if (message.rdf != null && message.hasOwnProperty("rdf"))
+            if (message.rdf != null && Object.hasOwnProperty.call(message, "rdf"))
                 $root.protos.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.inputFrameDownsyncBatch != null && message.inputFrameDownsyncBatch.length)
                 for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i)
                     $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
-            if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
+            if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
                 $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
@@ -2963,26 +3194,32 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.ret = reader.int32();
-                    break;
-                case 2:
-                    message.echoedMsgId = reader.int32();
-                    break;
-                case 3:
-                    message.act = reader.int32();
-                    break;
-                case 4:
-                    message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
-                        message.inputFrameDownsyncBatch = [];
-                    message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
-                    break;
-                case 6:
-                    message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.ret = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.echoedMsgId = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.act = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
+                            message.inputFrameDownsyncBatch = [];
+                        message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 6: {
+                        message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3141,14 +3378,41 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for WsResp
+         * @function getTypeUrl
+         * @memberof protos.WsResp
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        WsResp.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.WsResp";
+        };
+
         return WsResp;
     })();
 
-    protos.Direction = (function() {
+    return protos;
+})();
+
+$root.sharedprotos = (function() {
+
+    /**
+     * Namespace sharedprotos.
+     * @exports sharedprotos
+     * @namespace
+     */
+    var sharedprotos = {};
+
+    sharedprotos.Direction = (function() {
 
         /**
          * Properties of a Direction.
-         * @memberof protos
+         * @memberof sharedprotos
          * @interface IDirection
          * @property {number|null} [dx] Direction dx
          * @property {number|null} [dy] Direction dy
@@ -3156,11 +3420,11 @@ $root.protos = (function() {
 
         /**
          * Constructs a new Direction.
-         * @memberof protos
+         * @memberof sharedprotos
          * @classdesc Represents a Direction.
          * @implements IDirection
          * @constructor
-         * @param {protos.IDirection=} [properties] Properties to set
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
          */
         function Direction(properties) {
             if (properties)
@@ -3172,7 +3436,7 @@ $root.protos = (function() {
         /**
          * Direction dx.
          * @member {number} dx
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          */
         Direction.prototype.dx = 0;
@@ -3180,7 +3444,7 @@ $root.protos = (function() {
         /**
          * Direction dy.
          * @member {number} dy
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          */
         Direction.prototype.dy = 0;
@@ -3188,40 +3452,40 @@ $root.protos = (function() {
         /**
          * Creates a new Direction instance using the specified properties.
          * @function create
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {protos.IDirection=} [properties] Properties to set
-         * @returns {protos.Direction} Direction instance
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
+         * @returns {sharedprotos.Direction} Direction instance
          */
         Direction.create = function create(properties) {
             return new Direction(properties);
         };
 
         /**
-         * Encodes the specified Direction message. Does not implicitly {@link protos.Direction.verify|verify} messages.
+         * Encodes the specified Direction message. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
          * @function encode
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {protos.Direction} message Direction message or plain object to encode
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Direction.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.dx != null && message.hasOwnProperty("dx"))
+            if (message.dx != null && Object.hasOwnProperty.call(message, "dx"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.dx);
-            if (message.dy != null && message.hasOwnProperty("dy"))
+            if (message.dy != null && Object.hasOwnProperty.call(message, "dy"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.dy);
             return writer;
         };
 
         /**
-         * Encodes the specified Direction message, length delimited. Does not implicitly {@link protos.Direction.verify|verify} messages.
+         * Encodes the specified Direction message, length delimited. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {protos.Direction} message Direction message or plain object to encode
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3232,27 +3496,29 @@ $root.protos = (function() {
         /**
          * Decodes a Direction message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Direction.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Direction();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Direction();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.dx = reader.int32();
-                    break;
-                case 2:
-                    message.dy = reader.int32();
-                    break;
+                case 1: {
+                        message.dx = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.dy = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3264,10 +3530,10 @@ $root.protos = (function() {
         /**
          * Decodes a Direction message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3280,7 +3546,7 @@ $root.protos = (function() {
         /**
          * Verifies a Direction message.
          * @function verify
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3300,15 +3566,15 @@ $root.protos = (function() {
         /**
          * Creates a Direction message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          */
         Direction.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Direction)
+            if (object instanceof $root.sharedprotos.Direction)
                 return object;
-            var message = new $root.protos.Direction();
+            var message = new $root.sharedprotos.Direction();
             if (object.dx != null)
                 message.dx = object.dx | 0;
             if (object.dy != null)
@@ -3319,9 +3585,9 @@ $root.protos = (function() {
         /**
          * Creates a plain object from a Direction message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {protos.Direction} message Direction
+         * @param {sharedprotos.Direction} message Direction
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3343,7 +3609,7 @@ $root.protos = (function() {
         /**
          * Converts this Direction to JSON.
          * @function toJSON
-         * @memberof protos.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3351,14 +3617,29 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Direction
+         * @function getTypeUrl
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Direction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Direction";
+        };
+
         return Direction;
     })();
 
-    protos.Vec2D = (function() {
+    sharedprotos.Vec2D = (function() {
 
         /**
          * Properties of a Vec2D.
-         * @memberof protos
+         * @memberof sharedprotos
          * @interface IVec2D
          * @property {number|null} [x] Vec2D x
          * @property {number|null} [y] Vec2D y
@@ -3366,11 +3647,11 @@ $root.protos = (function() {
 
         /**
          * Constructs a new Vec2D.
-         * @memberof protos
+         * @memberof sharedprotos
          * @classdesc Represents a Vec2D.
          * @implements IVec2D
          * @constructor
-         * @param {protos.IVec2D=} [properties] Properties to set
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
          */
         function Vec2D(properties) {
             if (properties)
@@ -3382,7 +3663,7 @@ $root.protos = (function() {
         /**
          * Vec2D x.
          * @member {number} x
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          */
         Vec2D.prototype.x = 0;
@@ -3390,7 +3671,7 @@ $root.protos = (function() {
         /**
          * Vec2D y.
          * @member {number} y
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          */
         Vec2D.prototype.y = 0;
@@ -3398,40 +3679,40 @@ $root.protos = (function() {
         /**
          * Creates a new Vec2D instance using the specified properties.
          * @function create
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {protos.IVec2D=} [properties] Properties to set
-         * @returns {protos.Vec2D} Vec2D instance
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2D} Vec2D instance
          */
         Vec2D.create = function create(properties) {
             return new Vec2D(properties);
         };
 
         /**
-         * Encodes the specified Vec2D message. Does not implicitly {@link protos.Vec2D.verify|verify} messages.
+         * Encodes the specified Vec2D message. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
          * @function encode
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {protos.Vec2D} message Vec2D message or plain object to encode
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Vec2D.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.x != null && message.hasOwnProperty("x"))
+            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
                 writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
-            if (message.y != null && message.hasOwnProperty("y"))
+            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
                 writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
             return writer;
         };
 
         /**
-         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link protos.Vec2D.verify|verify} messages.
+         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {protos.Vec2D} message Vec2D message or plain object to encode
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3442,27 +3723,29 @@ $root.protos = (function() {
         /**
          * Decodes a Vec2D message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Vec2D.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Vec2D();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2D();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.x = reader.double();
-                    break;
-                case 2:
-                    message.y = reader.double();
-                    break;
+                case 1: {
+                        message.x = reader.double();
+                        break;
+                    }
+                case 2: {
+                        message.y = reader.double();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3474,10 +3757,10 @@ $root.protos = (function() {
         /**
          * Decodes a Vec2D message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3490,7 +3773,7 @@ $root.protos = (function() {
         /**
          * Verifies a Vec2D message.
          * @function verify
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3510,15 +3793,15 @@ $root.protos = (function() {
         /**
          * Creates a Vec2D message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          */
         Vec2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Vec2D)
+            if (object instanceof $root.sharedprotos.Vec2D)
                 return object;
-            var message = new $root.protos.Vec2D();
+            var message = new $root.sharedprotos.Vec2D();
             if (object.x != null)
                 message.x = Number(object.x);
             if (object.y != null)
@@ -3529,9 +3812,9 @@ $root.protos = (function() {
         /**
          * Creates a plain object from a Vec2D message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {protos.Vec2D} message Vec2D
+         * @param {sharedprotos.Vec2D} message Vec2D
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3553,7 +3836,7 @@ $root.protos = (function() {
         /**
          * Converts this Vec2D to JSON.
          * @function toJSON
-         * @memberof protos.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3561,26 +3844,41 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Vec2D
+         * @function getTypeUrl
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Vec2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Vec2D";
+        };
+
         return Vec2D;
     })();
 
-    protos.Polygon2D = (function() {
+    sharedprotos.Polygon2D = (function() {
 
         /**
          * Properties of a Polygon2D.
-         * @memberof protos
+         * @memberof sharedprotos
          * @interface IPolygon2D
-         * @property {protos.Vec2D|null} [anchor] Polygon2D anchor
-         * @property {Array.<protos.Vec2D>|null} [points] Polygon2D points
+         * @property {sharedprotos.Vec2D|null} [anchor] Polygon2D anchor
+         * @property {Array.<sharedprotos.Vec2D>|null} [points] Polygon2D points
          */
 
         /**
          * Constructs a new Polygon2D.
-         * @memberof protos
+         * @memberof sharedprotos
          * @classdesc Represents a Polygon2D.
          * @implements IPolygon2D
          * @constructor
-         * @param {protos.IPolygon2D=} [properties] Properties to set
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
          */
         function Polygon2D(properties) {
             this.points = [];
@@ -3592,16 +3890,16 @@ $root.protos = (function() {
 
         /**
          * Polygon2D anchor.
-         * @member {protos.Vec2D|null|undefined} anchor
-         * @memberof protos.Polygon2D
+         * @member {sharedprotos.Vec2D|null|undefined} anchor
+         * @memberof sharedprotos.Polygon2D
          * @instance
          */
         Polygon2D.prototype.anchor = null;
 
         /**
          * Polygon2D points.
-         * @member {Array.<protos.Vec2D>} points
-         * @memberof protos.Polygon2D
+         * @member {Array.<sharedprotos.Vec2D>} points
+         * @memberof sharedprotos.Polygon2D
          * @instance
          */
         Polygon2D.prototype.points = $util.emptyArray;
@@ -3609,41 +3907,41 @@ $root.protos = (function() {
         /**
          * Creates a new Polygon2D instance using the specified properties.
          * @function create
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {protos.IPolygon2D=} [properties] Properties to set
-         * @returns {protos.Polygon2D} Polygon2D instance
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2D} Polygon2D instance
          */
         Polygon2D.create = function create(properties) {
             return new Polygon2D(properties);
         };
 
         /**
-         * Encodes the specified Polygon2D message. Does not implicitly {@link protos.Polygon2D.verify|verify} messages.
+         * Encodes the specified Polygon2D message. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
          * @function encode
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {protos.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Polygon2D.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.anchor != null && message.hasOwnProperty("anchor"))
-                $root.protos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.anchor != null && Object.hasOwnProperty.call(message, "anchor"))
+                $root.sharedprotos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.points != null && message.points.length)
                 for (var i = 0; i < message.points.length; ++i)
-                    $root.protos.Vec2D.encode(message.points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                    $root.sharedprotos.Vec2D.encode(message.points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link protos.Polygon2D.verify|verify} messages.
+         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {protos.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3654,29 +3952,31 @@ $root.protos = (function() {
         /**
          * Decodes a Polygon2D message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Polygon2D.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Polygon2D();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2D();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.anchor = $root.protos.Vec2D.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    if (!(message.points && message.points.length))
-                        message.points = [];
-                    message.points.push($root.protos.Vec2D.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        if (!(message.points && message.points.length))
+                            message.points = [];
+                        message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3688,10 +3988,10 @@ $root.protos = (function() {
         /**
          * Decodes a Polygon2D message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3704,7 +4004,7 @@ $root.protos = (function() {
         /**
          * Verifies a Polygon2D message.
          * @function verify
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3713,7 +4013,7 @@ $root.protos = (function() {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.anchor != null && message.hasOwnProperty("anchor")) {
-                var error = $root.protos.Vec2D.verify(message.anchor);
+                var error = $root.sharedprotos.Vec2D.verify(message.anchor);
                 if (error)
                     return "anchor." + error;
             }
@@ -3721,7 +4021,7 @@ $root.protos = (function() {
                 if (!Array.isArray(message.points))
                     return "points: array expected";
                 for (var i = 0; i < message.points.length; ++i) {
-                    var error = $root.protos.Vec2D.verify(message.points[i]);
+                    var error = $root.sharedprotos.Vec2D.verify(message.points[i]);
                     if (error)
                         return "points." + error;
                 }
@@ -3732,28 +4032,28 @@ $root.protos = (function() {
         /**
          * Creates a Polygon2D message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          */
         Polygon2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Polygon2D)
+            if (object instanceof $root.sharedprotos.Polygon2D)
                 return object;
-            var message = new $root.protos.Polygon2D();
+            var message = new $root.sharedprotos.Polygon2D();
             if (object.anchor != null) {
                 if (typeof object.anchor !== "object")
-                    throw TypeError(".protos.Polygon2D.anchor: object expected");
-                message.anchor = $root.protos.Vec2D.fromObject(object.anchor);
+                    throw TypeError(".sharedprotos.Polygon2D.anchor: object expected");
+                message.anchor = $root.sharedprotos.Vec2D.fromObject(object.anchor);
             }
             if (object.points) {
                 if (!Array.isArray(object.points))
-                    throw TypeError(".protos.Polygon2D.points: array expected");
+                    throw TypeError(".sharedprotos.Polygon2D.points: array expected");
                 message.points = [];
                 for (var i = 0; i < object.points.length; ++i) {
                     if (typeof object.points[i] !== "object")
-                        throw TypeError(".protos.Polygon2D.points: object expected");
-                    message.points[i] = $root.protos.Vec2D.fromObject(object.points[i]);
+                        throw TypeError(".sharedprotos.Polygon2D.points: object expected");
+                    message.points[i] = $root.sharedprotos.Vec2D.fromObject(object.points[i]);
                 }
             }
             return message;
@@ -3762,9 +4062,9 @@ $root.protos = (function() {
         /**
          * Creates a plain object from a Polygon2D message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {protos.Polygon2D} message Polygon2D
+         * @param {sharedprotos.Polygon2D} message Polygon2D
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3777,11 +4077,11 @@ $root.protos = (function() {
             if (options.defaults)
                 object.anchor = null;
             if (message.anchor != null && message.hasOwnProperty("anchor"))
-                object.anchor = $root.protos.Vec2D.toObject(message.anchor, options);
+                object.anchor = $root.sharedprotos.Vec2D.toObject(message.anchor, options);
             if (message.points && message.points.length) {
                 object.points = [];
                 for (var j = 0; j < message.points.length; ++j)
-                    object.points[j] = $root.protos.Vec2D.toObject(message.points[j], options);
+                    object.points[j] = $root.sharedprotos.Vec2D.toObject(message.points[j], options);
             }
             return object;
         };
@@ -3789,7 +4089,7 @@ $root.protos = (function() {
         /**
          * Converts this Polygon2D to JSON.
          * @function toJSON
-         * @memberof protos.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3797,25 +4097,40 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Polygon2D
+         * @function getTypeUrl
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Polygon2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Polygon2D";
+        };
+
         return Polygon2D;
     })();
 
-    protos.Vec2DList = (function() {
+    sharedprotos.Vec2DList = (function() {
 
         /**
          * Properties of a Vec2DList.
-         * @memberof protos
+         * @memberof sharedprotos
          * @interface IVec2DList
-         * @property {Array.<protos.Vec2D>|null} [eles] Vec2DList eles
+         * @property {Array.<sharedprotos.Vec2D>|null} [eles] Vec2DList eles
          */
 
         /**
          * Constructs a new Vec2DList.
-         * @memberof protos
+         * @memberof sharedprotos
          * @classdesc Represents a Vec2DList.
          * @implements IVec2DList
          * @constructor
-         * @param {protos.IVec2DList=} [properties] Properties to set
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
          */
         function Vec2DList(properties) {
             this.eles = [];
@@ -3827,8 +4142,8 @@ $root.protos = (function() {
 
         /**
          * Vec2DList eles.
-         * @member {Array.<protos.Vec2D>} eles
-         * @memberof protos.Vec2DList
+         * @member {Array.<sharedprotos.Vec2D>} eles
+         * @memberof sharedprotos.Vec2DList
          * @instance
          */
         Vec2DList.prototype.eles = $util.emptyArray;
@@ -3836,21 +4151,21 @@ $root.protos = (function() {
         /**
          * Creates a new Vec2DList instance using the specified properties.
          * @function create
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {protos.IVec2DList=} [properties] Properties to set
-         * @returns {protos.Vec2DList} Vec2DList instance
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2DList} Vec2DList instance
          */
         Vec2DList.create = function create(properties) {
             return new Vec2DList(properties);
         };
 
         /**
-         * Encodes the specified Vec2DList message. Does not implicitly {@link protos.Vec2DList.verify|verify} messages.
+         * Encodes the specified Vec2DList message. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
          * @function encode
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {protos.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3859,16 +4174,16 @@ $root.protos = (function() {
                 writer = $Writer.create();
             if (message.eles != null && message.eles.length)
                 for (var i = 0; i < message.eles.length; ++i)
-                    $root.protos.Vec2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                    $root.sharedprotos.Vec2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link protos.Vec2DList.verify|verify} messages.
+         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {protos.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3879,26 +4194,27 @@ $root.protos = (function() {
         /**
          * Decodes a Vec2DList message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Vec2DList.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Vec2DList();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2DList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.eles && message.eles.length))
-                        message.eles = [];
-                    message.eles.push($root.protos.Vec2D.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3910,10 +4226,10 @@ $root.protos = (function() {
         /**
          * Decodes a Vec2DList message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3926,7 +4242,7 @@ $root.protos = (function() {
         /**
          * Verifies a Vec2DList message.
          * @function verify
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3938,7 +4254,7 @@ $root.protos = (function() {
                 if (!Array.isArray(message.eles))
                     return "eles: array expected";
                 for (var i = 0; i < message.eles.length; ++i) {
-                    var error = $root.protos.Vec2D.verify(message.eles[i]);
+                    var error = $root.sharedprotos.Vec2D.verify(message.eles[i]);
                     if (error)
                         return "eles." + error;
                 }
@@ -3949,23 +4265,23 @@ $root.protos = (function() {
         /**
          * Creates a Vec2DList message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          */
         Vec2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Vec2DList)
+            if (object instanceof $root.sharedprotos.Vec2DList)
                 return object;
-            var message = new $root.protos.Vec2DList();
+            var message = new $root.sharedprotos.Vec2DList();
             if (object.eles) {
                 if (!Array.isArray(object.eles))
-                    throw TypeError(".protos.Vec2DList.eles: array expected");
+                    throw TypeError(".sharedprotos.Vec2DList.eles: array expected");
                 message.eles = [];
                 for (var i = 0; i < object.eles.length; ++i) {
                     if (typeof object.eles[i] !== "object")
-                        throw TypeError(".protos.Vec2DList.eles: object expected");
-                    message.eles[i] = $root.protos.Vec2D.fromObject(object.eles[i]);
+                        throw TypeError(".sharedprotos.Vec2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Vec2D.fromObject(object.eles[i]);
                 }
             }
             return message;
@@ -3974,9 +4290,9 @@ $root.protos = (function() {
         /**
          * Creates a plain object from a Vec2DList message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {protos.Vec2DList} message Vec2DList
+         * @param {sharedprotos.Vec2DList} message Vec2DList
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3989,7 +4305,7 @@ $root.protos = (function() {
             if (message.eles && message.eles.length) {
                 object.eles = [];
                 for (var j = 0; j < message.eles.length; ++j)
-                    object.eles[j] = $root.protos.Vec2D.toObject(message.eles[j], options);
+                    object.eles[j] = $root.sharedprotos.Vec2D.toObject(message.eles[j], options);
             }
             return object;
         };
@@ -3997,7 +4313,7 @@ $root.protos = (function() {
         /**
          * Converts this Vec2DList to JSON.
          * @function toJSON
-         * @memberof protos.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -4005,25 +4321,40 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Vec2DList
+         * @function getTypeUrl
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Vec2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Vec2DList";
+        };
+
         return Vec2DList;
     })();
 
-    protos.Polygon2DList = (function() {
+    sharedprotos.Polygon2DList = (function() {
 
         /**
          * Properties of a Polygon2DList.
-         * @memberof protos
+         * @memberof sharedprotos
          * @interface IPolygon2DList
-         * @property {Array.<protos.Polygon2D>|null} [eles] Polygon2DList eles
+         * @property {Array.<sharedprotos.Polygon2D>|null} [eles] Polygon2DList eles
          */
 
         /**
          * Constructs a new Polygon2DList.
-         * @memberof protos
+         * @memberof sharedprotos
          * @classdesc Represents a Polygon2DList.
          * @implements IPolygon2DList
          * @constructor
-         * @param {protos.IPolygon2DList=} [properties] Properties to set
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
          */
         function Polygon2DList(properties) {
             this.eles = [];
@@ -4035,8 +4366,8 @@ $root.protos = (function() {
 
         /**
          * Polygon2DList eles.
-         * @member {Array.<protos.Polygon2D>} eles
-         * @memberof protos.Polygon2DList
+         * @member {Array.<sharedprotos.Polygon2D>} eles
+         * @memberof sharedprotos.Polygon2DList
          * @instance
          */
         Polygon2DList.prototype.eles = $util.emptyArray;
@@ -4044,21 +4375,21 @@ $root.protos = (function() {
         /**
          * Creates a new Polygon2DList instance using the specified properties.
          * @function create
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {protos.IPolygon2DList=} [properties] Properties to set
-         * @returns {protos.Polygon2DList} Polygon2DList instance
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList instance
          */
         Polygon2DList.create = function create(properties) {
             return new Polygon2DList(properties);
         };
 
         /**
-         * Encodes the specified Polygon2DList message. Does not implicitly {@link protos.Polygon2DList.verify|verify} messages.
+         * Encodes the specified Polygon2DList message. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
          * @function encode
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {protos.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -4067,16 +4398,16 @@ $root.protos = (function() {
                 writer = $Writer.create();
             if (message.eles != null && message.eles.length)
                 for (var i = 0; i < message.eles.length; ++i)
-                    $root.protos.Polygon2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                    $root.sharedprotos.Polygon2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link protos.Polygon2DList.verify|verify} messages.
+         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {protos.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -4087,26 +4418,27 @@ $root.protos = (function() {
         /**
          * Decodes a Polygon2DList message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Polygon2DList.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Polygon2DList();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2DList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.eles && message.eles.length))
-                        message.eles = [];
-                    message.eles.push($root.protos.Polygon2D.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4118,10 +4450,10 @@ $root.protos = (function() {
         /**
          * Decodes a Polygon2DList message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -4134,7 +4466,7 @@ $root.protos = (function() {
         /**
          * Verifies a Polygon2DList message.
          * @function verify
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -4146,7 +4478,7 @@ $root.protos = (function() {
                 if (!Array.isArray(message.eles))
                     return "eles: array expected";
                 for (var i = 0; i < message.eles.length; ++i) {
-                    var error = $root.protos.Polygon2D.verify(message.eles[i]);
+                    var error = $root.sharedprotos.Polygon2D.verify(message.eles[i]);
                     if (error)
                         return "eles." + error;
                 }
@@ -4157,23 +4489,23 @@ $root.protos = (function() {
         /**
          * Creates a Polygon2DList message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          */
         Polygon2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.Polygon2DList)
+            if (object instanceof $root.sharedprotos.Polygon2DList)
                 return object;
-            var message = new $root.protos.Polygon2DList();
+            var message = new $root.sharedprotos.Polygon2DList();
             if (object.eles) {
                 if (!Array.isArray(object.eles))
-                    throw TypeError(".protos.Polygon2DList.eles: array expected");
+                    throw TypeError(".sharedprotos.Polygon2DList.eles: array expected");
                 message.eles = [];
                 for (var i = 0; i < object.eles.length; ++i) {
                     if (typeof object.eles[i] !== "object")
-                        throw TypeError(".protos.Polygon2DList.eles: object expected");
-                    message.eles[i] = $root.protos.Polygon2D.fromObject(object.eles[i]);
+                        throw TypeError(".sharedprotos.Polygon2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Polygon2D.fromObject(object.eles[i]);
                 }
             }
             return message;
@@ -4182,9 +4514,9 @@ $root.protos = (function() {
         /**
          * Creates a plain object from a Polygon2DList message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {protos.Polygon2DList} message Polygon2DList
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -4197,7 +4529,7 @@ $root.protos = (function() {
             if (message.eles && message.eles.length) {
                 object.eles = [];
                 for (var j = 0; j < message.eles.length; ++j)
-                    object.eles[j] = $root.protos.Polygon2D.toObject(message.eles[j], options);
+                    object.eles[j] = $root.sharedprotos.Polygon2D.toObject(message.eles[j], options);
             }
             return object;
         };
@@ -4205,7 +4537,7 @@ $root.protos = (function() {
         /**
          * Converts this Polygon2DList to JSON.
          * @function toJSON
-         * @memberof protos.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -4213,10 +4545,25 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Polygon2DList
+         * @function getTypeUrl
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Polygon2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Polygon2DList";
+        };
+
         return Polygon2DList;
     })();
 
-    return protos;
+    return sharedprotos;
 })();
 
 module.exports = $root;

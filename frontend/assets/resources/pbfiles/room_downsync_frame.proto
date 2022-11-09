@@ -6,8 +6,8 @@ import "geometry.proto"; // The import path here is only w.r.t. the proto file, 
 
 message BattleColliderInfo {
   string stageName = 1;
-  map<string, Vec2DList> strToVec2DListMap = 2; 
-  map<string, Polygon2DList> strToPolygon2DListMap = 3; 
+  map<string, sharedprotos.Vec2DList> strToVec2DListMap = 2; 
+  map<string, sharedprotos.Polygon2DList> strToPolygon2DListMap = 3; 
   int32 stageDiscreteW = 4;
   int32 stageDiscreteH = 5;
   int32 stageTileW = 6;
@@ -31,11 +31,11 @@ message BattleColliderInfo {
   double virtualGridToWorldRatio = 22;
 }
 
-message Player {
+message PlayerDownsync {
   int32 id = 1;
   int32 virtualGridX = 2; 
   int32 virtualGridY = 3; 
-  Direction dir = 4;
+  sharedprotos.Direction dir = 4;
   int32 speed = 5; // in terms of virtual grid units
   int32 battleState = 6;
   int32 lastMoveGmtMillis = 7;
@@ -44,7 +44,7 @@ message Player {
   int32 joinIndex = 12;
 }
 
-message PlayerMeta {
+message PlayerDownsyncMeta {
   int32 id = 1;
   string name = 2;
   string displayName = 3;
@@ -69,9 +69,9 @@ message HeartbeatUpsync {
 
 message RoomDownsyncFrame {
   int32 id = 1;
-  map<int32, Player> players = 2;
+  map<int32, PlayerDownsync> players = 2;
   int64 countdownNanos = 3;
-  map<int32, PlayerMeta> playerMetas = 4;
+  map<int32, PlayerDownsyncMeta> playerMetas = 4;
 }
 
 message WsReq {

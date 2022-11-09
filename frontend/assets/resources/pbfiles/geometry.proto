@@ -1,7 +1,6 @@
 syntax = "proto3";
-option go_package = "dnmshared/protos"; // here "./" corresponds to the "--go_out" value in "protoc" command  
-
-package protos;
+option go_package = "dnmshared/sharedprotos"; // here "./" corresponds to the "--go_out" value in "protoc" command  
+package sharedprotos;
 
 message Direction {
   int32 dx = 1;

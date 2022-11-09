@@ -1,12 +1,12 @@
 package dnmshared
 
 import (
+	. "dnmshared/sharedprotos"
 	"fmt"
 	"github.com/kvartborg/vector"
 	"github.com/solarlune/resolv"
 	"math"
 	"strings"
-	. "dnmshared/protos"
 )
 
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {

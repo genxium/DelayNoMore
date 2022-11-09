@@ -1,11 +1,11 @@
 package models
 
 import (
+	. "battle_srv/common"
+	"battle_srv/common/utils"
 	"database/sql"
 	. "dnmshared"
 	"errors"
-	. "server/common"
-	"server/common/utils"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"

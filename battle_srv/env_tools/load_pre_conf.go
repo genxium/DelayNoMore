@@ -1,15 +1,15 @@
 package env_tools
 
 import (
+	. "battle_srv/common"
+	"battle_srv/common/utils"
+	"battle_srv/models"
+	"battle_srv/storage"
 	. "dnmshared"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
-	. "server/common"
-	"server/common/utils"
-	"server/models"
-	"server/storage"
 )
 
 func LoadPreConf() {
