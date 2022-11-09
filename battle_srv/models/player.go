@@ -34,10 +34,11 @@ func InitPlayerBattleStateIns() {
 
 type Player struct {
 	// Meta info fields
-	Id          int32  `json:"id,omitempty" db:"id"`
-	Name        string `json:"name,omitempty" db:"name"`
-	DisplayName string `json:"displayName,omitempty" db:"display_name"`
-	Avatar      string `json:"avatar,omitempty"`
+	Id             int32   `json:"id,omitempty" db:"id"`
+	Name           string  `json:"name,omitempty" db:"name"`
+	DisplayName    string  `json:"displayName,omitempty" db:"display_name"`
+	Avatar         string  `json:"avatar,omitempty"`
+	ColliderRadius float64 `json:"-"`
 
 	// DB only fields
 	CreatedAt     int64     `db:"created_at"`

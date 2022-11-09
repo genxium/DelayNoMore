@@ -123,12 +123,6 @@ cc.Class({
 
   dumpToRenderCache: function(rdf) {
     const self = this;
-    // round player position to lower precision
-    for (let playerId in rdf.players) {
-      const immediatePlayerInfo = rdf.players[playerId];
-      rdf.players[playerId].x = parseFloat(parseInt(immediatePlayerInfo.x * 100)) / 100.0;
-      rdf.players[playerId].y = parseFloat(parseInt(immediatePlayerInfo.y * 100)) / 100.0;
-    }
     const minToKeepRenderFrameId = self.lastAllConfirmedRenderFrameId;
     while (0 < self.recentRenderCache.cnt && self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
       self.recentRenderCache.pop();
@@ -428,8 +422,10 @@ cc.Class({
       self.rollbackEstimatedDt = parsedBattleColliderInfo.rollbackEstimatedDt;
       self.rollbackEstimatedDtMillis = parsedBattleColliderInfo.rollbackEstimatedDtMillis;
       self.rollbackEstimatedDtNanos = parsedBattleColliderInfo.rollbackEstimatedDtNanos;
-      self.rollbackEstimatedDtToleranceMillis = self.rollbackEstimatedDtMillis / 1000.0;
       self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
+
+      self.worldToVirtualGridRatio = parsedBattleColliderInfo.worldToVirtualGridRatio;
+      self.virtualGridToWorldRatio = parsedBattleColliderInfo.virtualGridToWorldRatio;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -970,11 +966,12 @@ cc.Class({
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       const currentSelfColliderCircle = playerRichInfo.node.getComponent(cc.CircleCollider);
+      const vpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, playerRichInfo);
       const r = currentSelfColliderCircle.radius;
       rdf.players[playerRichInfo.id] = {
         id: playerRichInfo.id,
-        x: playerCollider.x + r, // [WARNING] the (x, y) of "playerCollider" is offset to the anchor (i.e. first point of all points) of the polygon shape
-        y: playerCollider.y + r,
+        virtualGridX: vpos[0],
+        virtualGridY: vpos[1],
         dir: self.ctrl.decodeDirection(null == inputFrameAppliedOnPrevRenderFrame ? 0 : inputFrameAppliedOnPrevRenderFrame.inputList[joinIndex - 1]),
         speed: (null == speedRefRenderFrame ? playerRichInfo.speed : speedRefRenderFrame.players[playerRichInfo.id].speed),
         joinIndex: joinIndex
@@ -1001,12 +998,13 @@ cc.Class({
 
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const immediatePlayerInfo = rdf.players[playerId];
-      const dx = (immediatePlayerInfo.x - playerRichInfo.node.x);
-      const dy = (immediatePlayerInfo.y - playerRichInfo.node.y);
+      const wpos = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
+      const dx = (wpos[0] - playerRichInfo.node.x);
+      const dy = (wpos[1] - playerRichInfo.node.y);
       const justJiggling = (self.teleportEps1D >= Math.abs(dx) && self.teleportEps1D >= Math.abs(dy));
       if (!justJiggling) {
-        console.log("@renderFrameId=" + self.renderFrameId + ", teleporting playerId=" + playerId + ": '(" + playerRichInfo.node.x + ", " + playerRichInfo.node.y, ")' to '(" + immediatePlayerInfo.x + ", " + immediatePlayerInfo.y + ")'");
-        playerRichInfo.node.setPosition(immediatePlayerInfo.x, immediatePlayerInfo.y);
+        console.log("@renderFrameId=" + self.renderFrameId + ", teleporting playerId=" + playerId + ": '(" + playerRichInfo.node.x + ", " + playerRichInfo.node.y, ")' to '(" + wpos[0] + ", " + wpos[1] + ")'");
+        playerRichInfo.node.setPosition(wpos[0], wpos[1]);
       }
       playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
@@ -1046,10 +1044,9 @@ cc.Class({
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       const player = latestRdf.players[playerId];
 
-      const currentSelfColliderCircle = playerRichInfo.node.getComponent(cc.CircleCollider);
-      const r = currentSelfColliderCircle.radius;
-      playerCollider.x = player.x - r;
-      playerCollider.y = player.y - r;
+      const cpos = self.worldToVirtualGridPos(player.virtualGridX, player.virtualGridY);
+      playerCollider.x = cpos[0];
+      playerCollider.y = cpos[1];
     });
 
     /*
@@ -1072,7 +1069,7 @@ cc.Class({
         const player = renderFrame.players[playerId];
         const encodedInput = inputList[joinIndex - 1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
-        const baseChange = player.speed * self.rollbackEstimatedDt * decodedInput.speedFactor;
+        const baseChange = player.speed * decodedInput.speedFactor;
         playerCollider.x += baseChange * decodedInput.dx;
         playerCollider.y += baseChange * decodedInput.dy;
       }
@@ -1115,6 +1112,8 @@ cc.Class({
         scriptIns: nodeAndScriptIns[1]
       });
 
+      Object.assign(self.playerRichInfoDict.get(playerId), immediatePlayerMeta);
+
       if (self.selfPlayerInfo.id == playerId) {
         self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
         nodeAndScriptIns[1].showArrowTipNode();
@@ -1152,4 +1151,38 @@ cc.Class({
     return "[stRenderFrameId=" + self.recentRenderCache.stFrameId + ", edRenderFrameId=" + self.recentRenderCache.edFrameId + ")";
   },
 
+  worldToVirtualGridPos(x, y) {
+    const self = this;
+    // In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
+    let virtualGridX = parseInt(x * self.worldToVirtualGridRatio);
+    let virtualGridY = parseInt(y * self.worldToVirtualGridRatio);
+    return [virtualGridX, virtualGridY];
+  },
+
+  virtualGridToWorldPos(vx, vy) {
+    const self = this;
+    let wx = parseFloat(vx) * self.virtualGridToWorldRatio;
+    let wy = parseFloat(vy) * self.virtualGridToWorldRatio;
+    return [wx, wy];
+  },
+
+  playerWorldToCollisionPos(wx, wy, playerRichInfo) {
+    return [wx - playerRichInfo.colliderRadius, wy - playerRichInfo.colliderRadius];
+  },
+
+  playerColliderAnchorToWorldPos(cx, cy, playerRichInfo) {
+    return [cx + playerRichInfo.colliderRadius, cy + playerRichInfo.colliderRadius];
+  },
+
+  playerColliderAnchorToVirtualGridPos(cx, cy, playerRichInfo) {
+    const self = this;
+    const wpos = self.playerColliderAnchorToWorldPos(cx, cy, playerRichInfo);
+    return pR.worldToVirtualGridPos(wpos[0], wpos[1])
+  },
+
+  virtualGridToPlayerColliderPos(vx, vy, playerRichInfo) {
+    const self = this;
+    const wpos = self.virtualGridToWorldPos(vx, vy);
+    return playerWorldToCollisionPos(wpos[0], wpos[1], playerRichInfo)
+  },
 });

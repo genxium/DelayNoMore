@@ -22,6 +22,8 @@ js_outdir=$js_basedir/assets/scripts/modules
 # npm install -g protobufjs-cli 
 
 # The specific filename is respected by "frontend/build-templates/wechatgame/game.js".
-pbjs -t static-module -w commonjs --keep-case --force-message -o $js_outdir/room_downsync_frame_proto_bundle.forcemsg.js $js_basedir/assets/resources/pbfiles/room_downsync_frame.proto
+pbjs -t static-module -w commonjs --keep-case --force-message -o $js_outdir/room_downsync_frame_proto_bundle.forcemsg.js $js_basedir/assets/resources/pbfiles/geometry.proto $js_basedir/assets/resources/pbfiles/room_downsync_frame.proto
+
+sed -i 's#require("protobufjs/minimal")#require("./protobuf-with-floating-num-decoding-endianess-toggle")#g' $js_outdir/room_downsync_frame_proto_bundle.forcemsg.js # Not working in OSX, needs further investigation
 
 echo "JavaScript part done"

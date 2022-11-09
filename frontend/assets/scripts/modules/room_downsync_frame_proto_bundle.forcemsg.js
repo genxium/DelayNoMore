@@ -1,13 +1,1180 @@
 /*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
 "use strict";
 
-var $protobuf = require("protobufjs/minimal");
+var $protobuf = require("./protobuf-with-floating-num-decoding-endianess-toggle");
 
 // Common aliases
 var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
 
 // Exported root namespace
 var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
+
+$root.sharedprotos = (function() {
+
+    /**
+     * Namespace sharedprotos.
+     * @exports sharedprotos
+     * @namespace
+     */
+    var sharedprotos = {};
+
+    sharedprotos.Direction = (function() {
+
+        /**
+         * Properties of a Direction.
+         * @memberof sharedprotos
+         * @interface IDirection
+         * @property {number|null} [dx] Direction dx
+         * @property {number|null} [dy] Direction dy
+         */
+
+        /**
+         * Constructs a new Direction.
+         * @memberof sharedprotos
+         * @classdesc Represents a Direction.
+         * @implements IDirection
+         * @constructor
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
+         */
+        function Direction(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Direction dx.
+         * @member {number} dx
+         * @memberof sharedprotos.Direction
+         * @instance
+         */
+        Direction.prototype.dx = 0;
+
+        /**
+         * Direction dy.
+         * @member {number} dy
+         * @memberof sharedprotos.Direction
+         * @instance
+         */
+        Direction.prototype.dy = 0;
+
+        /**
+         * Creates a new Direction instance using the specified properties.
+         * @function create
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
+         * @returns {sharedprotos.Direction} Direction instance
+         */
+        Direction.create = function create(properties) {
+            return new Direction(properties);
+        };
+
+        /**
+         * Encodes the specified Direction message. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
+         * @function encode
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Direction.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.dx != null && Object.hasOwnProperty.call(message, "dx"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.dx);
+            if (message.dy != null && Object.hasOwnProperty.call(message, "dy"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.dy);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Direction message, length delimited. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Direction.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Direction message from the specified reader or buffer.
+         * @function decode
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {sharedprotos.Direction} Direction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Direction.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Direction();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.dx = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.dy = reader.int32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Direction message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {sharedprotos.Direction} Direction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Direction.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Direction message.
+         * @function verify
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Direction.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.dx != null && message.hasOwnProperty("dx"))
+                if (!$util.isInteger(message.dx))
+                    return "dx: integer expected";
+            if (message.dy != null && message.hasOwnProperty("dy"))
+                if (!$util.isInteger(message.dy))
+                    return "dy: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a Direction message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {sharedprotos.Direction} Direction
+         */
+        Direction.fromObject = function fromObject(object) {
+            if (object instanceof $root.sharedprotos.Direction)
+                return object;
+            var message = new $root.sharedprotos.Direction();
+            if (object.dx != null)
+                message.dx = object.dx | 0;
+            if (object.dy != null)
+                message.dy = object.dy | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Direction message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {sharedprotos.Direction} message Direction
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Direction.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.dx = 0;
+                object.dy = 0;
+            }
+            if (message.dx != null && message.hasOwnProperty("dx"))
+                object.dx = message.dx;
+            if (message.dy != null && message.hasOwnProperty("dy"))
+                object.dy = message.dy;
+            return object;
+        };
+
+        /**
+         * Converts this Direction to JSON.
+         * @function toJSON
+         * @memberof sharedprotos.Direction
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Direction.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Direction
+         * @function getTypeUrl
+         * @memberof sharedprotos.Direction
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Direction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Direction";
+        };
+
+        return Direction;
+    })();
+
+    sharedprotos.Vec2D = (function() {
+
+        /**
+         * Properties of a Vec2D.
+         * @memberof sharedprotos
+         * @interface IVec2D
+         * @property {number|null} [x] Vec2D x
+         * @property {number|null} [y] Vec2D y
+         */
+
+        /**
+         * Constructs a new Vec2D.
+         * @memberof sharedprotos
+         * @classdesc Represents a Vec2D.
+         * @implements IVec2D
+         * @constructor
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
+         */
+        function Vec2D(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Vec2D x.
+         * @member {number} x
+         * @memberof sharedprotos.Vec2D
+         * @instance
+         */
+        Vec2D.prototype.x = 0;
+
+        /**
+         * Vec2D y.
+         * @member {number} y
+         * @memberof sharedprotos.Vec2D
+         * @instance
+         */
+        Vec2D.prototype.y = 0;
+
+        /**
+         * Creates a new Vec2D instance using the specified properties.
+         * @function create
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2D} Vec2D instance
+         */
+        Vec2D.create = function create(properties) {
+            return new Vec2D(properties);
+        };
+
+        /**
+         * Encodes the specified Vec2D message. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
+         * @function encode
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Vec2D.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
+            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Vec2D.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Vec2D message from the specified reader or buffer.
+         * @function decode
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {sharedprotos.Vec2D} Vec2D
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Vec2D.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2D();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.x = reader.double();
+                        break;
+                    }
+                case 2: {
+                        message.y = reader.double();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Vec2D message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {sharedprotos.Vec2D} Vec2D
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Vec2D.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Vec2D message.
+         * @function verify
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Vec2D.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.x != null && message.hasOwnProperty("x"))
+                if (typeof message.x !== "number")
+                    return "x: number expected";
+            if (message.y != null && message.hasOwnProperty("y"))
+                if (typeof message.y !== "number")
+                    return "y: number expected";
+            return null;
+        };
+
+        /**
+         * Creates a Vec2D message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {sharedprotos.Vec2D} Vec2D
+         */
+        Vec2D.fromObject = function fromObject(object) {
+            if (object instanceof $root.sharedprotos.Vec2D)
+                return object;
+            var message = new $root.sharedprotos.Vec2D();
+            if (object.x != null)
+                message.x = Number(object.x);
+            if (object.y != null)
+                message.y = Number(object.y);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Vec2D message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {sharedprotos.Vec2D} message Vec2D
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Vec2D.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.x = 0;
+                object.y = 0;
+            }
+            if (message.x != null && message.hasOwnProperty("x"))
+                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
+            if (message.y != null && message.hasOwnProperty("y"))
+                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
+            return object;
+        };
+
+        /**
+         * Converts this Vec2D to JSON.
+         * @function toJSON
+         * @memberof sharedprotos.Vec2D
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Vec2D.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Vec2D
+         * @function getTypeUrl
+         * @memberof sharedprotos.Vec2D
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Vec2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Vec2D";
+        };
+
+        return Vec2D;
+    })();
+
+    sharedprotos.Polygon2D = (function() {
+
+        /**
+         * Properties of a Polygon2D.
+         * @memberof sharedprotos
+         * @interface IPolygon2D
+         * @property {sharedprotos.Vec2D|null} [anchor] Polygon2D anchor
+         * @property {Array.<sharedprotos.Vec2D>|null} [points] Polygon2D points
+         */
+
+        /**
+         * Constructs a new Polygon2D.
+         * @memberof sharedprotos
+         * @classdesc Represents a Polygon2D.
+         * @implements IPolygon2D
+         * @constructor
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
+         */
+        function Polygon2D(properties) {
+            this.points = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Polygon2D anchor.
+         * @member {sharedprotos.Vec2D|null|undefined} anchor
+         * @memberof sharedprotos.Polygon2D
+         * @instance
+         */
+        Polygon2D.prototype.anchor = null;
+
+        /**
+         * Polygon2D points.
+         * @member {Array.<sharedprotos.Vec2D>} points
+         * @memberof sharedprotos.Polygon2D
+         * @instance
+         */
+        Polygon2D.prototype.points = $util.emptyArray;
+
+        /**
+         * Creates a new Polygon2D instance using the specified properties.
+         * @function create
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2D} Polygon2D instance
+         */
+        Polygon2D.create = function create(properties) {
+            return new Polygon2D(properties);
+        };
+
+        /**
+         * Encodes the specified Polygon2D message. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
+         * @function encode
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Polygon2D.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.anchor != null && Object.hasOwnProperty.call(message, "anchor"))
+                $root.sharedprotos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.points != null && message.points.length)
+                for (var i = 0; i < message.points.length; ++i)
+                    $root.sharedprotos.Vec2D.encode(message.points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Polygon2D.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Polygon2D message from the specified reader or buffer.
+         * @function decode
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {sharedprotos.Polygon2D} Polygon2D
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Polygon2D.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2D();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        if (!(message.points && message.points.length))
+                            message.points = [];
+                        message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Polygon2D message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {sharedprotos.Polygon2D} Polygon2D
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Polygon2D.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Polygon2D message.
+         * @function verify
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Polygon2D.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.anchor != null && message.hasOwnProperty("anchor")) {
+                var error = $root.sharedprotos.Vec2D.verify(message.anchor);
+                if (error)
+                    return "anchor." + error;
+            }
+            if (message.points != null && message.hasOwnProperty("points")) {
+                if (!Array.isArray(message.points))
+                    return "points: array expected";
+                for (var i = 0; i < message.points.length; ++i) {
+                    var error = $root.sharedprotos.Vec2D.verify(message.points[i]);
+                    if (error)
+                        return "points." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Polygon2D message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {sharedprotos.Polygon2D} Polygon2D
+         */
+        Polygon2D.fromObject = function fromObject(object) {
+            if (object instanceof $root.sharedprotos.Polygon2D)
+                return object;
+            var message = new $root.sharedprotos.Polygon2D();
+            if (object.anchor != null) {
+                if (typeof object.anchor !== "object")
+                    throw TypeError(".sharedprotos.Polygon2D.anchor: object expected");
+                message.anchor = $root.sharedprotos.Vec2D.fromObject(object.anchor);
+            }
+            if (object.points) {
+                if (!Array.isArray(object.points))
+                    throw TypeError(".sharedprotos.Polygon2D.points: array expected");
+                message.points = [];
+                for (var i = 0; i < object.points.length; ++i) {
+                    if (typeof object.points[i] !== "object")
+                        throw TypeError(".sharedprotos.Polygon2D.points: object expected");
+                    message.points[i] = $root.sharedprotos.Vec2D.fromObject(object.points[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Polygon2D message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {sharedprotos.Polygon2D} message Polygon2D
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Polygon2D.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.points = [];
+            if (options.defaults)
+                object.anchor = null;
+            if (message.anchor != null && message.hasOwnProperty("anchor"))
+                object.anchor = $root.sharedprotos.Vec2D.toObject(message.anchor, options);
+            if (message.points && message.points.length) {
+                object.points = [];
+                for (var j = 0; j < message.points.length; ++j)
+                    object.points[j] = $root.sharedprotos.Vec2D.toObject(message.points[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Polygon2D to JSON.
+         * @function toJSON
+         * @memberof sharedprotos.Polygon2D
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Polygon2D.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Polygon2D
+         * @function getTypeUrl
+         * @memberof sharedprotos.Polygon2D
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Polygon2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Polygon2D";
+        };
+
+        return Polygon2D;
+    })();
+
+    sharedprotos.Vec2DList = (function() {
+
+        /**
+         * Properties of a Vec2DList.
+         * @memberof sharedprotos
+         * @interface IVec2DList
+         * @property {Array.<sharedprotos.Vec2D>|null} [eles] Vec2DList eles
+         */
+
+        /**
+         * Constructs a new Vec2DList.
+         * @memberof sharedprotos
+         * @classdesc Represents a Vec2DList.
+         * @implements IVec2DList
+         * @constructor
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
+         */
+        function Vec2DList(properties) {
+            this.eles = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Vec2DList eles.
+         * @member {Array.<sharedprotos.Vec2D>} eles
+         * @memberof sharedprotos.Vec2DList
+         * @instance
+         */
+        Vec2DList.prototype.eles = $util.emptyArray;
+
+        /**
+         * Creates a new Vec2DList instance using the specified properties.
+         * @function create
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2DList} Vec2DList instance
+         */
+        Vec2DList.create = function create(properties) {
+            return new Vec2DList(properties);
+        };
+
+        /**
+         * Encodes the specified Vec2DList message. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
+         * @function encode
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Vec2DList.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.eles != null && message.eles.length)
+                for (var i = 0; i < message.eles.length; ++i)
+                    $root.sharedprotos.Vec2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Vec2DList.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Vec2DList message from the specified reader or buffer.
+         * @function decode
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {sharedprotos.Vec2DList} Vec2DList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Vec2DList.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2DList();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Vec2DList message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {sharedprotos.Vec2DList} Vec2DList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Vec2DList.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Vec2DList message.
+         * @function verify
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Vec2DList.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.eles != null && message.hasOwnProperty("eles")) {
+                if (!Array.isArray(message.eles))
+                    return "eles: array expected";
+                for (var i = 0; i < message.eles.length; ++i) {
+                    var error = $root.sharedprotos.Vec2D.verify(message.eles[i]);
+                    if (error)
+                        return "eles." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Vec2DList message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {sharedprotos.Vec2DList} Vec2DList
+         */
+        Vec2DList.fromObject = function fromObject(object) {
+            if (object instanceof $root.sharedprotos.Vec2DList)
+                return object;
+            var message = new $root.sharedprotos.Vec2DList();
+            if (object.eles) {
+                if (!Array.isArray(object.eles))
+                    throw TypeError(".sharedprotos.Vec2DList.eles: array expected");
+                message.eles = [];
+                for (var i = 0; i < object.eles.length; ++i) {
+                    if (typeof object.eles[i] !== "object")
+                        throw TypeError(".sharedprotos.Vec2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Vec2D.fromObject(object.eles[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Vec2DList message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {sharedprotos.Vec2DList} message Vec2DList
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Vec2DList.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.eles = [];
+            if (message.eles && message.eles.length) {
+                object.eles = [];
+                for (var j = 0; j < message.eles.length; ++j)
+                    object.eles[j] = $root.sharedprotos.Vec2D.toObject(message.eles[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Vec2DList to JSON.
+         * @function toJSON
+         * @memberof sharedprotos.Vec2DList
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Vec2DList.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Vec2DList
+         * @function getTypeUrl
+         * @memberof sharedprotos.Vec2DList
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Vec2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Vec2DList";
+        };
+
+        return Vec2DList;
+    })();
+
+    sharedprotos.Polygon2DList = (function() {
+
+        /**
+         * Properties of a Polygon2DList.
+         * @memberof sharedprotos
+         * @interface IPolygon2DList
+         * @property {Array.<sharedprotos.Polygon2D>|null} [eles] Polygon2DList eles
+         */
+
+        /**
+         * Constructs a new Polygon2DList.
+         * @memberof sharedprotos
+         * @classdesc Represents a Polygon2DList.
+         * @implements IPolygon2DList
+         * @constructor
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
+         */
+        function Polygon2DList(properties) {
+            this.eles = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Polygon2DList eles.
+         * @member {Array.<sharedprotos.Polygon2D>} eles
+         * @memberof sharedprotos.Polygon2DList
+         * @instance
+         */
+        Polygon2DList.prototype.eles = $util.emptyArray;
+
+        /**
+         * Creates a new Polygon2DList instance using the specified properties.
+         * @function create
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList instance
+         */
+        Polygon2DList.create = function create(properties) {
+            return new Polygon2DList(properties);
+        };
+
+        /**
+         * Encodes the specified Polygon2DList message. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
+         * @function encode
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Polygon2DList.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.eles != null && message.eles.length)
+                for (var i = 0; i < message.eles.length; ++i)
+                    $root.sharedprotos.Polygon2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Polygon2DList.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Polygon2DList message from the specified reader or buffer.
+         * @function decode
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Polygon2DList.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2DList();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Polygon2DList message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Polygon2DList.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Polygon2DList message.
+         * @function verify
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Polygon2DList.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.eles != null && message.hasOwnProperty("eles")) {
+                if (!Array.isArray(message.eles))
+                    return "eles: array expected";
+                for (var i = 0; i < message.eles.length; ++i) {
+                    var error = $root.sharedprotos.Polygon2D.verify(message.eles[i]);
+                    if (error)
+                        return "eles." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Polygon2DList message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
+         */
+        Polygon2DList.fromObject = function fromObject(object) {
+            if (object instanceof $root.sharedprotos.Polygon2DList)
+                return object;
+            var message = new $root.sharedprotos.Polygon2DList();
+            if (object.eles) {
+                if (!Array.isArray(object.eles))
+                    throw TypeError(".sharedprotos.Polygon2DList.eles: array expected");
+                message.eles = [];
+                for (var i = 0; i < object.eles.length; ++i) {
+                    if (typeof object.eles[i] !== "object")
+                        throw TypeError(".sharedprotos.Polygon2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Polygon2D.fromObject(object.eles[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Polygon2DList message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Polygon2DList.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.eles = [];
+            if (message.eles && message.eles.length) {
+                object.eles = [];
+                for (var j = 0; j < message.eles.length; ++j)
+                    object.eles[j] = $root.sharedprotos.Polygon2D.toObject(message.eles[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Polygon2DList to JSON.
+         * @function toJSON
+         * @memberof sharedprotos.Polygon2DList
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Polygon2DList.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Polygon2DList
+         * @function getTypeUrl
+         * @memberof sharedprotos.Polygon2DList
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Polygon2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/sharedprotos.Polygon2DList";
+        };
+
+        return Polygon2DList;
+    })();
+
+    return sharedprotos;
+})();
 
 $root.protos = (function() {
 
@@ -1245,6 +2412,7 @@ $root.protos = (function() {
          * @property {string|null} [displayName] PlayerDownsyncMeta displayName
          * @property {string|null} [avatar] PlayerDownsyncMeta avatar
          * @property {number|null} [joinIndex] PlayerDownsyncMeta joinIndex
+         * @property {number|null} [colliderRadius] PlayerDownsyncMeta colliderRadius
          */
 
         /**
@@ -1303,6 +2471,14 @@ $root.protos = (function() {
         PlayerDownsyncMeta.prototype.joinIndex = 0;
 
         /**
+         * PlayerDownsyncMeta colliderRadius.
+         * @member {number} colliderRadius
+         * @memberof protos.PlayerDownsyncMeta
+         * @instance
+         */
+        PlayerDownsyncMeta.prototype.colliderRadius = 0;
+
+        /**
          * Creates a new PlayerDownsyncMeta instance using the specified properties.
          * @function create
          * @memberof protos.PlayerDownsyncMeta
@@ -1336,6 +2512,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatar);
             if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.joinIndex);
+            if (message.colliderRadius != null && Object.hasOwnProperty.call(message, "colliderRadius"))
+                writer.uint32(/* id 6, wireType 1 =*/49).double(message.colliderRadius);
             return writer;
         };
 
@@ -1390,6 +2568,10 @@ $root.protos = (function() {
                         message.joinIndex = reader.int32();
                         break;
                     }
+                case 6: {
+                        message.colliderRadius = reader.double();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1440,6 +2622,9 @@ $root.protos = (function() {
             if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 if (!$util.isInteger(message.joinIndex))
                     return "joinIndex: integer expected";
+            if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
+                if (typeof message.colliderRadius !== "number")
+                    return "colliderRadius: number expected";
             return null;
         };
 
@@ -1465,6 +2650,8 @@ $root.protos = (function() {
                 message.avatar = String(object.avatar);
             if (object.joinIndex != null)
                 message.joinIndex = object.joinIndex | 0;
+            if (object.colliderRadius != null)
+                message.colliderRadius = Number(object.colliderRadius);
             return message;
         };
 
@@ -1487,6 +2674,7 @@ $root.protos = (function() {
                 object.displayName = "";
                 object.avatar = "";
                 object.joinIndex = 0;
+                object.colliderRadius = 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -1498,6 +2686,8 @@ $root.protos = (function() {
                 object.avatar = message.avatar;
             if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 object.joinIndex = message.joinIndex;
+            if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
+                object.colliderRadius = options.json && !isFinite(message.colliderRadius) ? String(message.colliderRadius) : message.colliderRadius;
             return object;
         };
 
@@ -3397,1173 +4587,6 @@ $root.protos = (function() {
     })();
 
     return protos;
-})();
-
-$root.sharedprotos = (function() {
-
-    /**
-     * Namespace sharedprotos.
-     * @exports sharedprotos
-     * @namespace
-     */
-    var sharedprotos = {};
-
-    sharedprotos.Direction = (function() {
-
-        /**
-         * Properties of a Direction.
-         * @memberof sharedprotos
-         * @interface IDirection
-         * @property {number|null} [dx] Direction dx
-         * @property {number|null} [dy] Direction dy
-         */
-
-        /**
-         * Constructs a new Direction.
-         * @memberof sharedprotos
-         * @classdesc Represents a Direction.
-         * @implements IDirection
-         * @constructor
-         * @param {sharedprotos.IDirection=} [properties] Properties to set
-         */
-        function Direction(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Direction dx.
-         * @member {number} dx
-         * @memberof sharedprotos.Direction
-         * @instance
-         */
-        Direction.prototype.dx = 0;
-
-        /**
-         * Direction dy.
-         * @member {number} dy
-         * @memberof sharedprotos.Direction
-         * @instance
-         */
-        Direction.prototype.dy = 0;
-
-        /**
-         * Creates a new Direction instance using the specified properties.
-         * @function create
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {sharedprotos.IDirection=} [properties] Properties to set
-         * @returns {sharedprotos.Direction} Direction instance
-         */
-        Direction.create = function create(properties) {
-            return new Direction(properties);
-        };
-
-        /**
-         * Encodes the specified Direction message. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
-         * @function encode
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {sharedprotos.Direction} message Direction message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Direction.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.dx != null && Object.hasOwnProperty.call(message, "dx"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.dx);
-            if (message.dy != null && Object.hasOwnProperty.call(message, "dy"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.dy);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Direction message, length delimited. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {sharedprotos.Direction} message Direction message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Direction.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Direction message from the specified reader or buffer.
-         * @function decode
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {sharedprotos.Direction} Direction
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Direction.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Direction();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.dx = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.dy = reader.int32();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Direction message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {sharedprotos.Direction} Direction
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Direction.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Direction message.
-         * @function verify
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Direction.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.dx != null && message.hasOwnProperty("dx"))
-                if (!$util.isInteger(message.dx))
-                    return "dx: integer expected";
-            if (message.dy != null && message.hasOwnProperty("dy"))
-                if (!$util.isInteger(message.dy))
-                    return "dy: integer expected";
-            return null;
-        };
-
-        /**
-         * Creates a Direction message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {sharedprotos.Direction} Direction
-         */
-        Direction.fromObject = function fromObject(object) {
-            if (object instanceof $root.sharedprotos.Direction)
-                return object;
-            var message = new $root.sharedprotos.Direction();
-            if (object.dx != null)
-                message.dx = object.dx | 0;
-            if (object.dy != null)
-                message.dy = object.dy | 0;
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Direction message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {sharedprotos.Direction} message Direction
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Direction.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.dx = 0;
-                object.dy = 0;
-            }
-            if (message.dx != null && message.hasOwnProperty("dx"))
-                object.dx = message.dx;
-            if (message.dy != null && message.hasOwnProperty("dy"))
-                object.dy = message.dy;
-            return object;
-        };
-
-        /**
-         * Converts this Direction to JSON.
-         * @function toJSON
-         * @memberof sharedprotos.Direction
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Direction.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Direction
-         * @function getTypeUrl
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Direction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Direction";
-        };
-
-        return Direction;
-    })();
-
-    sharedprotos.Vec2D = (function() {
-
-        /**
-         * Properties of a Vec2D.
-         * @memberof sharedprotos
-         * @interface IVec2D
-         * @property {number|null} [x] Vec2D x
-         * @property {number|null} [y] Vec2D y
-         */
-
-        /**
-         * Constructs a new Vec2D.
-         * @memberof sharedprotos
-         * @classdesc Represents a Vec2D.
-         * @implements IVec2D
-         * @constructor
-         * @param {sharedprotos.IVec2D=} [properties] Properties to set
-         */
-        function Vec2D(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Vec2D x.
-         * @member {number} x
-         * @memberof sharedprotos.Vec2D
-         * @instance
-         */
-        Vec2D.prototype.x = 0;
-
-        /**
-         * Vec2D y.
-         * @member {number} y
-         * @memberof sharedprotos.Vec2D
-         * @instance
-         */
-        Vec2D.prototype.y = 0;
-
-        /**
-         * Creates a new Vec2D instance using the specified properties.
-         * @function create
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {sharedprotos.IVec2D=} [properties] Properties to set
-         * @returns {sharedprotos.Vec2D} Vec2D instance
-         */
-        Vec2D.create = function create(properties) {
-            return new Vec2D(properties);
-        };
-
-        /**
-         * Encodes the specified Vec2D message. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
-         * @function encode
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Vec2D.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Vec2D.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Vec2D message from the specified reader or buffer.
-         * @function decode
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {sharedprotos.Vec2D} Vec2D
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Vec2D.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2D();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 2: {
-                        message.y = reader.double();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Vec2D message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {sharedprotos.Vec2D} Vec2D
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Vec2D.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Vec2D message.
-         * @function verify
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Vec2D.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
-            return null;
-        };
-
-        /**
-         * Creates a Vec2D message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {sharedprotos.Vec2D} Vec2D
-         */
-        Vec2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.sharedprotos.Vec2D)
-                return object;
-            var message = new $root.sharedprotos.Vec2D();
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Vec2D message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {sharedprotos.Vec2D} message Vec2D
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Vec2D.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.x = 0;
-                object.y = 0;
-            }
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
-            return object;
-        };
-
-        /**
-         * Converts this Vec2D to JSON.
-         * @function toJSON
-         * @memberof sharedprotos.Vec2D
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Vec2D.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Vec2D
-         * @function getTypeUrl
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Vec2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Vec2D";
-        };
-
-        return Vec2D;
-    })();
-
-    sharedprotos.Polygon2D = (function() {
-
-        /**
-         * Properties of a Polygon2D.
-         * @memberof sharedprotos
-         * @interface IPolygon2D
-         * @property {sharedprotos.Vec2D|null} [anchor] Polygon2D anchor
-         * @property {Array.<sharedprotos.Vec2D>|null} [points] Polygon2D points
-         */
-
-        /**
-         * Constructs a new Polygon2D.
-         * @memberof sharedprotos
-         * @classdesc Represents a Polygon2D.
-         * @implements IPolygon2D
-         * @constructor
-         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
-         */
-        function Polygon2D(properties) {
-            this.points = [];
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Polygon2D anchor.
-         * @member {sharedprotos.Vec2D|null|undefined} anchor
-         * @memberof sharedprotos.Polygon2D
-         * @instance
-         */
-        Polygon2D.prototype.anchor = null;
-
-        /**
-         * Polygon2D points.
-         * @member {Array.<sharedprotos.Vec2D>} points
-         * @memberof sharedprotos.Polygon2D
-         * @instance
-         */
-        Polygon2D.prototype.points = $util.emptyArray;
-
-        /**
-         * Creates a new Polygon2D instance using the specified properties.
-         * @function create
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
-         * @returns {sharedprotos.Polygon2D} Polygon2D instance
-         */
-        Polygon2D.create = function create(properties) {
-            return new Polygon2D(properties);
-        };
-
-        /**
-         * Encodes the specified Polygon2D message. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
-         * @function encode
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Polygon2D.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.anchor != null && Object.hasOwnProperty.call(message, "anchor"))
-                $root.sharedprotos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.points != null && message.points.length)
-                for (var i = 0; i < message.points.length; ++i)
-                    $root.sharedprotos.Vec2D.encode(message.points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Polygon2D.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Polygon2D message from the specified reader or buffer.
-         * @function decode
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {sharedprotos.Polygon2D} Polygon2D
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Polygon2D.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2D();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 2: {
-                        if (!(message.points && message.points.length))
-                            message.points = [];
-                        message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Polygon2D message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {sharedprotos.Polygon2D} Polygon2D
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Polygon2D.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Polygon2D message.
-         * @function verify
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Polygon2D.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.anchor != null && message.hasOwnProperty("anchor")) {
-                var error = $root.sharedprotos.Vec2D.verify(message.anchor);
-                if (error)
-                    return "anchor." + error;
-            }
-            if (message.points != null && message.hasOwnProperty("points")) {
-                if (!Array.isArray(message.points))
-                    return "points: array expected";
-                for (var i = 0; i < message.points.length; ++i) {
-                    var error = $root.sharedprotos.Vec2D.verify(message.points[i]);
-                    if (error)
-                        return "points." + error;
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a Polygon2D message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {sharedprotos.Polygon2D} Polygon2D
-         */
-        Polygon2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.sharedprotos.Polygon2D)
-                return object;
-            var message = new $root.sharedprotos.Polygon2D();
-            if (object.anchor != null) {
-                if (typeof object.anchor !== "object")
-                    throw TypeError(".sharedprotos.Polygon2D.anchor: object expected");
-                message.anchor = $root.sharedprotos.Vec2D.fromObject(object.anchor);
-            }
-            if (object.points) {
-                if (!Array.isArray(object.points))
-                    throw TypeError(".sharedprotos.Polygon2D.points: array expected");
-                message.points = [];
-                for (var i = 0; i < object.points.length; ++i) {
-                    if (typeof object.points[i] !== "object")
-                        throw TypeError(".sharedprotos.Polygon2D.points: object expected");
-                    message.points[i] = $root.sharedprotos.Vec2D.fromObject(object.points[i]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Polygon2D message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {sharedprotos.Polygon2D} message Polygon2D
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Polygon2D.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.arrays || options.defaults)
-                object.points = [];
-            if (options.defaults)
-                object.anchor = null;
-            if (message.anchor != null && message.hasOwnProperty("anchor"))
-                object.anchor = $root.sharedprotos.Vec2D.toObject(message.anchor, options);
-            if (message.points && message.points.length) {
-                object.points = [];
-                for (var j = 0; j < message.points.length; ++j)
-                    object.points[j] = $root.sharedprotos.Vec2D.toObject(message.points[j], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this Polygon2D to JSON.
-         * @function toJSON
-         * @memberof sharedprotos.Polygon2D
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Polygon2D.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Polygon2D
-         * @function getTypeUrl
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Polygon2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Polygon2D";
-        };
-
-        return Polygon2D;
-    })();
-
-    sharedprotos.Vec2DList = (function() {
-
-        /**
-         * Properties of a Vec2DList.
-         * @memberof sharedprotos
-         * @interface IVec2DList
-         * @property {Array.<sharedprotos.Vec2D>|null} [eles] Vec2DList eles
-         */
-
-        /**
-         * Constructs a new Vec2DList.
-         * @memberof sharedprotos
-         * @classdesc Represents a Vec2DList.
-         * @implements IVec2DList
-         * @constructor
-         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
-         */
-        function Vec2DList(properties) {
-            this.eles = [];
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Vec2DList eles.
-         * @member {Array.<sharedprotos.Vec2D>} eles
-         * @memberof sharedprotos.Vec2DList
-         * @instance
-         */
-        Vec2DList.prototype.eles = $util.emptyArray;
-
-        /**
-         * Creates a new Vec2DList instance using the specified properties.
-         * @function create
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
-         * @returns {sharedprotos.Vec2DList} Vec2DList instance
-         */
-        Vec2DList.create = function create(properties) {
-            return new Vec2DList(properties);
-        };
-
-        /**
-         * Encodes the specified Vec2DList message. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
-         * @function encode
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Vec2DList.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.eles != null && message.eles.length)
-                for (var i = 0; i < message.eles.length; ++i)
-                    $root.sharedprotos.Vec2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Vec2DList.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Vec2DList message from the specified reader or buffer.
-         * @function decode
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {sharedprotos.Vec2DList} Vec2DList
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Vec2DList.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2DList();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        if (!(message.eles && message.eles.length))
-                            message.eles = [];
-                        message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Vec2DList message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {sharedprotos.Vec2DList} Vec2DList
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Vec2DList.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Vec2DList message.
-         * @function verify
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Vec2DList.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.eles != null && message.hasOwnProperty("eles")) {
-                if (!Array.isArray(message.eles))
-                    return "eles: array expected";
-                for (var i = 0; i < message.eles.length; ++i) {
-                    var error = $root.sharedprotos.Vec2D.verify(message.eles[i]);
-                    if (error)
-                        return "eles." + error;
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a Vec2DList message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {sharedprotos.Vec2DList} Vec2DList
-         */
-        Vec2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.sharedprotos.Vec2DList)
-                return object;
-            var message = new $root.sharedprotos.Vec2DList();
-            if (object.eles) {
-                if (!Array.isArray(object.eles))
-                    throw TypeError(".sharedprotos.Vec2DList.eles: array expected");
-                message.eles = [];
-                for (var i = 0; i < object.eles.length; ++i) {
-                    if (typeof object.eles[i] !== "object")
-                        throw TypeError(".sharedprotos.Vec2DList.eles: object expected");
-                    message.eles[i] = $root.sharedprotos.Vec2D.fromObject(object.eles[i]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Vec2DList message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {sharedprotos.Vec2DList} message Vec2DList
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Vec2DList.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.arrays || options.defaults)
-                object.eles = [];
-            if (message.eles && message.eles.length) {
-                object.eles = [];
-                for (var j = 0; j < message.eles.length; ++j)
-                    object.eles[j] = $root.sharedprotos.Vec2D.toObject(message.eles[j], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this Vec2DList to JSON.
-         * @function toJSON
-         * @memberof sharedprotos.Vec2DList
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Vec2DList.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Vec2DList
-         * @function getTypeUrl
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Vec2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Vec2DList";
-        };
-
-        return Vec2DList;
-    })();
-
-    sharedprotos.Polygon2DList = (function() {
-
-        /**
-         * Properties of a Polygon2DList.
-         * @memberof sharedprotos
-         * @interface IPolygon2DList
-         * @property {Array.<sharedprotos.Polygon2D>|null} [eles] Polygon2DList eles
-         */
-
-        /**
-         * Constructs a new Polygon2DList.
-         * @memberof sharedprotos
-         * @classdesc Represents a Polygon2DList.
-         * @implements IPolygon2DList
-         * @constructor
-         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
-         */
-        function Polygon2DList(properties) {
-            this.eles = [];
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Polygon2DList eles.
-         * @member {Array.<sharedprotos.Polygon2D>} eles
-         * @memberof sharedprotos.Polygon2DList
-         * @instance
-         */
-        Polygon2DList.prototype.eles = $util.emptyArray;
-
-        /**
-         * Creates a new Polygon2DList instance using the specified properties.
-         * @function create
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
-         * @returns {sharedprotos.Polygon2DList} Polygon2DList instance
-         */
-        Polygon2DList.create = function create(properties) {
-            return new Polygon2DList(properties);
-        };
-
-        /**
-         * Encodes the specified Polygon2DList message. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
-         * @function encode
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Polygon2DList.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.eles != null && message.eles.length)
-                for (var i = 0; i < message.eles.length; ++i)
-                    $root.sharedprotos.Polygon2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Polygon2DList.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Polygon2DList message from the specified reader or buffer.
-         * @function decode
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {sharedprotos.Polygon2DList} Polygon2DList
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Polygon2DList.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2DList();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        if (!(message.eles && message.eles.length))
-                            message.eles = [];
-                        message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Polygon2DList message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {sharedprotos.Polygon2DList} Polygon2DList
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Polygon2DList.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Polygon2DList message.
-         * @function verify
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Polygon2DList.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.eles != null && message.hasOwnProperty("eles")) {
-                if (!Array.isArray(message.eles))
-                    return "eles: array expected";
-                for (var i = 0; i < message.eles.length; ++i) {
-                    var error = $root.sharedprotos.Polygon2D.verify(message.eles[i]);
-                    if (error)
-                        return "eles." + error;
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a Polygon2DList message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {sharedprotos.Polygon2DList} Polygon2DList
-         */
-        Polygon2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.sharedprotos.Polygon2DList)
-                return object;
-            var message = new $root.sharedprotos.Polygon2DList();
-            if (object.eles) {
-                if (!Array.isArray(object.eles))
-                    throw TypeError(".sharedprotos.Polygon2DList.eles: array expected");
-                message.eles = [];
-                for (var i = 0; i < object.eles.length; ++i) {
-                    if (typeof object.eles[i] !== "object")
-                        throw TypeError(".sharedprotos.Polygon2DList.eles: object expected");
-                    message.eles[i] = $root.sharedprotos.Polygon2D.fromObject(object.eles[i]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Polygon2DList message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {sharedprotos.Polygon2DList} message Polygon2DList
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Polygon2DList.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.arrays || options.defaults)
-                object.eles = [];
-            if (message.eles && message.eles.length) {
-                object.eles = [];
-                for (var j = 0; j < message.eles.length; ++j)
-                    object.eles[j] = $root.sharedprotos.Polygon2D.toObject(message.eles[j], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this Polygon2DList to JSON.
-         * @function toJSON
-         * @memberof sharedprotos.Polygon2DList
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Polygon2DList.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Polygon2DList
-         * @function getTypeUrl
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Polygon2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Polygon2DList";
-        };
-
-        return Polygon2DList;
-    })();
-
-    return sharedprotos;
 })();
 
 module.exports = $root;

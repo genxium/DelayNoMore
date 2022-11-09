@@ -50,6 +50,7 @@ message PlayerDownsyncMeta {
   string displayName = 3;
   string avatar = 4;
   int32 joinIndex = 5;
+  double colliderRadius = 6;
 }
 
 message InputFrameUpsync {
