@@ -1,4 +1,4 @@
-module server
+module battle_srv
 
 go 1.19
 

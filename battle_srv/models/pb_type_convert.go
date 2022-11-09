@@ -68,9 +68,9 @@ func toPbPlayers(modelInstances map[int32]*Player) map[int32]*pb.Player {
 
 	for k, last := range modelInstances {
 		toRet[k] = &pb.Player{
-			Id: last.Id,
-			X:  last.X,
-			Y:  last.Y,
+			Id:           last.Id,
+			VirtualGridX: last.VirtualGridX,
+			VirtualGridY: last.VirtualGridY,
 			Dir: &pb.Direction{
 				Dx: last.Dir.Dx,
 				Dy: last.Dir.Dy,

@@ -8,9 +8,9 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
-	. "server/common"
-	"server/models"
-	pb "server/pb_output"
+	. "battle_srv/common"
+	"battle_srv/models"
+	pb "battle_srv/protos"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -263,9 +263,11 @@ func Serve(c *gin.Context) {
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
 			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
-			RollbackEstimatedDt:             pRoom.RollbackEstimatedDt,
 			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
 			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
+
+			WorldToVirtualGridRatio: pRoom.WorldToVirtualGridRatio,
+			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
 		}
 
 		resp := &pb.WsResp{

@@ -6,6 +6,7 @@ import (
 	"github.com/solarlune/resolv"
 	"math"
 	"strings"
+	. "dnmshared/protos"
 )
 
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {

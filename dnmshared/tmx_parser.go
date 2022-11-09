@@ -11,6 +11,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	. "dnmshared/protos"
 )
 
 const (
@@ -173,8 +174,6 @@ func (l *TmxLayer) decodeBase64() ([]uint32, error) {
 	return gids, nil
 }
 
-type Vec2DList []*Vec2D
-type Polygon2DList []*Polygon2D
 type StrToVec2DListMap map[string]*Vec2DList
 type StrToPolygon2DListMap map[string]*Polygon2DList
 
@@ -235,8 +234,6 @@ func tsxPolylineToOffsetsWrtTileCenter(pTmxMapIns *TmxMap, singleObjInTsxFile *T
 	thePolygon2DFromPolyline := &Polygon2D{
 		Anchor:     nil,
 		Points:     make([]*Vec2D, pointsCount),
-		TileWidth:  pTsxIns.TileWidth,
-		TileHeight: pTsxIns.TileHeight,
 	}
 
 	/*
@@ -327,7 +324,7 @@ func DeserializeTsxToColliderDict(pTmxMapIns *TmxMap, byteArrOfTsxFile []byte, f
 			if _, ok := theStrToPolygon2DListMap[key]; ok {
 				pThePolygon2DList = theStrToPolygon2DListMap[key]
 			} else {
-				thePolygon2DList := make(Polygon2DList, 0)
+				thePolygon2DListEles := make([]*Polygon2D, 0)
 				theStrToPolygon2DListMap[key] = &thePolygon2DList
 				pThePolygon2DList = theStrToPolygon2DListMap[key]
 			}
@@ -441,41 +438,4 @@ func (pTmxMapIns *TmxMap) continuousObjLayerOffsetToContinuousMapNodePos(continu
 	}
 
 	return toRet
-}
-
-func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
-	// Transform again to put "anchor" at the top-left point of the bounding box for "resolv"
-	float64Max := float64(99999999999999.9)
-	boundingBoxTL := &Vec2D{
-		X: float64Max,
-		Y: float64Max,
-	}
-	for _, p := range input.Points {
-		if p.X < boundingBoxTL.X {
-			boundingBoxTL.X = p.X
-		}
-		if p.Y < boundingBoxTL.Y {
-			boundingBoxTL.Y = p.Y
-		}
-	}
-
-	// Now "input.Anchor" should move to "input.Anchor+boundingBoxTL", thus "boundingBoxTL" is also the value of the negative diff for all "input.Points"
-	output := &Polygon2D{
-		Anchor: &Vec2D{
-			X: input.Anchor.X + boundingBoxTL.X,
-			Y: input.Anchor.Y + boundingBoxTL.Y,
-		},
-		Points:     make([]*Vec2D, len(input.Points)),
-		TileWidth:  input.TileWidth,
-		TileHeight: input.TileHeight,
-	}
-
-	for i, p := range input.Points {
-		output.Points[i] = &Vec2D{
-			X: p.X - boundingBoxTL.X,
-			Y: p.Y - boundingBoxTL.Y,
-		}
-	}
-
-	return output
 }

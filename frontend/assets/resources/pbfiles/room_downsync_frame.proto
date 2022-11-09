@@ -1,30 +1,8 @@
 syntax = "proto3";
-option go_package = "."; // "./" corresponds to the "--go_out" value in "protoc" command 
+option go_package = "battle_srv/protos"; // here "./" corresponds to the "--go_out" value in "protoc" command 
 
-package treasurehunterx;
-
-message Direction {
-  int32 dx = 1;
-  int32 dy = 2;
-}
-
-message Vec2D {
-  double x = 1;
-  double y = 2;
-}
-
-message Polygon2D {
-  Vec2D Anchor = 1;
-  repeated Vec2D Points = 2;
-}
-
-message Vec2DList {
-  repeated Vec2D vec2DList = 1;
-}
-
-message Polygon2DList {
-  repeated Polygon2D polygon2DList = 1;
-}
+package protos;
+import "geometry.proto"; // The import path here is only w.r.t. the proto file, not the Go package.
 
 message BattleColliderInfo {
   string stageName = 1;
@@ -46,17 +24,19 @@ message BattleColliderInfo {
   int32 inputFrameUpsyncDelayTolerance = 16;  
   int32 maxChasingRenderFramesPerUpdate = 17;
   int32 playerBattleState = 18;
-  double rollbackEstimatedDt = 19;
-  double rollbackEstimatedDtMillis = 20;
-  int64 rollbackEstimatedDtNanos = 21;
+  double rollbackEstimatedDtMillis = 19;
+  int64 rollbackEstimatedDtNanos = 20;
+ 
+  double worldToVirtualGridRatio = 21;
+  double virtualGridToWorldRatio = 22;
 }
 
 message Player {
   int32 id = 1;
-  double x = 2; 
-  double y = 3; 
+  int32 virtualGridX = 2; 
+  int32 virtualGridY = 3; 
   Direction dir = 4;
-  double speed = 5;
+  int32 speed = 5; // in terms of virtual grid units
   int32 battleState = 6;
   int32 lastMoveGmtMillis = 7;
   int32 score = 10;

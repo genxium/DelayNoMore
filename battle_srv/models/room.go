@@ -13,9 +13,9 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	. "server/common"
-	"server/common/utils"
-	pb "server/pb_output"
+	. "battle_srv/common"
+	"battle_srv/common/utils"
+	pb "battle_srv/protos"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -82,10 +82,10 @@ var DIRECTION_DECODER_INVERSE_LENGTH = []float64{
 	1.0,
 	0.5,
 	0.5,
-	0.4472,
-	0.4472,
-	0.4472,
-	0.4472,
+	0.44, // Actually it should be "0.4472", but truncated for better precision sync as well as a reduction of speed in diagonal direction
+	0.44,
+	0.44,
+	0.44,
 	0.5,
 	0.5,
 	1.0,
@@ -128,12 +128,14 @@ func calRoomScore(inRoomPlayerCount int32, roomPlayerCnt int, currentRoomBattleS
 }
 
 type Room struct {
-	Id                   int32
-	Capacity             int
-	playerColliderRadius float64
-	Players              map[int32]*Player
-	PlayersArr           []*Player // ordered by joinIndex
-	CollisionSysMap      map[int32]*resolv.Object
+	Id                    int32
+	Capacity              int
+	playerColliderRadius  float64
+	collisionSpaceOffsetX float64
+	collisionSpaceOffsetY float64
+	Players               map[int32]*Player
+	PlayersArr            []*Player // ordered by joinIndex
+	CollisionSysMap       map[int32]*resolv.Object
 	/**
 		 * The following `PlayerDownsyncSessionDict` is NOT individually put
 		 * under `type Player struct` for a reason.
@@ -177,10 +179,14 @@ type Room struct {
 	NstDelayFrames                         int32  // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 	InputScaleFrames                       uint32 // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	JoinIndexBooleanArr                    []bool
-	RollbackEstimatedDt                    float64
 	RollbackEstimatedDtMillis              float64
 	RollbackEstimatedDtNanos               int64
 	LastRenderFrameIdTriggeredAt           int64
+
+	WorldToVirtualGridRatio float64
+	VirtualGridToWorldRatio float64
+
+	PlayerDefaultSpeed int32
 
 	StageName                      string
 	StageDiscreteW                 int32
@@ -191,11 +197,6 @@ type Room struct {
 	RawBattleStrToPolygon2DListMap StrToPolygon2DListMap
 	BackendDynamicsEnabled         bool
 }
-
-const (
-	PLAYER_DEFAULT_SPEED = float64(200) // Hardcoded
-	ADD_SPEED            = float64(100) // Hardcoded
-)
 
 func (pR *Room) updateScore() {
 	pR.Score = calRoomScore(pR.EffectivePlayerCount, pR.Capacity, pR.State)
@@ -218,9 +219,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
-	pPlayerFromDbInit.FrozenAtGmtMillis = -1       // Hardcoded temporarily.
-	pPlayerFromDbInit.Speed = PLAYER_DEFAULT_SPEED // Hardcoded temporarily.
-	pPlayerFromDbInit.AddSpeedAtGmtMillis = -1     // Hardcoded temporarily.
+	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -421,7 +420,7 @@ func (pR *Room) StartBattle() {
 
 	spaceOffsetX := float64(spaceW) * 0.5
 	spaceOffsetY := float64(spaceH) * 0.5
-	pR.refreshColliders(spaceW, spaceH, spaceOffsetX, spaceOffsetY)
+	pR.refreshColliders(spaceW, spaceH)
 
 	/**
 	 * Will be triggered from a goroutine which executes the critical `Room.AddPlayerIfPossible`, thus the `battleMainLoop` should be detached.
@@ -799,6 +798,9 @@ func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.playerColliderRadius = float64(12) // hardcoded
+	pR.WorldToVirtualGridRatio = float64(10)
+	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
+	pR.PlayerDefaultSpeed = int32(3 * pR.WorldToVirtualGridRatio)          // Hardcoded in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -820,7 +822,6 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
 	pR.BattleDurationFrames = 30 * pR.ServerFps
@@ -947,8 +948,7 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 			if nil == playerPos {
 				panic(fmt.Sprintf("onPlayerAdded error, nil == playerPos, roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
-			pR.Players[playerId].X = playerPos.X
-			pR.Players[playerId].Y = playerPos.Y
+			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = pR.worldToVirtualGridPos(playerPos.X, playerPos.Y)
 
 			break
 		}
@@ -1215,12 +1215,15 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				if 0.0 == decodedInputSpeedFactor {
 					continue
 				}
-				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
+				baseChange := float64(player.Speed) * pR.VirtualGridToWorldRatio * decodedInputSpeedFactor
 				oldDx, oldDy := baseChange*float64(decodedInput[0]), baseChange*float64(decodedInput[1])
 				dx, dy := oldDx, oldDy
 
 				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
+				// Reset playerCollider position from the "virtual grid position"
+				playerCollider.X, playerCollider.Y = pR.virtualGridToPlayerColliderPos(player.VirtualGridX, player.VirtualGridY)
+
 				if collision := playerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
 					playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 					for _, obj := range collision.Objects {
@@ -1242,8 +1245,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 
 				player.Dir.Dx = decodedInput[0]
 				player.Dir.Dy = decodedInput[1]
-				player.X = playerCollider.X + pR.playerColliderRadius - spaceOffsetX
-				player.Y = playerCollider.Y + pR.playerColliderRadius - spaceOffsetY
+				player.VirtualGridX, player.VirtualGridY = pR.playerColliderAnchorToVirtualGridPos(playerCollider.X, playerCollider.Y)
 			}
 		}
 
@@ -1261,13 +1263,14 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 	return 0 == (inputFrameId % 10)
 }
 
-func (pR *Room) refreshColliders(spaceW, spaceH int32, spaceOffsetX, spaceOffsetY float64) {
+func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := int(3)                                                    // the approx minimum distance a player can move per frame
+	minStep := int(3)                                                    // the approx minimum distance a player can move per frame in world coordinate
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := GenerateRectCollider(player.X, player.Y, pR.playerColliderRadius*2, pR.playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")
+		wx, wy := pR.virtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY)
+		playerCollider := GenerateRectCollider(wx, wy, pR.playerColliderRadius*2, pR.playerColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
@@ -1278,11 +1281,43 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32, spaceOffsetX, spaceOffset
 
 	for _, barrier := range pR.Barriers {
 		boundaryUnaligned := barrier.Boundary
-		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
+		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Barrier")
 		space.Add(barrierCollider)
 	}
 }
 
 func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
 	Logger.Info(fmt.Sprintf("Barrier in roomId=%v: w=%v, h=%v, shape=%v", pR.Id, barrierCollider.W, barrierCollider.H, barrierCollider.Shape))
+}
+
+func (pR *Room) worldToVirtualGridPos(x, y float64) (int32, int32) {
+	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
+	var virtualGridX int32 = int32(x * pR.WorldToVirtualGridRatio)
+	var virtualGridY int32 = int32(y * pR.WorldToVirtualGridRatio)
+	return virtualGridX, virtualGridY
+}
+
+func (pR *Room) virtualGridToWorldPos(vx, vy int32) (float64, float64) {
+	var x float64 = float64(vx) * pR.VirtualGridToWorldRatio
+	var y float64 = float64(vy) * pR.VirtualGridToWorldRatio
+	return x, y
+}
+
+func (pR *Room) playerWorldToCollisionPos(wx, wy float64) (float64, float64) {
+	// TODO: remove this duplicate code w.r.t. "dnmshared/resolv_helper.go"
+	return wx - pR.playerColliderRadius + pR.collisionSpaceOffsetX, wy - pR.playerColliderRadius + pR.collisionSpaceOffsetY
+}
+
+func (pR *Room) playerColliderAnchorToWorldPos(cx, cy float64) (float64, float64) {
+	return cx + pR.playerColliderRadius - pR.collisionSpaceOffsetX, cy + pR.playerColliderRadius - pR.collisionSpaceOffsetY
+}
+
+func (pR *Room) playerColliderAnchorToVirtualGridPos(cx, cy float64) (int32, int32) {
+	wx, wy := pR.playerColliderAnchorToWorldPos(cx, cy)
+	return pR.worldToVirtualGridPos(wx, wy)
+}
+
+func (pR *Room) virtualGridToPlayerColliderPos(vx, vy int32) (float64, float64) {
+	wx, wy := pR.virtualGridToWorldPos(vx, vy)
+	return pR.playerWorldToCollisionPos(wx, wy)
 }
