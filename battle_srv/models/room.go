@@ -1191,11 +1191,11 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			if nil == tmp {
 				panic(fmt.Sprintf("delayedInputFrameId=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! InputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.InputsBufferString(false)))
 			}
-			delayedInputFrame := tmp.(*InputFrameDownsync)
+			delayedInputFrame = tmp.(*InputFrameDownsync)
 			// [WARNING] It's possible that by now "allConfirmedMask != delayedInputFrame.ConfirmedList && delayedInputFrameId <= pR.LastAllConfirmedInputFrameId", we trust "pR.LastAllConfirmedInputFrameId" as the TOP AUTHORITY.
 			atomic.StoreUint64(&(delayedInputFrame.ConfirmedList), allConfirmedMask)
 		}
-
+		
 		nextRenderFrame := pR.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, pR.CollisionSysMap)
 		// Update in the latest player pointers
 		for playerId, playerDownsync := range nextRenderFrame.Players {
@@ -1245,6 +1245,9 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			playerId := player.Id
 			currPlayerDownsync := currRenderFrame.Players[playerId]
 			encodedInput := inputList[joinIndex-1]
+			if 0 == encodedInput {
+				continue
+			}
 			decodedInput := DIRECTION_DECODER[encodedInput]
 			newVx := (currPlayerDownsync.VirtualGridX + (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed))
 			newVy := (currPlayerDownsync.VirtualGridY + (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed))
@@ -1288,6 +1291,8 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			nextRenderFramePlayers[playerId].VirtualGridX = newVx
 			nextRenderFramePlayers[playerId].VirtualGridY = newVy
 		}
+
+		Logger.Debug(fmt.Sprintf("After applyInputFrameDownsyncDynamicsOnSingleRenderFrame: currRenderFrame.Id=%v, inputList=%v, currRenderFrame.Players=%v, nextRenderFramePlayers=%v, toRet.Players=%v", currRenderFrame.Id, inputList, currRenderFrame.Players, nextRenderFramePlayers, toRet.Players))
 	}
 
 	return toRet

@@ -382,7 +382,8 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {};
+    resultPanelScriptIns.onCloseDelegate = () => {
+    };
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -585,7 +586,7 @@ cc.Class({
     if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet) {
       /*
       Don't change 
-      - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase > _createOrUpdateRoomDownsyncFrameLocally" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
+      - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
       - chaserRenderFrameId, it's updated only in "onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
       */
       return dumpRenderCacheRet;
@@ -945,62 +946,6 @@ cc.Class({
     }, 1500);
   },
 
-  _createOrUpdateRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
-    const self = this;
-    const prevRenderFrameId = renderFrameId - 1;
-    const inputFrameAppliedOnPrevRenderFrame = (
-    0 > prevRenderFrameId
-      ?
-      null
-      :
-      self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(prevRenderFrameId, self.inputDelayFrames))
-    );
-
-    // TODO: Find a better way to assign speeds instead of using "speedRefRenderFrameId".
-    const speedRefRenderFrameId = prevRenderFrameId;
-    const speedRefRenderFrame = (
-    0 > speedRefRenderFrameId
-      ?
-      null
-      :
-      self.recentRenderCache.getByFrameId(speedRefRenderFrameId)
-    );
-
-    const rdf = {
-      id: renderFrameId,
-      refFrameId: renderFrameId,
-      players: {}
-    };
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      const joinIndex = playerRichInfo.joinIndex;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const vpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, playerRichInfo);
-      rdf.players[playerRichInfo.id] = {
-        id: playerRichInfo.id,
-        virtualGridX: vpos[0],
-        virtualGridY: vpos[1],
-        dir: self.ctrl.decodeDirection(null == inputFrameAppliedOnPrevRenderFrame ? 0 : inputFrameAppliedOnPrevRenderFrame.inputList[joinIndex - 1]),
-        speed: (null == speedRefRenderFrame ? playerRichInfo.speed : speedRefRenderFrame.players[playerRichInfo.id].speed),
-        joinIndex: joinIndex
-      };
-    });
-    if (
-      null != inputFrameAppliedOnPrevRenderFrame && self._allConfirmed(inputFrameAppliedOnPrevRenderFrame.confirmedList)
-      &&
-      rdf.id > self.lastAllConfirmedRenderFrameId
-    ) {
-      // We got a more up-to-date "all-confirmed-render-frame".
-      self.lastAllConfirmedRenderFrameId = rdf.id;
-      if (rdf.id > self.chaserRenderFrameId) {
-        // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
-        self.chaserRenderFrameId = rdf.id;
-      }
-    }
-    self.dumpToRenderCache(rdf);
-    return rdf;
-  },
-
   applyRoomDownsyncFrameDynamics(rdf) {
     const self = this;
 
@@ -1034,28 +979,34 @@ cc.Class({
     return inputFrameDownsync;
   },
 
-  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
-    const self = this;
-    let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
-    if (null == latestRdf) {
-      console.error("Couldn't find renderFrameId=", renderFrameIdSt, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+  // TODO: Write unit-test for this function to compare with its backend counter part
+  applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap) {
+    const nextRenderFramePlayers = {}
+    for (let playerId in currRenderFrame.players) {
+      const currPlayerDownsync = currRenderFrame.players[playerId];
+      nextRenderFramePlayers[playerId] = {
+        id: playerId,
+        virtualGridX: currPlayerDownsync.virtualGridX,
+        virtualGridY: currPlayerDownsync.virtualGridY,
+        dir: {
+          dx: currPlayerDownsync.dir.dx,
+          dy: currPlayerDownsync.dir.dy,
+        },
+        speed: currPlayerDownsync.speed,
+        battleState: currPlayerDownsync.battleState,
+        score: currPlayerDownsync.score,
+        removed: currPlayerDownsync.removed,
+        joinIndex: currPlayerDownsync.joinIndex,
+      };
     }
 
-    if (renderFrameIdSt >= renderFrameIdEd) {
-      return latestRdf;
-    }
+    const toRet = {
+      id: currRenderFrame.id,
+      players: nextRenderFramePlayers,
+    };
 
-    /*
-    This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
-    */
-    for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
-      const renderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"
-      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      const inputFrameDownsync = self.getCachedInputFrameDownsyncWithPrediction(j);
-      if (null == inputFrameDownsync) {
-        console.error("Failed to get cached inputFrameDownsync for renderFrameId=", i, ", inputFrameId=", j, "lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
-      }
-      const inputList = inputFrameDownsync.inputList;
+    if (null != delayedInputFrame) {
+      const inputList = delayedInputFrame.inputList;
       // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
@@ -1083,8 +1034,9 @@ cc.Class({
       collisionSys.update();
       const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
 
-      for (let i in self.playerRichInfoArr) {
-        const joinIndex = parseInt(i) + 1;
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const potentials = playerCollider.potentials();
@@ -1095,9 +1047,55 @@ cc.Class({
           playerCollider.x -= result.overlap * result.overlap_x;
           playerCollider.y -= result.overlap * result.overlap_y;
         }
+
+        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, self.playerRichInfoArr[j]);
+        nextRenderFramePlayers[playerId].virtualGridX = newVpos[0];
+        nextRenderFramePlayers[playerId].virtualGridY = newVpos[1];
+      }
+    }
+
+    return toRet;
+  },
+
+  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
+    /*
+    This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
+    */
+    const self = this;
+    let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
+    if (null == latestRdf) {
+      console.error("Couldn't find renderFrameId=", renderFrameIdSt, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+    }
+
+    if (renderFrameIdSt >= renderFrameIdEd) {
+      return latestRdf;
+    }
+
+    for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
+      const currRenderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; FIXME: onRoomDownsyncFrame(rdf) might get called asynchronously and thus made this line return "null"!
+      if (null == currRenderFrame) {
+        console.error("Couldn't find renderFrameId=", i, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+      }
+      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      const delayedInputFrame = self.getCachedInputFrameDownsyncWithPrediction(j);
+      if (null == delayedInputFrame) {
+        console.error("Failed to get cached delayedInputFrame for renderFrameId=", i, ", inputFrameId=", j, "lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
       }
 
-      latestRdf = self._createOrUpdateRoomDownsyncFrameLocally(i + 1, collisionSys, collisionSysMap);
+      latestRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap);
+      if (
+        self._allConfirmed(delayedInputFrame.confirmedList)
+        &&
+        latestRdf.id > self.lastAllConfirmedRenderFrameId
+      ) {
+        // We got a more up-to-date "all-confirmed-render-frame".
+        self.lastAllConfirmedRenderFrameId = latestRdf.id;
+        if (latestRdf.id > self.chaserRenderFrameId) {
+          // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
+          self.chaserRenderFrameId = latestRdf.id;
+        }
+      }
+      self.dumpToRenderCache(latestRdf);
     }
 
     return latestRdf;
