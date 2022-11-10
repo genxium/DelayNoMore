@@ -44,14 +44,14 @@ module.export = cc.Class({
   onLoad() {
     const self = this;
     self.clips = {
-      '01': 'Top',
-      '0-1': 'Bottom',
+      '02': 'Top',
+      '0-2': 'Bottom',
       '-20': 'Left',
       '20': 'Right',
-      '-21': 'TopLeft',
-      '21': 'TopRight',
-      '-2-1': 'BottomLeft',
-      '2-1': 'BottomRight'
+      '-11': 'TopLeft',
+      '11': 'TopRight',
+      '-1-1': 'BottomLeft',
+      '1-1': 'BottomRight'
     };
     const canvasNode = self.mapNode.parent;
     self.mapIns = self.mapNode.getComponent("Map");

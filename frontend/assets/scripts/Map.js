@@ -111,7 +111,7 @@ cc.Class({
       type: cc.Integer,
       default: 4 // implies (renderFrameIdLagTolerance >> inputScaleFrames) count of inputFrameIds
     },
-    teleportEps1D: {
+    jigglingEps1D: {
       type: cc.Float,
       default: 1e-3
     },
@@ -749,7 +749,8 @@ cc.Class({
     newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
     newPlayerNode.getComponent("SelfPlayer").mapNode = self.node;
     const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerRichInfo);
-    const d = playerRichInfo.colliderRadius*2, x0 = cpos[0],
+    const d = playerRichInfo.colliderRadius * 2,
+      x0 = cpos[0],
       y0 = cpos[1];
     let pts = [[0, 0], [d, 0], [d, d], [0, d]];
 
@@ -990,6 +991,23 @@ cc.Class({
       rdf.id > self.lastAllConfirmedRenderFrameId
     ) {
       // We got a more up-to-date "all-confirmed-render-frame".
+      let predictedRdf = self.recentRenderCache.getByFrameId(rdf.id);
+      if (null != predictedRdf) {
+        let renderFrameCorrectlyPredicted = true;
+        for (let playerId in predictedRdf.players) {
+          const predictedPlayer = predictedRdf.players[playerId];
+          const confirmedPlayer = rdf.players[playerId];
+          if (predictedPlayer.virtualGridX != confirmedPlayer.virtualGridX || predictedPlayer.virtualGridY != confirmedPlayer.virtualGridY) {
+            renderFrameCorrectlyPredicted = false;
+            break;
+          }
+        }
+
+        if (!renderFrameCorrectlyPredicted) {
+          // TODO: Can I also check whether the applied inputFrame on predictedRdf was "correctly predicted"? If it wasn't then a mismatch of positions is expected.
+          console.warn("render frame was incorrectly predicted\npredictedRdf=" + predictedRdf.toString() + "\nrdf=" + rdf.toString());
+        }
+      }
       self.lastAllConfirmedRenderFrameId = rdf.id;
       if (rdf.id > self.chaserRenderFrameId) {
         // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
@@ -1008,13 +1026,14 @@ cc.Class({
       const wpos = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
       const dx = (wpos[0] - playerRichInfo.node.x);
       const dy = (wpos[1] - playerRichInfo.node.y);
-      const justJiggling = (self.teleportEps1D >= Math.abs(dx) && self.teleportEps1D >= Math.abs(dy));
+      const justJiggling = (self.jigglingEps1D >= Math.abs(dx) && self.jigglingEps1D >= Math.abs(dy));
       if (!justJiggling) {
-        console.log("@renderFrameId=" + self.renderFrameId + ", teleporting playerId=" + playerId + ": '(" + playerRichInfo.node.x + ", " + playerRichInfo.node.y, ")' to '(" + wpos[0] + ", " + wpos[1] + ")'");
         playerRichInfo.node.setPosition(wpos[0], wpos[1]);
+        playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
+        playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
+        playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
+        playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
       }
-      playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
-      playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
     });
   },
 
@@ -1062,18 +1081,20 @@ cc.Class({
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = renderFrame.players[playerId];
 
+        const encodedInput = inputList[joinIndex - 1];
+        const decodedInput = self.ctrl.decodeDirection(encodedInput);
+        if (0 == decodedInput.dx && 0 == decodedInput.dy) {
+          continue;
+        }
+
         /* 
         Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
         */
-        const cpos = self.virtualGridToPlayerColliderPos(player.virtualGridX, player.virtualGridY, self.playerRichInfoArr[j]);
-        playerCollider.x = cpos[0];
-        playerCollider.y = cpos[1];
-
-        const encodedInput = inputList[joinIndex - 1];
-        const decodedInput = self.ctrl.decodeDirection(encodedInput);
-        const baseChange = player.speed * self.virtualGridToWorldRatio * decodedInput.speedFactor;
-        playerCollider.x += baseChange * decodedInput.dx;
-        playerCollider.y += baseChange * decodedInput.dy;
+        const newVx = player.virtualGridX + (decodedInput.dx + player.speed * decodedInput.dx);
+        const newVy = player.virtualGridY + (decodedInput.dy + player.speed * decodedInput.dy);
+        const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[j]);
+        playerCollider.x = newCpos[0];
+        playerCollider.y = newCpos[1];
       }
 
       collisionSys.update();
@@ -1154,14 +1175,16 @@ cc.Class({
   },
 
   worldToVirtualGridPos(x, y) {
+    // [WARNING] Introduces loss of precision!
     const self = this;
     // In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-    let virtualGridX = parseInt(x * self.worldToVirtualGridRatio);
-    let virtualGridY = parseInt(y * self.worldToVirtualGridRatio);
+    let virtualGridX = Math.round(x * self.worldToVirtualGridRatio);
+    let virtualGridY = Math.round(y * self.worldToVirtualGridRatio);
     return [virtualGridX, virtualGridY];
   },
 
   virtualGridToWorldPos(vx, vy) {
+    // No loss of precision
     const self = this;
     let wx = parseFloat(vx) * self.virtualGridToWorldRatio;
     let wy = parseFloat(vy) * self.virtualGridToWorldRatio;

@@ -1,18 +1,14 @@
 window.DIRECTION_DECODER = [
-    // The 3rd value matches low-precision constants in backend.
-    [0, 0, 0.0],
-    [0, +1, 1.0],
-    [0, -1, 1.0],
-    [+2, 0, 0.5],
-    [-2, 0, 0.5],
-    [+2, +1, 0.44],
-    [-2, -1, 0.44],
-    [+2, -1, 0.44],
-    [-2, +1, 0.44],
-    [+2, 0, 0.5],
-    [-2, 0, 0.5],
-    [0, +1, 1.0],
-    [0, -1, 1.0],
+  // The 3rd value matches low-precision constants in backend.
+  [0, 0],
+  [0, +2],
+  [0, -2],
+  [+2, 0],
+  [-2, 0],
+  [+1, +1],
+  [-1, -1],
+  [+1, -1],
+  [-1, +1],
 ];
 
 cc.Class({
@@ -40,11 +36,11 @@ cc.Class({
       type: cc.Float
     },
     magicLeanLowerBound: {
-      default: 0.414, // Tangent of (PI/8).
+      default: 0.9, // Tangent of (PI/4) is 1.0.
       type: cc.Float
     },
     magicLeanUpperBound: {
-      default: 2.414, // Tangent of (3*PI/8).
+      default: 1.1,
       type: cc.Float
     },
     // For joystick ends.
@@ -117,8 +113,8 @@ cc.Class({
 
   _initTouchEvent() {
     const self = this;
-    const translationListenerNode = (self.translationListenerNode ? self.translationListenerNode : self.mapNode);  
-    const zoomingListenerNode = (self.zoomingListenerNode ? self.zoomingListenerNode : self.mapNode); 
+    const translationListenerNode = (self.translationListenerNode ? self.translationListenerNode : self.mapNode);
+    const zoomingListenerNode = (self.zoomingListenerNode ? self.zoomingListenerNode : self.mapNode);
 
     translationListenerNode.on(cc.Node.EventType.TOUCH_START, function(event) {
       self._touchStartEvent(event);
@@ -132,7 +128,7 @@ cc.Class({
     translationListenerNode.on(cc.Node.EventType.TOUCH_CANCEL, function(event) {
       self._touchEndEvent(event);
     });
-    translationListenerNode.inTouchPoints = new Map(); 
+    translationListenerNode.inTouchPoints = new Map();
 
     zoomingListenerNode.on(cc.Node.EventType.TOUCH_START, function(event) {
       self._touchStartEvent(event);
@@ -146,7 +142,7 @@ cc.Class({
     zoomingListenerNode.on(cc.Node.EventType.TOUCH_CANCEL, function(event) {
       self._touchEndEvent(event);
     });
-    zoomingListenerNode.inTouchPoints = new Map(); 
+    zoomingListenerNode.inTouchPoints = new Map();
   },
 
   _isMapOverMoved(mapTargetPos) {
@@ -155,7 +151,7 @@ cc.Class({
   },
 
   _touchStartEvent(event) {
-    const theListenerNode = event.target; 
+    const theListenerNode = event.target;
     for (let touch of event._touches) {
       theListenerNode.inTouchPoints.set(touch._id, touch);
     }
@@ -165,12 +161,12 @@ cc.Class({
     if (ALL_MAP_STATES.VISUAL != this.mapScriptIns.state) {
       return;
     }
-    const theListenerNode = event.target; 
+    const theListenerNode = event.target;
     const linearScaleFacBase = this.linearScaleFacBase; // Not used yet.
     if (1 != theListenerNode.inTouchPoints.size) {
       return;
     }
-    if (!theListenerNode.inTouchPoints.has(event.currentTouch._id))  {
+    if (!theListenerNode.inTouchPoints.has(event.currentTouch._id)) {
       return;
     }
     const diffVec = event.currentTouch._point.sub(event.currentTouch._startPoint);
@@ -189,9 +185,9 @@ cc.Class({
     if (ALL_MAP_STATES.VISUAL != this.mapScriptIns.state) {
       return;
     }
-    const theListenerNode = event.target; 
+    const theListenerNode = event.target;
     if (2 != theListenerNode.inTouchPoints.size) {
-       return;
+      return;
     }
     if (2 == event._touches.length) {
       const firstTouch = event._touches[0];
@@ -219,13 +215,13 @@ cc.Class({
       }
       this.mainCamera.zoomRatio = targetScale;
       for (let child of this.mainCameraNode.children) {
-        child.setScale(1/targetScale); 
+        child.setScale(1 / targetScale);
       }
     }
   },
 
   _touchEndEvent(event) {
-    const theListenerNode = event.target; 
+    const theListenerNode = event.target;
     do {
       if (!theListenerNode.inTouchPoints.has(event.currentTouch._id)) {
         break;
@@ -241,7 +237,7 @@ cc.Class({
         break;
       }
 
-      // TODO: Handle single-finger-click event.
+    // TODO: Handle single-finger-click event.
     } while (false);
     this.cachedStickHeadPosition = cc.v2(0.0, 0.0);
     for (let touch of event._touches) {
@@ -266,16 +262,16 @@ cc.Class({
       encodedIdx: 0
     };
     if (Math.abs(continuousDx) < eps && Math.abs(continuousDy) < eps) {
-        return ret;
+      return ret;
     }
 
     if (Math.abs(continuousDx) < eps) {
       ret.dx = 0;
       if (0 < continuousDy) {
-        ret.dy = +1; // up
+        ret.dy = +2; // up
         ret.encodedIdx = 1;
       } else {
-        ret.dy = -1; // down
+        ret.dy = -2; // down
         ret.encodedIdx = 2;
       }
     } else if (Math.abs(continuousDy) < eps) {
@@ -291,42 +287,42 @@ cc.Class({
       const criticalRatio = continuousDy / continuousDx;
       if (criticalRatio > this.magicLeanLowerBound && criticalRatio < this.magicLeanUpperBound) {
         if (0 < continuousDx) {
-          ret.dx = +2; 
+          ret.dx = +1;
           ret.dy = +1;
           ret.encodedIdx = 5;
         } else {
-          ret.dx = -2; 
+          ret.dx = -1;
           ret.dy = -1;
           ret.encodedIdx = 6;
         }
       } else if (criticalRatio > -this.magicLeanUpperBound && criticalRatio < -this.magicLeanLowerBound) {
         if (0 < continuousDx) {
-          ret.dx = +2; 
+          ret.dx = +1;
           ret.dy = -1;
           ret.encodedIdx = 7;
         } else {
-          ret.dx = -2; 
+          ret.dx = -1;
           ret.dy = +1;
           ret.encodedIdx = 8;
         }
       } else {
-        if (Math.abs(criticalRatio) < 1) {
+        if (Math.abs(criticalRatio) < 0.1) {
           ret.dy = 0;
           if (0 < continuousDx) {
-            ret.dx = +2; 
-            ret.encodedIdx = 9;
+            ret.dx = +2; // right 
+            ret.encodedIdx = 3;
           } else {
-            ret.dx = -2; 
-            ret.encodedIdx = 10;
+            ret.dx = -2; // left 
+            ret.encodedIdx = 4;
           }
-        } else {
+        } else if (Math.abs(criticalRatio) > 0.9) {
           ret.dx = 0;
           if (0 < continuousDy) {
-            ret.dy = +1; 
-            ret.encodedIdx = 11;
+            ret.dy = +2; // up
+            ret.encodedIdx = 1;
           } else {
-            ret.dy = -1; 
-            ret.encodedIdx = 12;
+            ret.dy = -2; // down
+            ret.encodedIdx = 2;
           }
         }
       }
@@ -337,16 +333,15 @@ cc.Class({
   decodeDirection(encodedDirection) {
     const mapped = window.DIRECTION_DECODER[encodedDirection];
     if (null == mapped) {
-        console.error("Unexpected encodedDirection = ", encodedDirection);
+      console.error("Unexpected encodedDirection = ", encodedDirection);
     }
     return {
       dx: mapped[0],
-      dy: mapped[1], 
-      speedFactor: mapped[2],
-    }
+      dy: mapped[1],
+    };
   },
 
   getDiscretizedDirection() {
-    return this.discretizeDirection(this.cachedStickHeadPosition.x, this.cachedStickHeadPosition.y, this.joyStickEps); 
+    return this.discretizeDirection(this.cachedStickHeadPosition.x, this.cachedStickHeadPosition.y, this.joyStickEps);
   }
 });
