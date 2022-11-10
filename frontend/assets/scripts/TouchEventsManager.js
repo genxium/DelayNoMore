@@ -36,11 +36,11 @@ cc.Class({
       type: cc.Float
     },
     magicLeanLowerBound: {
-      default: 0.9, // Tangent of (PI/4) is 1.0.
+      default: 0.1,
       type: cc.Float
     },
     magicLeanUpperBound: {
-      default: 1.1,
+      default: 0.9,
       type: cc.Float
     },
     // For joystick ends.
@@ -265,16 +265,8 @@ cc.Class({
       return ret;
     }
 
-    if (Math.abs(continuousDx) < eps) {
-      ret.dx = 0;
-      if (0 < continuousDy) {
-        ret.dy = +2; // up
-        ret.encodedIdx = 1;
-      } else {
-        ret.dy = -2; // down
-        ret.encodedIdx = 2;
-      }
-    } else if (Math.abs(continuousDy) < eps) {
+    const criticalRatio = continuousDy / continuousDx;
+    if (Math.abs(criticalRatio) < this.magicLeanLowerBound) {
       ret.dy = 0;
       if (0 < continuousDx) {
         ret.dx = +2; // right 
@@ -283,50 +275,40 @@ cc.Class({
         ret.dx = -2; // left 
         ret.encodedIdx = 4;
       }
+    } else if (Math.abs(criticalRatio) > this.magicLeanUpperBound) {
+      ret.dx = 0;
+      if (0 < continuousDy) {
+        ret.dy = +2; // up
+        ret.encodedIdx = 1;
+      } else {
+        ret.dy = -2; // down
+        ret.encodedIdx = 2;
+      }
     } else {
-      const criticalRatio = continuousDy / continuousDx;
-      if (criticalRatio > this.magicLeanLowerBound && criticalRatio < this.magicLeanUpperBound) {
-        if (0 < continuousDx) {
+      if (0 < continuousDx) {
+        if (0 < continuousDy) {
           ret.dx = +1;
           ret.dy = +1;
           ret.encodedIdx = 5;
+        } else {
+          ret.dx = +1;
+          ret.dy = -1;
+          ret.encodedIdx = 7;
+        }
+      } else {
+        // 0 >= continuousDx
+        if (0 < continuousDy) {
+          ret.dx = -1;
+          ret.dy = +1;
+          ret.encodedIdx = 8;
         } else {
           ret.dx = -1;
           ret.dy = -1;
           ret.encodedIdx = 6;
         }
-      } else if (criticalRatio > -this.magicLeanUpperBound && criticalRatio < -this.magicLeanLowerBound) {
-        if (0 < continuousDx) {
-          ret.dx = +1;
-          ret.dy = -1;
-          ret.encodedIdx = 7;
-        } else {
-          ret.dx = -1;
-          ret.dy = +1;
-          ret.encodedIdx = 8;
-        }
-      } else {
-        if (Math.abs(criticalRatio) < 0.1) {
-          ret.dy = 0;
-          if (0 < continuousDx) {
-            ret.dx = +2; // right 
-            ret.encodedIdx = 3;
-          } else {
-            ret.dx = -2; // left 
-            ret.encodedIdx = 4;
-          }
-        } else if (Math.abs(criticalRatio) > 0.9) {
-          ret.dx = 0;
-          if (0 < continuousDy) {
-            ret.dy = +2; // up
-            ret.encodedIdx = 1;
-          } else {
-            ret.dy = -2; // down
-            ret.encodedIdx = 2;
-          }
-        }
       }
     }
+
     return ret;
   },
 

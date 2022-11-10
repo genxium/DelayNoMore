@@ -585,7 +585,7 @@ cc.Class({
     if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet) {
       /*
       Don't change 
-      - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase > _createRoomDownsyncFrameLocally" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
+      - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase > _createOrUpdateRoomDownsyncFrameLocally" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
       - chaserRenderFrameId, it's updated only in "onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
       */
       return dumpRenderCacheRet;
@@ -945,7 +945,7 @@ cc.Class({
     }, 1500);
   },
 
-  _createRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
+  _createOrUpdateRoomDownsyncFrameLocally(renderFrameId, collisionSys, collisionSysMap) {
     const self = this;
     const prevRenderFrameId = renderFrameId - 1;
     const inputFrameAppliedOnPrevRenderFrame = (
@@ -991,23 +991,6 @@ cc.Class({
       rdf.id > self.lastAllConfirmedRenderFrameId
     ) {
       // We got a more up-to-date "all-confirmed-render-frame".
-      let predictedRdf = self.recentRenderCache.getByFrameId(rdf.id);
-      if (null != predictedRdf) {
-        let renderFrameCorrectlyPredicted = true;
-        for (let playerId in predictedRdf.players) {
-          const predictedPlayer = predictedRdf.players[playerId];
-          const confirmedPlayer = rdf.players[playerId];
-          if (predictedPlayer.virtualGridX != confirmedPlayer.virtualGridX || predictedPlayer.virtualGridY != confirmedPlayer.virtualGridY) {
-            renderFrameCorrectlyPredicted = false;
-            break;
-          }
-        }
-
-        if (!renderFrameCorrectlyPredicted) {
-          // TODO: Can I also check whether the applied inputFrame on predictedRdf was "correctly predicted"? If it wasn't then a mismatch of positions is expected.
-          console.warn("render frame was incorrectly predicted\npredictedRdf=" + predictedRdf.toString() + "\nrdf=" + rdf.toString());
-        }
-      }
       self.lastAllConfirmedRenderFrameId = rdf.id;
       if (rdf.id > self.chaserRenderFrameId) {
         // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
@@ -1114,7 +1097,7 @@ cc.Class({
         }
       }
 
-      latestRdf = self._createRoomDownsyncFrameLocally(i + 1, collisionSys, collisionSysMap);
+      latestRdf = self._createOrUpdateRoomDownsyncFrameLocally(i + 1, collisionSys, collisionSysMap);
     }
 
     return latestRdf;
