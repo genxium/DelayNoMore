@@ -532,11 +532,14 @@ func (pR *Room) StartBattle() {
 						continue
 					}
 
-					indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
-					var joinMask uint64 = (1 << indiceInJoinIndexBooleanArr)
-					shouldResyncForSlowerClocker := (0 < (unconfirmedMask & joinMask)) // This condition is critical, if we don't send resync upon this condition, the player with a slower frontend clock might never get its input synced
-					if pR.BackendDynamicsEnabled && (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId || shouldResyncForSlowerClocker) {
-						// [WARNING] Even upon "MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED", it could be true that "0 == ()"!
+					/*
+					   Resync helps
+					   1. when player with a slower frontend clock lags significantly behind and thus wouldn't get its inputUpsync recognized due to faster "forceConfirmation"
+					   2. reconnection
+					*/
+					shouldResync1 := (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId)
+					shouldResync2 := (0 < unconfirmedMask) // This condition is critical, if we don't send resync upon this condition, the  might never get its input synced
+					if pR.BackendDynamicsEnabled && (shouldResync1 || shouldResync2) {
 						tmp := pR.RenderFrameBuffer.GetByFrameId(refRenderFrameId)
 						if nil == tmp {
 							panic(fmt.Sprintf("Required refRenderFrameId=%v for roomId=%v, playerId=%v, candidateToSendInputFrameId=%v doesn't exist! InputsBuffer=%v, RenderFrameBuffer=%v", refRenderFrameId, pR.Id, playerId, candidateToSendInputFrameId, pR.InputsBufferString(false), pR.RenderFrameBufferString()))
@@ -560,9 +563,7 @@ func (pR *Room) StartBattle() {
 			toApplyInputFrameId := pR.ConvertToInputFrameId(refRenderFrameId, pR.InputDelayFrames)
 			/*
 			   [WARNING]
-			   The following updates to "toApplyInputFrameId" is necessary because
-			   1. When "false == pR.BackendDynamicsEnabled", the variable "refRenderFrameId" is not well defined;
-			   2. When "true == pR.BackendDynamicsEnabled", the initial value of "toApplyInputFrameId" might be too big and thus making frontends unable to receive consecutive all-confirmed inputFrameDownsync sequence - which is what we want during a battle if no one disconnects.
+			   The following updates to "toApplyInputFrameId" is necessary because when "false == pR.BackendDynamicsEnabled", the variable "refRenderFrameId" is not well defined.
 			*/
 			minLastSentInputFrameId := int32(math.MaxInt32)
 			for _, player := range pR.Players {
@@ -578,7 +579,7 @@ func (pR *Room) StartBattle() {
 				f := pR.InputsBuffer.Pop().(*InputFrameDownsync)
 				if pR.inputFrameIdDebuggable(f.InputFrameId) {
 					// Popping of an "inputFrame" would be AFTER its being all being confirmed, because it requires the "inputFrame" to be all acked
-					Logger.Debug("inputFrame lifecycle#4[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("minLastSentInputFrameId", minLastSentInputFrameId), zap.Any("toApplyInputFrameId", toApplyInputFrameId), zap.Any("InputsBuffer", pR.InputsBufferString(false)))
+					Logger.Debug("inputFrame lifecycle#4[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("toApplyInputFrameId", toApplyInputFrameId), zap.Any("InputsBuffer", pR.InputsBufferString(false)))
 				}
 			}
 
@@ -818,7 +819,7 @@ func (pR *Room) OnDismissed() {
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
-	pR.MaxChasingRenderFramesPerUpdate = 10
+	pR.MaxChasingRenderFramesPerUpdate = 5
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
 
