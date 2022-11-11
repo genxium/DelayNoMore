@@ -174,9 +174,16 @@ cc.Class({
     }
 
     const joinIndex = self.selfPlayerInfo.joinIndex;
-    const discreteDir = self.ctrl.getDiscretizedDirection();
     const previousInputFrameDownsyncWithPrediction = self.getCachedInputFrameDownsyncWithPrediction(inputFrameId);
+    const previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.inputList[joinIndex - 1]);
+
+    // If "forceConfirmation" is active on backend, we shouldn't override the already downsynced "inputFrameDownsync"s.  
+    const existingInputFrame = self.recentInputCache.getByFrameId(inputFrameId);
+    if (null != existingInputFrame && self._allConfirmed(existingInputFrame.confirmedList)) {
+      return [previousSelfInput, existingInputFrame.inputList[joinIndex - 1]];
+    }
     const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.inputList.slice());
+    const discreteDir = self.ctrl.getDiscretizedDirection();
     prefabbedInputList[(joinIndex - 1)] = discreteDir.encodedIdx;
     const prefabbedInputFrameDownsync = {
       inputFrameId: inputFrameId,
@@ -186,7 +193,6 @@ cc.Class({
 
     self.dumpToInputCache(prefabbedInputFrameDownsync); // A prefabbed inputFrame, would certainly be adding a new inputFrame to the cache, because server only downsyncs "all-confirmed inputFrames" 
 
-    const previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.inputList[joinIndex - 1]);
     return [previousSelfInput, discreteDir.encodedIdx];
   },
 
@@ -664,6 +670,8 @@ cc.Class({
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
+      // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
+      inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
       self.dumpToInputCache(inputFrameDownsync);
     }
 
@@ -1000,9 +1008,10 @@ cc.Class({
 
     if (null != delayedInputFrame) {
       const inputList = delayedInputFrame.inputList;
-      const effPushbacks = new Array(inputList.length).fill([0.0, 0.0]); // Guaranteed determinism regardless of traversal order
+      const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
+        effPushbacks[joinIndex - 1] = [0.0, 0.0];
         const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
@@ -1010,9 +1019,6 @@ cc.Class({
 
         const encodedInput = inputList[joinIndex - 1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
-        if (0 == decodedInput.dx && 0 == decodedInput.dy) {
-          continue;
-        }
 
         // console.log(`Got non-zero inputs for playerId=${playerId}, decodedInput=${JSON.stringify(decodedInput)} @currRenderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.id}`);
         /* 
@@ -1020,7 +1026,7 @@ cc.Class({
         */
         const newVx = player.virtualGridX + (decodedInput.dx + player.speed * decodedInput.dx);
         const newVy = player.virtualGridY + (decodedInput.dy + player.speed * decodedInput.dy);
-        const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[j]);
+        const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
         playerCollider.x = newCpos[0];
         playerCollider.y = newCpos[1];
         // Update directions and thus would eventually update moving animation accordingly
@@ -1041,11 +1047,9 @@ cc.Class({
           // Test if the player collides with the wall
           if (!playerCollider.collides(potential, result)) continue;
           // Push the player out of the wall
-          effPushbacks[j][0] += result.overlap * result.overlap_x;
-          effPushbacks[j][1] += result.overlap * result.overlap_y;
+          effPushbacks[joinIndex - 1][0] += result.overlap * result.overlap_x;
+          effPushbacks[joinIndex - 1][1] += result.overlap * result.overlap_y;
         }
-
-        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, self.playerRichInfoArr[j]);
       }
 
       for (let j in self.playerRichInfoArr) {
@@ -1053,7 +1057,7 @@ cc.Class({
         const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[j][0], playerCollider.y - effPushbacks[j][1], self.playerRichInfoArr[j]);
+        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j]);
         nextRenderFramePlayers[playerId].virtualGridX = newVpos[0];
         nextRenderFramePlayers[playerId].virtualGridY = newVpos[1];
       }
