@@ -1195,7 +1195,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			// [WARNING] It's possible that by now "allConfirmedMask != delayedInputFrame.ConfirmedList && delayedInputFrameId <= pR.LastAllConfirmedInputFrameId", we trust "pR.LastAllConfirmedInputFrameId" as the TOP AUTHORITY.
 			atomic.StoreUint64(&(delayedInputFrame.ConfirmedList), allConfirmedMask)
 		}
-		
+
 		nextRenderFrame := pR.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, pR.CollisionSysMap)
 		// Update in the latest player pointers
 		for playerId, playerDownsync := range nextRenderFrame.Players {
@@ -1238,11 +1238,10 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 	if nil != delayedInputFrame {
 		inputList := delayedInputFrame.InputList
-		// Ordered by joinIndex to guarantee determinism?
-		// Move players according to inputs
-		for joinIndex := 1; joinIndex <= pR.Capacity; joinIndex++ {
-			player := pR.PlayersArr[joinIndex-1]
-			playerId := player.Id
+		effPushbacks := make([]Vec2D, pR.Capacity) // Guaranteed determinism regardless of traversal order
+		for playerId, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
 			currPlayerDownsync := currRenderFrame.Players[playerId]
 			encodedInput := inputList[joinIndex-1]
 			if 0 == encodedInput {
@@ -1252,42 +1251,42 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			newVx := (currPlayerDownsync.VirtualGridX + (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed))
 			newVy := (currPlayerDownsync.VirtualGridY + (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed))
 			// Reset playerCollider position from the "virtual grid position"
-			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + currPlayerDownsync.JoinIndex
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
 			playerCollider.X, playerCollider.Y = pR.virtualGridToPlayerColliderPos(newVx, newVy, player)
+
+			// Update in the collision system
 			playerCollider.Update()
 		}
 
 		// handle pushbacks upon collision after all movements treated as simultaneous
-		for joinIndex := 1; joinIndex <= pR.Capacity; joinIndex++ {
-			player := pR.PlayersArr[joinIndex-1]
-			playerId := player.Id
-			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + player.JoinIndex
+		for _, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
 			oldDx, oldDy := float64(0), float64(0)
-			dx, dy := oldDx, oldDy
 			if collision := playerCollider.Check(oldDx, oldDy); collision != nil {
 				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 				for _, obj := range collision.Objects {
 					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
 					if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
 						Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
-						dx -= pushbackX
-						dy -= pushbackY
+						effPushbacks[joinIndex-1].X += pushbackX
+						effPushbacks[joinIndex-1].Y += pushbackY
 					} else {
 						Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
 					}
 				}
 			}
+		}
 
-			playerCollider.X += dx
-			playerCollider.Y += dy
-
-			// Update again in "collision space"
-			playerCollider.Update()
+		for playerId, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+			playerCollider := collisionSysMap[collisionPlayerIndex]
 
 			// Update "virtual grid position"
-			newVx, newVy := pR.playerColliderAnchorToVirtualGridPos(playerCollider.X, playerCollider.Y, player)
+			newVx, newVy := pR.playerColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player)
 			nextRenderFramePlayers[playerId].VirtualGridX = newVx
 			nextRenderFramePlayers[playerId].VirtualGridY = newVy
 		}

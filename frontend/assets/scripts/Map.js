@@ -324,12 +324,10 @@ cc.Class({
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
     self.recentInputCache = new RingBuffer(1024);
 
-    self.latestCollisionSys = new collisions.Collisions();
-    self.chaserCollisionSys = new collisions.Collisions();
+    self.collisionSys = new collisions.Collisions();
 
     self.collisionBarrierIndexPrefix = (1 << 16); // For tracking the movements of barriers, though not yet actually used 
-    self.latestCollisionSysMap = new Map();
-    self.chaserCollisionSysMap = new Map();
+    self.collisionSysMap = new Map();
 
     self.transitToState(ALL_MAP_STATES.VISUAL);
 
@@ -382,8 +380,7 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {
-    };
+    resultPanelScriptIns.onCloseDelegate = () => {};
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -474,13 +471,11 @@ cc.Class({
           for (let i = 0; i < boundaryObj.length; ++i) {
             pts.push([boundaryObj[i].x - x0, boundaryObj[i].y - y0]);
           }
-          const newBarrierLatest = self.latestCollisionSys.createPolygon(x0, y0, pts);
-          // console.log("Created barrier: ", newBarrierLatest);
-          const newBarrierChaser = self.chaserCollisionSys.createPolygon(x0, y0, pts);
+          const newBarrier = self.collisionSys.createPolygon(x0, y0, pts);
+          // console.log("Created barrier: ", newBarrier);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
-          self.latestCollisionSysMap.set(collisionBarrierIndex, newBarrierLatest);
-          self.chaserCollisionSysMap.set(collisionBarrierIndex, newBarrierChaser);
+          self.collisionSysMap.set(collisionBarrierIndex, newBarrier);
         }
 
         self.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
@@ -587,7 +582,7 @@ cc.Class({
       /*
       Don't change 
       - lastAllConfirmedRenderFrameId, it's updated only in "rollbackAndChase" (except for when RING_BUFF_NON_CONSECUTIVE_SET) 
-      - chaserRenderFrameId, it's updated only in "onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
+      - chaserRenderFrameId, it's updated only in "rollbackAndChase & onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
       */
       return dumpRenderCacheRet;
     }
@@ -755,11 +750,9 @@ cc.Class({
       y0 = cpos[1];
     let pts = [[0, 0], [d, 0], [d, d], [0, d]];
 
-    const newPlayerColliderLatest = self.latestCollisionSys.createPolygon(x0, y0, pts);
-    const newPlayerColliderChaser = self.chaserCollisionSys.createPolygon(x0, y0, pts);
+    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.latestCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderLatest);
-    self.chaserCollisionSysMap.set(collisionPlayerIndex, newPlayerColliderChaser);
+    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);
@@ -806,12 +799,11 @@ cc.Class({
         if (nextChaserRenderFrameId > self.renderFrameId) {
           nextChaserRenderFrameId = self.renderFrameId;
         }
-        self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.chaserCollisionSys, self.chaserCollisionSysMap);
-        self.chaserRenderFrameId = nextChaserRenderFrameId; // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+        self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.collisionSys, self.collisionSysMap, true);
         let t2 = performance.now();
 
-        // Inside the following "self.rollbackAndChase" (which actually ROLLS FORWARD), the "self.latestCollisionSys" is ALWAYS "ROLLED BACK" to "self.recentRenderCache.get(self.renderFrameId)" before being applied dynamics from corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
-        const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.latestCollisionSys, self.latestCollisionSysMap);
+        // Inside the following "self.rollbackAndChase" actually ROLLS FORWARD w.r.t. the corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
+        const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
         /*
         const nonTrivialChaseEnded = (prevChaserRenderFrameId < nextChaserRenderFrameId && nextChaserRenderFrameId == self.renderFrameId); 
         if (nonTrivialChaseEnded) {
@@ -981,6 +973,7 @@ cc.Class({
 
   // TODO: Write unit-test for this function to compare with its backend counter part
   applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap) {
+    const self = this;
     const nextRenderFramePlayers = {}
     for (let playerId in currRenderFrame.players) {
       const currPlayerDownsync = currRenderFrame.players[playerId];
@@ -1001,19 +994,19 @@ cc.Class({
     }
 
     const toRet = {
-      id: currRenderFrame.id,
+      id: currRenderFrame.id + 1,
       players: nextRenderFramePlayers,
     };
 
     if (null != delayedInputFrame) {
       const inputList = delayedInputFrame.inputList;
-      // [WARNING] Traverse in the order of joinIndices to guarantee determinism.
+      const effPushbacks = new Array(inputList.length).fill([0.0, 0.0]); // Guaranteed determinism regardless of traversal order
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
         const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-        const player = renderFrame.players[playerId];
+        const player = currRenderFrame.players[playerId];
 
         const encodedInput = inputList[joinIndex - 1];
         const decodedInput = self.ctrl.decodeDirection(encodedInput);
@@ -1021,6 +1014,7 @@ cc.Class({
           continue;
         }
 
+        // console.log(`Got non-zero inputs for playerId=${playerId}, decodedInput=${JSON.stringify(decodedInput)} @currRenderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.id}`);
         /* 
         Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
         */
@@ -1029,10 +1023,13 @@ cc.Class({
         const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[j]);
         playerCollider.x = newCpos[0];
         playerCollider.y = newCpos[1];
+        // Update directions and thus would eventually update moving animation accordingly
+        nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
+        nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
       }
 
       collisionSys.update();
-      const result = collisionSys.createResult(); // Can I reuse a "self.latestCollisionSysResult" object throughout the whole battle?
+      const result = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
 
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
@@ -1044,11 +1041,19 @@ cc.Class({
           // Test if the player collides with the wall
           if (!playerCollider.collides(potential, result)) continue;
           // Push the player out of the wall
-          playerCollider.x -= result.overlap * result.overlap_x;
-          playerCollider.y -= result.overlap * result.overlap_y;
+          effPushbacks[j][0] += result.overlap * result.overlap_x;
+          effPushbacks[j][1] += result.overlap * result.overlap_y;
         }
 
         const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x, playerCollider.y, self.playerRichInfoArr[j]);
+      }
+
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        const playerId = self.playerRichInfoArr[j].id;
+        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+        const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[j][0], playerCollider.y - effPushbacks[j][1], self.playerRichInfoArr[j]);
         nextRenderFramePlayers[playerId].virtualGridX = newVpos[0];
         nextRenderFramePlayers[playerId].virtualGridY = newVpos[1];
       }
@@ -1057,14 +1062,15 @@ cc.Class({
     return toRet;
   },
 
-  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap) {
+  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
     /*
-    This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd".
+    This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd" if not interruptted.
     */
     const self = this;
     let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
     if (null == latestRdf) {
       console.error("Couldn't find renderFrameId=", renderFrameIdSt, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+      return latestRdf;
     }
 
     if (renderFrameIdSt >= renderFrameIdEd) {
@@ -1072,14 +1078,16 @@ cc.Class({
     }
 
     for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
-      const currRenderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; FIXME: onRoomDownsyncFrame(rdf) might get called asynchronously and thus made this line return "null"!
+      const currRenderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing", this function can be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
       if (null == currRenderFrame) {
-        console.error("Couldn't find renderFrameId=", i, " to rollback, lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+        console.warn("Couldn't find renderFrame for i=", i, " to rollback, self.renderFrameId=", self.renderFrameId, ", lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", might've been interruptted by `onRoomDownsyncFrame`");
+        return latestRdf;
       }
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
       const delayedInputFrame = self.getCachedInputFrameDownsyncWithPrediction(j);
       if (null == delayedInputFrame) {
-        console.error("Failed to get cached delayedInputFrame for renderFrameId=", i, ", inputFrameId=", j, "lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+        console.warn("Failed to get cached delayedInputFrame for i=", i, ", j=", j, ", self.renderFrameId=", self.renderFrameId, ", lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId);
+        return latestRdf;
       }
 
       latestRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap);
@@ -1091,9 +1099,14 @@ cc.Class({
         // We got a more up-to-date "all-confirmed-render-frame".
         self.lastAllConfirmedRenderFrameId = latestRdf.id;
         if (latestRdf.id > self.chaserRenderFrameId) {
-          // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId"
+          // it must be true that "chaserRenderFrameId >= lastAllConfirmedRenderFrameId", regardeless of the "isChasing" param 
           self.chaserRenderFrameId = latestRdf.id;
         }
+      }
+
+      if (true == isChasing) {
+        // Move the cursor "self.chaserRenderFrameId", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+        self.chaserRenderFrameId = latestRdf.id;
       }
       self.dumpToRenderCache(latestRdf);
     }
