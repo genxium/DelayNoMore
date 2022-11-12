@@ -371,7 +371,7 @@ TileCollisionManager.prototype.extractBoundaryObjects = function (withTiledMapNo
   const tilesElListUnderTilesets = {};
   for (let tsxFilenameIdx = 0; tsxFilenameIdx < tsxFileNames.length; ++tsxFilenameIdx) {
     const tsxOrientation = tileSets[tsxFilenameIdx].orientation;
-    if (cc.TiledMap.Orientation.ORTHO == tsxOrientation) {
+    if (cc.TiledMap.Orientation.ORTHO != tsxOrientation) {
       cc.error("Error at tileset %s: We proceed with ONLY tilesets in ORTHO orientation for all map orientations by now.", tsxFileNames[tsxFilenameIdx]);
       continue;
     };

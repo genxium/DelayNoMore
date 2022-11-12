@@ -53,24 +53,24 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 
 	world.Space = space
 
-	moveToCollide := false
+	moveToCollide := true
 	if moveToCollide {
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		toTestPlayerCollider := playerColliders[0]
-		toTestPlayerCollider.X += -2.98
-		toTestPlayerCollider.Y += -50.0
+		toTestPlayerCollider.X += -50.0
+		toTestPlayerCollider.Y += -60.0
 		toTestPlayerCollider.Update()
 		oldDx, oldDy := float64(0), float64(0)
 		if collision := toTestPlayerCollider.Check(oldDx, oldDy); collision != nil {
 			playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
 			for _, obj := range collision.Objects {
 				barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-				if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
+				if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
 					Logger.Info(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
 					effPushback.X += pushbackX
 					effPushback.Y += pushbackY
 				} else {
-					Logger.Info(fmt.Sprintf("Collider BUT not overlapped: a=%v, b=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
+					Logger.Info(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
 				}
 			}
 			toTestPlayerCollider.X -= effPushback.X

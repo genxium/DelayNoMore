@@ -55,7 +55,7 @@ func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceO
 	return collider
 }
 
-func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64) {
+func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64, *SatResult) {
 	origX, origY := playerShape.Position()
 	defer func() {
 		playerShape.SetPosition(origX, origY)
@@ -71,9 +71,9 @@ func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.Conve
 	}
 	if overlapped := IsPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
 		pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY
-		return true, pushbackX, pushbackY
+		return true, pushbackX, pushbackY, overlapResult
 	} else {
-		return false, 0, 0
+		return false, 0, 0, overlapResult
 	}
 }
 
