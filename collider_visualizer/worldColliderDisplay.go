@@ -58,11 +58,13 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 
 	moveToCollide := true
 	if moveToCollide {
-		proposedDx, proposedDy := -50.0, -60.0
+		newVx, newVy := int32(-2959), int32(-2261)
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		toTestPlayerCollider := playerColliders[0]
-		toTestPlayerCollider.X += proposedDx
-		toTestPlayerCollider.Y += proposedDy
+		toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, playerColliderRadius, playerColliderRadius, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+
+		Logger.Info(fmt.Sprintf("Checking collision for virtual (%d, %d), now playerShape=%v", newVx, newVy, ConvexPolygonStr(toTestPlayerCollider.Shape.(*resolv.ConvexPolygon))))
+
 		toTestPlayerCollider.Update()
 		if collision := toTestPlayerCollider.Check(0, 0); collision != nil {
 			playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)

@@ -402,8 +402,7 @@ func (pR *Room) StartBattle() {
 	spaceW := pR.StageDiscreteW * pR.StageTileW
 	spaceH := pR.StageDiscreteH * pR.StageTileH
 
-	spaceOffsetX := float64(spaceW) * 0.5
-	spaceOffsetY := float64(spaceH) * 0.5
+	pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY = float64(spaceW)*0.5, float64(spaceH)*0.5
 	pR.refreshColliders(spaceW, spaceH)
 
 	/**
@@ -476,7 +475,7 @@ func (pR *Room) StartBattle() {
 					// Apply "all-confirmed inputFrames" to move forward "pR.CurDynamicsRenderFrameId"
 					nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
 					Logger.Debug(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, LastAllConfirmedInputFrameId=%v, InputDelayFrames=%v, nextDynamicsRenderFrameId=%v", pR.Id, pR.RenderFrameId, pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames, nextDynamicsRenderFrameId))
-					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, spaceOffsetX, spaceOffsetY)
+					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 					dynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
 				}
 
@@ -1251,7 +1250,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			playerCollider.Update()
 
 			if 0 < encodedInput {
-				Logger.Debug(fmt.Sprintf("Moved playerId=%v: virtual (%d, %d) -> (%d, %d), now playerCollider at (%.2f, %.2f)", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, playerCollider.X, playerCollider.Y))
+				Logger.Debug(fmt.Sprintf("Checking collision for playerId=%v: virtual (%d, %d) -> (%d, %d), now playerShape=%v", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
 			}
 		}
 
@@ -1262,15 +1261,14 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			playerCollider := collisionSysMap[collisionPlayerIndex]
 			if collision := playerCollider.Check(0, 0); collision != nil {
 				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-				Logger.Warn(fmt.Sprintf("Collided: a=%v", ConvexPolygonStr(playerShape)))
 				for _, obj := range collision.Objects {
 					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
 					if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape); overlapped {
-						Logger.Warn(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+						Logger.Debug(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
 						effPushbacks[joinIndex-1].X += pushbackX
 						effPushbacks[joinIndex-1].Y += pushbackY
 					} else {
-						Logger.Warn(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
+						Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
 					}
 				}
 			}
