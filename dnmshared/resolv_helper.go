@@ -12,14 +12,15 @@ import (
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
 	var s []string = make([]string, len(body.Points))
 	for i, p := range body.Points {
-		s[i] = fmt.Sprintf("[%v, %v]", p[0]+body.X, p[1]+body.Y)
+		s[i] = fmt.Sprintf("[%.2f, %.2f]", p[0]+body.X, p[1]+body.Y)
 	}
 
-	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
+	return fmt.Sprintf("{\n%s\n}", strings.Join(s, ",\n"))
 }
 
 func GenerateRectCollider(origX, origY, w, h, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
-	collider := resolv.NewObject(origX-w*0.5+spaceOffsetX, origY-h*0.5+spaceOffsetY, w, h, tag)
+	cx, cy := WorldToPolygonColliderAnchorPos(origX, origY, w*0.5, h*0.5, spaceOffsetX, spaceOffsetY)
+	collider := resolv.NewObject(cx, cy, w, h, tag)
 	shape := resolv.NewRectangle(0, 0, w, h)
 	collider.SetShape(shape)
 	return collider
@@ -218,4 +219,37 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 
 	// the specified unit vector "e" doesn't separate "a" and "b", overlap result is generated
 	return false
+}
+
+func WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio float64) (int32, int32) {
+	// [WARNING] Introduces loss of precision!
+	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
+	var virtualGridX int32 = int32(math.Round(wx * worldToVirtualGridRatio))
+	var virtualGridY int32 = int32(math.Round(wy * worldToVirtualGridRatio))
+	return virtualGridX, virtualGridY
+}
+
+func VirtualGridToWorldPos(vx, vy int32, virtualGridToWorldRatio float64) (float64, float64) {
+	// No loss of precision
+	var wx float64 = float64(vx) * virtualGridToWorldRatio
+	var wy float64 = float64(vy) * virtualGridToWorldRatio
+	return wx, wy
+}
+
+func WorldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return wx - halfBoundingW + collisionSpaceOffsetX, wy - halfBoundingH + collisionSpaceOffsetY
+}
+
+func PolygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return cx + halfBoundingW - collisionSpaceOffsetX, cy + halfBoundingH - collisionSpaceOffsetY
+}
+
+func PolygonColliderAnchorToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, worldToVirtualGridRatio float64) (int32, int32) {
+	wx, wy := PolygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
+	return WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio)
+}
+
+func VirtualGridToPolygonColliderAnchorPos(vx, vy int32, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, virtualGridToWorldRatio float64) (float64, float64) {
+	wx, wy := VirtualGridToWorldPos(vx, vy, virtualGridToWorldRatio)
+	return WorldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }

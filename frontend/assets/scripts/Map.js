@@ -352,6 +352,8 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
+    self.showCriticalCoordinateLabels = true;
+
     console.warn("+++++++ Map onLoad()");
     window.handleClientSessionError = function() {
       console.warn('+++++++ Common handleClientSessionError()');
@@ -473,9 +475,36 @@ cc.Class({
           const x0 = boundaryObj[0].x,
             y0 = boundaryObj[0].y;
           let pts = [];
-          // TODO: Simplify this redundant coordinate conversion within "extractBoundaryObjects", but since this routine is only called once per battle, not urgent.
           for (let i = 0; i < boundaryObj.length; ++i) {
-            pts.push([boundaryObj[i].x - x0, boundaryObj[i].y - y0]);
+            const dx = boundaryObj[i].x - x0;
+            const dy = boundaryObj[i].y - y0;
+            pts.push([dx, dy]);
+            if (self.showCriticalCoordinateLabels) {
+              const barrierVertLabelNode = new cc.Node();
+              switch (i % 4) {
+                case 0:
+                  barrierVertLabelNode.color = cc.Color.RED;
+                  break;
+                case 1:
+                  barrierVertLabelNode.color = cc.Color.GRAY;
+                  break;
+                case 2:
+                  barrierVertLabelNode.color = cc.Color.BLACK;
+                  break;
+                default:
+                  barrierVertLabelNode.color = cc.Color.MAGENTA;
+                  break;
+              }
+              barrierVertLabelNode.setPosition(cc.v2(x0+0.95*dx, y0+0.5*dy));
+              const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
+              barrierVertLabel.fontSize = 20;
+              barrierVertLabel.lineHeight = 22;
+              barrierVertLabel.string = `(${boundaryObj[i].x.toFixed(1)}, ${boundaryObj[i].y.toFixed(1)})`;
+              safelyAddChild(self.node, barrierVertLabelNode);
+              setLocalZOrder(barrierVertLabelNode, 5);
+
+              barrierVertLabelNode.active = true;
+            }
           }
           const newBarrier = self.collisionSys.createPolygon(x0, y0, pts);
           // console.log("Created barrier: ", newBarrier);

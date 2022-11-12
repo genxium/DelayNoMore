@@ -17,7 +17,7 @@
  </objectgroup>
  <layer id="3" name="FirsrtFloor" width="50" height="50">
   <data encoding="base64" compression="zlib">
-   eJztwQENAAAAwqD3T20ON6AAAAAAAAAAAADg3wAnEAAB
+   eJzt1jEKgDAQRNE0GtD739fGaQIhqJHdCf81aSz2oyspBQAAAADWcUYPMIEaaugU37TvwbGl9y05tYz2wWFfaMiBhhyNKzRs99n7lzo0SG1OcWqQtsWxQdSwD57L3CCjO4dDg7zd+Yye7nxmajlCp5jD6Y4OAAAA4H8XE6wBrA==
   </data>
  </layer>
  <objectgroup id="4" name="Barrier">

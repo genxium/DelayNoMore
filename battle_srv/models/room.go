@@ -201,7 +201,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed // Hardcoded
-	pPlayerFromDbInit.ColliderRadius = float64(12)  // Hardcoded
+	pPlayerFromDbInit.ColliderRadius = float64(24)  // Hardcoded
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -234,7 +234,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
 	pEffectiveInRoomPlayerInstance.Speed = pR.PlayerDefaultSpeed // Hardcoded
-	pEffectiveInRoomPlayerInstance.ColliderRadius = float64(12)  // Hardcoded
+	pEffectiveInRoomPlayerInstance.ColliderRadius = float64(16)  // Hardcoded
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("joinIndex", pEffectiveInRoomPlayerInstance.JoinIndex), zap.Any("playerBattleState", pEffectiveInRoomPlayerInstance.BattleState), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId), zap.Any("LastSentInputFrameId", pEffectiveInRoomPlayerInstance.LastSentInputFrameId))
 	return true
@@ -252,7 +252,7 @@ func (pR *Room) ChooseStage() error {
 	}
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{ /*"simple" ,*/ "richsoil"}
+	stageNameList := []string{"simple" /* "richsoil" */}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]
@@ -792,7 +792,7 @@ func (pR *Room) OnDismissed() {
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.WorldToVirtualGridRatio = float64(10)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
-	pR.PlayerDefaultSpeed = 10                                             // Hardcoded in virtual grids per frame
+	pR.PlayerDefaultSpeed = 20                                             // Hardcoded in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -940,7 +940,7 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 			if nil == playerPos {
 				panic(fmt.Sprintf("onPlayerAdded error, nil == playerPos, roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
-			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = pR.worldToVirtualGridPos(playerPos.X, playerPos.Y)
+			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = WorldToVirtualGridPos(playerPos.X, playerPos.Y, pR.WorldToVirtualGridRatio)
 
 			break
 		}
@@ -1240,15 +1240,19 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			currPlayerDownsync := currRenderFrame.Players[playerId]
 			encodedInput := inputList[joinIndex-1]
 			decodedInput := DIRECTION_DECODER[encodedInput]
-			newVx := (currPlayerDownsync.VirtualGridX + (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed))
-			newVy := (currPlayerDownsync.VirtualGridY + (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed))
+			proposedVirtualGridDx, proposedVirtualGridDy := (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed), (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed)
+			newVx, newVy := (currPlayerDownsync.VirtualGridX + proposedVirtualGridDx), (currPlayerDownsync.VirtualGridY + proposedVirtualGridDy)
 			// Reset playerCollider position from the "virtual grid position"
 			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
-			playerCollider.X, playerCollider.Y = pR.virtualGridToPlayerColliderPos(newVx, newVy, player)
+			playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
 
 			// Update in the collision system
 			playerCollider.Update()
+
+			if 0 < encodedInput {
+				Logger.Debug(fmt.Sprintf("Moved playerId=%v: virtual (%d, %d) -> (%d, %d), now playerCollider at (%.2f, %.2f)", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, playerCollider.X, playerCollider.Y))
+			}
 		}
 
 		// handle pushbacks upon collision after all movements treated as simultaneous
@@ -1256,17 +1260,17 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			joinIndex := player.JoinIndex
 			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
-			oldDx, oldDy := float64(0), float64(0)
-			if collision := playerCollider.Check(oldDx, oldDy); collision != nil {
+			if collision := playerCollider.Check(0, 0); collision != nil {
 				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
+				Logger.Warn(fmt.Sprintf("Collided: a=%v", ConvexPolygonStr(playerShape)))
 				for _, obj := range collision.Objects {
 					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-					if overlapped, pushbackX, pushbackY, _ := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
-						Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+					if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape); overlapped {
+						Logger.Warn(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
 						effPushbacks[joinIndex-1].X += pushbackX
 						effPushbacks[joinIndex-1].Y += pushbackY
 					} else {
-						Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
+						Logger.Warn(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
 					}
 				}
 			}
@@ -1278,7 +1282,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			playerCollider := collisionSysMap[collisionPlayerIndex]
 
 			// Update "virtual grid position"
-			newVx, newVy := pR.playerColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player)
+			newVx, newVy := PolygonColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
 			nextRenderFramePlayers[playerId].VirtualGridX = newVx
 			nextRenderFramePlayers[playerId].VirtualGridY = newVy
 		}
@@ -1296,10 +1300,10 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := int(pR.PlayerDefaultSpeed) // the approx minimum distance a player can move per frame in world coordinate
-	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
+	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 2) // the approx minimum distance a player can move per frame in world coordinate
+	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)             // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		wx, wy := pR.virtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY)
+		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
 		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
@@ -1318,38 +1322,4 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 
 func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
 	Logger.Info(fmt.Sprintf("Barrier in roomId=%v: w=%v, h=%v, shape=%v", pR.Id, barrierCollider.W, barrierCollider.H, barrierCollider.Shape))
-}
-
-func (pR *Room) worldToVirtualGridPos(wx, wy float64) (int32, int32) {
-	// [WARNING] Introduces loss of precision!
-	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-	var virtualGridX int32 = int32(math.Round(wx * pR.WorldToVirtualGridRatio))
-	var virtualGridY int32 = int32(math.Round(wy * pR.WorldToVirtualGridRatio))
-	return virtualGridX, virtualGridY
-}
-
-func (pR *Room) virtualGridToWorldPos(vx, vy int32) (float64, float64) {
-	// No loss of precision
-	var wx float64 = float64(vx) * pR.VirtualGridToWorldRatio
-	var wy float64 = float64(vy) * pR.VirtualGridToWorldRatio
-	return wx, wy
-}
-
-func (pR *Room) playerWorldToCollisionPos(wx, wy float64, player *Player) (float64, float64) {
-	// TODO: remove this duplicate code w.r.t. "dnmshared/resolv_helper.go"
-	return wx - player.ColliderRadius + pR.collisionSpaceOffsetX, wy - player.ColliderRadius + pR.collisionSpaceOffsetY
-}
-
-func (pR *Room) playerColliderAnchorToWorldPos(cx, cy float64, player *Player) (float64, float64) {
-	return cx + player.ColliderRadius - pR.collisionSpaceOffsetX, cy + player.ColliderRadius - pR.collisionSpaceOffsetY
-}
-
-func (pR *Room) playerColliderAnchorToVirtualGridPos(cx, cy float64, player *Player) (int32, int32) {
-	wx, wy := pR.playerColliderAnchorToWorldPos(cx, cy, player)
-	return pR.worldToVirtualGridPos(wx, wy)
-}
-
-func (pR *Room) virtualGridToPlayerColliderPos(vx, vy int32, player *Player) (float64, float64) {
-	wx, wy := pR.virtualGridToWorldPos(vx, vy)
-	return pR.playerWorldToCollisionPos(wx, wy, player)
 }

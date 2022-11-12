@@ -6,30 +6,10 @@ module.export = cc.Class({
       type: cc.Animation,
       default: null,
     },
-    baseSpeed: {
-      type: cc.Float,
-      default: 50,
-    },
-    speed: {
-      type: cc.Float,
-      default: 50
-    },
     lastMovedAt: {
       type: cc.Float,
       default: 0 // In "GMT milliseconds"
-    },
-    eps: {
-      default: 0.10,
-      type: cc.Float
-    },
-    magicLeanLowerBound: {
-      default: 0.414, // Tangent of (PI/8).
-      type: cc.Float
-    },
-    magicLeanUpperBound: {
-      default: 2.414, // Tangent of (3*PI/8).
-      type: cc.Float
-    },
+    }
   },
 
   // LIFE-CYCLE CALLBACKS:
@@ -70,7 +50,7 @@ module.export = cc.Class({
       this.activeDirection = newScheduledDirection;
       this.activeDirection = newScheduledDirection;
       const clipKey = newScheduledDirection.dx.toString() + newScheduledDirection.dy.toString();
-      const clips = (this.attacked ? this.attackedClips : this.clips); 
+      const clips = (this.attacked ? this.attackedClips : this.clips);
       let clip = clips[clipKey];
       if (!clip) {
         // Keep playing the current anim.
@@ -86,11 +66,9 @@ module.export = cc.Class({
     }
   },
 
-  update(dt) {
-  },
+  update(dt) {},
 
-  lateUpdate(dt) {
-  },
+  lateUpdate(dt) {},
 
   _generateRandomDirection() {
     return ALL_DISCRETE_DIRECTIONS_CLOCKWISE[Math.floor(Math.random() * ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length)];
@@ -117,16 +95,16 @@ module.export = cc.Class({
 
   updateSpeed(proposedSpeed) {
     if (0 == proposedSpeed && 0 < this.speed) {
-      this.startFrozenDisplay(); 
-    } 
+      this.startFrozenDisplay();
+    }
     if (0 < proposedSpeed && 0 == this.speed) {
-      this.stopFrozenDisplay(); 
-    } 
-    this.speed = proposedSpeed; 
+      this.stopFrozenDisplay();
+    }
+    this.speed = proposedSpeed;
   },
 
   startFrozenDisplay() {
-    const self =  this;
+    const self = this;
     self.attacked = true;
   },
 

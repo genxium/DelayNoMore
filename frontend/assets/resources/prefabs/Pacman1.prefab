@@ -100,7 +100,7 @@
       "__id__": 1
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 3
@@ -119,8 +119,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 93.36,
-      "height": 40
+      "width": 46.68,
+      "height": 27.72
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -132,7 +132,7 @@
       "ctor": "Float64Array",
       "array": [
         -5,
-        101,
+        50,
         0,
         0,
         0,
@@ -164,12 +164,16 @@
       "__id__": 2
     },
     "_enabled": true,
-    "_materials": [],
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
     "_useOriginalSize": false,
     "_string": "(0, 0)",
     "_N$string": "(0, 0)",
-    "_fontSize": 40,
-    "_lineHeight": 40,
+    "_fontSize": 20,
+    "_lineHeight": 22,
     "_enableWrapText": true,
     "_N$file": null,
     "_isSystemFontUsed": true,
@@ -557,14 +561,12 @@
     },
     "_enabled": true,
     "animComp": null,
-    "baseSpeed": 50,
-    "speed": 50,
     "lastMovedAt": 0,
-    "eps": 0.1,
-    "magicLeanLowerBound": 0.414,
-    "magicLeanUpperBound": 2.414,
     "arrowTipNode": {
       "__id__": 8
+    },
+    "coordLabel": {
+      "__id__": 3
     },
     "_id": ""
   },
