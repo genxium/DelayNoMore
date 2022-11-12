@@ -1261,7 +1261,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 				for _, obj := range collision.Objects {
 					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-					if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
+					if overlapped, pushbackX, pushbackY, _ := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
 						Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
 						effPushbacks[joinIndex-1].X += pushbackX
 						effPushbacks[joinIndex-1].Y += pushbackY
@@ -1296,7 +1296,7 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := int(3)                                                    // the approx minimum distance a player can move per frame in world coordinate
+	minStep := int(pR.PlayerDefaultSpeed) // the approx minimum distance a player can move per frame in world coordinate
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := pR.virtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY)

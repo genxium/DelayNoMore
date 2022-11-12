@@ -33,9 +33,11 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetX := float64(spaceW) * 0.5
 	spaceOffsetY := float64(spaceH) * 0.5
 
-	playerColliderRadius := float64(32)
+	playerDefaultSpeed := int32(10)
+    minStep := int(playerDefaultSpeed)
+	playerColliderRadius := float64(12)
 	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
-	space := resolv.NewSpace(int(spaceW), int(spaceH), 16, 16)
+	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
 	for i, playerPos := range playerPosList.Eles {
 		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, playerColliderRadius*2, playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
 		Logger.Info(fmt.Sprintf("Player Collider#%d: playerPos.X=%v, playerPos.Y=%v, radius=%v, spaceOffsetX=%v, spaceOffsetY=%v, shape=%v", i, playerPos.X, playerPos.Y, playerColliderRadius, spaceOffsetX, spaceOffsetY, playerCollider.Shape))
