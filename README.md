@@ -9,6 +9,7 @@ _(how input delay roughly works)_
 _(how rollback-and-chase in this project roughly works)_
 
 ![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)
+![floating_point_accumulation_err](./charts/AvoidingFloatingPointAccumulationErr.jpg)
 
 _(in game screenshot)_
 
