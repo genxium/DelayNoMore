@@ -1,7 +1,11 @@
 package models
 
 import (
+	. "battle_srv/common"
+	"battle_srv/common/utils"
+	. "battle_srv/protos"
 	. "dnmshared"
+	. "dnmshared/sharedprotos"
 	"encoding/xml"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -13,9 +17,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	. "server/common"
-	"server/common/utils"
-	pb "server/pb_output"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -60,36 +61,17 @@ const (
 	MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED      = -2
 )
 
+// These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
 var DIRECTION_DECODER = [][]int32{
 	{0, 0},
-	{0, +1},
-	{0, -1},
+	{0, +2},
+	{0, -2},
 	{+2, 0},
 	{-2, 0},
-	{+2, +1},
-	{-2, -1},
-	{+2, -1},
-	{-2, +1},
-	{+2, 0},
-	{-2, 0},
-	{0, +1},
-	{0, -1},
-}
-
-var DIRECTION_DECODER_INVERSE_LENGTH = []float64{
-	0.0,
-	1.0,
-	1.0,
-	0.5,
-	0.5,
-	0.4472,
-	0.4472,
-	0.4472,
-	0.4472,
-	0.5,
-	0.5,
-	1.0,
-	1.0,
+	{+1, +1},
+	{-1, -1},
+	{+1, -1},
+	{-1, +1},
 }
 
 type RoomBattleState struct {
@@ -128,12 +110,13 @@ func calRoomScore(inRoomPlayerCount int32, roomPlayerCnt int, currentRoomBattleS
 }
 
 type Room struct {
-	Id                   int32
-	Capacity             int
-	playerColliderRadius float64
-	Players              map[int32]*Player
-	PlayersArr           []*Player // ordered by joinIndex
-	CollisionSysMap      map[int32]*resolv.Object
+	Id                    int32
+	Capacity              int
+	collisionSpaceOffsetX float64
+	collisionSpaceOffsetY float64
+	Players               map[int32]*Player
+	PlayersArr            []*Player // ordered by joinIndex
+	CollisionSysMap       map[int32]*resolv.Object
 	/**
 		 * The following `PlayerDownsyncSessionDict` is NOT individually put
 		 * under `type Player struct` for a reason.
@@ -177,10 +160,14 @@ type Room struct {
 	NstDelayFrames                         int32  // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 	InputScaleFrames                       uint32 // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	JoinIndexBooleanArr                    []bool
-	RollbackEstimatedDt                    float64
 	RollbackEstimatedDtMillis              float64
 	RollbackEstimatedDtNanos               int64
 	LastRenderFrameIdTriggeredAt           int64
+
+	WorldToVirtualGridRatio float64
+	VirtualGridToWorldRatio float64
+
+	PlayerDefaultSpeed int32
 
 	StageName                      string
 	StageDiscreteW                 int32
@@ -191,11 +178,6 @@ type Room struct {
 	RawBattleStrToPolygon2DListMap StrToPolygon2DListMap
 	BackendDynamicsEnabled         bool
 }
-
-const (
-	PLAYER_DEFAULT_SPEED = float64(200) // Hardcoded
-	ADD_SPEED            = float64(100) // Hardcoded
-)
 
 func (pR *Room) updateScore() {
 	pR.Score = calRoomScore(pR.EffectivePlayerCount, pR.Capacity, pR.State)
@@ -218,9 +200,8 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
-	pPlayerFromDbInit.FrozenAtGmtMillis = -1       // Hardcoded temporarily.
-	pPlayerFromDbInit.Speed = PLAYER_DEFAULT_SPEED // Hardcoded temporarily.
-	pPlayerFromDbInit.AddSpeedAtGmtMillis = -1     // Hardcoded temporarily.
+	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed // Hardcoded
+	pPlayerFromDbInit.ColliderRadius = float64(24)  // Hardcoded
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -252,6 +233,8 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
+	pEffectiveInRoomPlayerInstance.Speed = pR.PlayerDefaultSpeed // Hardcoded
+	pEffectiveInRoomPlayerInstance.ColliderRadius = float64(16)  // Hardcoded
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("joinIndex", pEffectiveInRoomPlayerInstance.JoinIndex), zap.Any("playerBattleState", pEffectiveInRoomPlayerInstance.BattleState), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId), zap.Any("LastSentInputFrameId", pEffectiveInRoomPlayerInstance.LastSentInputFrameId))
 	return true
@@ -269,7 +252,7 @@ func (pR *Room) ChooseStage() error {
 	}
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{ /*"simple" ,*/ "richsoil"}
+	stageNameList := []string{"simple" /* "richsoil" */}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]
@@ -329,7 +312,7 @@ func (pR *Room) ChooseStage() error {
 	barrierPolygon2DList := *(toRetStrToPolygon2DListMap["Barrier"])
 
 	var barrierLocalIdInBattle int32 = 0
-	for _, polygon2DUnaligned := range barrierPolygon2DList {
+	for _, polygon2DUnaligned := range barrierPolygon2DList.Eles {
 		polygon2D := AlignPolygon2DToBoundingBox(polygon2DUnaligned)
 		/*
 		   // For debug-printing only.
@@ -362,7 +345,7 @@ func (pR *Room) ConvertToLastUsedRenderFrameId(inputFrameId int32, inputDelayFra
 	return ((inputFrameId << pR.InputScaleFrames) + inputDelayFrames + (1 << pR.InputScaleFrames) - 1)
 }
 
-func (pR *Room) EncodeUpsyncCmd(upsyncCmd *pb.InputFrameUpsync) uint64 {
+func (pR *Room) EncodeUpsyncCmd(upsyncCmd *InputFrameUpsync) uint64 {
 	var ret uint64 = 0
 	// There're 13 possible directions, occupying the first 4 bits, no need to shift
 	ret += uint64(upsyncCmd.EncodedDir)
@@ -386,7 +369,7 @@ func (pR *Room) InputsBufferString(allDetails bool) string {
 			if nil == tmp {
 				break
 			}
-			f := tmp.(*pb.InputFrameDownsync)
+			f := tmp.(*InputFrameDownsync)
 			s = append(s, fmt.Sprintf("{inputFrameId: %v, inputList: %v, confirmedList: %v}", f.InputFrameId, f.InputList, f.ConfirmedList))
 		}
 
@@ -408,7 +391,7 @@ func (pR *Room) StartBattle() {
 
 	// Initialize the "collisionSys" as well as "RenderFrameBuffer"
 	pR.CurDynamicsRenderFrameId = 0
-	kickoffFrame := &pb.RoomDownsyncFrame{
+	kickoffFrame := &RoomDownsyncFrame{
 		Id:             pR.RenderFrameId,
 		Players:        toPbPlayers(pR.Players),
 		CountdownNanos: pR.BattleDurationNanos,
@@ -419,9 +402,8 @@ func (pR *Room) StartBattle() {
 	spaceW := pR.StageDiscreteW * pR.StageTileW
 	spaceH := pR.StageDiscreteH * pR.StageTileH
 
-	spaceOffsetX := float64(spaceW) * 0.5
-	spaceOffsetY := float64(spaceH) * 0.5
-	pR.refreshColliders(spaceW, spaceH, spaceOffsetX, spaceOffsetY)
+	pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY = float64(spaceW)*0.5, float64(spaceH)*0.5
+	pR.refreshColliders(spaceW, spaceH)
 
 	/**
 	 * Will be triggered from a goroutine which executes the critical `Room.AddPlayerIfPossible`, thus the `battleMainLoop` should be detached.
@@ -465,12 +447,11 @@ func (pR *Room) StartBattle() {
 				pR.prefabInputFrameDownsync(noDelayInputFrameId)
 			}
 
+			pR.markConfirmationIfApplicable()
 			unconfirmedMask := uint64(0)
 			if pR.BackendDynamicsEnabled {
 				// Force setting all-confirmed of buffered inputFrames periodically
 				unconfirmedMask = pR.forceConfirmationIfApplicable()
-			} else {
-				pR.markConfirmationIfApplicable()
 			}
 
 			upperToSendInputFrameId := atomic.LoadInt32(&(pR.LastAllConfirmedInputFrameId))
@@ -494,7 +475,7 @@ func (pR *Room) StartBattle() {
 					// Apply "all-confirmed inputFrames" to move forward "pR.CurDynamicsRenderFrameId"
 					nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
 					Logger.Debug(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, LastAllConfirmedInputFrameId=%v, InputDelayFrames=%v, nextDynamicsRenderFrameId=%v", pR.Id, pR.RenderFrameId, pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames, nextDynamicsRenderFrameId))
-					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, spaceOffsetX, spaceOffsetY)
+					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 					dynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
 				}
 
@@ -503,21 +484,22 @@ func (pR *Room) StartBattle() {
 					refRenderFrameId = pR.CurDynamicsRenderFrameId
 				}
 			}
+
 			for playerId, player := range pR.Players {
 				if swapped := atomic.CompareAndSwapInt32(&player.BattleState, PlayerBattleStateIns.ACTIVE, PlayerBattleStateIns.ACTIVE); !swapped {
 					// [WARNING] DON'T send anything if the player is disconnected, because it could jam the channel and cause significant delay upon "battle recovery for reconnected player".
 					continue
 				}
 				if 0 == pR.RenderFrameId {
-					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*pb.RoomDownsyncFrame)
+					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*RoomDownsyncFrame)
 					pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_START, playerId)
 				} else {
 					// [WARNING] Websocket is TCP-based, thus no need to re-send a previously sent inputFrame to a same player!
-					toSendInputFrames := make([]*pb.InputFrameDownsync, 0, pR.InputsBuffer.Cnt)
+					toSendInputFrames := make([]*InputFrameDownsync, 0, pR.InputsBuffer.Cnt)
 					candidateToSendInputFrameId := pR.Players[playerId].LastSentInputFrameId + 1
 					if candidateToSendInputFrameId < pR.InputsBuffer.StFrameId {
 						// [WARNING] As "player.LastSentInputFrameId <= lastAllConfirmedInputFrameIdWithChange" for each iteration, and "lastAllConfirmedInputFrameIdWithChange <= lastAllConfirmedInputFrameId" where the latter is used to "applyInputFrameDownsyncDynamics" and then evict "pR.InputsBuffer", thus there's a very high possibility that "player.LastSentInputFrameId" is already evicted.
-						// Logger.Debug(fmt.Sprintf("LastSentInputFrameId already popped: roomId=%v, playerId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, candidateToSendInputFrameId-1, player.AckingInputFrameId, pR.InputsBufferString(false)))
+						Logger.Warn(fmt.Sprintf("LastSentInputFrameId already popped: roomId=%v, playerId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, candidateToSendInputFrameId-1, player.AckingInputFrameId, pR.InputsBufferString(false)))
 						candidateToSendInputFrameId = pR.InputsBuffer.StFrameId
 					}
 
@@ -533,7 +515,7 @@ func (pR *Room) StartBattle() {
 						if nil == tmp {
 							panic(fmt.Sprintf("Required inputFrameId=%v for roomId=%v, playerId=%v doesn't exist! InputsBuffer=%v", candidateToSendInputFrameId, pR.Id, playerId, pR.InputsBufferString(false)))
 						}
-						f := tmp.(*pb.InputFrameDownsync)
+						f := tmp.(*InputFrameDownsync)
 						if pR.inputFrameIdDebuggable(candidateToSendInputFrameId) {
 							Logger.Debug("inputFrame lifecycle#3[sending]:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerAckingInputFrameId", player.AckingInputFrameId), zap.Any("inputFrameId", candidateToSendInputFrameId), zap.Any("inputFrameId-doublecheck", f.InputFrameId), zap.Any("InputsBuffer", pR.InputsBufferString(false)), zap.Any("ConfirmedList", f.ConfirmedList))
 						}
@@ -543,22 +525,26 @@ func (pR *Room) StartBattle() {
 
 					if 0 >= len(toSendInputFrames) {
 						// [WARNING] When sending DOWNSYNC_MSG_ACT_FORCED_RESYNC, there MUST BE accompanying "toSendInputFrames" for calculating "refRenderFrameId"!
-
 						if MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId {
 							Logger.Warn(fmt.Sprintf("Not sending due to empty toSendInputFrames: roomId=%v, playerId=%v, refRenderFrameId=%v, upperToSendInputFrameId=%v, lastSentInputFrameId=%v, playerAckingInputFrameId=%v", pR.Id, playerId, refRenderFrameId, upperToSendInputFrameId, player.LastSentInputFrameId, player.AckingInputFrameId))
 						}
 						continue
 					}
 
-					indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
-					var joinMask uint64 = (1 << indiceInJoinIndexBooleanArr)
-					if pR.BackendDynamicsEnabled && (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId || 0 < (unconfirmedMask&joinMask)) {
-						// [WARNING] Even upon "MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED", it could be true that "0 == (unconfirmedMask & joinMask)"!
+					/*
+					   Resync helps
+					   1. when player with a slower frontend clock lags significantly behind and thus wouldn't get its inputUpsync recognized due to faster "forceConfirmation"
+					   2. reconnection
+					*/
+					shouldResync1 := (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId)
+					// shouldResync2 := (0 < (unconfirmedMask & uint64(1 << uint32(player.JoinIndex-1)))) // This condition is critical, if we don't send resync upon this condition, the "reconnected or slowly-clocking player" might never get its input synced
+					shouldResync2 := (0 < unconfirmedMask) // An easier version of the above, might keep sending "refRenderFrame"s to still connected players when any player is disconnected
+					if pR.BackendDynamicsEnabled && (shouldResync1 || shouldResync2) {
 						tmp := pR.RenderFrameBuffer.GetByFrameId(refRenderFrameId)
 						if nil == tmp {
 							panic(fmt.Sprintf("Required refRenderFrameId=%v for roomId=%v, playerId=%v, candidateToSendInputFrameId=%v doesn't exist! InputsBuffer=%v, RenderFrameBuffer=%v", refRenderFrameId, pR.Id, playerId, candidateToSendInputFrameId, pR.InputsBufferString(false), pR.RenderFrameBufferString()))
 						}
-						refRenderFrame := tmp.(*pb.RoomDownsyncFrame)
+						refRenderFrame := tmp.(*RoomDownsyncFrame)
 						pR.sendSafely(refRenderFrame, toSendInputFrames, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId)
 					} else {
 						pR.sendSafely(nil, toSendInputFrames, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId)
@@ -567,35 +553,40 @@ func (pR *Room) StartBattle() {
 				}
 			}
 
-			// Evict no longer required "RenderFrameBuffer"
-			for pR.RenderFrameBuffer.N < pR.RenderFrameBuffer.Cnt || (0 < pR.RenderFrameBuffer.Cnt && pR.RenderFrameBuffer.StFrameId < refRenderFrameId) {
-				_ = pR.RenderFrameBuffer.Pop()
+			if pR.BackendDynamicsEnabled {
+				// Evict no longer required "RenderFrameBuffer"
+				for pR.RenderFrameBuffer.N < pR.RenderFrameBuffer.Cnt || (0 < pR.RenderFrameBuffer.Cnt && pR.RenderFrameBuffer.StFrameId < refRenderFrameId) {
+					_ = pR.RenderFrameBuffer.Pop()
+				}
 			}
 
 			toApplyInputFrameId := pR.ConvertToInputFrameId(refRenderFrameId, pR.InputDelayFrames)
-			if false == pR.BackendDynamicsEnabled {
-				// When "false == pR.BackendDynamicsEnabled", the variable "refRenderFrameId" is not well defined
-				minLastSentInputFrameId := int32(math.MaxInt32)
-				for _, player := range pR.Players {
-					if player.LastSentInputFrameId >= minLastSentInputFrameId {
-						continue
-					}
-					minLastSentInputFrameId = player.LastSentInputFrameId
+			/*
+			   [WARNING]
+			   The following updates to "toApplyInputFrameId" is necessary because when "false == pR.BackendDynamicsEnabled", the variable "refRenderFrameId" is not well defined.
+			*/
+			minLastSentInputFrameId := int32(math.MaxInt32)
+			for _, player := range pR.Players {
+				if player.LastSentInputFrameId >= minLastSentInputFrameId {
+					continue
 				}
+				minLastSentInputFrameId = player.LastSentInputFrameId
+			}
+			if minLastSentInputFrameId < toApplyInputFrameId {
 				toApplyInputFrameId = minLastSentInputFrameId
 			}
 			for pR.InputsBuffer.N < pR.InputsBuffer.Cnt || (0 < pR.InputsBuffer.Cnt && pR.InputsBuffer.StFrameId < toApplyInputFrameId) {
-				f := pR.InputsBuffer.Pop().(*pb.InputFrameDownsync)
+				f := pR.InputsBuffer.Pop().(*InputFrameDownsync)
 				if pR.inputFrameIdDebuggable(f.InputFrameId) {
 					// Popping of an "inputFrame" would be AFTER its being all being confirmed, because it requires the "inputFrame" to be all acked
-					Logger.Debug("inputFrame lifecycle#4[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("InputsBuffer", pR.InputsBufferString(false)))
+					Logger.Debug("inputFrame lifecycle#4[popped]:", zap.Any("roomId", pR.Id), zap.Any("inputFrameId", f.InputFrameId), zap.Any("toApplyInputFrameId", toApplyInputFrameId), zap.Any("InputsBuffer", pR.InputsBufferString(false)))
 				}
 			}
 
 			pR.RenderFrameId++
 			elapsedInCalculation := (utils.UnixtimeNano() - stCalculation)
 			if elapsedInCalculation > nanosPerFrame {
-				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v, dynamicsDuration=%v, nanosPerFrame=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, nanosPerFrame))
+				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v ns, dynamicsDuration=%v ns, expected nanosPerFrame=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, nanosPerFrame))
 			}
 			time.Sleep(time.Duration(nanosPerFrame - elapsedInCalculation))
 		}
@@ -611,7 +602,7 @@ func (pR *Room) toDiscreteInputsBufferIndex(inputFrameId int32, joinIndex int32)
 	return (inputFrameId << 2) + joinIndex // allowing joinIndex upto 15
 }
 
-func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
+func (pR *Room) OnBattleCmdReceived(pReq *WsReq) {
 	if swapped := atomic.CompareAndSwapInt32(&pR.State, RoomBattleStateIns.IN_BATTLE, RoomBattleStateIns.IN_BATTLE); !swapped {
 		return
 	}
@@ -649,7 +640,7 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 	}
 }
 
-func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *pb.InputFrameDownsync, playerId int32) {
+func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *InputFrameDownsync, playerId int32) {
 	inputFrameId := inputFrameDownsync.InputFrameId
 	if -1 == pR.LastAllConfirmedInputFrameIdWithChange || false == pR.equalInputLists(inputFrameDownsync.InputList, pR.LastAllConfirmedInputList) {
 		if -1 == playerId {
@@ -691,7 +682,7 @@ func (pR *Room) StopBattleForSettlement() {
 	Logger.Info("Stopping the `battleMainLoop` for:", zap.Any("roomId", pR.Id))
 	pR.RenderFrameId++
 	for playerId, _ := range pR.Players {
-		assembledFrame := pb.RoomDownsyncFrame{
+		assembledFrame := RoomDownsyncFrame{
 			Id:             pR.RenderFrameId,
 			Players:        toPbPlayers(pR.Players),
 			CountdownNanos: -1, // TODO: Replace this magic constant!
@@ -717,18 +708,19 @@ func (pR *Room) onBattlePrepare(cb BattleStartCbType) {
 	pR.State = RoomBattleStateIns.PREPARE
 	Logger.Info("Battle state transitted to RoomBattleStateIns.PREPARE for:", zap.Any("roomId", pR.Id))
 
-	playerMetas := make(map[int32]*pb.PlayerMeta, 0)
+	playerMetas := make(map[int32]*PlayerDownsyncMeta, 0)
 	for _, player := range pR.Players {
-		playerMetas[player.Id] = &pb.PlayerMeta{
-			Id:          player.Id,
-			Name:        player.Name,
-			DisplayName: player.DisplayName,
-			Avatar:      player.Avatar,
-			JoinIndex:   player.JoinIndex,
+		playerMetas[player.Id] = &PlayerDownsyncMeta{
+			Id:             player.Id,
+			Name:           player.Name,
+			DisplayName:    player.DisplayName,
+			Avatar:         player.Avatar,
+			ColliderRadius: player.ColliderRadius, // hardcoded for now
+			JoinIndex:      player.JoinIndex,
 		}
 	}
 
-	battleReadyToStartFrame := &pb.RoomDownsyncFrame{
+	battleReadyToStartFrame := &RoomDownsyncFrame{
 		Id:             DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START,
 		Players:        toPbPlayers(pR.Players),
 		PlayerMetas:    playerMetas,
@@ -798,7 +790,9 @@ func (pR *Room) Dismiss() {
 func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
-	pR.playerColliderRadius = float64(12) // hardcoded
+	pR.WorldToVirtualGridRatio = float64(1000)
+	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
+	pR.PlayerDefaultSpeed = int32(float64(2) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -820,13 +814,12 @@ func (pR *Room) OnDismissed() {
 	pR.NstDelayFrames = 8
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
-	pR.RollbackEstimatedDt = 0.016667      // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
-	pR.MaxChasingRenderFramesPerUpdate = 10
+	pR.MaxChasingRenderFramesPerUpdate = 5
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
 
@@ -939,16 +932,15 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 
 			// Lazily assign the initial position of "Player" for "RoomDownsyncFrame".
 			playerPosList := *(pR.RawBattleStrToVec2DListMap["PlayerStartingPos"])
-			if index > len(playerPosList) {
+			if index > len(playerPosList.Eles) {
 				panic(fmt.Sprintf("onPlayerAdded error, index >= len(playerPosList), roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
-			playerPos := playerPosList[index]
+			playerPos := playerPosList.Eles[index]
 
 			if nil == playerPos {
 				panic(fmt.Sprintf("onPlayerAdded error, nil == playerPos, roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
-			pR.Players[playerId].X = playerPos.X
-			pR.Players[playerId].Y = playerPos.Y
+			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = WorldToVirtualGridPos(playerPos.X, playerPos.Y, pR.WorldToVirtualGridRatio)
 
 			break
 		}
@@ -976,14 +968,15 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 		return false
 	}
 
-	playerMetas := make(map[int32]*pb.PlayerMeta, 0)
+	playerMetas := make(map[int32]*PlayerDownsyncMeta, 0)
 	for _, eachPlayer := range pR.Players {
-		playerMetas[eachPlayer.Id] = &pb.PlayerMeta{
-			Id:          eachPlayer.Id,
-			Name:        eachPlayer.Name,
-			DisplayName: eachPlayer.DisplayName,
-			Avatar:      eachPlayer.Avatar,
-			JoinIndex:   eachPlayer.JoinIndex,
+		playerMetas[eachPlayer.Id] = &PlayerDownsyncMeta{
+			Id:             eachPlayer.Id,
+			Name:           eachPlayer.Name,
+			DisplayName:    eachPlayer.DisplayName,
+			Avatar:         eachPlayer.Avatar,
+			JoinIndex:      eachPlayer.JoinIndex,
+			ColliderRadius: eachPlayer.ColliderRadius,
 		}
 	}
 
@@ -999,14 +992,14 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 		*/
 		switch targetPlayer.BattleState {
 		case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
-			playerAckedFrame := &pb.RoomDownsyncFrame{
+			playerAckedFrame := &RoomDownsyncFrame{
 				Id:          pR.RenderFrameId,
 				Players:     toPbPlayers(pR.Players),
 				PlayerMetas: playerMetas,
 			}
 			pR.sendSafely(playerAckedFrame, nil, DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED, eachPlayer.Id)
 		case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
-			playerAckedFrame := &pb.RoomDownsyncFrame{
+			playerAckedFrame := &RoomDownsyncFrame{
 				Id:          pR.RenderFrameId,
 				Players:     toPbPlayers(pR.Players),
 				PlayerMetas: playerMetas,
@@ -1037,14 +1030,14 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 	return true
 }
 
-func (pR *Room) sendSafely(roomDownsyncFrame *pb.RoomDownsyncFrame, toSendFrames []*pb.InputFrameDownsync, act int32, playerId int32) {
+func (pR *Room) sendSafely(roomDownsyncFrame *RoomDownsyncFrame, toSendFrames []*InputFrameDownsync, act int32, playerId int32) {
 	defer func() {
 		if r := recover(); r != nil {
 			pR.PlayerSignalToCloseDict[playerId](Constants.RetCode.UnknownError, fmt.Sprintf("%v", r))
 		}
 	}()
 
-	pResp := &pb.WsResp{
+	pResp := &WsResp{
 		Ret:                     int32(Constants.RetCode.Ok),
 		Act:                     act,
 		Rdf:                     roomDownsyncFrame,
@@ -1065,16 +1058,16 @@ func (pR *Room) shouldPrefabInputFrameDownsync(renderFrameId int32) bool {
 	return ((renderFrameId & ((1 << pR.InputScaleFrames) - 1)) == 0)
 }
 
-func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *pb.InputFrameDownsync {
+func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync {
 	/*
 	   Kindly note that on backend the prefab is much simpler than its frontend counterpart, because frontend will upsync its latest command immediately if there's any change w.r.t. its own prev cmd, thus if no upsync received from a frontend,
 	   - EITHER it's due to local lag and bad network,
 	   - OR there's no change w.r.t. to its prev cmd.
 	*/
-	var currInputFrameDownsync *pb.InputFrameDownsync = nil
+	var currInputFrameDownsync *InputFrameDownsync = nil
 
 	if 0 == inputFrameId && 0 == pR.InputsBuffer.Cnt {
-		currInputFrameDownsync = &pb.InputFrameDownsync{
+		currInputFrameDownsync = &InputFrameDownsync{
 			InputFrameId:  0,
 			InputList:     make([]uint64, pR.Capacity),
 			ConfirmedList: uint64(0),
@@ -1084,9 +1077,9 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *pb.InputFrameDowns
 		if nil == tmp {
 			panic(fmt.Sprintf("Error prefabbing inputFrameDownsync: roomId=%v, InputsBuffer=%v", pR.Id, pR.InputsBufferString(false)))
 		}
-		prevInputFrameDownsync := tmp.(*pb.InputFrameDownsync)
+		prevInputFrameDownsync := tmp.(*InputFrameDownsync)
 		currInputList := prevInputFrameDownsync.InputList // Would be a clone of the values
-		currInputFrameDownsync = &pb.InputFrameDownsync{
+		currInputFrameDownsync = &InputFrameDownsync{
 			InputFrameId:  inputFrameId,
 			InputList:     currInputList,
 			ConfirmedList: uint64(0),
@@ -1112,20 +1105,19 @@ func (pR *Room) markConfirmationIfApplicable() {
 		if nil == tmp {
 			panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", inputFrameId, pR.Id, pR.InputsBufferString(false)))
 		}
-		inputFrameDownsync := tmp.(*pb.InputFrameDownsync)
+		inputFrameDownsync := tmp.(*InputFrameDownsync)
 		for _, player := range pR.Players {
 			bufIndex := pR.toDiscreteInputsBufferIndex(inputFrameId, player.JoinIndex)
 			tmp, loaded := pR.DiscreteInputsBuffer.LoadAndDelete(bufIndex) // It's safe to "LoadAndDelete" here because the "inputFrameUpsync" of this player is already remembered by the corresponding "inputFrameDown".
 			if !loaded {
 				continue
 			}
-			inputFrameUpsync := tmp.(*pb.InputFrameUpsync)
+			inputFrameUpsync := tmp.(*InputFrameUpsync)
 			indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
 			inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr] = pR.EncodeUpsyncCmd(inputFrameUpsync)
 			inputFrameDownsync.ConfirmedList |= (1 << indiceInJoinIndexBooleanArr)
 		}
 
-		// Force confirmation of "inputFrame2"
 		if allConfirmedMask == inputFrameDownsync.ConfirmedList {
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		} else {
@@ -1156,24 +1148,12 @@ func (pR *Room) forceConfirmationIfApplicable() uint64 {
 	if nil == tmp {
 		panic(fmt.Sprintf("inputFrameId2=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", inputFrameId2, pR.Id, pR.InputsBufferString(false)))
 	}
-	inputFrame2 := tmp.(*pb.InputFrameDownsync)
-	for _, player := range pR.Players {
-		// Enrich by already arrived player upsync commands
-		bufIndex := pR.toDiscreteInputsBufferIndex(inputFrame2.InputFrameId, player.JoinIndex)
-		tmp, loaded := pR.DiscreteInputsBuffer.LoadAndDelete(bufIndex)
-		if !loaded {
-			continue
-		}
-		inputFrameUpsync := tmp.(*pb.InputFrameUpsync)
-		indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
-		inputFrame2.InputList[indiceInJoinIndexBooleanArr] = pR.EncodeUpsyncCmd(inputFrameUpsync)
-		inputFrame2.ConfirmedList |= (1 << indiceInJoinIndexBooleanArr)
-	}
 
 	totPlayerCnt := uint32(pR.Capacity)
 	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
 
 	// Force confirmation of "inputFrame2"
+	inputFrame2 := tmp.(*InputFrameDownsync)
 	oldConfirmedList := inputFrame2.ConfirmedList
 	unconfirmedMask := (oldConfirmedList ^ allConfirmedMask)
 	inputFrame2.ConfirmedList = allConfirmedMask
@@ -1192,7 +1172,13 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
 
 	for collisionSysRenderFrameId := fromRenderFrameId; collisionSysRenderFrameId < toRenderFrameId; collisionSysRenderFrameId++ {
+		currRenderFrameTmp := pR.RenderFrameBuffer.GetByFrameId(collisionSysRenderFrameId)
+		if nil == currRenderFrameTmp {
+			panic(fmt.Sprintf("collisionSysRenderFrameId=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v)! RenderFrameBuffer=%v", collisionSysRenderFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, pR.RenderFrameBufferString()))
+		}
+		currRenderFrame := currRenderFrameTmp.(*RoomDownsyncFrame)
 		delayedInputFrameId := pR.ConvertToInputFrameId(collisionSysRenderFrameId, pR.InputDelayFrames)
+		var delayedInputFrame *InputFrameDownsync = nil
 		if 0 <= delayedInputFrameId {
 			if delayedInputFrameId > pR.LastAllConfirmedInputFrameId {
 				panic(fmt.Sprintf("delayedInputFrameId=%v is not yet all-confirmed for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! InputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.InputsBufferString(false)))
@@ -1201,73 +1187,126 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			if nil == tmp {
 				panic(fmt.Sprintf("delayedInputFrameId=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! InputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.InputsBufferString(false)))
 			}
-			delayedInputFrame := tmp.(*pb.InputFrameDownsync)
+			delayedInputFrame = tmp.(*InputFrameDownsync)
 			// [WARNING] It's possible that by now "allConfirmedMask != delayedInputFrame.ConfirmedList && delayedInputFrameId <= pR.LastAllConfirmedInputFrameId", we trust "pR.LastAllConfirmedInputFrameId" as the TOP AUTHORITY.
 			atomic.StoreUint64(&(delayedInputFrame.ConfirmedList), allConfirmedMask)
+		}
 
-			inputList := delayedInputFrame.InputList
-			// Ordered by joinIndex to guarantee determinism
-			for _, player := range pR.PlayersArr {
-				joinIndex := player.JoinIndex
-				encodedInput := inputList[joinIndex-1]
-				decodedInput := DIRECTION_DECODER[encodedInput]
-				decodedInputSpeedFactor := DIRECTION_DECODER_INVERSE_LENGTH[encodedInput]
-				if 0.0 == decodedInputSpeedFactor {
-					continue
-				}
-				baseChange := player.Speed * pR.RollbackEstimatedDt * decodedInputSpeedFactor
-				oldDx, oldDy := baseChange*float64(decodedInput[0]), baseChange*float64(decodedInput[1])
-				dx, dy := oldDx, oldDy
+		nextRenderFrame := pR.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, pR.CollisionSysMap)
+		// Update in the latest player pointers
+		for playerId, playerDownsync := range nextRenderFrame.Players {
+			pR.Players[playerId].VirtualGridX = playerDownsync.VirtualGridX
+			pR.Players[playerId].VirtualGridY = playerDownsync.VirtualGridY
+			pR.Players[playerId].Dir.Dx = playerDownsync.Dir.Dx
+			pR.Players[playerId].Dir.Dy = playerDownsync.Dir.Dy
+		}
+		pR.RenderFrameBuffer.Put(nextRenderFrame)
+		pR.CurDynamicsRenderFrameId++
+	}
+}
 
-				collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-				playerCollider := pR.CollisionSysMap[collisionPlayerIndex]
-				if collision := playerCollider.Check(oldDx, oldDy, "Barrier"); collision != nil {
-					playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-					for _, obj := range collision.Objects {
-						barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-						if overlapped, pushbackX, pushbackY := CalcPushbacks(oldDx, oldDy, playerShape, barrierShape); overlapped {
-							Logger.Debug(fmt.Sprintf("Collided & overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v, pushbackX=%v, pushbackY=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
-							dx -= pushbackX
-							dy -= pushbackY
-						} else {
-							Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: player.X=%v, player.Y=%v, oldDx=%v, oldDy=%v, playerShape=%v, toCheckBarrier=%v", playerCollider.X, playerCollider.Y, oldDx, oldDy, ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape)))
-						}
-					}
-				}
-				playerCollider.X += dx
-				playerCollider.Y += dy
+// TODO: Write unit-test for this function to compare with its frontend counter part
+func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *InputFrameDownsync, currRenderFrame *RoomDownsyncFrame, collisionSysMap map[int32]*resolv.Object) *RoomDownsyncFrame {
+	nextRenderFramePlayers := make(map[int32]*PlayerDownsync, pR.Capacity)
+	// Make a copy first
+	for playerId, currPlayerDownsync := range currRenderFrame.Players {
+		nextRenderFramePlayers[playerId] = &PlayerDownsync{
+			Id:           playerId,
+			VirtualGridX: currPlayerDownsync.VirtualGridX,
+			VirtualGridY: currPlayerDownsync.VirtualGridY,
+			Dir: &Direction{
+				Dx: currPlayerDownsync.Dir.Dx,
+				Dy: currPlayerDownsync.Dir.Dy,
+			},
+			Speed:       currPlayerDownsync.Speed,
+			BattleState: currPlayerDownsync.BattleState,
+			Score:       currPlayerDownsync.Score,
+			Removed:     currPlayerDownsync.Removed,
+			JoinIndex:   currPlayerDownsync.JoinIndex,
+		}
+	}
 
-				// Update in "collision space"
-				playerCollider.Update()
+	toRet := &RoomDownsyncFrame{
+		Id:             currRenderFrame.Id + 1,
+		Players:        nextRenderFramePlayers,
+		CountdownNanos: (pR.BattleDurationNanos - int64(currRenderFrame.Id)*pR.RollbackEstimatedDtNanos),
+	}
 
-				player.Dir.Dx = decodedInput[0]
-				player.Dir.Dy = decodedInput[1]
-				player.X = playerCollider.X + pR.playerColliderRadius - spaceOffsetX
-				player.Y = playerCollider.Y + pR.playerColliderRadius - spaceOffsetY
+	if nil != delayedInputFrame {
+		inputList := delayedInputFrame.InputList
+		effPushbacks := make([]Vec2D, pR.Capacity) // Guaranteed determinism regardless of traversal order
+		for playerId, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
+			currPlayerDownsync := currRenderFrame.Players[playerId]
+			encodedInput := inputList[joinIndex-1]
+			decodedInput := DIRECTION_DECODER[encodedInput]
+			proposedVirtualGridDx, proposedVirtualGridDy := (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed), (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed)
+			newVx, newVy := (currPlayerDownsync.VirtualGridX + proposedVirtualGridDx), (currPlayerDownsync.VirtualGridY + proposedVirtualGridDy)
+			// Reset playerCollider position from the "virtual grid position"
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+			playerCollider := collisionSysMap[collisionPlayerIndex]
+			playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
+
+			// Update in the collision system
+			playerCollider.Update()
+
+			if 0 < encodedInput {
+				Logger.Debug(fmt.Sprintf("Checking collision for playerId=%v: virtual (%d, %d) -> (%d, %d), now playerShape=%v", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
+				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput[0]
+				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput[1]
 			}
 		}
 
-		newRenderFrame := pb.RoomDownsyncFrame{
-			Id:             collisionSysRenderFrameId + 1,
-			Players:        toPbPlayers(pR.Players),
-			CountdownNanos: (pR.BattleDurationNanos - int64(collisionSysRenderFrameId)*pR.RollbackEstimatedDtNanos),
+		// handle pushbacks upon collision after all movements treated as simultaneous
+		for _, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+			playerCollider := collisionSysMap[collisionPlayerIndex]
+			if collision := playerCollider.Check(0, 0); collision != nil {
+				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
+				for _, obj := range collision.Objects {
+					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
+					if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape); overlapped {
+						Logger.Debug(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
+						effPushbacks[joinIndex-1].X += pushbackX
+						effPushbacks[joinIndex-1].Y += pushbackY
+					} else {
+						Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
+					}
+				}
+			}
 		}
-		pR.RenderFrameBuffer.Put(&newRenderFrame)
-		pR.CurDynamicsRenderFrameId++
+
+		for playerId, player := range pR.Players {
+			joinIndex := player.JoinIndex
+			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+			playerCollider := collisionSysMap[collisionPlayerIndex]
+
+			// Update "virtual grid position"
+			newVx, newVy := PolygonColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
+			nextRenderFramePlayers[playerId].VirtualGridX = newVx
+			nextRenderFramePlayers[playerId].VirtualGridY = newVy
+		}
+
+		Logger.Debug(fmt.Sprintf("After applyInputFrameDownsyncDynamicsOnSingleRenderFrame: currRenderFrame.Id=%v, inputList=%v, currRenderFrame.Players=%v, nextRenderFramePlayers=%v, toRet.Players=%v", currRenderFrame.Id, inputList, currRenderFrame.Players, nextRenderFramePlayers, toRet.Players))
 	}
+
+	return toRet
 }
 
 func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 	return 0 == (inputFrameId % 10)
 }
 
-func (pR *Room) refreshColliders(spaceW, spaceH int32, spaceOffsetX, spaceOffsetY float64) {
+func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := int(3)                                                    // the approx minimum distance a player can move per frame
-	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep) // allocate a new collision space everytime after a battle is settled
+	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 2) // the approx minimum distance a player can move per frame in world coordinate
+	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)             // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
-		playerCollider := GenerateRectCollider(player.X, player.Y, pR.playerColliderRadius*2, pR.playerColliderRadius*2, spaceOffsetX, spaceOffsetY, "Player")
+		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
+		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
@@ -1278,7 +1317,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32, spaceOffsetX, spaceOffset
 
 	for _, barrier := range pR.Barriers {
 		boundaryUnaligned := barrier.Boundary
-		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
+		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Barrier")
 		space.Add(barrierCollider)
 	}
 }

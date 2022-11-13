@@ -1,7 +1,7 @@
 package storage
 
 import (
-	. "server/common"
+	. "battle_srv/common"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"

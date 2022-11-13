@@ -9,12 +9,13 @@ _(how input delay roughly works)_
 _(how rollback-and-chase in this project roughly works)_
 
 ![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)
+![floating_point_accumulation_err](./charts/AvoidingFloatingPointAccumulationErr.jpg)
 
 _(in game screenshot)_
 
 ![screenshot-1](./charts/screenshot-1.png)
 
-Please checkout [this demo video](https://pan.baidu.com/s/123LlWcT9X-wbcYybqYnvmA?pwd=qrlw) to see whether the source codes are doing what you expect for synchronization.
+Please checkout [this demo video](https://pan.baidu.com/s/1YkfuHjNLzlFVnKiEj6wrDQ?pwd=tkr5) to see whether the source codes are doing what you expect for synchronization.
 
 The video mainly shows the following features.
 - The backend receives inputs from frontend peers and [by a GGPO-alike manner](https://github.com/pond3r/ggpo/blob/master/doc/README.md) broadcasts back for synchronization.

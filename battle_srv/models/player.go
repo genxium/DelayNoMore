@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	. "dnmshared"
+	. "dnmshared/sharedprotos"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -33,30 +33,32 @@ func InitPlayerBattleStateIns() {
 }
 
 type Player struct {
-	Id                int32      `json:"id,omitempty" db:"id"`
-	X                 float64    `json:"x,omitempty"`
-	Y                 float64    `json:"y,omitempty"`
-	Dir               *Direction `json:"dir,omitempty"`
-	Speed             float64    `json:"speed,omitempty"`
-	BattleState       int32      `json:"battleState,omitempty"`
-	LastMoveGmtMillis int32      `json:"lastMoveGmtMillis,omitempty"`
-	Score             int32      `json:"score,omitempty"`
-	Removed           bool       `json:"removed,omitempty"`
-	JoinIndex         int32
+	// Meta info fields
+	Id             int32   `json:"id,omitempty" db:"id"`
+	Name           string  `json:"name,omitempty" db:"name"`
+	DisplayName    string  `json:"displayName,omitempty" db:"display_name"`
+	Avatar         string  `json:"avatar,omitempty"`
+	ColliderRadius float64 `json:"-"`
 
-	Name        string `json:"name,omitempty" db:"name"`
-	DisplayName string `json:"displayName,omitempty" db:"display_name"`
-	Avatar      string `json:"avatar,omitempty"`
+	// DB only fields
+	CreatedAt     int64     `db:"created_at"`
+	UpdatedAt     int64     `db:"updated_at"`
+	DeletedAt     NullInt64 `db:"deleted_at"`
+	TutorialStage int       `db:"tutorial_stage"`
 
-	FrozenAtGmtMillis    int64     `json:"-" db:"-"`
-	AddSpeedAtGmtMillis  int64     `json:"-" db:"-"`
-	CreatedAt            int64     `json:"-" db:"created_at"`
-	UpdatedAt            int64     `json:"-" db:"updated_at"`
-	DeletedAt            NullInt64 `json:"-" db:"deleted_at"`
-	TutorialStage        int       `json:"-" db:"tutorial_stage"`
-	AckingFrameId        int32     `json:"ackingFrameId"`
-	AckingInputFrameId   int32     `json:"-"`
-	LastSentInputFrameId int32     `json:"-"`
+	// in-battle info fields
+	VirtualGridX         int32
+	VirtualGridY         int32
+	Dir                  *Direction
+	Speed                int32
+	BattleState          int32
+	LastMoveGmtMillis    int32
+	Score                int32
+	Removed              bool
+	JoinIndex            int32
+	AckingFrameId        int32
+	AckingInputFrameId   int32
+	LastSentInputFrameId int32
 }
 
 func ExistPlayerByName(name string) (bool, error) {

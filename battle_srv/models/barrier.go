@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "dnmshared"
+	. "dnmshared/sharedprotos"
 )
 
 type Barrier struct {

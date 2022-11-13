@@ -1,6 +1,9 @@
 package ws
 
 import (
+	. "battle_srv/common"
+	"battle_srv/models"
+	pb "battle_srv/protos"
 	"container/heap"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -8,14 +11,12 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
-	. "server/common"
-	"server/models"
-	pb "server/pb_output"
 	"strconv"
 	"sync/atomic"
 	"time"
 
 	. "dnmshared"
+	"runtime/debug"
 )
 
 const (
@@ -104,7 +105,7 @@ func Serve(c *gin.Context) {
 		}
 		defer func() {
 			if r := recover(); r != nil {
-				Logger.Warn("Recovered from: ", zap.Any("panic", r))
+				Logger.Error("Recovered from: ", zap.Any("panic", r))
 			}
 		}()
 		/**
@@ -246,8 +247,8 @@ func Serve(c *gin.Context) {
 		bciFrame := &pb.BattleColliderInfo{
 			BoundRoomId:           pRoom.Id,
 			StageName:             pRoom.StageName,
-			StrToVec2DListMap:     models.ToPbVec2DListMap(pRoom.RawBattleStrToVec2DListMap),
-			StrToPolygon2DListMap: models.ToPbPolygon2DListMap(pRoom.RawBattleStrToPolygon2DListMap),
+			StrToVec2DListMap:     pRoom.RawBattleStrToVec2DListMap,
+			StrToPolygon2DListMap: pRoom.RawBattleStrToPolygon2DListMap,
 			StageDiscreteW:        pRoom.StageDiscreteW,
 			StageDiscreteH:        pRoom.StageDiscreteH,
 			StageTileW:            pRoom.StageTileW,
@@ -263,9 +264,11 @@ func Serve(c *gin.Context) {
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
 			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
-			RollbackEstimatedDt:             pRoom.RollbackEstimatedDt,
 			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
 			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
+
+			WorldToVirtualGridRatio: pRoom.WorldToVirtualGridRatio,
+			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
 		}
 
 		resp := &pb.WsResp{
@@ -354,7 +357,7 @@ func Serve(c *gin.Context) {
 	receivingLoopAgainstPlayer := func() error {
 		defer func() {
 			if r := recover(); r != nil {
-				Logger.Warn("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r))
+				Logger.Error("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r), zap.Any("callstack", debug.Stack()))
 			}
 			Logger.Info("Goroutine `receivingLoopAgainstPlayer` is stopped for:", zap.Any("playerId", playerId), zap.Any("roomId", pRoom.Id))
 		}()

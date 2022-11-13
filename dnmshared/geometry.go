@@ -1,47 +1,46 @@
 package dnmshared
 
 import (
+	. "dnmshared/sharedprotos"
 	"math"
 )
 
-// Use type `float64` for json unmarshalling of numbers.
-type Direction struct {
-	Dx int32 `json:"dx,omitempty"`
-	Dy int32 `json:"dy,omitempty"`
-}
-
-type Vec2D struct {
-	X float64 `json:"x,omitempty"`
-	Y float64 `json:"y,omitempty"`
-}
-
 func NormVec2D(dx, dy float64) Vec2D {
-	return Vec2D{dy, -dx}
+	return Vec2D{X: dy, Y: -dx}
 }
 
-type Polygon2D struct {
-	Anchor *Vec2D   `json:"-"` // This "Polygon2D.Anchor" is used to be assigned to "B2BodyDef.Position", which in turn is used as the position of the FIRST POINT of the polygon.
-	Points []*Vec2D `json:"-"`
+func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
+	// Transform again to put "anchor" at the top-left point of the bounding box for "resolv"
+	boundingBoxTL := &Vec2D{
+		X: math.MaxFloat64,
+		Y: math.MaxFloat64,
+	}
+	for _, p := range input.Points {
+		if p.X < boundingBoxTL.X {
+			boundingBoxTL.X = p.X
+		}
+		if p.Y < boundingBoxTL.Y {
+			boundingBoxTL.Y = p.Y
+		}
+	}
 
-	/*
-	   When used to represent a "polyline directly drawn in a `Tmx file`", we can initialize both "Anchor" and "Points" simultaneously.
+	// Now "input.Anchor" should move to "input.Anchor+boundingBoxTL", thus "boundingBoxTL" is also the value of the negative diff for all "input.Points"
+	output := &Polygon2D{
+		Anchor: &Vec2D{
+			X: input.Anchor.X + boundingBoxTL.X,
+			Y: input.Anchor.Y + boundingBoxTL.Y,
+		},
+		Points: make([]*Vec2D, len(input.Points)),
+	}
 
-	   Yet when used to represent a "polyline drawn in a `Tsx file`", we have to first initialize "Points w.r.t. center of the tile-rectangle", and then "Anchor(initially nil) of the tile positioned in the `Tmx file`".
+	for i, p := range input.Points {
+		output.Points[i] = &Vec2D{
+			X: p.X - boundingBoxTL.X,
+			Y: p.Y - boundingBoxTL.Y,
+		}
+	}
 
-	   Refer to https://shimo.im/docs/SmLJJhXm2C8XMzZT for more information.
-	*/
-
-	/*
-	  [WARNING] Used to cache "`TileWidth & TileHeight` of a Tsx file" only.
-	*/
-	TileWidth  int
-	TileHeight int
-
-	/*
-	  [WARNING] Used to cache "`Width & TileHeight` of an object in Tmx file" only.
-	*/
-	TmxObjectWidth  float64
-	TmxObjectHeight float64
+	return output
 }
 
 func Distance(pt1 *Vec2D, pt2 *Vec2D) float64 {

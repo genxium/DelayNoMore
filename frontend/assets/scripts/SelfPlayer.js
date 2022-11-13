@@ -1,4 +1,4 @@
-const BasePlayer = require("./BasePlayer"); 
+const BasePlayer = require("./BasePlayer");
 
 cc.Class({
   extends: BasePlayer,
@@ -6,6 +6,10 @@ cc.Class({
   properties: {
     arrowTipNode: {
       type: cc.Node,
+      default: null
+    },
+    coordLabel: {
+      type: cc.Label,
       default: null
     }
   },
@@ -26,6 +30,10 @@ cc.Class({
       '2-1': 'attackedRight'
     };
     this.arrowTipNode.active = false;
+
+    if (!this.mapIns.showCriticalCoordinateLabels) {
+      this.coordLabel.node.active = false;
+    }
   },
 
   showArrowTipNode() {
@@ -34,7 +42,7 @@ cc.Class({
       return;
     }
     self.arrowTipNode.active = true;
-    window.setTimeout(function(){
+    window.setTimeout(function() {
       if (null == self.arrowTipNode) {
         return;
       }
@@ -44,6 +52,9 @@ cc.Class({
 
   update(dt) {
     BasePlayer.prototype.update.call(this, dt);
+    if (this.mapIns.showCriticalCoordinateLabels) {
+      this.coordLabel.string = `(${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`;
+    }
   },
 
 });

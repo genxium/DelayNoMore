@@ -1,19 +1,19 @@
 package main
 
 import (
+	"battle_srv/api"
+	"battle_srv/api/v1"
+	. "battle_srv/common"
+	"battle_srv/env_tools"
+	"battle_srv/models"
+	"battle_srv/storage"
+	"battle_srv/ws"
 	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"server/api"
-	"server/api/v1"
-	. "server/common"
-	"server/env_tools"
-	"server/models"
-	"server/storage"
-	"server/ws"
 	"syscall"
 	"time"
 

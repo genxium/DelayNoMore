@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = "dnmshared/sharedprotos"; // here "./" corresponds to the "--go_out" value in "protoc" command  
+package sharedprotos;
+
+message Direction {
+  int32 dx = 1;
+  int32 dy = 2;
+}
+
+message Vec2D {
+  double x = 1;
+  double y = 2;
+}
+
+message Polygon2D {
+  Vec2D anchor = 1;
+  repeated Vec2D points = 2;
+}
+
+message Vec2DList {
+  repeated Vec2D eles = 1;
+}
+
+message Polygon2DList {
+  repeated Polygon2D eles = 1;
+}

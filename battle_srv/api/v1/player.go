@@ -1,6 +1,11 @@
 package v1
 
 import (
+	"battle_srv/api"
+	. "battle_srv/common"
+	"battle_srv/common/utils"
+	"battle_srv/models"
+	"battle_srv/storage"
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
@@ -10,11 +15,6 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
-	"server/api"
-	. "server/common"
-	"server/common/utils"
-	"server/models"
-	"server/storage"
 	"strconv"
 
 	. "dnmshared"
@@ -79,7 +79,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 		c.Set(api.RET, Constants.RetCode.UnknownError)
 		return
 	}
-	// Redis剩余时长校验
 	if ttl >= ConstVals.Player.CaptchaMaxTTL {
 		Logger.Info("There's an existing SmsCaptcha record in Redis-server: ", zap.String("key", redisKey), zap.Duration("ttl", ttl))
 		c.Set(api.RET, Constants.RetCode.SmsCaptchaRequestedTooFrequently)
@@ -89,7 +88,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 	pass := false
 	var succRet int
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
-		// 测试环境，优先从数据库校验`player.name`，不通过再走机器人magic name校验
 		player, err := models.GetPlayerByName(req.Num)
 		if nil == err && nil != player {
 			pass = true
@@ -98,7 +96,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 	}
 
 	if !pass {
-		// 机器人magic name校验，不通过再走手机号校验
 		player, err := models.GetPlayerByName(req.Num)
 		if nil == err && nil != player {
 			pass = true
@@ -111,7 +108,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 			succRet = Constants.RetCode.Ok
 			pass = true
 		}
-		// Hardecoded 只验证国内手机号格式
 		if req.CountryCode == "86" {
 			if RE_CHINA_PHONE_NUM.MatchString(req.Num) {
 				succRet = Constants.RetCode.Ok
@@ -133,7 +129,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 	}{Ret: succRet}
 	var captcha string
 	if ttl >= 0 {
-		// 已有未过期的旧验证码记录，续验证码有效期。
 		storage.RedisManagerIns.Expire(redisKey, ConstVals.Player.CaptchaExpire)
 		captcha = storage.RedisManagerIns.Get(redisKey).Val()
 		if ttl >= ConstVals.Player.CaptchaExpire/4 {
@@ -147,7 +142,6 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 		}
 		Logger.Info("Extended ttl of existing SMSCaptcha record in Redis:", zap.String("key", redisKey), zap.String("captcha", captcha))
 	} else {
-		// 校验通过，进行验证码生成处理
 		captcha = strconv.Itoa(utils.Rand.Number(1000, 9999))
 		if succRet == Constants.RetCode.Ok {
 			getSmsCaptchaRespErrorCode := sendSMSViaVendor(req.Num, req.CountryCode, captcha)
@@ -234,7 +228,6 @@ func (p *playerController) WechatLogin(c *gin.Context) {
 		return
 	}
 
-	//baseInfo ResAccessToken 获取用户授权access_token的返回结果
 	baseInfo, err := utils.WechatIns.GetOauth2Basic(req.Authcode)
 
 	if err != nil {
@@ -250,7 +243,6 @@ func (p *playerController) WechatLogin(c *gin.Context) {
 		c.Set(api.RET, Constants.RetCode.WechatServerError)
 		return
 	}
-	//fserver不会返回openId
 	userInfo.OpenID = baseInfo.OpenID
 
 	player, err := p.maybeCreatePlayerWechatAuthBinding(userInfo)
@@ -316,7 +308,6 @@ func (p *playerController) WechatGameLogin(c *gin.Context) {
 		return
 	}
 
-	//baseInfo ResAccessToken 获取用户授权access_token的返回结果
 	baseInfo, err := utils.WechatGameIns.GetOauth2Basic(req.Authcode)
 
 	if err != nil {
@@ -337,7 +328,6 @@ func (p *playerController) WechatGameLogin(c *gin.Context) {
 		c.Set(api.RET, Constants.RetCode.WechatServerError)
 		return
 	}
-	//fserver不会返回openId
 	userInfo.OpenID = baseInfo.OpenID
 
 	player, err := p.maybeCreatePlayerWechatGameAuthBinding(userInfo)
@@ -395,7 +385,6 @@ func (p *playerController) IntAuthTokenLogin(c *gin.Context) {
 		return
 	}
 
-	//kobako: 从player获取display name等
 	player, err := models.GetPlayerById(playerLogin.PlayerID)
 	if err != nil {
 		Logger.Error("Get player by id in IntAuthTokenLogin function error: ", zap.Error(err))
@@ -479,7 +468,6 @@ func (p *playerController) TokenAuth(c *gin.Context) {
 	c.Abort()
 }
 
-// 以下是内部私有函数
 func (p *playerController) maybeCreateNewPlayer(req smsCaptchaReq) (*models.Player, error) {
 	extAuthID := req.extAuthID()
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
@@ -492,7 +480,7 @@ func (p *playerController) maybeCreateNewPlayer(req smsCaptchaReq) (*models.Play
 			Logger.Info("Got a test env player:", zap.Any("phonenum", req.Num), zap.Any("playerId", player.Id))
 			return player, nil
 		}
-	} else { //正式环境检查是否为bot用户
+	} else {
 		botPlayer, err := models.GetPlayerByName(req.Num)
 		if err != nil {
 			Logger.Error("Seeking bot player error:", zap.Error(err))
@@ -537,19 +525,17 @@ func (p *playerController) maybeCreatePlayerWechatAuthBinding(userInfo utils.Use
 			return nil, err
 		}
 		if player != nil {
-			{ //更新玩家姓名及头像
-				updateInfo := models.Player{
-					Avatar:      userInfo.HeadImgURL,
-					DisplayName: userInfo.Nickname,
-				}
-				tx := storage.MySQLManagerIns.MustBegin()
-				defer tx.Rollback()
-				ok, err := models.Update(tx, player.Id, &updateInfo)
-				if err != nil && ok != true {
-					return nil, err
-				} else {
-					tx.Commit()
-				}
+			updateInfo := models.Player{
+				Avatar:      userInfo.HeadImgURL,
+				DisplayName: userInfo.Nickname,
+			}
+			tx := storage.MySQLManagerIns.MustBegin()
+			defer tx.Rollback()
+			ok, err := models.Update(tx, player.Id, &updateInfo)
+			if err != nil && ok != true {
+				return nil, err
+			} else {
+				tx.Commit()
 			}
 			return player, nil
 		}
@@ -575,19 +561,17 @@ func (p *playerController) maybeCreatePlayerWechatGameAuthBinding(userInfo utils
 			return nil, err
 		}
 		if player != nil {
-			{ //更新玩家姓名及头像
-				updateInfo := models.Player{
-					Avatar:      userInfo.HeadImgURL,
-					DisplayName: userInfo.Nickname,
-				}
-				tx := storage.MySQLManagerIns.MustBegin()
-				defer tx.Rollback()
-				ok, err := models.Update(tx, player.Id, &updateInfo)
-				if err != nil && ok != true {
-					return nil, err
-				} else {
-					tx.Commit()
-				}
+			updateInfo := models.Player{
+				Avatar:      userInfo.HeadImgURL,
+				DisplayName: userInfo.Nickname,
+			}
+			tx := storage.MySQLManagerIns.MustBegin()
+			defer tx.Rollback()
+			ok, err := models.Update(tx, player.Id, &updateInfo)
+			if err != nil && ok != true {
+				return nil, err
+			} else {
+				tx.Commit()
 			}
 			return player, nil
 		}
@@ -672,15 +656,13 @@ func sendSMSViaVendor(mobile string, nationcode string, captchaCode string) int 
 		Nationcode: nationcode,
 	}
 	var captchaExpireMin string
-	//短信有效期hardcode
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
-		//测试环境下有效期为20秒 先hardcode了
-		captchaExpireMin = "0.5"
+		captchaExpireMin = "0.5" // Hardcoded
 	} else {
 		captchaExpireMin = strconv.Itoa(int(ConstVals.Player.CaptchaExpire) / 60000000000)
 	}
 	params := [2]string{captchaCode, captchaExpireMin}
-	appkey := "41a5142feff0b38ade02ea12deee9741" // TODO: Should read from config file!
+	appkey := "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // TODO: Should read from config file!
 	rand := strconv.Itoa(utils.Rand.Number(1000, 9999))
 	now := utils.UnixtimeSec()
 
@@ -694,7 +676,7 @@ func sendSMSViaVendor(mobile string, nationcode string, captchaCode string) int 
 		Extend: "",
 		Params: &params,
 		Sig:    sig,
-		Sign:   "洛克互娱",
+		Sign:   "YYYYYYYYYYYYYYYYY",
 		Tel:    tel,
 		Time:   now,
 		Tpl_id: 207399,
@@ -705,7 +687,7 @@ func sendSMSViaVendor(mobile string, nationcode string, captchaCode string) int 
 		Logger.Info("json marshal", zap.Any("err:", err))
 		return -1
 	}
-	resp, err := http.Post("https://yun.tim.qq.com/v5/tlssmssvr/sendsms?sdkappid=1400150185&random="+rand,
+	resp, err := http.Post("https://yun.tim.qq.com/v5/tlssmssvr/sendsms?sdkappid=uuuuuuuuuuuuuuuuuuuuuuuu&random="+rand,
 		"application/json",
 		req)
 	if err != nil {

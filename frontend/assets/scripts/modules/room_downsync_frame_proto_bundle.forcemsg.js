@@ -9,20 +9,20 @@ var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.ut
 // Exported root namespace
 var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
 
-$root.treasurehunterx = (function() {
+$root.sharedprotos = (function() {
 
     /**
-     * Namespace treasurehunterx.
-     * @exports treasurehunterx
+     * Namespace sharedprotos.
+     * @exports sharedprotos
      * @namespace
      */
-    var treasurehunterx = {};
+    var sharedprotos = {};
 
-    treasurehunterx.Direction = (function() {
+    sharedprotos.Direction = (function() {
 
         /**
          * Properties of a Direction.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @interface IDirection
          * @property {number|null} [dx] Direction dx
          * @property {number|null} [dy] Direction dy
@@ -30,11 +30,11 @@ $root.treasurehunterx = (function() {
 
         /**
          * Constructs a new Direction.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @classdesc Represents a Direction.
          * @implements IDirection
          * @constructor
-         * @param {treasurehunterx.IDirection=} [properties] Properties to set
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
          */
         function Direction(properties) {
             if (properties)
@@ -46,7 +46,7 @@ $root.treasurehunterx = (function() {
         /**
          * Direction dx.
          * @member {number} dx
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          */
         Direction.prototype.dx = 0;
@@ -54,7 +54,7 @@ $root.treasurehunterx = (function() {
         /**
          * Direction dy.
          * @member {number} dy
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          */
         Direction.prototype.dy = 0;
@@ -62,21 +62,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new Direction instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {treasurehunterx.IDirection=} [properties] Properties to set
-         * @returns {treasurehunterx.Direction} Direction instance
+         * @param {sharedprotos.IDirection=} [properties] Properties to set
+         * @returns {sharedprotos.Direction} Direction instance
          */
         Direction.create = function create(properties) {
             return new Direction(properties);
         };
 
         /**
-         * Encodes the specified Direction message. Does not implicitly {@link treasurehunterx.Direction.verify|verify} messages.
+         * Encodes the specified Direction message. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {treasurehunterx.Direction} message Direction message or plain object to encode
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -91,11 +91,11 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified Direction message, length delimited. Does not implicitly {@link treasurehunterx.Direction.verify|verify} messages.
+         * Encodes the specified Direction message, length delimited. Does not implicitly {@link sharedprotos.Direction.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {treasurehunterx.Direction} message Direction message or plain object to encode
+         * @param {sharedprotos.Direction} message Direction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -106,18 +106,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Direction message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Direction.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Direction();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Direction();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -140,10 +140,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Direction message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -156,7 +156,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a Direction message.
          * @function verify
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -176,15 +176,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a Direction message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Direction} Direction
+         * @returns {sharedprotos.Direction} Direction
          */
         Direction.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Direction)
+            if (object instanceof $root.sharedprotos.Direction)
                 return object;
-            var message = new $root.treasurehunterx.Direction();
+            var message = new $root.sharedprotos.Direction();
             if (object.dx != null)
                 message.dx = object.dx | 0;
             if (object.dy != null)
@@ -195,9 +195,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a Direction message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
-         * @param {treasurehunterx.Direction} message Direction
+         * @param {sharedprotos.Direction} message Direction
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -219,7 +219,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this Direction to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -230,7 +230,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for Direction
          * @function getTypeUrl
-         * @memberof treasurehunterx.Direction
+         * @memberof sharedprotos.Direction
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -239,17 +239,17 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Direction";
+            return typeUrlPrefix + "/sharedprotos.Direction";
         };
 
         return Direction;
     })();
 
-    treasurehunterx.Vec2D = (function() {
+    sharedprotos.Vec2D = (function() {
 
         /**
          * Properties of a Vec2D.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @interface IVec2D
          * @property {number|null} [x] Vec2D x
          * @property {number|null} [y] Vec2D y
@@ -257,11 +257,11 @@ $root.treasurehunterx = (function() {
 
         /**
          * Constructs a new Vec2D.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @classdesc Represents a Vec2D.
          * @implements IVec2D
          * @constructor
-         * @param {treasurehunterx.IVec2D=} [properties] Properties to set
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
          */
         function Vec2D(properties) {
             if (properties)
@@ -273,7 +273,7 @@ $root.treasurehunterx = (function() {
         /**
          * Vec2D x.
          * @member {number} x
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          */
         Vec2D.prototype.x = 0;
@@ -281,7 +281,7 @@ $root.treasurehunterx = (function() {
         /**
          * Vec2D y.
          * @member {number} y
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          */
         Vec2D.prototype.y = 0;
@@ -289,21 +289,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new Vec2D instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {treasurehunterx.IVec2D=} [properties] Properties to set
-         * @returns {treasurehunterx.Vec2D} Vec2D instance
+         * @param {sharedprotos.IVec2D=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2D} Vec2D instance
          */
         Vec2D.create = function create(properties) {
             return new Vec2D(properties);
         };
 
         /**
-         * Encodes the specified Vec2D message. Does not implicitly {@link treasurehunterx.Vec2D.verify|verify} messages.
+         * Encodes the specified Vec2D message. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {treasurehunterx.Vec2D} message Vec2D message or plain object to encode
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -318,11 +318,11 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link treasurehunterx.Vec2D.verify|verify} messages.
+         * Encodes the specified Vec2D message, length delimited. Does not implicitly {@link sharedprotos.Vec2D.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {treasurehunterx.Vec2D} message Vec2D message or plain object to encode
+         * @param {sharedprotos.Vec2D} message Vec2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -333,18 +333,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Vec2D message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Vec2D.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Vec2D();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2D();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -367,10 +367,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Vec2D message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -383,7 +383,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a Vec2D message.
          * @function verify
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -403,15 +403,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a Vec2D message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Vec2D} Vec2D
+         * @returns {sharedprotos.Vec2D} Vec2D
          */
         Vec2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Vec2D)
+            if (object instanceof $root.sharedprotos.Vec2D)
                 return object;
-            var message = new $root.treasurehunterx.Vec2D();
+            var message = new $root.sharedprotos.Vec2D();
             if (object.x != null)
                 message.x = Number(object.x);
             if (object.y != null)
@@ -422,9 +422,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a Vec2D message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
-         * @param {treasurehunterx.Vec2D} message Vec2D
+         * @param {sharedprotos.Vec2D} message Vec2D
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -446,7 +446,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this Vec2D to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -457,7 +457,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for Vec2D
          * @function getTypeUrl
-         * @memberof treasurehunterx.Vec2D
+         * @memberof sharedprotos.Vec2D
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -466,32 +466,32 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Vec2D";
+            return typeUrlPrefix + "/sharedprotos.Vec2D";
         };
 
         return Vec2D;
     })();
 
-    treasurehunterx.Polygon2D = (function() {
+    sharedprotos.Polygon2D = (function() {
 
         /**
          * Properties of a Polygon2D.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @interface IPolygon2D
-         * @property {treasurehunterx.Vec2D|null} [Anchor] Polygon2D Anchor
-         * @property {Array.<treasurehunterx.Vec2D>|null} [Points] Polygon2D Points
+         * @property {sharedprotos.Vec2D|null} [anchor] Polygon2D anchor
+         * @property {Array.<sharedprotos.Vec2D>|null} [points] Polygon2D points
          */
 
         /**
          * Constructs a new Polygon2D.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @classdesc Represents a Polygon2D.
          * @implements IPolygon2D
          * @constructor
-         * @param {treasurehunterx.IPolygon2D=} [properties] Properties to set
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
          */
         function Polygon2D(properties) {
-            this.Points = [];
+            this.points = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -499,59 +499,59 @@ $root.treasurehunterx = (function() {
         }
 
         /**
-         * Polygon2D Anchor.
-         * @member {treasurehunterx.Vec2D|null|undefined} Anchor
-         * @memberof treasurehunterx.Polygon2D
+         * Polygon2D anchor.
+         * @member {sharedprotos.Vec2D|null|undefined} anchor
+         * @memberof sharedprotos.Polygon2D
          * @instance
          */
-        Polygon2D.prototype.Anchor = null;
+        Polygon2D.prototype.anchor = null;
 
         /**
-         * Polygon2D Points.
-         * @member {Array.<treasurehunterx.Vec2D>} Points
-         * @memberof treasurehunterx.Polygon2D
+         * Polygon2D points.
+         * @member {Array.<sharedprotos.Vec2D>} points
+         * @memberof sharedprotos.Polygon2D
          * @instance
          */
-        Polygon2D.prototype.Points = $util.emptyArray;
+        Polygon2D.prototype.points = $util.emptyArray;
 
         /**
          * Creates a new Polygon2D instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {treasurehunterx.IPolygon2D=} [properties] Properties to set
-         * @returns {treasurehunterx.Polygon2D} Polygon2D instance
+         * @param {sharedprotos.IPolygon2D=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2D} Polygon2D instance
          */
         Polygon2D.create = function create(properties) {
             return new Polygon2D(properties);
         };
 
         /**
-         * Encodes the specified Polygon2D message. Does not implicitly {@link treasurehunterx.Polygon2D.verify|verify} messages.
+         * Encodes the specified Polygon2D message. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {treasurehunterx.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Polygon2D.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.Anchor != null && Object.hasOwnProperty.call(message, "Anchor"))
-                $root.treasurehunterx.Vec2D.encode(message.Anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.Points != null && message.Points.length)
-                for (var i = 0; i < message.Points.length; ++i)
-                    $root.treasurehunterx.Vec2D.encode(message.Points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.anchor != null && Object.hasOwnProperty.call(message, "anchor"))
+                $root.sharedprotos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.points != null && message.points.length)
+                for (var i = 0; i < message.points.length; ++i)
+                    $root.sharedprotos.Vec2D.encode(message.points[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link treasurehunterx.Polygon2D.verify|verify} messages.
+         * Encodes the specified Polygon2D message, length delimited. Does not implicitly {@link sharedprotos.Polygon2D.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {treasurehunterx.Polygon2D} message Polygon2D message or plain object to encode
+         * @param {sharedprotos.Polygon2D} message Polygon2D message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -562,29 +562,29 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Polygon2D message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Polygon2D.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Polygon2D();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2D();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.Anchor = $root.treasurehunterx.Vec2D.decode(reader, reader.uint32());
+                        message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
                         break;
                     }
                 case 2: {
-                        if (!(message.Points && message.Points.length))
-                            message.Points = [];
-                        message.Points.push($root.treasurehunterx.Vec2D.decode(reader, reader.uint32()));
+                        if (!(message.points && message.points.length))
+                            message.points = [];
+                        message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
                         break;
                     }
                 default:
@@ -598,10 +598,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Polygon2D message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -614,7 +614,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a Polygon2D message.
          * @function verify
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -622,18 +622,18 @@ $root.treasurehunterx = (function() {
         Polygon2D.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.Anchor != null && message.hasOwnProperty("Anchor")) {
-                var error = $root.treasurehunterx.Vec2D.verify(message.Anchor);
+            if (message.anchor != null && message.hasOwnProperty("anchor")) {
+                var error = $root.sharedprotos.Vec2D.verify(message.anchor);
                 if (error)
-                    return "Anchor." + error;
+                    return "anchor." + error;
             }
-            if (message.Points != null && message.hasOwnProperty("Points")) {
-                if (!Array.isArray(message.Points))
-                    return "Points: array expected";
-                for (var i = 0; i < message.Points.length; ++i) {
-                    var error = $root.treasurehunterx.Vec2D.verify(message.Points[i]);
+            if (message.points != null && message.hasOwnProperty("points")) {
+                if (!Array.isArray(message.points))
+                    return "points: array expected";
+                for (var i = 0; i < message.points.length; ++i) {
+                    var error = $root.sharedprotos.Vec2D.verify(message.points[i]);
                     if (error)
-                        return "Points." + error;
+                        return "points." + error;
                 }
             }
             return null;
@@ -642,28 +642,28 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a Polygon2D message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Polygon2D} Polygon2D
+         * @returns {sharedprotos.Polygon2D} Polygon2D
          */
         Polygon2D.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Polygon2D)
+            if (object instanceof $root.sharedprotos.Polygon2D)
                 return object;
-            var message = new $root.treasurehunterx.Polygon2D();
-            if (object.Anchor != null) {
-                if (typeof object.Anchor !== "object")
-                    throw TypeError(".treasurehunterx.Polygon2D.Anchor: object expected");
-                message.Anchor = $root.treasurehunterx.Vec2D.fromObject(object.Anchor);
+            var message = new $root.sharedprotos.Polygon2D();
+            if (object.anchor != null) {
+                if (typeof object.anchor !== "object")
+                    throw TypeError(".sharedprotos.Polygon2D.anchor: object expected");
+                message.anchor = $root.sharedprotos.Vec2D.fromObject(object.anchor);
             }
-            if (object.Points) {
-                if (!Array.isArray(object.Points))
-                    throw TypeError(".treasurehunterx.Polygon2D.Points: array expected");
-                message.Points = [];
-                for (var i = 0; i < object.Points.length; ++i) {
-                    if (typeof object.Points[i] !== "object")
-                        throw TypeError(".treasurehunterx.Polygon2D.Points: object expected");
-                    message.Points[i] = $root.treasurehunterx.Vec2D.fromObject(object.Points[i]);
+            if (object.points) {
+                if (!Array.isArray(object.points))
+                    throw TypeError(".sharedprotos.Polygon2D.points: array expected");
+                message.points = [];
+                for (var i = 0; i < object.points.length; ++i) {
+                    if (typeof object.points[i] !== "object")
+                        throw TypeError(".sharedprotos.Polygon2D.points: object expected");
+                    message.points[i] = $root.sharedprotos.Vec2D.fromObject(object.points[i]);
                 }
             }
             return message;
@@ -672,9 +672,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a Polygon2D message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
-         * @param {treasurehunterx.Polygon2D} message Polygon2D
+         * @param {sharedprotos.Polygon2D} message Polygon2D
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -683,15 +683,15 @@ $root.treasurehunterx = (function() {
                 options = {};
             var object = {};
             if (options.arrays || options.defaults)
-                object.Points = [];
+                object.points = [];
             if (options.defaults)
-                object.Anchor = null;
-            if (message.Anchor != null && message.hasOwnProperty("Anchor"))
-                object.Anchor = $root.treasurehunterx.Vec2D.toObject(message.Anchor, options);
-            if (message.Points && message.Points.length) {
-                object.Points = [];
-                for (var j = 0; j < message.Points.length; ++j)
-                    object.Points[j] = $root.treasurehunterx.Vec2D.toObject(message.Points[j], options);
+                object.anchor = null;
+            if (message.anchor != null && message.hasOwnProperty("anchor"))
+                object.anchor = $root.sharedprotos.Vec2D.toObject(message.anchor, options);
+            if (message.points && message.points.length) {
+                object.points = [];
+                for (var j = 0; j < message.points.length; ++j)
+                    object.points[j] = $root.sharedprotos.Vec2D.toObject(message.points[j], options);
             }
             return object;
         };
@@ -699,7 +699,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this Polygon2D to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -710,7 +710,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for Polygon2D
          * @function getTypeUrl
-         * @memberof treasurehunterx.Polygon2D
+         * @memberof sharedprotos.Polygon2D
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -719,31 +719,31 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Polygon2D";
+            return typeUrlPrefix + "/sharedprotos.Polygon2D";
         };
 
         return Polygon2D;
     })();
 
-    treasurehunterx.Vec2DList = (function() {
+    sharedprotos.Vec2DList = (function() {
 
         /**
          * Properties of a Vec2DList.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @interface IVec2DList
-         * @property {Array.<treasurehunterx.Vec2D>|null} [vec2DList] Vec2DList vec2DList
+         * @property {Array.<sharedprotos.Vec2D>|null} [eles] Vec2DList eles
          */
 
         /**
          * Constructs a new Vec2DList.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @classdesc Represents a Vec2DList.
          * @implements IVec2DList
          * @constructor
-         * @param {treasurehunterx.IVec2DList=} [properties] Properties to set
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
          */
         function Vec2DList(properties) {
-            this.vec2DList = [];
+            this.eles = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -751,49 +751,49 @@ $root.treasurehunterx = (function() {
         }
 
         /**
-         * Vec2DList vec2DList.
-         * @member {Array.<treasurehunterx.Vec2D>} vec2DList
-         * @memberof treasurehunterx.Vec2DList
+         * Vec2DList eles.
+         * @member {Array.<sharedprotos.Vec2D>} eles
+         * @memberof sharedprotos.Vec2DList
          * @instance
          */
-        Vec2DList.prototype.vec2DList = $util.emptyArray;
+        Vec2DList.prototype.eles = $util.emptyArray;
 
         /**
          * Creates a new Vec2DList instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {treasurehunterx.IVec2DList=} [properties] Properties to set
-         * @returns {treasurehunterx.Vec2DList} Vec2DList instance
+         * @param {sharedprotos.IVec2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Vec2DList} Vec2DList instance
          */
         Vec2DList.create = function create(properties) {
             return new Vec2DList(properties);
         };
 
         /**
-         * Encodes the specified Vec2DList message. Does not implicitly {@link treasurehunterx.Vec2DList.verify|verify} messages.
+         * Encodes the specified Vec2DList message. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {treasurehunterx.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Vec2DList.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.vec2DList != null && message.vec2DList.length)
-                for (var i = 0; i < message.vec2DList.length; ++i)
-                    $root.treasurehunterx.Vec2D.encode(message.vec2DList[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.eles != null && message.eles.length)
+                for (var i = 0; i < message.eles.length; ++i)
+                    $root.sharedprotos.Vec2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link treasurehunterx.Vec2DList.verify|verify} messages.
+         * Encodes the specified Vec2DList message, length delimited. Does not implicitly {@link sharedprotos.Vec2DList.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {treasurehunterx.Vec2DList} message Vec2DList message or plain object to encode
+         * @param {sharedprotos.Vec2DList} message Vec2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -804,25 +804,25 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Vec2DList message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Vec2DList.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Vec2DList();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Vec2DList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        if (!(message.vec2DList && message.vec2DList.length))
-                            message.vec2DList = [];
-                        message.vec2DList.push($root.treasurehunterx.Vec2D.decode(reader, reader.uint32()));
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
                         break;
                     }
                 default:
@@ -836,10 +836,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Vec2DList message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -852,7 +852,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a Vec2DList message.
          * @function verify
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -860,13 +860,13 @@ $root.treasurehunterx = (function() {
         Vec2DList.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.vec2DList != null && message.hasOwnProperty("vec2DList")) {
-                if (!Array.isArray(message.vec2DList))
-                    return "vec2DList: array expected";
-                for (var i = 0; i < message.vec2DList.length; ++i) {
-                    var error = $root.treasurehunterx.Vec2D.verify(message.vec2DList[i]);
+            if (message.eles != null && message.hasOwnProperty("eles")) {
+                if (!Array.isArray(message.eles))
+                    return "eles: array expected";
+                for (var i = 0; i < message.eles.length; ++i) {
+                    var error = $root.sharedprotos.Vec2D.verify(message.eles[i]);
                     if (error)
-                        return "vec2DList." + error;
+                        return "eles." + error;
                 }
             }
             return null;
@@ -875,23 +875,23 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a Vec2DList message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Vec2DList} Vec2DList
+         * @returns {sharedprotos.Vec2DList} Vec2DList
          */
         Vec2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Vec2DList)
+            if (object instanceof $root.sharedprotos.Vec2DList)
                 return object;
-            var message = new $root.treasurehunterx.Vec2DList();
-            if (object.vec2DList) {
-                if (!Array.isArray(object.vec2DList))
-                    throw TypeError(".treasurehunterx.Vec2DList.vec2DList: array expected");
-                message.vec2DList = [];
-                for (var i = 0; i < object.vec2DList.length; ++i) {
-                    if (typeof object.vec2DList[i] !== "object")
-                        throw TypeError(".treasurehunterx.Vec2DList.vec2DList: object expected");
-                    message.vec2DList[i] = $root.treasurehunterx.Vec2D.fromObject(object.vec2DList[i]);
+            var message = new $root.sharedprotos.Vec2DList();
+            if (object.eles) {
+                if (!Array.isArray(object.eles))
+                    throw TypeError(".sharedprotos.Vec2DList.eles: array expected");
+                message.eles = [];
+                for (var i = 0; i < object.eles.length; ++i) {
+                    if (typeof object.eles[i] !== "object")
+                        throw TypeError(".sharedprotos.Vec2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Vec2D.fromObject(object.eles[i]);
                 }
             }
             return message;
@@ -900,9 +900,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a Vec2DList message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
-         * @param {treasurehunterx.Vec2DList} message Vec2DList
+         * @param {sharedprotos.Vec2DList} message Vec2DList
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -911,11 +911,11 @@ $root.treasurehunterx = (function() {
                 options = {};
             var object = {};
             if (options.arrays || options.defaults)
-                object.vec2DList = [];
-            if (message.vec2DList && message.vec2DList.length) {
-                object.vec2DList = [];
-                for (var j = 0; j < message.vec2DList.length; ++j)
-                    object.vec2DList[j] = $root.treasurehunterx.Vec2D.toObject(message.vec2DList[j], options);
+                object.eles = [];
+            if (message.eles && message.eles.length) {
+                object.eles = [];
+                for (var j = 0; j < message.eles.length; ++j)
+                    object.eles[j] = $root.sharedprotos.Vec2D.toObject(message.eles[j], options);
             }
             return object;
         };
@@ -923,7 +923,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this Vec2DList to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -934,7 +934,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for Vec2DList
          * @function getTypeUrl
-         * @memberof treasurehunterx.Vec2DList
+         * @memberof sharedprotos.Vec2DList
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -943,31 +943,31 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Vec2DList";
+            return typeUrlPrefix + "/sharedprotos.Vec2DList";
         };
 
         return Vec2DList;
     })();
 
-    treasurehunterx.Polygon2DList = (function() {
+    sharedprotos.Polygon2DList = (function() {
 
         /**
          * Properties of a Polygon2DList.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @interface IPolygon2DList
-         * @property {Array.<treasurehunterx.Polygon2D>|null} [polygon2DList] Polygon2DList polygon2DList
+         * @property {Array.<sharedprotos.Polygon2D>|null} [eles] Polygon2DList eles
          */
 
         /**
          * Constructs a new Polygon2DList.
-         * @memberof treasurehunterx
+         * @memberof sharedprotos
          * @classdesc Represents a Polygon2DList.
          * @implements IPolygon2DList
          * @constructor
-         * @param {treasurehunterx.IPolygon2DList=} [properties] Properties to set
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
          */
         function Polygon2DList(properties) {
-            this.polygon2DList = [];
+            this.eles = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -975,49 +975,49 @@ $root.treasurehunterx = (function() {
         }
 
         /**
-         * Polygon2DList polygon2DList.
-         * @member {Array.<treasurehunterx.Polygon2D>} polygon2DList
-         * @memberof treasurehunterx.Polygon2DList
+         * Polygon2DList eles.
+         * @member {Array.<sharedprotos.Polygon2D>} eles
+         * @memberof sharedprotos.Polygon2DList
          * @instance
          */
-        Polygon2DList.prototype.polygon2DList = $util.emptyArray;
+        Polygon2DList.prototype.eles = $util.emptyArray;
 
         /**
          * Creates a new Polygon2DList instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {treasurehunterx.IPolygon2DList=} [properties] Properties to set
-         * @returns {treasurehunterx.Polygon2DList} Polygon2DList instance
+         * @param {sharedprotos.IPolygon2DList=} [properties] Properties to set
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList instance
          */
         Polygon2DList.create = function create(properties) {
             return new Polygon2DList(properties);
         };
 
         /**
-         * Encodes the specified Polygon2DList message. Does not implicitly {@link treasurehunterx.Polygon2DList.verify|verify} messages.
+         * Encodes the specified Polygon2DList message. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {treasurehunterx.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
         Polygon2DList.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.polygon2DList != null && message.polygon2DList.length)
-                for (var i = 0; i < message.polygon2DList.length; ++i)
-                    $root.treasurehunterx.Polygon2D.encode(message.polygon2DList[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.eles != null && message.eles.length)
+                for (var i = 0; i < message.eles.length; ++i)
+                    $root.sharedprotos.Polygon2D.encode(message.eles[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link treasurehunterx.Polygon2DList.verify|verify} messages.
+         * Encodes the specified Polygon2DList message, length delimited. Does not implicitly {@link sharedprotos.Polygon2DList.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {treasurehunterx.Polygon2DList} message Polygon2DList message or plain object to encode
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1028,25 +1028,25 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Polygon2DList message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         Polygon2DList.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Polygon2DList();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.sharedprotos.Polygon2DList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        if (!(message.polygon2DList && message.polygon2DList.length))
-                            message.polygon2DList = [];
-                        message.polygon2DList.push($root.treasurehunterx.Polygon2D.decode(reader, reader.uint32()));
+                        if (!(message.eles && message.eles.length))
+                            message.eles = [];
+                        message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
                         break;
                     }
                 default:
@@ -1060,10 +1060,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a Polygon2DList message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -1076,7 +1076,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a Polygon2DList message.
          * @function verify
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -1084,13 +1084,13 @@ $root.treasurehunterx = (function() {
         Polygon2DList.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.polygon2DList != null && message.hasOwnProperty("polygon2DList")) {
-                if (!Array.isArray(message.polygon2DList))
-                    return "polygon2DList: array expected";
-                for (var i = 0; i < message.polygon2DList.length; ++i) {
-                    var error = $root.treasurehunterx.Polygon2D.verify(message.polygon2DList[i]);
+            if (message.eles != null && message.hasOwnProperty("eles")) {
+                if (!Array.isArray(message.eles))
+                    return "eles: array expected";
+                for (var i = 0; i < message.eles.length; ++i) {
+                    var error = $root.sharedprotos.Polygon2D.verify(message.eles[i]);
                     if (error)
-                        return "polygon2DList." + error;
+                        return "eles." + error;
                 }
             }
             return null;
@@ -1099,23 +1099,23 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a Polygon2DList message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Polygon2DList} Polygon2DList
+         * @returns {sharedprotos.Polygon2DList} Polygon2DList
          */
         Polygon2DList.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Polygon2DList)
+            if (object instanceof $root.sharedprotos.Polygon2DList)
                 return object;
-            var message = new $root.treasurehunterx.Polygon2DList();
-            if (object.polygon2DList) {
-                if (!Array.isArray(object.polygon2DList))
-                    throw TypeError(".treasurehunterx.Polygon2DList.polygon2DList: array expected");
-                message.polygon2DList = [];
-                for (var i = 0; i < object.polygon2DList.length; ++i) {
-                    if (typeof object.polygon2DList[i] !== "object")
-                        throw TypeError(".treasurehunterx.Polygon2DList.polygon2DList: object expected");
-                    message.polygon2DList[i] = $root.treasurehunterx.Polygon2D.fromObject(object.polygon2DList[i]);
+            var message = new $root.sharedprotos.Polygon2DList();
+            if (object.eles) {
+                if (!Array.isArray(object.eles))
+                    throw TypeError(".sharedprotos.Polygon2DList.eles: array expected");
+                message.eles = [];
+                for (var i = 0; i < object.eles.length; ++i) {
+                    if (typeof object.eles[i] !== "object")
+                        throw TypeError(".sharedprotos.Polygon2DList.eles: object expected");
+                    message.eles[i] = $root.sharedprotos.Polygon2D.fromObject(object.eles[i]);
                 }
             }
             return message;
@@ -1124,9 +1124,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a Polygon2DList message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
-         * @param {treasurehunterx.Polygon2DList} message Polygon2DList
+         * @param {sharedprotos.Polygon2DList} message Polygon2DList
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -1135,11 +1135,11 @@ $root.treasurehunterx = (function() {
                 options = {};
             var object = {};
             if (options.arrays || options.defaults)
-                object.polygon2DList = [];
-            if (message.polygon2DList && message.polygon2DList.length) {
-                object.polygon2DList = [];
-                for (var j = 0; j < message.polygon2DList.length; ++j)
-                    object.polygon2DList[j] = $root.treasurehunterx.Polygon2D.toObject(message.polygon2DList[j], options);
+                object.eles = [];
+            if (message.eles && message.eles.length) {
+                object.eles = [];
+                for (var j = 0; j < message.eles.length; ++j)
+                    object.eles[j] = $root.sharedprotos.Polygon2D.toObject(message.eles[j], options);
             }
             return object;
         };
@@ -1147,7 +1147,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this Polygon2DList to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -1158,7 +1158,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for Polygon2DList
          * @function getTypeUrl
-         * @memberof treasurehunterx.Polygon2DList
+         * @memberof sharedprotos.Polygon2DList
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -1167,21 +1167,33 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Polygon2DList";
+            return typeUrlPrefix + "/sharedprotos.Polygon2DList";
         };
 
         return Polygon2DList;
     })();
 
-    treasurehunterx.BattleColliderInfo = (function() {
+    return sharedprotos;
+})();
+
+$root.protos = (function() {
+
+    /**
+     * Namespace protos.
+     * @exports protos
+     * @namespace
+     */
+    var protos = {};
+
+    protos.BattleColliderInfo = (function() {
 
         /**
          * Properties of a BattleColliderInfo.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IBattleColliderInfo
          * @property {string|null} [stageName] BattleColliderInfo stageName
-         * @property {Object.<string,treasurehunterx.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
-         * @property {Object.<string,treasurehunterx.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
+         * @property {Object.<string,sharedprotos.Vec2DList>|null} [strToVec2DListMap] BattleColliderInfo strToVec2DListMap
+         * @property {Object.<string,sharedprotos.Polygon2DList>|null} [strToPolygon2DListMap] BattleColliderInfo strToPolygon2DListMap
          * @property {number|null} [stageDiscreteW] BattleColliderInfo stageDiscreteW
          * @property {number|null} [stageDiscreteH] BattleColliderInfo stageDiscreteH
          * @property {number|null} [stageTileW] BattleColliderInfo stageTileW
@@ -1197,18 +1209,19 @@ $root.treasurehunterx = (function() {
          * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
          * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
          * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
-         * @property {number|null} [rollbackEstimatedDt] BattleColliderInfo rollbackEstimatedDt
          * @property {number|null} [rollbackEstimatedDtMillis] BattleColliderInfo rollbackEstimatedDtMillis
          * @property {number|Long|null} [rollbackEstimatedDtNanos] BattleColliderInfo rollbackEstimatedDtNanos
+         * @property {number|null} [worldToVirtualGridRatio] BattleColliderInfo worldToVirtualGridRatio
+         * @property {number|null} [virtualGridToWorldRatio] BattleColliderInfo virtualGridToWorldRatio
          */
 
         /**
          * Constructs a new BattleColliderInfo.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents a BattleColliderInfo.
          * @implements IBattleColliderInfo
          * @constructor
-         * @param {treasurehunterx.IBattleColliderInfo=} [properties] Properties to set
+         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
          */
         function BattleColliderInfo(properties) {
             this.strToVec2DListMap = {};
@@ -1222,23 +1235,23 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo stageName.
          * @member {string} stageName
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.stageName = "";
 
         /**
          * BattleColliderInfo strToVec2DListMap.
-         * @member {Object.<string,treasurehunterx.Vec2DList>} strToVec2DListMap
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @member {Object.<string,sharedprotos.Vec2DList>} strToVec2DListMap
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.strToVec2DListMap = $util.emptyObject;
 
         /**
          * BattleColliderInfo strToPolygon2DListMap.
-         * @member {Object.<string,treasurehunterx.Polygon2DList>} strToPolygon2DListMap
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @member {Object.<string,sharedprotos.Polygon2DList>} strToPolygon2DListMap
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.strToPolygon2DListMap = $util.emptyObject;
@@ -1246,7 +1259,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo stageDiscreteW.
          * @member {number} stageDiscreteW
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.stageDiscreteW = 0;
@@ -1254,7 +1267,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo stageDiscreteH.
          * @member {number} stageDiscreteH
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.stageDiscreteH = 0;
@@ -1262,7 +1275,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo stageTileW.
          * @member {number} stageTileW
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.stageTileW = 0;
@@ -1270,7 +1283,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo stageTileH.
          * @member {number} stageTileH
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.stageTileH = 0;
@@ -1278,7 +1291,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo intervalToPing.
          * @member {number} intervalToPing
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.intervalToPing = 0;
@@ -1286,7 +1299,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo willKickIfInactiveFor.
          * @member {number} willKickIfInactiveFor
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
@@ -1294,7 +1307,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo boundRoomId.
          * @member {number} boundRoomId
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.boundRoomId = 0;
@@ -1302,7 +1315,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo battleDurationNanos.
          * @member {number|Long} battleDurationNanos
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
@@ -1310,7 +1323,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo serverFps.
          * @member {number} serverFps
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.serverFps = 0;
@@ -1318,7 +1331,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo inputDelayFrames.
          * @member {number} inputDelayFrames
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.inputDelayFrames = 0;
@@ -1326,7 +1339,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo inputScaleFrames.
          * @member {number} inputScaleFrames
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.inputScaleFrames = 0;
@@ -1334,7 +1347,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo nstDelayFrames.
          * @member {number} nstDelayFrames
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.nstDelayFrames = 0;
@@ -1342,7 +1355,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo inputFrameUpsyncDelayTolerance.
          * @member {number} inputFrameUpsyncDelayTolerance
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.inputFrameUpsyncDelayTolerance = 0;
@@ -1350,7 +1363,7 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo maxChasingRenderFramesPerUpdate.
          * @member {number} maxChasingRenderFramesPerUpdate
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
@@ -1358,23 +1371,15 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo playerBattleState.
          * @member {number} playerBattleState
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.playerBattleState = 0;
 
         /**
-         * BattleColliderInfo rollbackEstimatedDt.
-         * @member {number} rollbackEstimatedDt
-         * @memberof treasurehunterx.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.rollbackEstimatedDt = 0;
-
-        /**
          * BattleColliderInfo rollbackEstimatedDtMillis.
          * @member {number} rollbackEstimatedDtMillis
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.rollbackEstimatedDtMillis = 0;
@@ -1382,29 +1387,45 @@ $root.treasurehunterx = (function() {
         /**
          * BattleColliderInfo rollbackEstimatedDtNanos.
          * @member {number|Long} rollbackEstimatedDtNanos
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.rollbackEstimatedDtNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
+         * BattleColliderInfo worldToVirtualGridRatio.
+         * @member {number} worldToVirtualGridRatio
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.worldToVirtualGridRatio = 0;
+
+        /**
+         * BattleColliderInfo virtualGridToWorldRatio.
+         * @member {number} virtualGridToWorldRatio
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.virtualGridToWorldRatio = 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
-         * @param {treasurehunterx.IBattleColliderInfo=} [properties] Properties to set
-         * @returns {treasurehunterx.BattleColliderInfo} BattleColliderInfo instance
+         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo instance
          */
         BattleColliderInfo.create = function create(properties) {
             return new BattleColliderInfo(properties);
         };
 
         /**
-         * Encodes the specified BattleColliderInfo message. Does not implicitly {@link treasurehunterx.BattleColliderInfo.verify|verify} messages.
+         * Encodes the specified BattleColliderInfo message. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
-         * @param {treasurehunterx.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1416,12 +1437,12 @@ $root.treasurehunterx = (function() {
             if (message.strToVec2DListMap != null && Object.hasOwnProperty.call(message, "strToVec2DListMap"))
                 for (var keys = Object.keys(message.strToVec2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
-                    $root.treasurehunterx.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.sharedprotos.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.strToPolygon2DListMap != null && Object.hasOwnProperty.call(message, "strToPolygon2DListMap"))
                 for (var keys = Object.keys(message.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
-                    $root.treasurehunterx.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.sharedprotos.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageDiscreteW);
@@ -1453,21 +1474,23 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
             if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
-            if (message.rollbackEstimatedDt != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDt"))
-                writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDt);
             if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
-                writer.uint32(/* id 20, wireType 1 =*/161).double(message.rollbackEstimatedDtMillis);
+                writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDtMillis);
             if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
-                writer.uint32(/* id 21, wireType 0 =*/168).int64(message.rollbackEstimatedDtNanos);
+                writer.uint32(/* id 20, wireType 0 =*/160).int64(message.rollbackEstimatedDtNanos);
+            if (message.worldToVirtualGridRatio != null && Object.hasOwnProperty.call(message, "worldToVirtualGridRatio"))
+                writer.uint32(/* id 21, wireType 1 =*/169).double(message.worldToVirtualGridRatio);
+            if (message.virtualGridToWorldRatio != null && Object.hasOwnProperty.call(message, "virtualGridToWorldRatio"))
+                writer.uint32(/* id 22, wireType 1 =*/177).double(message.virtualGridToWorldRatio);
             return writer;
         };
 
         /**
-         * Encodes the specified BattleColliderInfo message, length delimited. Does not implicitly {@link treasurehunterx.BattleColliderInfo.verify|verify} messages.
+         * Encodes the specified BattleColliderInfo message, length delimited. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
-         * @param {treasurehunterx.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1478,18 +1501,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a BattleColliderInfo message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.BattleColliderInfo} BattleColliderInfo
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         BattleColliderInfo.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.BattleColliderInfo(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key, value;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -1510,7 +1533,7 @@ $root.treasurehunterx = (function() {
                                 key = reader.string();
                                 break;
                             case 2:
-                                value = $root.treasurehunterx.Vec2DList.decode(reader, reader.uint32());
+                                value = $root.sharedprotos.Vec2DList.decode(reader, reader.uint32());
                                 break;
                             default:
                                 reader.skipType(tag2 & 7);
@@ -1533,7 +1556,7 @@ $root.treasurehunterx = (function() {
                                 key = reader.string();
                                 break;
                             case 2:
-                                value = $root.treasurehunterx.Polygon2DList.decode(reader, reader.uint32());
+                                value = $root.sharedprotos.Polygon2DList.decode(reader, reader.uint32());
                                 break;
                             default:
                                 reader.skipType(tag2 & 7);
@@ -1604,15 +1627,19 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 19: {
-                        message.rollbackEstimatedDt = reader.double();
-                        break;
-                    }
-                case 20: {
                         message.rollbackEstimatedDtMillis = reader.double();
                         break;
                     }
-                case 21: {
+                case 20: {
                         message.rollbackEstimatedDtNanos = reader.int64();
+                        break;
+                    }
+                case 21: {
+                        message.worldToVirtualGridRatio = reader.double();
+                        break;
+                    }
+                case 22: {
+                        message.virtualGridToWorldRatio = reader.double();
                         break;
                     }
                 default:
@@ -1626,10 +1653,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a BattleColliderInfo message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.BattleColliderInfo} BattleColliderInfo
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -1642,7 +1669,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a BattleColliderInfo message.
          * @function verify
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -1658,7 +1685,7 @@ $root.treasurehunterx = (function() {
                     return "strToVec2DListMap: object expected";
                 var key = Object.keys(message.strToVec2DListMap);
                 for (var i = 0; i < key.length; ++i) {
-                    var error = $root.treasurehunterx.Vec2DList.verify(message.strToVec2DListMap[key[i]]);
+                    var error = $root.sharedprotos.Vec2DList.verify(message.strToVec2DListMap[key[i]]);
                     if (error)
                         return "strToVec2DListMap." + error;
                 }
@@ -1668,7 +1695,7 @@ $root.treasurehunterx = (function() {
                     return "strToPolygon2DListMap: object expected";
                 var key = Object.keys(message.strToPolygon2DListMap);
                 for (var i = 0; i < key.length; ++i) {
-                    var error = $root.treasurehunterx.Polygon2DList.verify(message.strToPolygon2DListMap[key[i]]);
+                    var error = $root.sharedprotos.Polygon2DList.verify(message.strToPolygon2DListMap[key[i]]);
                     if (error)
                         return "strToPolygon2DListMap." + error;
                 }
@@ -1718,50 +1745,53 @@ $root.treasurehunterx = (function() {
             if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
                 if (!$util.isInteger(message.playerBattleState))
                     return "playerBattleState: integer expected";
-            if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
-                if (typeof message.rollbackEstimatedDt !== "number")
-                    return "rollbackEstimatedDt: number expected";
             if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
                 if (typeof message.rollbackEstimatedDtMillis !== "number")
                     return "rollbackEstimatedDtMillis: number expected";
             if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
                 if (!$util.isInteger(message.rollbackEstimatedDtNanos) && !(message.rollbackEstimatedDtNanos && $util.isInteger(message.rollbackEstimatedDtNanos.low) && $util.isInteger(message.rollbackEstimatedDtNanos.high)))
                     return "rollbackEstimatedDtNanos: integer|Long expected";
+            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
+                if (typeof message.worldToVirtualGridRatio !== "number")
+                    return "worldToVirtualGridRatio: number expected";
+            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
+                if (typeof message.virtualGridToWorldRatio !== "number")
+                    return "virtualGridToWorldRatio: number expected";
             return null;
         };
 
         /**
          * Creates a BattleColliderInfo message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.BattleColliderInfo} BattleColliderInfo
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
          */
         BattleColliderInfo.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.BattleColliderInfo)
+            if (object instanceof $root.protos.BattleColliderInfo)
                 return object;
-            var message = new $root.treasurehunterx.BattleColliderInfo();
+            var message = new $root.protos.BattleColliderInfo();
             if (object.stageName != null)
                 message.stageName = String(object.stageName);
             if (object.strToVec2DListMap) {
                 if (typeof object.strToVec2DListMap !== "object")
-                    throw TypeError(".treasurehunterx.BattleColliderInfo.strToVec2DListMap: object expected");
+                    throw TypeError(".protos.BattleColliderInfo.strToVec2DListMap: object expected");
                 message.strToVec2DListMap = {};
                 for (var keys = Object.keys(object.strToVec2DListMap), i = 0; i < keys.length; ++i) {
                     if (typeof object.strToVec2DListMap[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.BattleColliderInfo.strToVec2DListMap: object expected");
-                    message.strToVec2DListMap[keys[i]] = $root.treasurehunterx.Vec2DList.fromObject(object.strToVec2DListMap[keys[i]]);
+                        throw TypeError(".protos.BattleColliderInfo.strToVec2DListMap: object expected");
+                    message.strToVec2DListMap[keys[i]] = $root.sharedprotos.Vec2DList.fromObject(object.strToVec2DListMap[keys[i]]);
                 }
             }
             if (object.strToPolygon2DListMap) {
                 if (typeof object.strToPolygon2DListMap !== "object")
-                    throw TypeError(".treasurehunterx.BattleColliderInfo.strToPolygon2DListMap: object expected");
+                    throw TypeError(".protos.BattleColliderInfo.strToPolygon2DListMap: object expected");
                 message.strToPolygon2DListMap = {};
                 for (var keys = Object.keys(object.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
                     if (typeof object.strToPolygon2DListMap[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.BattleColliderInfo.strToPolygon2DListMap: object expected");
-                    message.strToPolygon2DListMap[keys[i]] = $root.treasurehunterx.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
+                        throw TypeError(".protos.BattleColliderInfo.strToPolygon2DListMap: object expected");
+                    message.strToPolygon2DListMap[keys[i]] = $root.sharedprotos.Polygon2DList.fromObject(object.strToPolygon2DListMap[keys[i]]);
                 }
             }
             if (object.stageDiscreteW != null)
@@ -1801,8 +1831,6 @@ $root.treasurehunterx = (function() {
                 message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
             if (object.playerBattleState != null)
                 message.playerBattleState = object.playerBattleState | 0;
-            if (object.rollbackEstimatedDt != null)
-                message.rollbackEstimatedDt = Number(object.rollbackEstimatedDt);
             if (object.rollbackEstimatedDtMillis != null)
                 message.rollbackEstimatedDtMillis = Number(object.rollbackEstimatedDtMillis);
             if (object.rollbackEstimatedDtNanos != null)
@@ -1814,15 +1842,19 @@ $root.treasurehunterx = (function() {
                     message.rollbackEstimatedDtNanos = object.rollbackEstimatedDtNanos;
                 else if (typeof object.rollbackEstimatedDtNanos === "object")
                     message.rollbackEstimatedDtNanos = new $util.LongBits(object.rollbackEstimatedDtNanos.low >>> 0, object.rollbackEstimatedDtNanos.high >>> 0).toNumber();
+            if (object.worldToVirtualGridRatio != null)
+                message.worldToVirtualGridRatio = Number(object.worldToVirtualGridRatio);
+            if (object.virtualGridToWorldRatio != null)
+                message.virtualGridToWorldRatio = Number(object.virtualGridToWorldRatio);
             return message;
         };
 
         /**
          * Creates a plain object from a BattleColliderInfo message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
-         * @param {treasurehunterx.BattleColliderInfo} message BattleColliderInfo
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -1855,13 +1887,14 @@ $root.treasurehunterx = (function() {
                 object.inputFrameUpsyncDelayTolerance = 0;
                 object.maxChasingRenderFramesPerUpdate = 0;
                 object.playerBattleState = 0;
-                object.rollbackEstimatedDt = 0;
                 object.rollbackEstimatedDtMillis = 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, false);
                     object.rollbackEstimatedDtNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.rollbackEstimatedDtNanos = options.longs === String ? "0" : 0;
+                object.worldToVirtualGridRatio = 0;
+                object.virtualGridToWorldRatio = 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -1869,12 +1902,12 @@ $root.treasurehunterx = (function() {
             if (message.strToVec2DListMap && (keys2 = Object.keys(message.strToVec2DListMap)).length) {
                 object.strToVec2DListMap = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.strToVec2DListMap[keys2[j]] = $root.treasurehunterx.Vec2DList.toObject(message.strToVec2DListMap[keys2[j]], options);
+                    object.strToVec2DListMap[keys2[j]] = $root.sharedprotos.Vec2DList.toObject(message.strToVec2DListMap[keys2[j]], options);
             }
             if (message.strToPolygon2DListMap && (keys2 = Object.keys(message.strToPolygon2DListMap)).length) {
                 object.strToPolygon2DListMap = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.strToPolygon2DListMap[keys2[j]] = $root.treasurehunterx.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
+                    object.strToPolygon2DListMap[keys2[j]] = $root.sharedprotos.Polygon2DList.toObject(message.strToPolygon2DListMap[keys2[j]], options);
             }
             if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
                 object.stageDiscreteW = message.stageDiscreteW;
@@ -1909,8 +1942,6 @@ $root.treasurehunterx = (function() {
                 object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
             if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
                 object.playerBattleState = message.playerBattleState;
-            if (message.rollbackEstimatedDt != null && message.hasOwnProperty("rollbackEstimatedDt"))
-                object.rollbackEstimatedDt = options.json && !isFinite(message.rollbackEstimatedDt) ? String(message.rollbackEstimatedDt) : message.rollbackEstimatedDt;
             if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
                 object.rollbackEstimatedDtMillis = options.json && !isFinite(message.rollbackEstimatedDtMillis) ? String(message.rollbackEstimatedDtMillis) : message.rollbackEstimatedDtMillis;
             if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
@@ -1918,13 +1949,17 @@ $root.treasurehunterx = (function() {
                     object.rollbackEstimatedDtNanos = options.longs === String ? String(message.rollbackEstimatedDtNanos) : message.rollbackEstimatedDtNanos;
                 else
                     object.rollbackEstimatedDtNanos = options.longs === String ? $util.Long.prototype.toString.call(message.rollbackEstimatedDtNanos) : options.longs === Number ? new $util.LongBits(message.rollbackEstimatedDtNanos.low >>> 0, message.rollbackEstimatedDtNanos.high >>> 0).toNumber() : message.rollbackEstimatedDtNanos;
+            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
+                object.worldToVirtualGridRatio = options.json && !isFinite(message.worldToVirtualGridRatio) ? String(message.worldToVirtualGridRatio) : message.worldToVirtualGridRatio;
+            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
+                object.virtualGridToWorldRatio = options.json && !isFinite(message.virtualGridToWorldRatio) ? String(message.virtualGridToWorldRatio) : message.virtualGridToWorldRatio;
             return object;
         };
 
         /**
          * Converts this BattleColliderInfo to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -1935,7 +1970,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for BattleColliderInfo
          * @function getTypeUrl
-         * @memberof treasurehunterx.BattleColliderInfo
+         * @memberof protos.BattleColliderInfo
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -1944,39 +1979,39 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.BattleColliderInfo";
+            return typeUrlPrefix + "/protos.BattleColliderInfo";
         };
 
         return BattleColliderInfo;
     })();
 
-    treasurehunterx.Player = (function() {
+    protos.PlayerDownsync = (function() {
 
         /**
-         * Properties of a Player.
-         * @memberof treasurehunterx
-         * @interface IPlayer
-         * @property {number|null} [id] Player id
-         * @property {number|null} [x] Player x
-         * @property {number|null} [y] Player y
-         * @property {treasurehunterx.Direction|null} [dir] Player dir
-         * @property {number|null} [speed] Player speed
-         * @property {number|null} [battleState] Player battleState
-         * @property {number|null} [lastMoveGmtMillis] Player lastMoveGmtMillis
-         * @property {number|null} [score] Player score
-         * @property {boolean|null} [removed] Player removed
-         * @property {number|null} [joinIndex] Player joinIndex
+         * Properties of a PlayerDownsync.
+         * @memberof protos
+         * @interface IPlayerDownsync
+         * @property {number|null} [id] PlayerDownsync id
+         * @property {number|null} [virtualGridX] PlayerDownsync virtualGridX
+         * @property {number|null} [virtualGridY] PlayerDownsync virtualGridY
+         * @property {sharedprotos.Direction|null} [dir] PlayerDownsync dir
+         * @property {number|null} [speed] PlayerDownsync speed
+         * @property {number|null} [battleState] PlayerDownsync battleState
+         * @property {number|null} [lastMoveGmtMillis] PlayerDownsync lastMoveGmtMillis
+         * @property {number|null} [score] PlayerDownsync score
+         * @property {boolean|null} [removed] PlayerDownsync removed
+         * @property {number|null} [joinIndex] PlayerDownsync joinIndex
          */
 
         /**
-         * Constructs a new Player.
-         * @memberof treasurehunterx
-         * @classdesc Represents a Player.
-         * @implements IPlayer
+         * Constructs a new PlayerDownsync.
+         * @memberof protos
+         * @classdesc Represents a PlayerDownsync.
+         * @implements IPlayerDownsync
          * @constructor
-         * @param {treasurehunterx.IPlayer=} [properties] Properties to set
+         * @param {protos.IPlayerDownsync=} [properties] Properties to set
          */
-        function Player(properties) {
+        function PlayerDownsync(properties) {
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1984,119 +2019,119 @@ $root.treasurehunterx = (function() {
         }
 
         /**
-         * Player id.
+         * PlayerDownsync id.
          * @member {number} id
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.id = 0;
+        PlayerDownsync.prototype.id = 0;
 
         /**
-         * Player x.
-         * @member {number} x
-         * @memberof treasurehunterx.Player
+         * PlayerDownsync virtualGridX.
+         * @member {number} virtualGridX
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.x = 0;
+        PlayerDownsync.prototype.virtualGridX = 0;
 
         /**
-         * Player y.
-         * @member {number} y
-         * @memberof treasurehunterx.Player
+         * PlayerDownsync virtualGridY.
+         * @member {number} virtualGridY
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.y = 0;
+        PlayerDownsync.prototype.virtualGridY = 0;
 
         /**
-         * Player dir.
-         * @member {treasurehunterx.Direction|null|undefined} dir
-         * @memberof treasurehunterx.Player
+         * PlayerDownsync dir.
+         * @member {sharedprotos.Direction|null|undefined} dir
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.dir = null;
+        PlayerDownsync.prototype.dir = null;
 
         /**
-         * Player speed.
+         * PlayerDownsync speed.
          * @member {number} speed
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.speed = 0;
+        PlayerDownsync.prototype.speed = 0;
 
         /**
-         * Player battleState.
+         * PlayerDownsync battleState.
          * @member {number} battleState
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.battleState = 0;
+        PlayerDownsync.prototype.battleState = 0;
 
         /**
-         * Player lastMoveGmtMillis.
+         * PlayerDownsync lastMoveGmtMillis.
          * @member {number} lastMoveGmtMillis
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.lastMoveGmtMillis = 0;
+        PlayerDownsync.prototype.lastMoveGmtMillis = 0;
 
         /**
-         * Player score.
+         * PlayerDownsync score.
          * @member {number} score
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.score = 0;
+        PlayerDownsync.prototype.score = 0;
 
         /**
-         * Player removed.
+         * PlayerDownsync removed.
          * @member {boolean} removed
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.removed = false;
+        PlayerDownsync.prototype.removed = false;
 
         /**
-         * Player joinIndex.
+         * PlayerDownsync joinIndex.
          * @member {number} joinIndex
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          */
-        Player.prototype.joinIndex = 0;
+        PlayerDownsync.prototype.joinIndex = 0;
 
         /**
-         * Creates a new Player instance using the specified properties.
+         * Creates a new PlayerDownsync instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {treasurehunterx.IPlayer=} [properties] Properties to set
-         * @returns {treasurehunterx.Player} Player instance
+         * @param {protos.IPlayerDownsync=} [properties] Properties to set
+         * @returns {protos.PlayerDownsync} PlayerDownsync instance
          */
-        Player.create = function create(properties) {
-            return new Player(properties);
+        PlayerDownsync.create = function create(properties) {
+            return new PlayerDownsync(properties);
         };
 
         /**
-         * Encodes the specified Player message. Does not implicitly {@link treasurehunterx.Player.verify|verify} messages.
+         * Encodes the specified PlayerDownsync message. Does not implicitly {@link protos.PlayerDownsync.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {treasurehunterx.Player} message Player message or plain object to encode
+         * @param {protos.PlayerDownsync} message PlayerDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Player.encode = function encode(message, writer) {
+        PlayerDownsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                writer.uint32(/* id 2, wireType 1 =*/17).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                writer.uint32(/* id 3, wireType 1 =*/25).double(message.y);
+            if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.virtualGridX);
+            if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.virtualGridY);
             if (message.dir != null && Object.hasOwnProperty.call(message, "dir"))
-                $root.treasurehunterx.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                $root.sharedprotos.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.speed);
             if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.battleState);
             if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
@@ -2111,33 +2146,33 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified Player message, length delimited. Does not implicitly {@link treasurehunterx.Player.verify|verify} messages.
+         * Encodes the specified PlayerDownsync message, length delimited. Does not implicitly {@link protos.PlayerDownsync.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {treasurehunterx.Player} message Player message or plain object to encode
+         * @param {protos.PlayerDownsync} message PlayerDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        Player.encodeDelimited = function encodeDelimited(message, writer) {
+        PlayerDownsync.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a Player message from the specified reader or buffer.
+         * Decodes a PlayerDownsync message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Player.decode = function decode(reader, length) {
+        PlayerDownsync.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.Player();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PlayerDownsync();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -2146,19 +2181,19 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 2: {
-                        message.x = reader.double();
+                        message.virtualGridX = reader.int32();
                         break;
                     }
                 case 3: {
-                        message.y = reader.double();
+                        message.virtualGridY = reader.int32();
                         break;
                     }
                 case 4: {
-                        message.dir = $root.treasurehunterx.Direction.decode(reader, reader.uint32());
+                        message.dir = $root.sharedprotos.Direction.decode(reader, reader.uint32());
                         break;
                     }
                 case 5: {
-                        message.speed = reader.double();
+                        message.speed = reader.int32();
                         break;
                     }
                 case 6: {
@@ -2190,49 +2225,49 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Decodes a Player message from the specified reader or buffer, length delimited.
+         * Decodes a PlayerDownsync message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        Player.decodeDelimited = function decodeDelimited(reader) {
+        PlayerDownsync.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a Player message.
+         * Verifies a PlayerDownsync message.
          * @function verify
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        Player.verify = function verify(message) {
+        PlayerDownsync.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.id != null && message.hasOwnProperty("id"))
                 if (!$util.isInteger(message.id))
                     return "id: integer expected";
-            if (message.x != null && message.hasOwnProperty("x"))
-                if (typeof message.x !== "number")
-                    return "x: number expected";
-            if (message.y != null && message.hasOwnProperty("y"))
-                if (typeof message.y !== "number")
-                    return "y: number expected";
+            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
+                if (!$util.isInteger(message.virtualGridX))
+                    return "virtualGridX: integer expected";
+            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
+                if (!$util.isInteger(message.virtualGridY))
+                    return "virtualGridY: integer expected";
             if (message.dir != null && message.hasOwnProperty("dir")) {
-                var error = $root.treasurehunterx.Direction.verify(message.dir);
+                var error = $root.sharedprotos.Direction.verify(message.dir);
                 if (error)
                     return "dir." + error;
             }
             if (message.speed != null && message.hasOwnProperty("speed"))
-                if (typeof message.speed !== "number")
-                    return "speed: number expected";
+                if (!$util.isInteger(message.speed))
+                    return "speed: integer expected";
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 if (!$util.isInteger(message.battleState))
                     return "battleState: integer expected";
@@ -2252,30 +2287,30 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Creates a Player message from a plain object. Also converts values to their respective internal types.
+         * Creates a PlayerDownsync message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.Player} Player
+         * @returns {protos.PlayerDownsync} PlayerDownsync
          */
-        Player.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.Player)
+        PlayerDownsync.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.PlayerDownsync)
                 return object;
-            var message = new $root.treasurehunterx.Player();
+            var message = new $root.protos.PlayerDownsync();
             if (object.id != null)
                 message.id = object.id | 0;
-            if (object.x != null)
-                message.x = Number(object.x);
-            if (object.y != null)
-                message.y = Number(object.y);
+            if (object.virtualGridX != null)
+                message.virtualGridX = object.virtualGridX | 0;
+            if (object.virtualGridY != null)
+                message.virtualGridY = object.virtualGridY | 0;
             if (object.dir != null) {
                 if (typeof object.dir !== "object")
-                    throw TypeError(".treasurehunterx.Player.dir: object expected");
-                message.dir = $root.treasurehunterx.Direction.fromObject(object.dir);
+                    throw TypeError(".protos.PlayerDownsync.dir: object expected");
+                message.dir = $root.sharedprotos.Direction.fromObject(object.dir);
             }
             if (object.speed != null)
-                message.speed = Number(object.speed);
+                message.speed = object.speed | 0;
             if (object.battleState != null)
                 message.battleState = object.battleState | 0;
             if (object.lastMoveGmtMillis != null)
@@ -2290,22 +2325,22 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Creates a plain object from a Player message. Also converts values to other types if specified.
+         * Creates a plain object from a PlayerDownsync message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
-         * @param {treasurehunterx.Player} message Player
+         * @param {protos.PlayerDownsync} message PlayerDownsync
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        Player.toObject = function toObject(message, options) {
+        PlayerDownsync.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
             if (options.defaults) {
                 object.id = 0;
-                object.x = 0;
-                object.y = 0;
+                object.virtualGridX = 0;
+                object.virtualGridY = 0;
                 object.dir = null;
                 object.speed = 0;
                 object.battleState = 0;
@@ -2316,14 +2351,14 @@ $root.treasurehunterx = (function() {
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
-            if (message.x != null && message.hasOwnProperty("x"))
-                object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-            if (message.y != null && message.hasOwnProperty("y"))
-                object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
+            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
+                object.virtualGridX = message.virtualGridX;
+            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
+                object.virtualGridY = message.virtualGridY;
             if (message.dir != null && message.hasOwnProperty("dir"))
-                object.dir = $root.treasurehunterx.Direction.toObject(message.dir, options);
+                object.dir = $root.sharedprotos.Direction.toObject(message.dir, options);
             if (message.speed != null && message.hasOwnProperty("speed"))
-                object.speed = options.json && !isFinite(message.speed) ? String(message.speed) : message.speed;
+                object.speed = message.speed;
             if (message.battleState != null && message.hasOwnProperty("battleState"))
                 object.battleState = message.battleState;
             if (message.lastMoveGmtMillis != null && message.hasOwnProperty("lastMoveGmtMillis"))
@@ -2338,56 +2373,57 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Converts this Player to JSON.
+         * Converts this PlayerDownsync to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        Player.prototype.toJSON = function toJSON() {
+        PlayerDownsync.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
-         * Gets the default type url for Player
+         * Gets the default type url for PlayerDownsync
          * @function getTypeUrl
-         * @memberof treasurehunterx.Player
+         * @memberof protos.PlayerDownsync
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        Player.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        PlayerDownsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.Player";
+            return typeUrlPrefix + "/protos.PlayerDownsync";
         };
 
-        return Player;
+        return PlayerDownsync;
     })();
 
-    treasurehunterx.PlayerMeta = (function() {
+    protos.PlayerDownsyncMeta = (function() {
 
         /**
-         * Properties of a PlayerMeta.
-         * @memberof treasurehunterx
-         * @interface IPlayerMeta
-         * @property {number|null} [id] PlayerMeta id
-         * @property {string|null} [name] PlayerMeta name
-         * @property {string|null} [displayName] PlayerMeta displayName
-         * @property {string|null} [avatar] PlayerMeta avatar
-         * @property {number|null} [joinIndex] PlayerMeta joinIndex
+         * Properties of a PlayerDownsyncMeta.
+         * @memberof protos
+         * @interface IPlayerDownsyncMeta
+         * @property {number|null} [id] PlayerDownsyncMeta id
+         * @property {string|null} [name] PlayerDownsyncMeta name
+         * @property {string|null} [displayName] PlayerDownsyncMeta displayName
+         * @property {string|null} [avatar] PlayerDownsyncMeta avatar
+         * @property {number|null} [joinIndex] PlayerDownsyncMeta joinIndex
+         * @property {number|null} [colliderRadius] PlayerDownsyncMeta colliderRadius
          */
 
         /**
-         * Constructs a new PlayerMeta.
-         * @memberof treasurehunterx
-         * @classdesc Represents a PlayerMeta.
-         * @implements IPlayerMeta
+         * Constructs a new PlayerDownsyncMeta.
+         * @memberof protos
+         * @classdesc Represents a PlayerDownsyncMeta.
+         * @implements IPlayerDownsyncMeta
          * @constructor
-         * @param {treasurehunterx.IPlayerMeta=} [properties] Properties to set
+         * @param {protos.IPlayerDownsyncMeta=} [properties] Properties to set
          */
-        function PlayerMeta(properties) {
+        function PlayerDownsyncMeta(properties) {
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -2395,67 +2431,75 @@ $root.treasurehunterx = (function() {
         }
 
         /**
-         * PlayerMeta id.
+         * PlayerDownsyncMeta id.
          * @member {number} id
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.id = 0;
+        PlayerDownsyncMeta.prototype.id = 0;
 
         /**
-         * PlayerMeta name.
+         * PlayerDownsyncMeta name.
          * @member {string} name
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.name = "";
+        PlayerDownsyncMeta.prototype.name = "";
 
         /**
-         * PlayerMeta displayName.
+         * PlayerDownsyncMeta displayName.
          * @member {string} displayName
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.displayName = "";
+        PlayerDownsyncMeta.prototype.displayName = "";
 
         /**
-         * PlayerMeta avatar.
+         * PlayerDownsyncMeta avatar.
          * @member {string} avatar
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.avatar = "";
+        PlayerDownsyncMeta.prototype.avatar = "";
 
         /**
-         * PlayerMeta joinIndex.
+         * PlayerDownsyncMeta joinIndex.
          * @member {number} joinIndex
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          */
-        PlayerMeta.prototype.joinIndex = 0;
+        PlayerDownsyncMeta.prototype.joinIndex = 0;
 
         /**
-         * Creates a new PlayerMeta instance using the specified properties.
-         * @function create
-         * @memberof treasurehunterx.PlayerMeta
-         * @static
-         * @param {treasurehunterx.IPlayerMeta=} [properties] Properties to set
-         * @returns {treasurehunterx.PlayerMeta} PlayerMeta instance
+         * PlayerDownsyncMeta colliderRadius.
+         * @member {number} colliderRadius
+         * @memberof protos.PlayerDownsyncMeta
+         * @instance
          */
-        PlayerMeta.create = function create(properties) {
-            return new PlayerMeta(properties);
+        PlayerDownsyncMeta.prototype.colliderRadius = 0;
+
+        /**
+         * Creates a new PlayerDownsyncMeta instance using the specified properties.
+         * @function create
+         * @memberof protos.PlayerDownsyncMeta
+         * @static
+         * @param {protos.IPlayerDownsyncMeta=} [properties] Properties to set
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta instance
+         */
+        PlayerDownsyncMeta.create = function create(properties) {
+            return new PlayerDownsyncMeta(properties);
         };
 
         /**
-         * Encodes the specified PlayerMeta message. Does not implicitly {@link treasurehunterx.PlayerMeta.verify|verify} messages.
+         * Encodes the specified PlayerDownsyncMeta message. Does not implicitly {@link protos.PlayerDownsyncMeta.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {treasurehunterx.PlayerMeta} message PlayerMeta message or plain object to encode
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        PlayerMeta.encode = function encode(message, writer) {
+        PlayerDownsyncMeta.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
@@ -2468,37 +2512,39 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatar);
             if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.joinIndex);
+            if (message.colliderRadius != null && Object.hasOwnProperty.call(message, "colliderRadius"))
+                writer.uint32(/* id 6, wireType 1 =*/49).double(message.colliderRadius);
             return writer;
         };
 
         /**
-         * Encodes the specified PlayerMeta message, length delimited. Does not implicitly {@link treasurehunterx.PlayerMeta.verify|verify} messages.
+         * Encodes the specified PlayerDownsyncMeta message, length delimited. Does not implicitly {@link protos.PlayerDownsyncMeta.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {treasurehunterx.PlayerMeta} message PlayerMeta message or plain object to encode
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        PlayerMeta.encodeDelimited = function encodeDelimited(message, writer) {
+        PlayerDownsyncMeta.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a PlayerMeta message from the specified reader or buffer.
+         * Decodes a PlayerDownsyncMeta message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        PlayerMeta.decode = function decode(reader, length) {
+        PlayerDownsyncMeta.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.PlayerMeta();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PlayerDownsyncMeta();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -2522,6 +2568,10 @@ $root.treasurehunterx = (function() {
                         message.joinIndex = reader.int32();
                         break;
                     }
+                case 6: {
+                        message.colliderRadius = reader.double();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2531,30 +2581,30 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Decodes a PlayerMeta message from the specified reader or buffer, length delimited.
+         * Decodes a PlayerDownsyncMeta message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        PlayerMeta.decodeDelimited = function decodeDelimited(reader) {
+        PlayerDownsyncMeta.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a PlayerMeta message.
+         * Verifies a PlayerDownsyncMeta message.
          * @function verify
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        PlayerMeta.verify = function verify(message) {
+        PlayerDownsyncMeta.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             if (message.id != null && message.hasOwnProperty("id"))
@@ -2572,21 +2622,24 @@ $root.treasurehunterx = (function() {
             if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 if (!$util.isInteger(message.joinIndex))
                     return "joinIndex: integer expected";
+            if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
+                if (typeof message.colliderRadius !== "number")
+                    return "colliderRadius: number expected";
             return null;
         };
 
         /**
-         * Creates a PlayerMeta message from a plain object. Also converts values to their respective internal types.
+         * Creates a PlayerDownsyncMeta message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.PlayerMeta} PlayerMeta
+         * @returns {protos.PlayerDownsyncMeta} PlayerDownsyncMeta
          */
-        PlayerMeta.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.PlayerMeta)
+        PlayerDownsyncMeta.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.PlayerDownsyncMeta)
                 return object;
-            var message = new $root.treasurehunterx.PlayerMeta();
+            var message = new $root.protos.PlayerDownsyncMeta();
             if (object.id != null)
                 message.id = object.id | 0;
             if (object.name != null)
@@ -2597,19 +2650,21 @@ $root.treasurehunterx = (function() {
                 message.avatar = String(object.avatar);
             if (object.joinIndex != null)
                 message.joinIndex = object.joinIndex | 0;
+            if (object.colliderRadius != null)
+                message.colliderRadius = Number(object.colliderRadius);
             return message;
         };
 
         /**
-         * Creates a plain object from a PlayerMeta message. Also converts values to other types if specified.
+         * Creates a plain object from a PlayerDownsyncMeta message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
-         * @param {treasurehunterx.PlayerMeta} message PlayerMeta
+         * @param {protos.PlayerDownsyncMeta} message PlayerDownsyncMeta
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        PlayerMeta.toObject = function toObject(message, options) {
+        PlayerDownsyncMeta.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
@@ -2619,6 +2674,7 @@ $root.treasurehunterx = (function() {
                 object.displayName = "";
                 object.avatar = "";
                 object.joinIndex = 0;
+                object.colliderRadius = 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -2630,43 +2686,45 @@ $root.treasurehunterx = (function() {
                 object.avatar = message.avatar;
             if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 object.joinIndex = message.joinIndex;
+            if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
+                object.colliderRadius = options.json && !isFinite(message.colliderRadius) ? String(message.colliderRadius) : message.colliderRadius;
             return object;
         };
 
         /**
-         * Converts this PlayerMeta to JSON.
+         * Converts this PlayerDownsyncMeta to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        PlayerMeta.prototype.toJSON = function toJSON() {
+        PlayerDownsyncMeta.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
-         * Gets the default type url for PlayerMeta
+         * Gets the default type url for PlayerDownsyncMeta
          * @function getTypeUrl
-         * @memberof treasurehunterx.PlayerMeta
+         * @memberof protos.PlayerDownsyncMeta
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        PlayerMeta.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        PlayerDownsyncMeta.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.PlayerMeta";
+            return typeUrlPrefix + "/protos.PlayerDownsyncMeta";
         };
 
-        return PlayerMeta;
+        return PlayerDownsyncMeta;
     })();
 
-    treasurehunterx.InputFrameUpsync = (function() {
+    protos.InputFrameUpsync = (function() {
 
         /**
          * Properties of an InputFrameUpsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IInputFrameUpsync
          * @property {number|null} [inputFrameId] InputFrameUpsync inputFrameId
          * @property {number|null} [encodedDir] InputFrameUpsync encodedDir
@@ -2674,11 +2732,11 @@ $root.treasurehunterx = (function() {
 
         /**
          * Constructs a new InputFrameUpsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents an InputFrameUpsync.
          * @implements IInputFrameUpsync
          * @constructor
-         * @param {treasurehunterx.IInputFrameUpsync=} [properties] Properties to set
+         * @param {protos.IInputFrameUpsync=} [properties] Properties to set
          */
         function InputFrameUpsync(properties) {
             if (properties)
@@ -2690,7 +2748,7 @@ $root.treasurehunterx = (function() {
         /**
          * InputFrameUpsync inputFrameId.
          * @member {number} inputFrameId
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @instance
          */
         InputFrameUpsync.prototype.inputFrameId = 0;
@@ -2698,7 +2756,7 @@ $root.treasurehunterx = (function() {
         /**
          * InputFrameUpsync encodedDir.
          * @member {number} encodedDir
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @instance
          */
         InputFrameUpsync.prototype.encodedDir = 0;
@@ -2706,21 +2764,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new InputFrameUpsync instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
-         * @param {treasurehunterx.IInputFrameUpsync=} [properties] Properties to set
-         * @returns {treasurehunterx.InputFrameUpsync} InputFrameUpsync instance
+         * @param {protos.IInputFrameUpsync=} [properties] Properties to set
+         * @returns {protos.InputFrameUpsync} InputFrameUpsync instance
          */
         InputFrameUpsync.create = function create(properties) {
             return new InputFrameUpsync(properties);
         };
 
         /**
-         * Encodes the specified InputFrameUpsync message. Does not implicitly {@link treasurehunterx.InputFrameUpsync.verify|verify} messages.
+         * Encodes the specified InputFrameUpsync message. Does not implicitly {@link protos.InputFrameUpsync.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
-         * @param {treasurehunterx.InputFrameUpsync} message InputFrameUpsync message or plain object to encode
+         * @param {protos.InputFrameUpsync} message InputFrameUpsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -2735,11 +2793,11 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified InputFrameUpsync message, length delimited. Does not implicitly {@link treasurehunterx.InputFrameUpsync.verify|verify} messages.
+         * Encodes the specified InputFrameUpsync message, length delimited. Does not implicitly {@link protos.InputFrameUpsync.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
-         * @param {treasurehunterx.InputFrameUpsync} message InputFrameUpsync message or plain object to encode
+         * @param {protos.InputFrameUpsync} message InputFrameUpsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -2750,18 +2808,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes an InputFrameUpsync message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.InputFrameUpsync} InputFrameUpsync
+         * @returns {protos.InputFrameUpsync} InputFrameUpsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         InputFrameUpsync.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.InputFrameUpsync();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.InputFrameUpsync();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -2784,10 +2842,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes an InputFrameUpsync message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.InputFrameUpsync} InputFrameUpsync
+         * @returns {protos.InputFrameUpsync} InputFrameUpsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -2800,7 +2858,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies an InputFrameUpsync message.
          * @function verify
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -2820,15 +2878,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates an InputFrameUpsync message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.InputFrameUpsync} InputFrameUpsync
+         * @returns {protos.InputFrameUpsync} InputFrameUpsync
          */
         InputFrameUpsync.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.InputFrameUpsync)
+            if (object instanceof $root.protos.InputFrameUpsync)
                 return object;
-            var message = new $root.treasurehunterx.InputFrameUpsync();
+            var message = new $root.protos.InputFrameUpsync();
             if (object.inputFrameId != null)
                 message.inputFrameId = object.inputFrameId | 0;
             if (object.encodedDir != null)
@@ -2839,9 +2897,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from an InputFrameUpsync message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
-         * @param {treasurehunterx.InputFrameUpsync} message InputFrameUpsync
+         * @param {protos.InputFrameUpsync} message InputFrameUpsync
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -2863,7 +2921,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this InputFrameUpsync to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -2874,7 +2932,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for InputFrameUpsync
          * @function getTypeUrl
-         * @memberof treasurehunterx.InputFrameUpsync
+         * @memberof protos.InputFrameUpsync
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -2883,17 +2941,17 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.InputFrameUpsync";
+            return typeUrlPrefix + "/protos.InputFrameUpsync";
         };
 
         return InputFrameUpsync;
     })();
 
-    treasurehunterx.InputFrameDownsync = (function() {
+    protos.InputFrameDownsync = (function() {
 
         /**
          * Properties of an InputFrameDownsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IInputFrameDownsync
          * @property {number|null} [inputFrameId] InputFrameDownsync inputFrameId
          * @property {Array.<number|Long>|null} [inputList] InputFrameDownsync inputList
@@ -2902,11 +2960,11 @@ $root.treasurehunterx = (function() {
 
         /**
          * Constructs a new InputFrameDownsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents an InputFrameDownsync.
          * @implements IInputFrameDownsync
          * @constructor
-         * @param {treasurehunterx.IInputFrameDownsync=} [properties] Properties to set
+         * @param {protos.IInputFrameDownsync=} [properties] Properties to set
          */
         function InputFrameDownsync(properties) {
             this.inputList = [];
@@ -2919,7 +2977,7 @@ $root.treasurehunterx = (function() {
         /**
          * InputFrameDownsync inputFrameId.
          * @member {number} inputFrameId
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @instance
          */
         InputFrameDownsync.prototype.inputFrameId = 0;
@@ -2927,7 +2985,7 @@ $root.treasurehunterx = (function() {
         /**
          * InputFrameDownsync inputList.
          * @member {Array.<number|Long>} inputList
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @instance
          */
         InputFrameDownsync.prototype.inputList = $util.emptyArray;
@@ -2935,7 +2993,7 @@ $root.treasurehunterx = (function() {
         /**
          * InputFrameDownsync confirmedList.
          * @member {number|Long} confirmedList
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @instance
          */
         InputFrameDownsync.prototype.confirmedList = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -2943,21 +3001,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new InputFrameDownsync instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
-         * @param {treasurehunterx.IInputFrameDownsync=} [properties] Properties to set
-         * @returns {treasurehunterx.InputFrameDownsync} InputFrameDownsync instance
+         * @param {protos.IInputFrameDownsync=} [properties] Properties to set
+         * @returns {protos.InputFrameDownsync} InputFrameDownsync instance
          */
         InputFrameDownsync.create = function create(properties) {
             return new InputFrameDownsync(properties);
         };
 
         /**
-         * Encodes the specified InputFrameDownsync message. Does not implicitly {@link treasurehunterx.InputFrameDownsync.verify|verify} messages.
+         * Encodes the specified InputFrameDownsync message. Does not implicitly {@link protos.InputFrameDownsync.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
-         * @param {treasurehunterx.InputFrameDownsync} message InputFrameDownsync message or plain object to encode
+         * @param {protos.InputFrameDownsync} message InputFrameDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -2978,11 +3036,11 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified InputFrameDownsync message, length delimited. Does not implicitly {@link treasurehunterx.InputFrameDownsync.verify|verify} messages.
+         * Encodes the specified InputFrameDownsync message, length delimited. Does not implicitly {@link protos.InputFrameDownsync.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
-         * @param {treasurehunterx.InputFrameDownsync} message InputFrameDownsync message or plain object to encode
+         * @param {protos.InputFrameDownsync} message InputFrameDownsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -2993,18 +3051,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes an InputFrameDownsync message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.InputFrameDownsync} InputFrameDownsync
+         * @returns {protos.InputFrameDownsync} InputFrameDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         InputFrameDownsync.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.InputFrameDownsync();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.InputFrameDownsync();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -3038,10 +3096,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes an InputFrameDownsync message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.InputFrameDownsync} InputFrameDownsync
+         * @returns {protos.InputFrameDownsync} InputFrameDownsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3054,7 +3112,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies an InputFrameDownsync message.
          * @function verify
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3081,20 +3139,20 @@ $root.treasurehunterx = (function() {
         /**
          * Creates an InputFrameDownsync message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.InputFrameDownsync} InputFrameDownsync
+         * @returns {protos.InputFrameDownsync} InputFrameDownsync
          */
         InputFrameDownsync.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.InputFrameDownsync)
+            if (object instanceof $root.protos.InputFrameDownsync)
                 return object;
-            var message = new $root.treasurehunterx.InputFrameDownsync();
+            var message = new $root.protos.InputFrameDownsync();
             if (object.inputFrameId != null)
                 message.inputFrameId = object.inputFrameId | 0;
             if (object.inputList) {
                 if (!Array.isArray(object.inputList))
-                    throw TypeError(".treasurehunterx.InputFrameDownsync.inputList: array expected");
+                    throw TypeError(".protos.InputFrameDownsync.inputList: array expected");
                 message.inputList = [];
                 for (var i = 0; i < object.inputList.length; ++i)
                     if ($util.Long)
@@ -3121,9 +3179,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from an InputFrameDownsync message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
-         * @param {treasurehunterx.InputFrameDownsync} message InputFrameDownsync
+         * @param {protos.InputFrameDownsync} message InputFrameDownsync
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3162,7 +3220,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this InputFrameDownsync to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3173,7 +3231,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for InputFrameDownsync
          * @function getTypeUrl
-         * @memberof treasurehunterx.InputFrameDownsync
+         * @memberof protos.InputFrameDownsync
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -3182,28 +3240,28 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.InputFrameDownsync";
+            return typeUrlPrefix + "/protos.InputFrameDownsync";
         };
 
         return InputFrameDownsync;
     })();
 
-    treasurehunterx.HeartbeatUpsync = (function() {
+    protos.HeartbeatUpsync = (function() {
 
         /**
          * Properties of a HeartbeatUpsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IHeartbeatUpsync
          * @property {number|Long|null} [clientTimestamp] HeartbeatUpsync clientTimestamp
          */
 
         /**
          * Constructs a new HeartbeatUpsync.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents a HeartbeatUpsync.
          * @implements IHeartbeatUpsync
          * @constructor
-         * @param {treasurehunterx.IHeartbeatUpsync=} [properties] Properties to set
+         * @param {protos.IHeartbeatUpsync=} [properties] Properties to set
          */
         function HeartbeatUpsync(properties) {
             if (properties)
@@ -3215,7 +3273,7 @@ $root.treasurehunterx = (function() {
         /**
          * HeartbeatUpsync clientTimestamp.
          * @member {number|Long} clientTimestamp
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @instance
          */
         HeartbeatUpsync.prototype.clientTimestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
@@ -3223,21 +3281,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new HeartbeatUpsync instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
-         * @param {treasurehunterx.IHeartbeatUpsync=} [properties] Properties to set
-         * @returns {treasurehunterx.HeartbeatUpsync} HeartbeatUpsync instance
+         * @param {protos.IHeartbeatUpsync=} [properties] Properties to set
+         * @returns {protos.HeartbeatUpsync} HeartbeatUpsync instance
          */
         HeartbeatUpsync.create = function create(properties) {
             return new HeartbeatUpsync(properties);
         };
 
         /**
-         * Encodes the specified HeartbeatUpsync message. Does not implicitly {@link treasurehunterx.HeartbeatUpsync.verify|verify} messages.
+         * Encodes the specified HeartbeatUpsync message. Does not implicitly {@link protos.HeartbeatUpsync.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
-         * @param {treasurehunterx.HeartbeatUpsync} message HeartbeatUpsync message or plain object to encode
+         * @param {protos.HeartbeatUpsync} message HeartbeatUpsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3250,11 +3308,11 @@ $root.treasurehunterx = (function() {
         };
 
         /**
-         * Encodes the specified HeartbeatUpsync message, length delimited. Does not implicitly {@link treasurehunterx.HeartbeatUpsync.verify|verify} messages.
+         * Encodes the specified HeartbeatUpsync message, length delimited. Does not implicitly {@link protos.HeartbeatUpsync.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
-         * @param {treasurehunterx.HeartbeatUpsync} message HeartbeatUpsync message or plain object to encode
+         * @param {protos.HeartbeatUpsync} message HeartbeatUpsync message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3265,18 +3323,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a HeartbeatUpsync message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.HeartbeatUpsync} HeartbeatUpsync
+         * @returns {protos.HeartbeatUpsync} HeartbeatUpsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         HeartbeatUpsync.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.HeartbeatUpsync();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.HeartbeatUpsync();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -3295,10 +3353,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a HeartbeatUpsync message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.HeartbeatUpsync} HeartbeatUpsync
+         * @returns {protos.HeartbeatUpsync} HeartbeatUpsync
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3311,7 +3369,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a HeartbeatUpsync message.
          * @function verify
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3328,15 +3386,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a HeartbeatUpsync message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.HeartbeatUpsync} HeartbeatUpsync
+         * @returns {protos.HeartbeatUpsync} HeartbeatUpsync
          */
         HeartbeatUpsync.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.HeartbeatUpsync)
+            if (object instanceof $root.protos.HeartbeatUpsync)
                 return object;
-            var message = new $root.treasurehunterx.HeartbeatUpsync();
+            var message = new $root.protos.HeartbeatUpsync();
             if (object.clientTimestamp != null)
                 if ($util.Long)
                     (message.clientTimestamp = $util.Long.fromValue(object.clientTimestamp)).unsigned = false;
@@ -3352,9 +3410,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a HeartbeatUpsync message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
-         * @param {treasurehunterx.HeartbeatUpsync} message HeartbeatUpsync
+         * @param {protos.HeartbeatUpsync} message HeartbeatUpsync
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3379,7 +3437,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this HeartbeatUpsync to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3390,7 +3448,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for HeartbeatUpsync
          * @function getTypeUrl
-         * @memberof treasurehunterx.HeartbeatUpsync
+         * @memberof protos.HeartbeatUpsync
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -3399,31 +3457,31 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.HeartbeatUpsync";
+            return typeUrlPrefix + "/protos.HeartbeatUpsync";
         };
 
         return HeartbeatUpsync;
     })();
 
-    treasurehunterx.RoomDownsyncFrame = (function() {
+    protos.RoomDownsyncFrame = (function() {
 
         /**
          * Properties of a RoomDownsyncFrame.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IRoomDownsyncFrame
          * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {Object.<string,treasurehunterx.Player>|null} [players] RoomDownsyncFrame players
+         * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
-         * @property {Object.<string,treasurehunterx.PlayerMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
+         * @property {Object.<string,protos.PlayerDownsyncMeta>|null} [playerMetas] RoomDownsyncFrame playerMetas
          */
 
         /**
          * Constructs a new RoomDownsyncFrame.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents a RoomDownsyncFrame.
          * @implements IRoomDownsyncFrame
          * @constructor
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
+         * @param {protos.IRoomDownsyncFrame=} [properties] Properties to set
          */
         function RoomDownsyncFrame(properties) {
             this.players = {};
@@ -3437,15 +3495,15 @@ $root.treasurehunterx = (function() {
         /**
          * RoomDownsyncFrame id.
          * @member {number} id
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @instance
          */
         RoomDownsyncFrame.prototype.id = 0;
 
         /**
          * RoomDownsyncFrame players.
-         * @member {Object.<string,treasurehunterx.Player>} players
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @member {Object.<string,protos.PlayerDownsync>} players
+         * @memberof protos.RoomDownsyncFrame
          * @instance
          */
         RoomDownsyncFrame.prototype.players = $util.emptyObject;
@@ -3453,15 +3511,15 @@ $root.treasurehunterx = (function() {
         /**
          * RoomDownsyncFrame countdownNanos.
          * @member {number|Long} countdownNanos
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @instance
          */
         RoomDownsyncFrame.prototype.countdownNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * RoomDownsyncFrame playerMetas.
-         * @member {Object.<string,treasurehunterx.PlayerMeta>} playerMetas
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @member {Object.<string,protos.PlayerDownsyncMeta>} playerMetas
+         * @memberof protos.RoomDownsyncFrame
          * @instance
          */
         RoomDownsyncFrame.prototype.playerMetas = $util.emptyObject;
@@ -3469,21 +3527,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
-         * @param {treasurehunterx.IRoomDownsyncFrame=} [properties] Properties to set
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame instance
+         * @param {protos.IRoomDownsyncFrame=} [properties] Properties to set
+         * @returns {protos.RoomDownsyncFrame} RoomDownsyncFrame instance
          */
         RoomDownsyncFrame.create = function create(properties) {
             return new RoomDownsyncFrame(properties);
         };
 
         /**
-         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * Encodes the specified RoomDownsyncFrame message. Does not implicitly {@link protos.RoomDownsyncFrame.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {protos.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3495,24 +3553,24 @@ $root.treasurehunterx = (function() {
             if (message.players != null && Object.hasOwnProperty.call(message, "players"))
                 for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.Player.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
             if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
                 for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.treasurehunterx.PlayerMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    $root.protos.PlayerDownsyncMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             return writer;
         };
 
         /**
-         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link treasurehunterx.RoomDownsyncFrame.verify|verify} messages.
+         * Encodes the specified RoomDownsyncFrame message, length delimited. Does not implicitly {@link protos.RoomDownsyncFrame.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
+         * @param {protos.RoomDownsyncFrame} message RoomDownsyncFrame message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3523,18 +3581,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a RoomDownsyncFrame message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @returns {protos.RoomDownsyncFrame} RoomDownsyncFrame
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.RoomDownsyncFrame(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -3555,7 +3613,7 @@ $root.treasurehunterx = (function() {
                                 key = reader.int32();
                                 break;
                             case 2:
-                                value = $root.treasurehunterx.Player.decode(reader, reader.uint32());
+                                value = $root.protos.PlayerDownsync.decode(reader, reader.uint32());
                                 break;
                             default:
                                 reader.skipType(tag2 & 7);
@@ -3582,7 +3640,7 @@ $root.treasurehunterx = (function() {
                                 key = reader.int32();
                                 break;
                             case 2:
-                                value = $root.treasurehunterx.PlayerMeta.decode(reader, reader.uint32());
+                                value = $root.protos.PlayerDownsyncMeta.decode(reader, reader.uint32());
                                 break;
                             default:
                                 reader.skipType(tag2 & 7);
@@ -3603,10 +3661,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a RoomDownsyncFrame message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @returns {protos.RoomDownsyncFrame} RoomDownsyncFrame
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -3619,7 +3677,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a RoomDownsyncFrame message.
          * @function verify
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -3638,7 +3696,7 @@ $root.treasurehunterx = (function() {
                     if (!$util.key32Re.test(key[i]))
                         return "players: integer key{k:int32} expected";
                     {
-                        var error = $root.treasurehunterx.Player.verify(message.players[key[i]]);
+                        var error = $root.protos.PlayerDownsync.verify(message.players[key[i]]);
                         if (error)
                             return "players." + error;
                     }
@@ -3655,7 +3713,7 @@ $root.treasurehunterx = (function() {
                     if (!$util.key32Re.test(key[i]))
                         return "playerMetas: integer key{k:int32} expected";
                     {
-                        var error = $root.treasurehunterx.PlayerMeta.verify(message.playerMetas[key[i]]);
+                        var error = $root.protos.PlayerDownsyncMeta.verify(message.playerMetas[key[i]]);
                         if (error)
                             return "playerMetas." + error;
                     }
@@ -3667,25 +3725,25 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a RoomDownsyncFrame message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.RoomDownsyncFrame} RoomDownsyncFrame
+         * @returns {protos.RoomDownsyncFrame} RoomDownsyncFrame
          */
         RoomDownsyncFrame.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.RoomDownsyncFrame)
+            if (object instanceof $root.protos.RoomDownsyncFrame)
                 return object;
-            var message = new $root.treasurehunterx.RoomDownsyncFrame();
+            var message = new $root.protos.RoomDownsyncFrame();
             if (object.id != null)
                 message.id = object.id | 0;
             if (object.players) {
                 if (typeof object.players !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
+                    throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
                 message.players = {};
                 for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
                     if (typeof object.players[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.treasurehunterx.Player.fromObject(object.players[keys[i]]);
+                        throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
+                    message.players[keys[i]] = $root.protos.PlayerDownsync.fromObject(object.players[keys[i]]);
                 }
             }
             if (object.countdownNanos != null)
@@ -3699,12 +3757,12 @@ $root.treasurehunterx = (function() {
                     message.countdownNanos = new $util.LongBits(object.countdownNanos.low >>> 0, object.countdownNanos.high >>> 0).toNumber();
             if (object.playerMetas) {
                 if (typeof object.playerMetas !== "object")
-                    throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
+                    throw TypeError(".protos.RoomDownsyncFrame.playerMetas: object expected");
                 message.playerMetas = {};
                 for (var keys = Object.keys(object.playerMetas), i = 0; i < keys.length; ++i) {
                     if (typeof object.playerMetas[keys[i]] !== "object")
-                        throw TypeError(".treasurehunterx.RoomDownsyncFrame.playerMetas: object expected");
-                    message.playerMetas[keys[i]] = $root.treasurehunterx.PlayerMeta.fromObject(object.playerMetas[keys[i]]);
+                        throw TypeError(".protos.RoomDownsyncFrame.playerMetas: object expected");
+                    message.playerMetas[keys[i]] = $root.protos.PlayerDownsyncMeta.fromObject(object.playerMetas[keys[i]]);
                 }
             }
             return message;
@@ -3713,9 +3771,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a RoomDownsyncFrame message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
-         * @param {treasurehunterx.RoomDownsyncFrame} message RoomDownsyncFrame
+         * @param {protos.RoomDownsyncFrame} message RoomDownsyncFrame
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -3741,7 +3799,7 @@ $root.treasurehunterx = (function() {
             if (message.players && (keys2 = Object.keys(message.players)).length) {
                 object.players = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.treasurehunterx.Player.toObject(message.players[keys2[j]], options);
+                    object.players[keys2[j]] = $root.protos.PlayerDownsync.toObject(message.players[keys2[j]], options);
             }
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 if (typeof message.countdownNanos === "number")
@@ -3751,7 +3809,7 @@ $root.treasurehunterx = (function() {
             if (message.playerMetas && (keys2 = Object.keys(message.playerMetas)).length) {
                 object.playerMetas = {};
                 for (var j = 0; j < keys2.length; ++j)
-                    object.playerMetas[keys2[j]] = $root.treasurehunterx.PlayerMeta.toObject(message.playerMetas[keys2[j]], options);
+                    object.playerMetas[keys2[j]] = $root.protos.PlayerDownsyncMeta.toObject(message.playerMetas[keys2[j]], options);
             }
             return object;
         };
@@ -3759,7 +3817,7 @@ $root.treasurehunterx = (function() {
         /**
          * Converts this RoomDownsyncFrame to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -3770,7 +3828,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for RoomDownsyncFrame
          * @function getTypeUrl
-         * @memberof treasurehunterx.RoomDownsyncFrame
+         * @memberof protos.RoomDownsyncFrame
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -3779,17 +3837,17 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.RoomDownsyncFrame";
+            return typeUrlPrefix + "/protos.RoomDownsyncFrame";
         };
 
         return RoomDownsyncFrame;
     })();
 
-    treasurehunterx.WsReq = (function() {
+    protos.WsReq = (function() {
 
         /**
          * Properties of a WsReq.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IWsReq
          * @property {number|null} [msgId] WsReq msgId
          * @property {number|null} [playerId] WsReq playerId
@@ -3797,17 +3855,17 @@ $root.treasurehunterx = (function() {
          * @property {number|null} [joinIndex] WsReq joinIndex
          * @property {number|null} [ackingFrameId] WsReq ackingFrameId
          * @property {number|null} [ackingInputFrameId] WsReq ackingInputFrameId
-         * @property {Array.<treasurehunterx.InputFrameUpsync>|null} [inputFrameUpsyncBatch] WsReq inputFrameUpsyncBatch
-         * @property {treasurehunterx.HeartbeatUpsync|null} [hb] WsReq hb
+         * @property {Array.<protos.InputFrameUpsync>|null} [inputFrameUpsyncBatch] WsReq inputFrameUpsyncBatch
+         * @property {protos.HeartbeatUpsync|null} [hb] WsReq hb
          */
 
         /**
          * Constructs a new WsReq.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents a WsReq.
          * @implements IWsReq
          * @constructor
-         * @param {treasurehunterx.IWsReq=} [properties] Properties to set
+         * @param {protos.IWsReq=} [properties] Properties to set
          */
         function WsReq(properties) {
             this.inputFrameUpsyncBatch = [];
@@ -3820,7 +3878,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq msgId.
          * @member {number} msgId
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.msgId = 0;
@@ -3828,7 +3886,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq playerId.
          * @member {number} playerId
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.playerId = 0;
@@ -3836,7 +3894,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq act.
          * @member {number} act
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.act = 0;
@@ -3844,7 +3902,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq joinIndex.
          * @member {number} joinIndex
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.joinIndex = 0;
@@ -3852,7 +3910,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq ackingFrameId.
          * @member {number} ackingFrameId
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.ackingFrameId = 0;
@@ -3860,23 +3918,23 @@ $root.treasurehunterx = (function() {
         /**
          * WsReq ackingInputFrameId.
          * @member {number} ackingInputFrameId
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.ackingInputFrameId = 0;
 
         /**
          * WsReq inputFrameUpsyncBatch.
-         * @member {Array.<treasurehunterx.InputFrameUpsync>} inputFrameUpsyncBatch
-         * @memberof treasurehunterx.WsReq
+         * @member {Array.<protos.InputFrameUpsync>} inputFrameUpsyncBatch
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.inputFrameUpsyncBatch = $util.emptyArray;
 
         /**
          * WsReq hb.
-         * @member {treasurehunterx.HeartbeatUpsync|null|undefined} hb
-         * @memberof treasurehunterx.WsReq
+         * @member {protos.HeartbeatUpsync|null|undefined} hb
+         * @memberof protos.WsReq
          * @instance
          */
         WsReq.prototype.hb = null;
@@ -3884,21 +3942,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new WsReq instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
-         * @param {treasurehunterx.IWsReq=} [properties] Properties to set
-         * @returns {treasurehunterx.WsReq} WsReq instance
+         * @param {protos.IWsReq=} [properties] Properties to set
+         * @returns {protos.WsReq} WsReq instance
          */
         WsReq.create = function create(properties) {
             return new WsReq(properties);
         };
 
         /**
-         * Encodes the specified WsReq message. Does not implicitly {@link treasurehunterx.WsReq.verify|verify} messages.
+         * Encodes the specified WsReq message. Does not implicitly {@link protos.WsReq.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
-         * @param {treasurehunterx.WsReq} message WsReq message or plain object to encode
+         * @param {protos.WsReq} message WsReq message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3919,18 +3977,18 @@ $root.treasurehunterx = (function() {
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.ackingInputFrameId);
             if (message.inputFrameUpsyncBatch != null && message.inputFrameUpsyncBatch.length)
                 for (var i = 0; i < message.inputFrameUpsyncBatch.length; ++i)
-                    $root.treasurehunterx.InputFrameUpsync.encode(message.inputFrameUpsyncBatch[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                    $root.protos.InputFrameUpsync.encode(message.inputFrameUpsyncBatch[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
             if (message.hb != null && Object.hasOwnProperty.call(message, "hb"))
-                $root.treasurehunterx.HeartbeatUpsync.encode(message.hb, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                $root.protos.HeartbeatUpsync.encode(message.hb, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified WsReq message, length delimited. Does not implicitly {@link treasurehunterx.WsReq.verify|verify} messages.
+         * Encodes the specified WsReq message, length delimited. Does not implicitly {@link protos.WsReq.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
-         * @param {treasurehunterx.WsReq} message WsReq message or plain object to encode
+         * @param {protos.WsReq} message WsReq message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -3941,18 +3999,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a WsReq message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.WsReq} WsReq
+         * @returns {protos.WsReq} WsReq
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         WsReq.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.WsReq();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.WsReq();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -3983,11 +4041,11 @@ $root.treasurehunterx = (function() {
                 case 7: {
                         if (!(message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length))
                             message.inputFrameUpsyncBatch = [];
-                        message.inputFrameUpsyncBatch.push($root.treasurehunterx.InputFrameUpsync.decode(reader, reader.uint32()));
+                        message.inputFrameUpsyncBatch.push($root.protos.InputFrameUpsync.decode(reader, reader.uint32()));
                         break;
                     }
                 case 8: {
-                        message.hb = $root.treasurehunterx.HeartbeatUpsync.decode(reader, reader.uint32());
+                        message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -4001,10 +4059,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a WsReq message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.WsReq} WsReq
+         * @returns {protos.WsReq} WsReq
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -4017,7 +4075,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a WsReq message.
          * @function verify
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -4047,13 +4105,13 @@ $root.treasurehunterx = (function() {
                 if (!Array.isArray(message.inputFrameUpsyncBatch))
                     return "inputFrameUpsyncBatch: array expected";
                 for (var i = 0; i < message.inputFrameUpsyncBatch.length; ++i) {
-                    var error = $root.treasurehunterx.InputFrameUpsync.verify(message.inputFrameUpsyncBatch[i]);
+                    var error = $root.protos.InputFrameUpsync.verify(message.inputFrameUpsyncBatch[i]);
                     if (error)
                         return "inputFrameUpsyncBatch." + error;
                 }
             }
             if (message.hb != null && message.hasOwnProperty("hb")) {
-                var error = $root.treasurehunterx.HeartbeatUpsync.verify(message.hb);
+                var error = $root.protos.HeartbeatUpsync.verify(message.hb);
                 if (error)
                     return "hb." + error;
             }
@@ -4063,15 +4121,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a WsReq message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.WsReq} WsReq
+         * @returns {protos.WsReq} WsReq
          */
         WsReq.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.WsReq)
+            if (object instanceof $root.protos.WsReq)
                 return object;
-            var message = new $root.treasurehunterx.WsReq();
+            var message = new $root.protos.WsReq();
             if (object.msgId != null)
                 message.msgId = object.msgId | 0;
             if (object.playerId != null)
@@ -4086,18 +4144,18 @@ $root.treasurehunterx = (function() {
                 message.ackingInputFrameId = object.ackingInputFrameId | 0;
             if (object.inputFrameUpsyncBatch) {
                 if (!Array.isArray(object.inputFrameUpsyncBatch))
-                    throw TypeError(".treasurehunterx.WsReq.inputFrameUpsyncBatch: array expected");
+                    throw TypeError(".protos.WsReq.inputFrameUpsyncBatch: array expected");
                 message.inputFrameUpsyncBatch = [];
                 for (var i = 0; i < object.inputFrameUpsyncBatch.length; ++i) {
                     if (typeof object.inputFrameUpsyncBatch[i] !== "object")
-                        throw TypeError(".treasurehunterx.WsReq.inputFrameUpsyncBatch: object expected");
-                    message.inputFrameUpsyncBatch[i] = $root.treasurehunterx.InputFrameUpsync.fromObject(object.inputFrameUpsyncBatch[i]);
+                        throw TypeError(".protos.WsReq.inputFrameUpsyncBatch: object expected");
+                    message.inputFrameUpsyncBatch[i] = $root.protos.InputFrameUpsync.fromObject(object.inputFrameUpsyncBatch[i]);
                 }
             }
             if (object.hb != null) {
                 if (typeof object.hb !== "object")
-                    throw TypeError(".treasurehunterx.WsReq.hb: object expected");
-                message.hb = $root.treasurehunterx.HeartbeatUpsync.fromObject(object.hb);
+                    throw TypeError(".protos.WsReq.hb: object expected");
+                message.hb = $root.protos.HeartbeatUpsync.fromObject(object.hb);
             }
             return message;
         };
@@ -4105,9 +4163,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a WsReq message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
-         * @param {treasurehunterx.WsReq} message WsReq
+         * @param {protos.WsReq} message WsReq
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -4141,17 +4199,17 @@ $root.treasurehunterx = (function() {
             if (message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length) {
                 object.inputFrameUpsyncBatch = [];
                 for (var j = 0; j < message.inputFrameUpsyncBatch.length; ++j)
-                    object.inputFrameUpsyncBatch[j] = $root.treasurehunterx.InputFrameUpsync.toObject(message.inputFrameUpsyncBatch[j], options);
+                    object.inputFrameUpsyncBatch[j] = $root.protos.InputFrameUpsync.toObject(message.inputFrameUpsyncBatch[j], options);
             }
             if (message.hb != null && message.hasOwnProperty("hb"))
-                object.hb = $root.treasurehunterx.HeartbeatUpsync.toObject(message.hb, options);
+                object.hb = $root.protos.HeartbeatUpsync.toObject(message.hb, options);
             return object;
         };
 
         /**
          * Converts this WsReq to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -4162,7 +4220,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for WsReq
          * @function getTypeUrl
-         * @memberof treasurehunterx.WsReq
+         * @memberof protos.WsReq
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -4171,33 +4229,33 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.WsReq";
+            return typeUrlPrefix + "/protos.WsReq";
         };
 
         return WsReq;
     })();
 
-    treasurehunterx.WsResp = (function() {
+    protos.WsResp = (function() {
 
         /**
          * Properties of a WsResp.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @interface IWsResp
          * @property {number|null} [ret] WsResp ret
          * @property {number|null} [echoedMsgId] WsResp echoedMsgId
          * @property {number|null} [act] WsResp act
-         * @property {treasurehunterx.RoomDownsyncFrame|null} [rdf] WsResp rdf
-         * @property {Array.<treasurehunterx.InputFrameDownsync>|null} [inputFrameDownsyncBatch] WsResp inputFrameDownsyncBatch
-         * @property {treasurehunterx.BattleColliderInfo|null} [bciFrame] WsResp bciFrame
+         * @property {protos.RoomDownsyncFrame|null} [rdf] WsResp rdf
+         * @property {Array.<protos.InputFrameDownsync>|null} [inputFrameDownsyncBatch] WsResp inputFrameDownsyncBatch
+         * @property {protos.BattleColliderInfo|null} [bciFrame] WsResp bciFrame
          */
 
         /**
          * Constructs a new WsResp.
-         * @memberof treasurehunterx
+         * @memberof protos
          * @classdesc Represents a WsResp.
          * @implements IWsResp
          * @constructor
-         * @param {treasurehunterx.IWsResp=} [properties] Properties to set
+         * @param {protos.IWsResp=} [properties] Properties to set
          */
         function WsResp(properties) {
             this.inputFrameDownsyncBatch = [];
@@ -4210,7 +4268,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsResp ret.
          * @member {number} ret
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.ret = 0;
@@ -4218,7 +4276,7 @@ $root.treasurehunterx = (function() {
         /**
          * WsResp echoedMsgId.
          * @member {number} echoedMsgId
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.echoedMsgId = 0;
@@ -4226,31 +4284,31 @@ $root.treasurehunterx = (function() {
         /**
          * WsResp act.
          * @member {number} act
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.act = 0;
 
         /**
          * WsResp rdf.
-         * @member {treasurehunterx.RoomDownsyncFrame|null|undefined} rdf
-         * @memberof treasurehunterx.WsResp
+         * @member {protos.RoomDownsyncFrame|null|undefined} rdf
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.rdf = null;
 
         /**
          * WsResp inputFrameDownsyncBatch.
-         * @member {Array.<treasurehunterx.InputFrameDownsync>} inputFrameDownsyncBatch
-         * @memberof treasurehunterx.WsResp
+         * @member {Array.<protos.InputFrameDownsync>} inputFrameDownsyncBatch
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.inputFrameDownsyncBatch = $util.emptyArray;
 
         /**
          * WsResp bciFrame.
-         * @member {treasurehunterx.BattleColliderInfo|null|undefined} bciFrame
-         * @memberof treasurehunterx.WsResp
+         * @member {protos.BattleColliderInfo|null|undefined} bciFrame
+         * @memberof protos.WsResp
          * @instance
          */
         WsResp.prototype.bciFrame = null;
@@ -4258,21 +4316,21 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a new WsResp instance using the specified properties.
          * @function create
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
-         * @param {treasurehunterx.IWsResp=} [properties] Properties to set
-         * @returns {treasurehunterx.WsResp} WsResp instance
+         * @param {protos.IWsResp=} [properties] Properties to set
+         * @returns {protos.WsResp} WsResp instance
          */
         WsResp.create = function create(properties) {
             return new WsResp(properties);
         };
 
         /**
-         * Encodes the specified WsResp message. Does not implicitly {@link treasurehunterx.WsResp.verify|verify} messages.
+         * Encodes the specified WsResp message. Does not implicitly {@link protos.WsResp.verify|verify} messages.
          * @function encode
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
-         * @param {treasurehunterx.WsResp} message WsResp message or plain object to encode
+         * @param {protos.WsResp} message WsResp message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -4286,21 +4344,21 @@ $root.treasurehunterx = (function() {
             if (message.act != null && Object.hasOwnProperty.call(message, "act"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
             if (message.rdf != null && Object.hasOwnProperty.call(message, "rdf"))
-                $root.treasurehunterx.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                $root.protos.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.inputFrameDownsyncBatch != null && message.inputFrameDownsyncBatch.length)
                 for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i)
-                    $root.treasurehunterx.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
-                $root.treasurehunterx.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified WsResp message, length delimited. Does not implicitly {@link treasurehunterx.WsResp.verify|verify} messages.
+         * Encodes the specified WsResp message, length delimited. Does not implicitly {@link protos.WsResp.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
-         * @param {treasurehunterx.WsResp} message WsResp message or plain object to encode
+         * @param {protos.WsResp} message WsResp message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -4311,18 +4369,18 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a WsResp message from the specified reader or buffer.
          * @function decode
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {treasurehunterx.WsResp} WsResp
+         * @returns {protos.WsResp} WsResp
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         WsResp.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.treasurehunterx.WsResp();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.WsResp();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -4339,17 +4397,17 @@ $root.treasurehunterx = (function() {
                         break;
                     }
                 case 4: {
-                        message.rdf = $root.treasurehunterx.RoomDownsyncFrame.decode(reader, reader.uint32());
+                        message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
                         break;
                     }
                 case 5: {
                         if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
                             message.inputFrameDownsyncBatch = [];
-                        message.inputFrameDownsyncBatch.push($root.treasurehunterx.InputFrameDownsync.decode(reader, reader.uint32()));
+                        message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
                         break;
                     }
                 case 6: {
-                        message.bciFrame = $root.treasurehunterx.BattleColliderInfo.decode(reader, reader.uint32());
+                        message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -4363,10 +4421,10 @@ $root.treasurehunterx = (function() {
         /**
          * Decodes a WsResp message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {treasurehunterx.WsResp} WsResp
+         * @returns {protos.WsResp} WsResp
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -4379,7 +4437,7 @@ $root.treasurehunterx = (function() {
         /**
          * Verifies a WsResp message.
          * @function verify
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -4397,7 +4455,7 @@ $root.treasurehunterx = (function() {
                 if (!$util.isInteger(message.act))
                     return "act: integer expected";
             if (message.rdf != null && message.hasOwnProperty("rdf")) {
-                var error = $root.treasurehunterx.RoomDownsyncFrame.verify(message.rdf);
+                var error = $root.protos.RoomDownsyncFrame.verify(message.rdf);
                 if (error)
                     return "rdf." + error;
             }
@@ -4405,13 +4463,13 @@ $root.treasurehunterx = (function() {
                 if (!Array.isArray(message.inputFrameDownsyncBatch))
                     return "inputFrameDownsyncBatch: array expected";
                 for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i) {
-                    var error = $root.treasurehunterx.InputFrameDownsync.verify(message.inputFrameDownsyncBatch[i]);
+                    var error = $root.protos.InputFrameDownsync.verify(message.inputFrameDownsyncBatch[i]);
                     if (error)
                         return "inputFrameDownsyncBatch." + error;
                 }
             }
             if (message.bciFrame != null && message.hasOwnProperty("bciFrame")) {
-                var error = $root.treasurehunterx.BattleColliderInfo.verify(message.bciFrame);
+                var error = $root.protos.BattleColliderInfo.verify(message.bciFrame);
                 if (error)
                     return "bciFrame." + error;
             }
@@ -4421,15 +4479,15 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a WsResp message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {treasurehunterx.WsResp} WsResp
+         * @returns {protos.WsResp} WsResp
          */
         WsResp.fromObject = function fromObject(object) {
-            if (object instanceof $root.treasurehunterx.WsResp)
+            if (object instanceof $root.protos.WsResp)
                 return object;
-            var message = new $root.treasurehunterx.WsResp();
+            var message = new $root.protos.WsResp();
             if (object.ret != null)
                 message.ret = object.ret | 0;
             if (object.echoedMsgId != null)
@@ -4438,23 +4496,23 @@ $root.treasurehunterx = (function() {
                 message.act = object.act | 0;
             if (object.rdf != null) {
                 if (typeof object.rdf !== "object")
-                    throw TypeError(".treasurehunterx.WsResp.rdf: object expected");
-                message.rdf = $root.treasurehunterx.RoomDownsyncFrame.fromObject(object.rdf);
+                    throw TypeError(".protos.WsResp.rdf: object expected");
+                message.rdf = $root.protos.RoomDownsyncFrame.fromObject(object.rdf);
             }
             if (object.inputFrameDownsyncBatch) {
                 if (!Array.isArray(object.inputFrameDownsyncBatch))
-                    throw TypeError(".treasurehunterx.WsResp.inputFrameDownsyncBatch: array expected");
+                    throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: array expected");
                 message.inputFrameDownsyncBatch = [];
                 for (var i = 0; i < object.inputFrameDownsyncBatch.length; ++i) {
                     if (typeof object.inputFrameDownsyncBatch[i] !== "object")
-                        throw TypeError(".treasurehunterx.WsResp.inputFrameDownsyncBatch: object expected");
-                    message.inputFrameDownsyncBatch[i] = $root.treasurehunterx.InputFrameDownsync.fromObject(object.inputFrameDownsyncBatch[i]);
+                        throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: object expected");
+                    message.inputFrameDownsyncBatch[i] = $root.protos.InputFrameDownsync.fromObject(object.inputFrameDownsyncBatch[i]);
                 }
             }
             if (object.bciFrame != null) {
                 if (typeof object.bciFrame !== "object")
-                    throw TypeError(".treasurehunterx.WsResp.bciFrame: object expected");
-                message.bciFrame = $root.treasurehunterx.BattleColliderInfo.fromObject(object.bciFrame);
+                    throw TypeError(".protos.WsResp.bciFrame: object expected");
+                message.bciFrame = $root.protos.BattleColliderInfo.fromObject(object.bciFrame);
             }
             return message;
         };
@@ -4462,9 +4520,9 @@ $root.treasurehunterx = (function() {
         /**
          * Creates a plain object from a WsResp message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
-         * @param {treasurehunterx.WsResp} message WsResp
+         * @param {protos.WsResp} message WsResp
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -4488,21 +4546,21 @@ $root.treasurehunterx = (function() {
             if (message.act != null && message.hasOwnProperty("act"))
                 object.act = message.act;
             if (message.rdf != null && message.hasOwnProperty("rdf"))
-                object.rdf = $root.treasurehunterx.RoomDownsyncFrame.toObject(message.rdf, options);
+                object.rdf = $root.protos.RoomDownsyncFrame.toObject(message.rdf, options);
             if (message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length) {
                 object.inputFrameDownsyncBatch = [];
                 for (var j = 0; j < message.inputFrameDownsyncBatch.length; ++j)
-                    object.inputFrameDownsyncBatch[j] = $root.treasurehunterx.InputFrameDownsync.toObject(message.inputFrameDownsyncBatch[j], options);
+                    object.inputFrameDownsyncBatch[j] = $root.protos.InputFrameDownsync.toObject(message.inputFrameDownsyncBatch[j], options);
             }
             if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
-                object.bciFrame = $root.treasurehunterx.BattleColliderInfo.toObject(message.bciFrame, options);
+                object.bciFrame = $root.protos.BattleColliderInfo.toObject(message.bciFrame, options);
             return object;
         };
 
         /**
          * Converts this WsResp to JSON.
          * @function toJSON
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -4513,7 +4571,7 @@ $root.treasurehunterx = (function() {
         /**
          * Gets the default type url for WsResp
          * @function getTypeUrl
-         * @memberof treasurehunterx.WsResp
+         * @memberof protos.WsResp
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -4522,13 +4580,13 @@ $root.treasurehunterx = (function() {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/treasurehunterx.WsResp";
+            return typeUrlPrefix + "/protos.WsResp";
         };
 
         return WsResp;
     })();
 
-    return treasurehunterx;
+    return protos;
 })();
 
 module.exports = $root;

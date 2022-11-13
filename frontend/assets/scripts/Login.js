@@ -1,6 +1,8 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
+window.pb = require("./modules/room_downsync_frame_proto_bundle.forcemsg");
+
 cc.Class({
   extends: cc.Component,
 
@@ -84,8 +86,8 @@ cc.Class({
     self.smsLoginCaptchaLabel.active = true;
 
     self.loginButton.active = true;
-	self.onLoginButtonClicked = self.onLoginButtonClicked.bind(self);
-	self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
+    self.onLoginButtonClicked = self.onLoginButtonClicked.bind(self);
+    self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
     self.smsLoginCaptchaButton.on('click', self.onSMSCaptchaGetButtonClicked);
 
     self.loadingNode = cc.instantiate(this.loadingPrefab);
@@ -97,29 +99,16 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     }
 
-    cc.loader.loadRes("pbfiles/room_downsync_frame", function(err, textAsset /* cc.TextAsset */ ) {
-      if (err) {
-        cc.error(err.message || err);
-        return;
+    self.checkIntAuthTokenExpire().then(
+      (intAuthToken) => {
+        console.log("Successfully found `intAuthToken` in local cache");
+        self.useTokenLogin(intAuthToken);
+      },
+      () => {
+        console.warn("Failed to find `intAuthToken` in local cache");
+        window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       }
-      // Otherwise, `window.RoomDownsyncFrame` is already assigned.
-      let protoRoot = new protobuf.Root;
-      window.protobuf.parse(textAsset.text, protoRoot);
-      window.RoomDownsyncFrame = protoRoot.lookupType("treasurehunterx.RoomDownsyncFrame"); 
-      window.BattleColliderInfo = protoRoot.lookupType("treasurehunterx.BattleColliderInfo"); 
-      window.WsReq = protoRoot.lookupType("treasurehunterx.WsReq"); 
-      window.WsResp = protoRoot.lookupType("treasurehunterx.WsResp"); 
-      self.checkIntAuthTokenExpire().then(
-        (intAuthToken) => {
-	 	  console.log("Successfully found `intAuthToken` in local cache");
-          self.useTokenLogin(intAuthToken);
-        },
-        () => {
-	 	  console.warn("Failed to find `intAuthToken` in local cache");
-          window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-        }
-      );
-    });
+    );
   },
 
   getRetCodeList() {
@@ -207,28 +196,28 @@ cc.Class({
   checkIntAuthTokenExpire() {
     return new Promise((resolve, reject) => {
       if (!cc.sys.localStorage.getItem('selfPlayer')) {
-		console.warn("Couldn't find selfPlayer key in local cache");
+        console.warn("Couldn't find selfPlayer key in local cache");
         reject();
         return;
       }
       const selfPlayer = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
-	  if (null == selfPlayer) {
-		console.warn("Couldn't find selfPlayer object in local cache");
-		reject();
-		return;
-	  } 
-
-	  if (null == selfPlayer.intAuthToken) {
-		console.warn("Couldn't find selfPlayer object with key `intAuthToken` in local cache");
-		reject();
-		return;
-	  } 
-      if (new Date().getTime() > selfPlayer.expiresAt) {
-		console.warn("Couldn't find unexpired selfPlayer `intAuthToken` in local cache");
-		reject();
-		return;
+      if (null == selfPlayer) {
+        console.warn("Couldn't find selfPlayer object in local cache");
+        reject();
+        return;
       }
-	  resolve(selfPlayer.intAuthToken);
+
+      if (null == selfPlayer.intAuthToken) {
+        console.warn("Couldn't find selfPlayer object with key `intAuthToken` in local cache");
+        reject();
+        return;
+      }
+      if (new Date().getTime() > selfPlayer.expiresAt) {
+        console.warn("Couldn't find unexpired selfPlayer `intAuthToken` in local cache");
+        reject();
+        return;
+      }
+      resolve(selfPlayer.intAuthToken);
     })
   },
 
@@ -365,7 +354,7 @@ cc.Class({
       );
       cc.director.loadScene('default_map');
     } else {
-   	  console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")
+      console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")
       cc.sys.localStorage.removeItem("selfPlayer");
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       self.enableInteractiveControls(true);

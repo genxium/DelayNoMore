@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="isometric" renderorder="right-down" width="50" height="50" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="214">
+<map version="1.2" tiledversion="1.2.3" orientation="isometric" renderorder="right-down" width="50" height="50" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="215">
  <tileset firstgid="1" source="Tile_W64_H64_S01.tsx"/>
  <tileset firstgid="17" source="Tile_W300_H300_S01.tsx"/>
  <layer id="1" name="GroundFloor" width="50" height="50" locked="1">
@@ -8,7 +8,7 @@
   </data>
  </layer>
  <objectgroup id="2" name="PlayerStartingPos">
-  <object id="135" x="1442.33" y="2063">
+  <object id="135" x="1513.33" y="1996">
    <point/>
   </object>
   <object id="137" x="2270" y="1640">
@@ -17,7 +17,7 @@
  </objectgroup>
  <layer id="3" name="FirsrtFloor" width="50" height="50">
   <data encoding="base64" compression="zlib">
-   eJztwQENAAAAwqD3T20ON6AAAAAAAAAAAADg3wAnEAAB
+   eJzt1jEKgDAQRNE0GtD739fGaQIhqJHdCf81aSz2oyspBQAAAADWcUYPMIEaaugU37TvwbGl9y05tYz2wWFfaMiBhhyNKzRs99n7lzo0SG1OcWqQtsWxQdSwD57L3CCjO4dDg7zd+Yye7nxmajlCp5jD6Y4OAAAA4H8XE6wBrA==
   </data>
  </layer>
  <objectgroup id="4" name="Barrier">
@@ -35,6 +35,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
    <polyline points="1101.33,-342 470.926,284.848 526.26,339.333 1152.93,-285.091"/>
+  </object>
+  <object id="214" x="988" y="1632">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="-3,1 -70,72 514,640 588,572"/>
   </object>
  </objectgroup>
 </map>
