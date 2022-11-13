@@ -30,6 +30,10 @@ cc.Class({
       '2-1': 'attackedRight'
     };
     this.arrowTipNode.active = false;
+
+    if (!this.mapIns.showCriticalCoordinateLabels) {
+      this.coordLabel.node.active = false;
+    }
   },
 
   showArrowTipNode() {

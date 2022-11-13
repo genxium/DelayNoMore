@@ -16,6 +16,7 @@ import (
 	"time"
 
 	. "dnmshared"
+	"runtime/debug"
 )
 
 const (
@@ -104,7 +105,7 @@ func Serve(c *gin.Context) {
 		}
 		defer func() {
 			if r := recover(); r != nil {
-				Logger.Warn("Recovered from: ", zap.Any("panic", r))
+				Logger.Error("Recovered from: ", zap.Any("panic", r))
 			}
 		}()
 		/**
@@ -356,7 +357,7 @@ func Serve(c *gin.Context) {
 	receivingLoopAgainstPlayer := func() error {
 		defer func() {
 			if r := recover(); r != nil {
-				Logger.Warn("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r))
+				Logger.Error("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r), zap.Any("callstack", debug.Stack()))
 			}
 			Logger.Info("Goroutine `receivingLoopAgainstPlayer` is stopped for:", zap.Any("playerId", playerId), zap.Any("roomId", pRoom.Id))
 		}()

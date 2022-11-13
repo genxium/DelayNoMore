@@ -352,7 +352,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     console.warn("+++++++ Map onLoad()");
     window.handleClientSessionError = function() {

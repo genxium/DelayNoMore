@@ -790,9 +790,9 @@ func (pR *Room) Dismiss() {
 func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
-	pR.WorldToVirtualGridRatio = float64(10)
+	pR.WorldToVirtualGridRatio = float64(1000)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
-	pR.PlayerDefaultSpeed = 20                                             // Hardcoded in virtual grids per frame
+	pR.PlayerDefaultSpeed = int32(float64(2) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
