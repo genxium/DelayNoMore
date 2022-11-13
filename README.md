@@ -1,6 +1,15 @@
 # Preface 
 
-This project is a demo for a websocket-based input synchronization method inspired by [GGPO](https://www.ggpo.net/).
+This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
+
+![gif_demo](./charts/along_wall_interaction_with_reconnection.gif)
+
+Please also checkout [this demo video](https://pan.baidu.com/s/1YkfuHjNLzlFVnKiEj6wrDQ?pwd=tkr5) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
+
+The video mainly shows the following features.
+- The backend receives inputs from frontend peers and broadcasts back for synchronization.
+- The game is recovered for a player upon reconnection.
+- Both backend(Golang) and frontend(JavaScript) execute collision detection and handle collision contacts by the same algorithm. The backend dynamics is togglable by [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.5.2/battle_srv/models/room.go#L813), but **when turned off the game couldn't support recovery upon reconnection**.
 
 _(how input delay roughly works)_
 
@@ -10,17 +19,6 @@ _(how rollback-and-chase in this project roughly works)_
 
 ![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)
 ![floating_point_accumulation_err](./charts/AvoidingFloatingPointAccumulationErr.jpg)
-
-_(in game screenshot)_
-
-![screenshot-1](./charts/screenshot-1.png)
-
-Please checkout [this demo video](https://pan.baidu.com/s/1YkfuHjNLzlFVnKiEj6wrDQ?pwd=tkr5) to see whether the source codes are doing what you expect for synchronization.
-
-The video mainly shows the following features.
-- The backend receives inputs from frontend peers and [by a GGPO-alike manner](https://github.com/pond3r/ggpo/blob/master/doc/README.md) broadcasts back for synchronization.
-- The game is recovered for a player upon reconnection.
-- Both backend(Golang) and frontend(JavaScript) execute collision detection and handle collision contacts by the same algorithm. The backend dynamics can be toggled off by [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.5.2/battle_srv/models/room.go#L813), but **when turned off the game couldn't support recovery upon reconnection**.
 
 # 1. Building & running
 
