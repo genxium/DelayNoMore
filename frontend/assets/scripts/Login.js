@@ -86,8 +86,8 @@ cc.Class({
     self.smsLoginCaptchaLabel.active = true;
 
     self.loginButton.active = true;
-	self.onLoginButtonClicked = self.onLoginButtonClicked.bind(self);
-	self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
+    self.onLoginButtonClicked = self.onLoginButtonClicked.bind(self);
+    self.onSMSCaptchaGetButtonClicked = self.onSMSCaptchaGetButtonClicked.bind(self);
     self.smsLoginCaptchaButton.on('click', self.onSMSCaptchaGetButtonClicked);
 
     self.loadingNode = cc.instantiate(this.loadingPrefab);
@@ -98,6 +98,17 @@ cc.Class({
     if (null != qDict && qDict["expectedRoomId"]) {
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     }
+
+    self.checkIntAuthTokenExpire().then(
+      (intAuthToken) => {
+        console.log("Successfully found `intAuthToken` in local cache");
+        self.useTokenLogin(intAuthToken);
+      },
+      () => {
+        console.warn("Failed to find `intAuthToken` in local cache");
+        window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+      }
+    );
   },
 
   getRetCodeList() {
@@ -185,28 +196,28 @@ cc.Class({
   checkIntAuthTokenExpire() {
     return new Promise((resolve, reject) => {
       if (!cc.sys.localStorage.getItem('selfPlayer')) {
-		console.warn("Couldn't find selfPlayer key in local cache");
+        console.warn("Couldn't find selfPlayer key in local cache");
         reject();
         return;
       }
       const selfPlayer = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
-	  if (null == selfPlayer) {
-		console.warn("Couldn't find selfPlayer object in local cache");
-		reject();
-		return;
-	  } 
-
-	  if (null == selfPlayer.intAuthToken) {
-		console.warn("Couldn't find selfPlayer object with key `intAuthToken` in local cache");
-		reject();
-		return;
-	  } 
-      if (new Date().getTime() > selfPlayer.expiresAt) {
-		console.warn("Couldn't find unexpired selfPlayer `intAuthToken` in local cache");
-		reject();
-		return;
+      if (null == selfPlayer) {
+        console.warn("Couldn't find selfPlayer object in local cache");
+        reject();
+        return;
       }
-	  resolve(selfPlayer.intAuthToken);
+
+      if (null == selfPlayer.intAuthToken) {
+        console.warn("Couldn't find selfPlayer object with key `intAuthToken` in local cache");
+        reject();
+        return;
+      }
+      if (new Date().getTime() > selfPlayer.expiresAt) {
+        console.warn("Couldn't find unexpired selfPlayer `intAuthToken` in local cache");
+        reject();
+        return;
+      }
+      resolve(selfPlayer.intAuthToken);
     })
   },
 
@@ -343,7 +354,7 @@ cc.Class({
       );
       cc.director.loadScene('default_map');
     } else {
-   	  console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")
+      console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")
       cc.sys.localStorage.removeItem("selfPlayer");
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       self.enableInteractiveControls(true);

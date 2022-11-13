@@ -156,7 +156,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
           // Deliberately left blank for now
-          mapIns.hideFindingPlayersGUI();
+          mapIns.hideFindingPlayersGUI(resp.rdf);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
           mapIns.onBattleReadyToStart(resp.rdf);

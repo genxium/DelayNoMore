@@ -537,7 +537,8 @@ func (pR *Room) StartBattle() {
 					   2. reconnection
 					*/
 					shouldResync1 := (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId)
-					shouldResync2 := (0 < unconfirmedMask) // This condition is critical, if we don't send resync upon this condition, the  might never get its input synced
+					// shouldResync2 := (0 < (unconfirmedMask & uint64(1 << uint32(player.JoinIndex-1)))) // This condition is critical, if we don't send resync upon this condition, the "reconnected or slowly-clocking player" might never get its input synced
+					shouldResync2 := (0 < unconfirmedMask) // An easier version of the above, might keep sending "refRenderFrame"s to still connected players when any player is disconnected
 					if pR.BackendDynamicsEnabled && (shouldResync1 || shouldResync2) {
 						tmp := pR.RenderFrameBuffer.GetByFrameId(refRenderFrameId)
 						if nil == tmp {
@@ -970,11 +971,12 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 	playerMetas := make(map[int32]*PlayerDownsyncMeta, 0)
 	for _, eachPlayer := range pR.Players {
 		playerMetas[eachPlayer.Id] = &PlayerDownsyncMeta{
-			Id:          eachPlayer.Id,
-			Name:        eachPlayer.Name,
-			DisplayName: eachPlayer.DisplayName,
-			Avatar:      eachPlayer.Avatar,
-			JoinIndex:   eachPlayer.JoinIndex,
+			Id:             eachPlayer.Id,
+			Name:           eachPlayer.Name,
+			DisplayName:    eachPlayer.DisplayName,
+			Avatar:         eachPlayer.Avatar,
+			JoinIndex:      eachPlayer.JoinIndex,
+			ColliderRadius: eachPlayer.ColliderRadius,
 		}
 	}
 
@@ -1251,6 +1253,8 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 			if 0 < encodedInput {
 				Logger.Debug(fmt.Sprintf("Checking collision for playerId=%v: virtual (%d, %d) -> (%d, %d), now playerShape=%v", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
+				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput[0]
+				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput[1]
 			}
 		}
 
