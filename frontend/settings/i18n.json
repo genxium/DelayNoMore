@@ -1,4 +1,7 @@
 {
-  "languages": [],
-  "default_language": null
+  "default_language": "zh",
+  "languages": [
+    "zh",
+    "en"
+  ]
 }

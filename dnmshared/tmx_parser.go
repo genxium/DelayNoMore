@@ -409,7 +409,7 @@ func (pTmxMapIns *TmxMap) continuousObjLayerVecToContinuousMapNodeVec(continuous
 	if "orthogonal" == pTmxMapIns.Orientation {
 		return Vec2D{
 			X: continuousObjLayerVec.X,
-			Y: continuousObjLayerVec.Y,
+			Y: -continuousObjLayerVec.Y,
 		}
 	}
 	var tileRectilinearSize TileRectilinearSize
@@ -434,29 +434,24 @@ func (pTmxMapIns *TmxMap) continuousObjLayerVecToContinuousMapNodeVec(continuous
 }
 
 func (pTmxMapIns *TmxMap) continuousObjLayerOffsetToContinuousMapNodePos(continuousObjLayerOffset *Vec2D) Vec2D {
+	var layerOffset Vec2D
 	if "orthogonal" == pTmxMapIns.Orientation {
-		layerOffset := Vec2D{
-			X: float64(pTmxMapIns.Width*pTmxMapIns.TileWidth) * 0.5,
+		layerOffset = Vec2D{
+			X: -float64(pTmxMapIns.Width*pTmxMapIns.TileWidth) * 0.5,
 			Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
 		}
-		return Vec2D{
-			X: continuousObjLayerOffset.X - layerOffset.X,
-			Y: continuousObjLayerOffset.Y - layerOffset.Y,
+	} else {
+		// "isometric" == pTmxMapIns.Orientation
+		layerOffset = Vec2D{
+			X: 0,
+			Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
 		}
 	}
-	// "isometric" == pTmxMapIns.Orientation
-	layerOffset := Vec2D{
-		X: 0,
-		Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
-	}
 
-	calibratedVec := continuousObjLayerOffset
-	convertedVec := pTmxMapIns.continuousObjLayerVecToContinuousMapNodeVec(calibratedVec)
+	convertedVec := pTmxMapIns.continuousObjLayerVecToContinuousMapNodeVec(continuousObjLayerOffset)
 
-	toRet := Vec2D{
+	return Vec2D{
 		X: layerOffset.X + convertedVec.X,
 		Y: layerOffset.Y + convertedVec.Y,
 	}
-
-	return toRet
 }

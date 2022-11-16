@@ -74,25 +74,6 @@ module.export = cc.Class({
     return ALL_DISCRETE_DIRECTIONS_CLOCKWISE[Math.floor(Math.random() * ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length)];
   },
 
-  _generateRandomDirectionExcluding(toExcludeDx, toExcludeDy) {
-    let randomDirectionList = [];
-    let exactIdx = null;
-    for (let ii = 0; ii < ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length; ++ii) {
-      if (toExcludeDx != ALL_DISCRETE_DIRECTIONS_CLOCKWISE[ii].dx || toExcludeDy != ALL_DISCRETE_DIRECTIONS_CLOCKWISE[ii].dy) continue;
-      exactIdx = ii;
-      break;
-    }
-    if (null == exactIdx) {
-      return this._generateRandomDirection();
-    }
-
-    for (let ii = 0; ii < ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length; ++ii) {
-      if (ii == exactIdx || ((ii - 1) % ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length) == exactIdx || ((ii + 1) % ALL_DISCRETE_DIRECTIONS_CLOCKWISE.length) == exactIdx) continue;
-      randomDirectionList.push(ALL_DISCRETE_DIRECTIONS_CLOCKWISE[ii]);
-    }
-    return randomDirectionList[Math.floor(Math.random() * randomDirectionList.length)]
-  },
-
   updateSpeed(proposedSpeed) {
     if (0 == proposedSpeed && 0 < this.speed) {
       this.startFrozenDisplay();
