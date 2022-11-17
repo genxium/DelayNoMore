@@ -252,7 +252,7 @@ func (pR *Room) ChooseStage() error {
 	}
 
 	rand.Seed(time.Now().Unix())
-	stageNameList := []string{"simple" /* "richsoil" */}
+	stageNameList := []string{"dungeon" /*"dungeon", "simple", "richsoil" */}
 	chosenStageIndex := rand.Int() % len(stageNameList) // Hardcoded temporarily. -- YFLu
 
 	pR.StageName = stageNameList[chosenStageIndex]

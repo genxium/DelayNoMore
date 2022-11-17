@@ -406,6 +406,12 @@ type TileRectilinearSize struct {
 }
 
 func (pTmxMapIns *TmxMap) continuousObjLayerVecToContinuousMapNodeVec(continuousObjLayerVec *Vec2D) Vec2D {
+	if "orthogonal" == pTmxMapIns.Orientation {
+		return Vec2D{
+			X: continuousObjLayerVec.X,
+			Y: -continuousObjLayerVec.Y,
+		}
+	}
 	var tileRectilinearSize TileRectilinearSize
 	tileRectilinearSize.Width = float64(pTmxMapIns.TileWidth)
 	tileRectilinearSize.Height = float64(pTmxMapIns.TileHeight)
@@ -428,18 +434,24 @@ func (pTmxMapIns *TmxMap) continuousObjLayerVecToContinuousMapNodeVec(continuous
 }
 
 func (pTmxMapIns *TmxMap) continuousObjLayerOffsetToContinuousMapNodePos(continuousObjLayerOffset *Vec2D) Vec2D {
-	layerOffset := Vec2D{
-		X: 0,
-		Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
+	var layerOffset Vec2D
+	if "orthogonal" == pTmxMapIns.Orientation {
+		layerOffset = Vec2D{
+			X: -float64(pTmxMapIns.Width*pTmxMapIns.TileWidth) * 0.5,
+			Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
+		}
+	} else {
+		// "isometric" == pTmxMapIns.Orientation
+		layerOffset = Vec2D{
+			X: 0,
+			Y: float64(pTmxMapIns.Height*pTmxMapIns.TileHeight) * 0.5,
+		}
 	}
 
-	calibratedVec := continuousObjLayerOffset
-	convertedVec := pTmxMapIns.continuousObjLayerVecToContinuousMapNodeVec(calibratedVec)
+	convertedVec := pTmxMapIns.continuousObjLayerVecToContinuousMapNodeVec(continuousObjLayerOffset)
 
-	toRet := Vec2D{
+	return Vec2D{
 		X: layerOffset.X + convertedVec.X,
 		Y: layerOffset.Y + convertedVec.Y,
 	}
-
-	return toRet
 }

@@ -85,8 +85,9 @@ type Game struct {
 
 func NewGame() *Game {
 
-	stageName := "simple" // Use this for calibration
+	// stageName := "simple" // Use this for calibration in isometric orientation
 	// stageName := "richsoil"
+	stageName := "dungeon"
 	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, playerPosMap, barrierMap, err := parseStage(stageName)
 	if nil != err {
 		panic(err)

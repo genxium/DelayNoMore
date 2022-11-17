@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="8">
+ <tileset firstgid="1" source="tiles0.tsx"/>
+ <tileset firstgid="65" source="tiles1.tsx"/>
+ <layer id="1" name="Ground" width="64" height="64">
+  <data encoding="base64" compression="zlib">
+   eJzt0jEOwjAUREGLkiLmALRU3In7HwMKkFCUCCwiNrKnmCbVvh8fSikHAAAA/qruYEOr84Zd+vM9re0v+vXr1z9S/7f0l3KZ9dXZ91r67QeAXxyf0jv0Z/tvO9iS7F+T3ucG+Xuk96RvkN4CMJLaIL0VttLy7r19euHdA+zX6YP0vlR3z/3ax2tfarw+TAO0L/VPb3ruXvv3o7z7lv70zuQN0vtgz+6DDSsZ
+  </data>
+ </layer>
+ <objectgroup id="1" name="PlayerStartingPos">
+  <object id="135" x="512" y="512">
+   <point/>
+  </object>
+  <object id="137" x="640" y="640">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="2" name="Barrier">
+  <properties>
+   <property name="type" value="barrier_and_shelter"/>
+  </properties>
+  <object id="1" x="400" y="224.5">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 0,141.5 17,141.5 17,-1"/>
+  </object>
+  <object id="2" x="559.5" y="207.5">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 1,158.5 17,158.5 17,0"/>
+  </object>
+  <object id="3" x="448.5" y="353">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 0,14.5 -49,14.5 -49,-1.5"/>
+  </object>
+  <object id="4" x="577.5" y="351.5">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -98,1 -98,16 -1,15.5"/>
+  </object>
+  <object id="5" x="449.333" y="654.667">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -178.667,0.666667 -178.667,17.3333 -0.666667,17.3333"/>
+  </object>
+  <object id="6" x="432.5" y="703.5">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -191.667,0.666667 -191.667,17.3333 -0.715174,17.3333"/>
+  </object>
+  <object id="7" x="400" y="751">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -191.667,0.666667 -191.667,17.3333 -0.715174,17.3333"/>
+  </object>
+ </objectgroup>
+</map>

@@ -352,7 +352,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
 
     console.warn("+++++++ Map onLoad()");
     window.handleClientSessionError = function() {
@@ -435,6 +435,7 @@ cc.Class({
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
+      // It's easier to just use the "barrier"s extracted by the backend (all anchor points in world coordinates), but I'd like to verify frontend tmx parser logic as well.
       const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", parsedBattleColliderInfo.stageName);
       cc.loader.loadRes(fullPathOfTmxFile, cc.TiledMapAsset, (err, tmxAsset) => {
         if (null != err) {
@@ -472,43 +473,42 @@ cc.Class({
         let barrierIdCounter = 0;
         const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
         for (let boundaryObj of boundaryObjs.barriers) {
-          const x0 = boundaryObj[0].x,
-            y0 = boundaryObj[0].y;
-          let pts = [];
-          for (let i = 0; i < boundaryObj.length; ++i) {
-            const dx = boundaryObj[i].x - x0;
-            const dy = boundaryObj[i].y - y0;
-            pts.push([dx, dy]);
-          /*
-          if (self.showCriticalCoordinateLabels) {
-            const barrierVertLabelNode = new cc.Node();
-            switch (i % 4) {
-              case 0:
-                barrierVertLabelNode.color = cc.Color.RED;
-                break;
-              case 1:
-                barrierVertLabelNode.color = cc.Color.GRAY;
-                break;
-              case 2:
-                barrierVertLabelNode.color = cc.Color.BLACK;
-                break;
-              default:
-                barrierVertLabelNode.color = cc.Color.MAGENTA;
-                break;
-            }
-            barrierVertLabelNode.setPosition(cc.v2(x0+0.95*dx, y0+0.5*dy));
-            const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
-            barrierVertLabel.fontSize = 20;
-            barrierVertLabel.lineHeight = 22;
-            barrierVertLabel.string = `(${boundaryObj[i].x.toFixed(1)}, ${boundaryObj[i].y.toFixed(1)})`;
-            safelyAddChild(self.node, barrierVertLabelNode);
-            setLocalZOrder(barrierVertLabelNode, 5);
+          const x0 = boundaryObj.anchor.x,
+            y0 = boundaryObj.anchor.y;
+        
+          const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => { return [p.x, p.y]; }));
 
-            barrierVertLabelNode.active = true;
+          if (self.showCriticalCoordinateLabels) {
+            for (let i = 0; i < boundaryObj.length; ++i) {
+              const barrierVertLabelNode = new cc.Node();
+              switch (i % 4) {
+                case 0:
+                  barrierVertLabelNode.color = cc.Color.RED;
+                  break;
+                case 1:
+                  barrierVertLabelNode.color = cc.Color.GRAY;
+                  break;
+                case 2:
+                  barrierVertLabelNode.color = cc.Color.BLACK;
+                  break;
+                default:
+                  barrierVertLabelNode.color = cc.Color.MAGENTA;
+                  break;
+              }
+              const wx = boundaryObj.anchor.x + boundaryObj[i].x,
+                wy = boundaryObj.anchor.y + boundaryObj[i].y;
+              barrierVertLabelNode.setPosition(cc.v2(wx, wy));
+              const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
+              barrierVertLabel.fontSize = 12;
+              barrierVertLabel.lineHeight = barrierVertLabel.fontSize+1;
+              barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
+              safelyAddChild(self.node, barrierVertLabelNode);
+              setLocalZOrder(barrierVertLabelNode, 5);
+
+              barrierVertLabelNode.active = true;
+            }
+
           }
-          */
-          }
-          const newBarrier = self.collisionSys.createPolygon(x0, y0, pts);
           // console.log("Created barrier: ", newBarrier);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
@@ -520,27 +520,11 @@ cc.Class({
           id: self.selfPlayerInfo.playerId
         });
 
-        const fullPathOfBackgroundMapTmxFile = cc.js.formatStr("map/%s/BackgroundMap/map", parsedBattleColliderInfo.stageName);
-        cc.loader.loadRes(fullPathOfBackgroundMapTmxFile, cc.TiledMapAsset, (err, backgroundMapTmxAsset) => {
-          if (null != err) {
-            console.error(err);
-            return;
-          }
-
-          self.backgroundMapTiledIns.tmxAsset = null;
-          self.backgroundMapTiledIns.node.removeAllChildren();
-          self.backgroundMapTiledIns.tmxAsset = backgroundMapTmxAsset;
-          const newBackgroundMapSize = self.backgroundMapTiledIns.getMapSize();
-          const newBackgroundMapTileSize = self.backgroundMapTiledIns.getTileSize();
-          self.backgroundMapTiledIns.node.setContentSize(newBackgroundMapSize.width * newBackgroundMapTileSize.width, newBackgroundMapSize.height * newBackgroundMapTileSize.height);
-          self.backgroundMapTiledIns.node.setPosition(cc.v2(0, 0));
-
-          const reqData = window.pb.protos.WsReq.encode({
-            msgId: Date.now(),
-            act: window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK,
-          }).finish();
-          window.sendSafely(reqData);
-        });
+        const reqData = window.pb.protos.WsReq.encode({
+          msgId: Date.now(),
+          act: window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK,
+        }).finish();
+        window.sendSafely(reqData);
       });
     };
 

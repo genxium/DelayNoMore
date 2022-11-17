@@ -36,7 +36,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	virtualGridToWorldRatio := 0.1
 	playerDefaultSpeed := 20
 	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 2)
-	playerColliderRadius := float64(24)
+	playerColliderRadius := float64(16)
 	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
 	for i, playerPos := range playerPosList.Eles {
@@ -56,7 +56,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 
 	world.Space = space
 
-	moveToCollide := true
+	moveToCollide := false
 	if moveToCollide {
 		newVx, newVy := int32(-2959), int32(-2261)
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}

@@ -159,7 +159,7 @@ cc.Class({
   start() {
     BasePlayer.prototype.start.call(this);
 
-    this.scheduleNewDirection(this._generateRandomDirectionExcluding(0, 0));
+    this.scheduleNewDirection(this._generateRandomDirection());
   },
 
   onLoad() {
@@ -185,8 +185,7 @@ cc.Class({
       self.collisionWithPlayerState = transitStunnedAnimPlayingToPlayed(this.collisionWithPlayerState, true);
       if (oldCollisionWithPlayerState == self.collisionWithPlayerState || !self.node) return;
       
-      // TODO: Be more specific with "toExcludeDx" and "toExcludeDy".
-      self.scheduleNewDirection(self._generateRandomDirectionExcluding(0, 0)); 
+      self.scheduleNewDirection(self._generateRandomDirection()); 
       self.collisionWithPlayerState = transitStunnedAnimPlayedToWalking(self.collisionWithPlayerState);
       setTimeout(() => {
         self.collisionWithPlayerState = transitWalkingConditionallyCollidableToUnconditionallyCollidable(self.collisionWithPlayerState);
@@ -257,17 +256,7 @@ cc.Class({
   },
 
   update(dt) {
-    const self = this;
-
     BasePlayer.prototype.update.call(this, dt);
-
-    if (0 < self.contactedBarriers.length) {
-      self.scheduleNewDirection(self._generateRandomDirectionExcluding(self.scheduledDirection.dx, self.scheduledDirection.dy));
-    }
-
-    if (tileCollisionManager.isOutOfMapNode(self.mapNode, self.computedNewDifferentPosLocalToParentWithinCurrentFrame)) {
-      self.scheduleNewDirection(self._generateRandomDirectionExcluding(self.scheduledDirection.dx, self.scheduledDirection.dy));
-    } 
   },
 
   onCollisionEnter(other, self) {
