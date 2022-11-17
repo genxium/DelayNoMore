@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "62e6fcea-0e29-4cba-9f99-b6df0514706c",
+  "uuid": "847a359c-27b8-4302-a6f9-84d5d9d11e0b",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "warlock": {
       "ver": "1.0.4",
-      "uuid": "f052834d-bf3b-4a81-a4cd-ba892d07f839",
-      "rawTextureUuid": "62e6fcea-0e29-4cba-9f99-b6df0514706c",
+      "uuid": "99928b66-f803-4eb2-a107-8c9b116edfd6",
+      "rawTextureUuid": "847a359c-27b8-4302-a6f9-84d5d9d11e0b",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

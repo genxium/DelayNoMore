@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "21ccce17-52d6-4cc6-bda6-476faa53ba9d",
+  "uuid": "94f42afa-43e1-4936-b5ac-7bcfe252f9e1",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "amulet": {
       "ver": "1.0.4",
-      "uuid": "8946357a-148c-408d-a46b-20e62ffcba67",
-      "rawTextureUuid": "21ccce17-52d6-4cc6-bda6-476faa53ba9d",
+      "uuid": "52580025-ae7a-4c48-878f-f685bc90e737",
+      "rawTextureUuid": "94f42afa-43e1-4936-b5ac-7bcfe252f9e1",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

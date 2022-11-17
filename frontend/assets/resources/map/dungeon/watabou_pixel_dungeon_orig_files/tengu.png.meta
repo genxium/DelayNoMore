@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "1d2f9e16-9443-47dd-835d-7f62716aa249",
+  "uuid": "b5bb9431-a7ca-480e-828c-ed34361d21b2",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "tengu": {
       "ver": "1.0.4",
-      "uuid": "fa084a92-eb45-4746-9f5b-21e3d8cb42ef",
-      "rawTextureUuid": "1d2f9e16-9443-47dd-835d-7f62716aa249",
+      "uuid": "19050af0-c579-434a-8cbd-cc0f1f2e2761",
+      "rawTextureUuid": "b5bb9431-a7ca-480e-828c-ed34361d21b2",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

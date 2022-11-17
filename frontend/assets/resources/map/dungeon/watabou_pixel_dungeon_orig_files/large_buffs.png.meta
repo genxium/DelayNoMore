@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "ba8b7b9f-3eda-4def-824c-dee0329de839",
+  "uuid": "f9e7c518-76ca-48c7-8ea1-a60e0443a7cb",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "large_buffs": {
       "ver": "1.0.4",
-      "uuid": "de6b1c73-a9b8-4c2e-a995-6ae2eae1ebc8",
-      "rawTextureUuid": "ba8b7b9f-3eda-4def-824c-dee0329de839",
+      "uuid": "79dd646d-56ee-444a-afaa-219d2f9f494f",
+      "rawTextureUuid": "f9e7c518-76ca-48c7-8ea1-a60e0443a7cb",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

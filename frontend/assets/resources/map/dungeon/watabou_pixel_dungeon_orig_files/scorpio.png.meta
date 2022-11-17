@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "bfa778c5-5059-4453-83e9-b742e3722923",
+  "uuid": "d2eb46f7-097a-4672-8578-0f60e0fdbbb9",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "scorpio": {
       "ver": "1.0.4",
-      "uuid": "46ecbb9e-6903-48ab-96e4-2f74b22ed4c4",
-      "rawTextureUuid": "bfa778c5-5059-4453-83e9-b742e3722923",
+      "uuid": "5edf75a9-eee5-4d1e-ba16-8da467cc6068",
+      "rawTextureUuid": "d2eb46f7-097a-4672-8578-0f60e0fdbbb9",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "7508662b-0e9f-4dfe-9184-fe92c1ff3c14",
+  "uuid": "689df9d3-1bcf-4369-9d9f-dce4bc182633",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "golem": {
       "ver": "1.0.4",
-      "uuid": "aaadb57e-c7a0-4e10-b14e-8f54fd90af6d",
-      "rawTextureUuid": "7508662b-0e9f-4dfe-9184-fe92c1ff3c14",
+      "uuid": "bcd5e6bb-fddb-401f-af8c-894f46ff4b92",
+      "rawTextureUuid": "689df9d3-1bcf-4369-9d9f-dce4bc182633",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

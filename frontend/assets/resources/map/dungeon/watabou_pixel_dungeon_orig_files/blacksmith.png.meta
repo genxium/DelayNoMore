@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "98530f0a-4865-4d74-a28b-0bd14166082d",
+  "uuid": "4ba0be3a-32d0-43f1-9640-5fb0f65ea16a",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "blacksmith": {
       "ver": "1.0.4",
-      "uuid": "e23114ca-3751-47af-a23d-731b646d8540",
-      "rawTextureUuid": "98530f0a-4865-4d74-a28b-0bd14166082d",
+      "uuid": "cc238a21-5d38-496a-86c0-3c223cb0977a",
+      "rawTextureUuid": "4ba0be3a-32d0-43f1-9640-5fb0f65ea16a",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

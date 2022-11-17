@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "215739c9-ba6d-43d6-b885-eb08b1e5484c",
+  "uuid": "8cae32d2-ce55-4083-94ab-96179057fe08",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "wandmaker": {
       "ver": "1.0.4",
-      "uuid": "5b4e9070-04b3-4bab-8f79-63581ecfb7e9",
-      "rawTextureUuid": "215739c9-ba6d-43d6-b885-eb08b1e5484c",
+      "uuid": "226cece5-e690-41ba-8b41-0654a4cf67f5",
+      "rawTextureUuid": "8cae32d2-ce55-4083-94ab-96179057fe08",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

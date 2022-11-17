@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "1b8b93fe-3db9-4aff-b97b-c1fce944815c",
+  "uuid": "902e544c-494e-4d24-989c-8101b081d516",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "dm300": {
       "ver": "1.0.4",
-      "uuid": "28b7fc8c-8677-4606-b332-bbe45b069473",
-      "rawTextureUuid": "1b8b93fe-3db9-4aff-b97b-c1fce944815c",
+      "uuid": "e18e981b-7790-45be-a877-fa1ffccd9cfd",
+      "rawTextureUuid": "902e544c-494e-4d24-989c-8101b081d516",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

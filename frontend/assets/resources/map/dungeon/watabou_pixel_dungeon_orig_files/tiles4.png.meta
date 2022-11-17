@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "7ac2a141-d0ce-4165-bfc2-d3a27ab754e1",
+  "uuid": "16078d95-d6db-4665-8b06-d3959205bac4",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "tiles4": {
       "ver": "1.0.4",
-      "uuid": "fad41331-14e2-4369-b44e-761d27f6672a",
-      "rawTextureUuid": "7ac2a141-d0ce-4165-bfc2-d3a27ab754e1",
+      "uuid": "90d22894-acef-4d02-96e9-946163edab4c",
+      "rawTextureUuid": "16078d95-d6db-4665-8b06-d3959205bac4",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "8a493967-7723-4fd0-b7bc-14b762e6add4",
+  "uuid": "68d076de-28e1-4e54-bc2e-399afbfa81ce",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "succubus": {
       "ver": "1.0.4",
-      "uuid": "9da2f8c3-4d5c-491e-b306-9f20aca3bc53",
-      "rawTextureUuid": "8a493967-7723-4fd0-b7bc-14b762e6add4",
+      "uuid": "0d69f6e6-ca09-43b5-9e4a-6ff695909c55",
+      "rawTextureUuid": "68d076de-28e1-4e54-bc2e-399afbfa81ce",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

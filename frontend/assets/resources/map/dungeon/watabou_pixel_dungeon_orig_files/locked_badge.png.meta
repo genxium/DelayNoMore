@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "3aac19d3-f407-4db1-9d16-c109b5e03d1f",
+  "uuid": "a9f0ec72-e6ea-443e-bbd6-859756de773d",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "locked_badge": {
       "ver": "1.0.4",
-      "uuid": "aa6183c9-8033-4237-bdbd-c20f25ba45ee",
-      "rawTextureUuid": "3aac19d3-f407-4db1-9d16-c109b5e03d1f",
+      "uuid": "1e078c1d-8fbe-4675-bb9e-202989088f53",
+      "rawTextureUuid": "a9f0ec72-e6ea-443e-bbd6-859756de773d",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
