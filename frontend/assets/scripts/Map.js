@@ -40,10 +40,6 @@ cc.Class({
       type: cc.Node,
       default: null,
     },
-    tiledAnimPrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
     player1Prefab: {
       type: cc.Prefab,
       default: null,
@@ -51,14 +47,6 @@ cc.Class({
     player2Prefab: {
       type: cc.Prefab,
       default: null,
-    },
-    polygonBoundaryBarrierPrefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    keyboardInputControllerNode: {
-      type: cc.Node,
-      default: null
     },
     joystickInputControllerNode: {
       type: cc.Node,
