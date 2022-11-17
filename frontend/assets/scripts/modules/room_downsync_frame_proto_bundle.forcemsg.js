@@ -83,9 +83,9 @@ $root.sharedprotos = (function() {
         Direction.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.dx != null && Object.hasOwnProperty.call(message, "dx"))
+            if (message.dx != null && message.hasOwnProperty("dx"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.dx);
-            if (message.dy != null && Object.hasOwnProperty.call(message, "dy"))
+            if (message.dy != null && message.hasOwnProperty("dy"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.dy);
             return writer;
         };
@@ -121,14 +121,12 @@ $root.sharedprotos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.dx = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.dy = reader.int32();
-                        break;
-                    }
+                case 1:
+                    message.dx = reader.int32();
+                    break;
+                case 2:
+                    message.dy = reader.int32();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -227,21 +225,6 @@ $root.sharedprotos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for Direction
-         * @function getTypeUrl
-         * @memberof sharedprotos.Direction
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Direction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Direction";
-        };
-
         return Direction;
     })();
 
@@ -310,9 +293,9 @@ $root.sharedprotos = (function() {
         Vec2D.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+            if (message.x != null && message.hasOwnProperty("x"))
                 writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
-            if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+            if (message.y != null && message.hasOwnProperty("y"))
                 writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
             return writer;
         };
@@ -348,14 +331,12 @@ $root.sharedprotos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.x = reader.double();
-                        break;
-                    }
-                case 2: {
-                        message.y = reader.double();
-                        break;
-                    }
+                case 1:
+                    message.x = reader.double();
+                    break;
+                case 2:
+                    message.y = reader.double();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -454,21 +435,6 @@ $root.sharedprotos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for Vec2D
-         * @function getTypeUrl
-         * @memberof sharedprotos.Vec2D
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Vec2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Vec2D";
-        };
-
         return Vec2D;
     })();
 
@@ -538,7 +504,7 @@ $root.sharedprotos = (function() {
         Polygon2D.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.anchor != null && Object.hasOwnProperty.call(message, "anchor"))
+            if (message.anchor != null && message.hasOwnProperty("anchor"))
                 $root.sharedprotos.Vec2D.encode(message.anchor, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.points != null && message.points.length)
                 for (var i = 0; i < message.points.length; ++i)
@@ -577,16 +543,14 @@ $root.sharedprotos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 2: {
-                        if (!(message.points && message.points.length))
-                            message.points = [];
-                        message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
-                        break;
-                    }
+                case 1:
+                    message.anchor = $root.sharedprotos.Vec2D.decode(reader, reader.uint32());
+                    break;
+                case 2:
+                    if (!(message.points && message.points.length))
+                        message.points = [];
+                    message.points.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -707,21 +671,6 @@ $root.sharedprotos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for Polygon2D
-         * @function getTypeUrl
-         * @memberof sharedprotos.Polygon2D
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Polygon2D.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Polygon2D";
-        };
-
         return Polygon2D;
     })();
 
@@ -819,12 +768,11 @@ $root.sharedprotos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        if (!(message.eles && message.eles.length))
-                            message.eles = [];
-                        message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
-                        break;
-                    }
+                case 1:
+                    if (!(message.eles && message.eles.length))
+                        message.eles = [];
+                    message.eles.push($root.sharedprotos.Vec2D.decode(reader, reader.uint32()));
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -931,21 +879,6 @@ $root.sharedprotos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for Vec2DList
-         * @function getTypeUrl
-         * @memberof sharedprotos.Vec2DList
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Vec2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Vec2DList";
-        };
-
         return Vec2DList;
     })();
 
@@ -1043,12 +976,11 @@ $root.sharedprotos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        if (!(message.eles && message.eles.length))
-                            message.eles = [];
-                        message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
-                        break;
-                    }
+                case 1:
+                    if (!(message.eles && message.eles.length))
+                        message.eles = [];
+                    message.eles.push($root.sharedprotos.Polygon2D.decode(reader, reader.uint32()));
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1153,21 +1085,6 @@ $root.sharedprotos = (function() {
          */
         Polygon2DList.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for Polygon2DList
-         * @function getTypeUrl
-         * @memberof sharedprotos.Polygon2DList
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        Polygon2DList.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/sharedprotos.Polygon2DList";
         };
 
         return Polygon2DList;
@@ -1432,55 +1349,55 @@ $root.protos = (function() {
         BattleColliderInfo.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
+            if (message.stageName != null && message.hasOwnProperty("stageName"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
-            if (message.strToVec2DListMap != null && Object.hasOwnProperty.call(message, "strToVec2DListMap"))
+            if (message.strToVec2DListMap != null && message.hasOwnProperty("strToVec2DListMap"))
                 for (var keys = Object.keys(message.strToVec2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.sharedprotos.Vec2DList.encode(message.strToVec2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.strToPolygon2DListMap != null && Object.hasOwnProperty.call(message, "strToPolygon2DListMap"))
+            if (message.strToPolygon2DListMap != null && message.hasOwnProperty("strToPolygon2DListMap"))
                 for (var keys = Object.keys(message.strToPolygon2DListMap), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 3, wireType 2 =*/26).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
                     $root.sharedprotos.Polygon2DList.encode(message.strToPolygon2DListMap[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
+            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageDiscreteW);
-            if (message.stageDiscreteH != null && Object.hasOwnProperty.call(message, "stageDiscreteH"))
+            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.stageDiscreteH);
-            if (message.stageTileW != null && Object.hasOwnProperty.call(message, "stageTileW"))
+            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.stageTileW);
-            if (message.stageTileH != null && Object.hasOwnProperty.call(message, "stageTileH"))
+            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
                 writer.uint32(/* id 7, wireType 0 =*/56).int32(message.stageTileH);
-            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
                 writer.uint32(/* id 8, wireType 0 =*/64).int32(message.intervalToPing);
-            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
                 writer.uint32(/* id 9, wireType 0 =*/72).int32(message.willKickIfInactiveFor);
-            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.boundRoomId);
-            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
                 writer.uint32(/* id 11, wireType 0 =*/88).int64(message.battleDurationNanos);
-            if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
+            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
                 writer.uint32(/* id 12, wireType 0 =*/96).int32(message.serverFps);
-            if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
+            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
                 writer.uint32(/* id 13, wireType 0 =*/104).int32(message.inputDelayFrames);
-            if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
+            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
                 writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.inputScaleFrames);
-            if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
+            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
                 writer.uint32(/* id 15, wireType 0 =*/120).int32(message.nstDelayFrames);
-            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
                 writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
-            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
-            if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
+            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
-            if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
+            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
                 writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDtMillis);
-            if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
+            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
                 writer.uint32(/* id 20, wireType 0 =*/160).int64(message.rollbackEstimatedDtNanos);
-            if (message.worldToVirtualGridRatio != null && Object.hasOwnProperty.call(message, "worldToVirtualGridRatio"))
+            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
                 writer.uint32(/* id 21, wireType 1 =*/169).double(message.worldToVirtualGridRatio);
-            if (message.virtualGridToWorldRatio != null && Object.hasOwnProperty.call(message, "virtualGridToWorldRatio"))
+            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
                 writer.uint32(/* id 22, wireType 1 =*/177).double(message.virtualGridToWorldRatio);
             return writer;
         };
@@ -1512,136 +1429,86 @@ $root.protos = (function() {
         BattleColliderInfo.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.stageName = reader.string();
-                        break;
-                    }
-                case 2: {
-                        if (message.strToVec2DListMap === $util.emptyObject)
-                            message.strToVec2DListMap = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = "";
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.string();
-                                break;
-                            case 2:
-                                value = $root.sharedprotos.Vec2DList.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.strToVec2DListMap[key] = value;
-                        break;
-                    }
-                case 3: {
-                        if (message.strToPolygon2DListMap === $util.emptyObject)
-                            message.strToPolygon2DListMap = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = "";
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.string();
-                                break;
-                            case 2:
-                                value = $root.sharedprotos.Polygon2DList.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.strToPolygon2DListMap[key] = value;
-                        break;
-                    }
-                case 4: {
-                        message.stageDiscreteW = reader.int32();
-                        break;
-                    }
-                case 5: {
-                        message.stageDiscreteH = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.stageTileW = reader.int32();
-                        break;
-                    }
-                case 7: {
-                        message.stageTileH = reader.int32();
-                        break;
-                    }
-                case 8: {
-                        message.intervalToPing = reader.int32();
-                        break;
-                    }
-                case 9: {
-                        message.willKickIfInactiveFor = reader.int32();
-                        break;
-                    }
-                case 10: {
-                        message.boundRoomId = reader.int32();
-                        break;
-                    }
-                case 11: {
-                        message.battleDurationNanos = reader.int64();
-                        break;
-                    }
-                case 12: {
-                        message.serverFps = reader.int32();
-                        break;
-                    }
-                case 13: {
-                        message.inputDelayFrames = reader.int32();
-                        break;
-                    }
-                case 14: {
-                        message.inputScaleFrames = reader.uint32();
-                        break;
-                    }
-                case 15: {
-                        message.nstDelayFrames = reader.int32();
-                        break;
-                    }
-                case 16: {
-                        message.inputFrameUpsyncDelayTolerance = reader.int32();
-                        break;
-                    }
-                case 17: {
-                        message.maxChasingRenderFramesPerUpdate = reader.int32();
-                        break;
-                    }
-                case 18: {
-                        message.playerBattleState = reader.int32();
-                        break;
-                    }
-                case 19: {
-                        message.rollbackEstimatedDtMillis = reader.double();
-                        break;
-                    }
-                case 20: {
-                        message.rollbackEstimatedDtNanos = reader.int64();
-                        break;
-                    }
-                case 21: {
-                        message.worldToVirtualGridRatio = reader.double();
-                        break;
-                    }
-                case 22: {
-                        message.virtualGridToWorldRatio = reader.double();
-                        break;
-                    }
+                case 1:
+                    message.stageName = reader.string();
+                    break;
+                case 2:
+                    reader.skip().pos++;
+                    if (message.strToVec2DListMap === $util.emptyObject)
+                        message.strToVec2DListMap = {};
+                    key = reader.string();
+                    reader.pos++;
+                    message.strToVec2DListMap[key] = $root.sharedprotos.Vec2DList.decode(reader, reader.uint32());
+                    break;
+                case 3:
+                    reader.skip().pos++;
+                    if (message.strToPolygon2DListMap === $util.emptyObject)
+                        message.strToPolygon2DListMap = {};
+                    key = reader.string();
+                    reader.pos++;
+                    message.strToPolygon2DListMap[key] = $root.sharedprotos.Polygon2DList.decode(reader, reader.uint32());
+                    break;
+                case 4:
+                    message.stageDiscreteW = reader.int32();
+                    break;
+                case 5:
+                    message.stageDiscreteH = reader.int32();
+                    break;
+                case 6:
+                    message.stageTileW = reader.int32();
+                    break;
+                case 7:
+                    message.stageTileH = reader.int32();
+                    break;
+                case 8:
+                    message.intervalToPing = reader.int32();
+                    break;
+                case 9:
+                    message.willKickIfInactiveFor = reader.int32();
+                    break;
+                case 10:
+                    message.boundRoomId = reader.int32();
+                    break;
+                case 11:
+                    message.battleDurationNanos = reader.int64();
+                    break;
+                case 12:
+                    message.serverFps = reader.int32();
+                    break;
+                case 13:
+                    message.inputDelayFrames = reader.int32();
+                    break;
+                case 14:
+                    message.inputScaleFrames = reader.uint32();
+                    break;
+                case 15:
+                    message.nstDelayFrames = reader.int32();
+                    break;
+                case 16:
+                    message.inputFrameUpsyncDelayTolerance = reader.int32();
+                    break;
+                case 17:
+                    message.maxChasingRenderFramesPerUpdate = reader.int32();
+                    break;
+                case 18:
+                    message.playerBattleState = reader.int32();
+                    break;
+                case 19:
+                    message.rollbackEstimatedDtMillis = reader.double();
+                    break;
+                case 20:
+                    message.rollbackEstimatedDtNanos = reader.int64();
+                    break;
+                case 21:
+                    message.worldToVirtualGridRatio = reader.double();
+                    break;
+                case 22:
+                    message.virtualGridToWorldRatio = reader.double();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1967,21 +1834,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for BattleColliderInfo
-         * @function getTypeUrl
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        BattleColliderInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.BattleColliderInfo";
-        };
-
         return BattleColliderInfo;
     })();
 
@@ -2122,25 +1974,25 @@ $root.protos = (function() {
         PlayerDownsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+            if (message.id != null && message.hasOwnProperty("id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
+            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.virtualGridX);
-            if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
+            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.virtualGridY);
-            if (message.dir != null && Object.hasOwnProperty.call(message, "dir"))
+            if (message.dir != null && message.hasOwnProperty("dir"))
                 $root.sharedprotos.Direction.encode(message.dir, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
+            if (message.speed != null && message.hasOwnProperty("speed"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.speed);
-            if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
+            if (message.battleState != null && message.hasOwnProperty("battleState"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.battleState);
-            if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
+            if (message.lastMoveGmtMillis != null && message.hasOwnProperty("lastMoveGmtMillis"))
                 writer.uint32(/* id 7, wireType 0 =*/56).int32(message.lastMoveGmtMillis);
-            if (message.score != null && Object.hasOwnProperty.call(message, "score"))
+            if (message.score != null && message.hasOwnProperty("score"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.score);
-            if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
+            if (message.removed != null && message.hasOwnProperty("removed"))
                 writer.uint32(/* id 11, wireType 0 =*/88).bool(message.removed);
-            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 writer.uint32(/* id 12, wireType 0 =*/96).int32(message.joinIndex);
             return writer;
         };
@@ -2176,46 +2028,36 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.virtualGridX = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.virtualGridY = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.dir = $root.sharedprotos.Direction.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 5: {
-                        message.speed = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.battleState = reader.int32();
-                        break;
-                    }
-                case 7: {
-                        message.lastMoveGmtMillis = reader.int32();
-                        break;
-                    }
-                case 10: {
-                        message.score = reader.int32();
-                        break;
-                    }
-                case 11: {
-                        message.removed = reader.bool();
-                        break;
-                    }
-                case 12: {
-                        message.joinIndex = reader.int32();
-                        break;
-                    }
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.virtualGridX = reader.int32();
+                    break;
+                case 3:
+                    message.virtualGridY = reader.int32();
+                    break;
+                case 4:
+                    message.dir = $root.sharedprotos.Direction.decode(reader, reader.uint32());
+                    break;
+                case 5:
+                    message.speed = reader.int32();
+                    break;
+                case 6:
+                    message.battleState = reader.int32();
+                    break;
+                case 7:
+                    message.lastMoveGmtMillis = reader.int32();
+                    break;
+                case 10:
+                    message.score = reader.int32();
+                    break;
+                case 11:
+                    message.removed = reader.bool();
+                    break;
+                case 12:
+                    message.joinIndex = reader.int32();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2383,21 +2225,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for PlayerDownsync
-         * @function getTypeUrl
-         * @memberof protos.PlayerDownsync
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        PlayerDownsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.PlayerDownsync";
-        };
-
         return PlayerDownsync;
     })();
 
@@ -2502,17 +2329,17 @@ $root.protos = (function() {
         PlayerDownsyncMeta.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+            if (message.id != null && message.hasOwnProperty("id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+            if (message.name != null && message.hasOwnProperty("name"))
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
-            if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
+            if (message.displayName != null && message.hasOwnProperty("displayName"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.displayName);
-            if (message.avatar != null && Object.hasOwnProperty.call(message, "avatar"))
+            if (message.avatar != null && message.hasOwnProperty("avatar"))
                 writer.uint32(/* id 4, wireType 2 =*/34).string(message.avatar);
-            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.joinIndex);
-            if (message.colliderRadius != null && Object.hasOwnProperty.call(message, "colliderRadius"))
+            if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
                 writer.uint32(/* id 6, wireType 1 =*/49).double(message.colliderRadius);
             return writer;
         };
@@ -2548,30 +2375,24 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.name = reader.string();
-                        break;
-                    }
-                case 3: {
-                        message.displayName = reader.string();
-                        break;
-                    }
-                case 4: {
-                        message.avatar = reader.string();
-                        break;
-                    }
-                case 5: {
-                        message.joinIndex = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.colliderRadius = reader.double();
-                        break;
-                    }
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.name = reader.string();
+                    break;
+                case 3:
+                    message.displayName = reader.string();
+                    break;
+                case 4:
+                    message.avatar = reader.string();
+                    break;
+                case 5:
+                    message.joinIndex = reader.int32();
+                    break;
+                case 6:
+                    message.colliderRadius = reader.double();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2702,21 +2523,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for PlayerDownsyncMeta
-         * @function getTypeUrl
-         * @memberof protos.PlayerDownsyncMeta
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        PlayerDownsyncMeta.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.PlayerDownsyncMeta";
-        };
-
         return PlayerDownsyncMeta;
     })();
 
@@ -2785,9 +2591,9 @@ $root.protos = (function() {
         InputFrameUpsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.inputFrameId != null && Object.hasOwnProperty.call(message, "inputFrameId"))
+            if (message.inputFrameId != null && message.hasOwnProperty("inputFrameId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.inputFrameId);
-            if (message.encodedDir != null && Object.hasOwnProperty.call(message, "encodedDir"))
+            if (message.encodedDir != null && message.hasOwnProperty("encodedDir"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.encodedDir);
             return writer;
         };
@@ -2823,14 +2629,12 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.inputFrameId = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.encodedDir = reader.int32();
-                        break;
-                    }
+                case 1:
+                    message.inputFrameId = reader.int32();
+                    break;
+                case 6:
+                    message.encodedDir = reader.int32();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2929,21 +2733,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for InputFrameUpsync
-         * @function getTypeUrl
-         * @memberof protos.InputFrameUpsync
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        InputFrameUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.InputFrameUpsync";
-        };
-
         return InputFrameUpsync;
     })();
 
@@ -3022,7 +2811,7 @@ $root.protos = (function() {
         InputFrameDownsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.inputFrameId != null && Object.hasOwnProperty.call(message, "inputFrameId"))
+            if (message.inputFrameId != null && message.hasOwnProperty("inputFrameId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.inputFrameId);
             if (message.inputList != null && message.inputList.length) {
                 writer.uint32(/* id 2, wireType 2 =*/18).fork();
@@ -3030,7 +2819,7 @@ $root.protos = (function() {
                     writer.uint64(message.inputList[i]);
                 writer.ldelim();
             }
-            if (message.confirmedList != null && Object.hasOwnProperty.call(message, "confirmedList"))
+            if (message.confirmedList != null && message.hasOwnProperty("confirmedList"))
                 writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.confirmedList);
             return writer;
         };
@@ -3066,25 +2855,22 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.inputFrameId = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        if (!(message.inputList && message.inputList.length))
-                            message.inputList = [];
-                        if ((tag & 7) === 2) {
-                            var end2 = reader.uint32() + reader.pos;
-                            while (reader.pos < end2)
-                                message.inputList.push(reader.uint64());
-                        } else
+                case 1:
+                    message.inputFrameId = reader.int32();
+                    break;
+                case 2:
+                    if (!(message.inputList && message.inputList.length))
+                        message.inputList = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
                             message.inputList.push(reader.uint64());
-                        break;
-                    }
-                case 3: {
-                        message.confirmedList = reader.uint64();
-                        break;
-                    }
+                    } else
+                        message.inputList.push(reader.uint64());
+                    break;
+                case 3:
+                    message.confirmedList = reader.uint64();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3228,21 +3014,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for InputFrameDownsync
-         * @function getTypeUrl
-         * @memberof protos.InputFrameDownsync
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        InputFrameDownsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.InputFrameDownsync";
-        };
-
         return InputFrameDownsync;
     })();
 
@@ -3302,7 +3073,7 @@ $root.protos = (function() {
         HeartbeatUpsync.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.clientTimestamp != null && Object.hasOwnProperty.call(message, "clientTimestamp"))
+            if (message.clientTimestamp != null && message.hasOwnProperty("clientTimestamp"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int64(message.clientTimestamp);
             return writer;
         };
@@ -3338,10 +3109,9 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.clientTimestamp = reader.int64();
-                        break;
-                    }
+                case 1:
+                    message.clientTimestamp = reader.int64();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3445,21 +3215,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for HeartbeatUpsync
-         * @function getTypeUrl
-         * @memberof protos.HeartbeatUpsync
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        HeartbeatUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.HeartbeatUpsync";
-        };
-
         return HeartbeatUpsync;
     })();
 
@@ -3548,16 +3303,16 @@ $root.protos = (function() {
         RoomDownsyncFrame.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+            if (message.id != null && message.hasOwnProperty("id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
+            if (message.players != null && message.hasOwnProperty("players"))
                 for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
-            if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
+            if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
-            if (message.playerMetas != null && Object.hasOwnProperty.call(message, "playerMetas"))
+            if (message.playerMetas != null && message.hasOwnProperty("playerMetas"))
                 for (var keys = Object.keys(message.playerMetas), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.protos.PlayerDownsyncMeta.encode(message.playerMetas[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
@@ -3592,64 +3347,32 @@ $root.protos = (function() {
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.id = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        if (message.players === $util.emptyObject)
-                            message.players = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.protos.PlayerDownsync.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.players[key] = value;
-                        break;
-                    }
-                case 3: {
-                        message.countdownNanos = reader.int64();
-                        break;
-                    }
-                case 4: {
-                        if (message.playerMetas === $util.emptyObject)
-                            message.playerMetas = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.protos.PlayerDownsyncMeta.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.playerMetas[key] = value;
-                        break;
-                    }
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    reader.skip().pos++;
+                    if (message.players === $util.emptyObject)
+                        message.players = {};
+                    key = reader.int32();
+                    reader.pos++;
+                    message.players[key] = $root.protos.PlayerDownsync.decode(reader, reader.uint32());
+                    break;
+                case 3:
+                    message.countdownNanos = reader.int64();
+                    break;
+                case 4:
+                    reader.skip().pos++;
+                    if (message.playerMetas === $util.emptyObject)
+                        message.playerMetas = {};
+                    key = reader.int32();
+                    reader.pos++;
+                    message.playerMetas[key] = $root.protos.PlayerDownsyncMeta.decode(reader, reader.uint32());
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3825,21 +3548,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for RoomDownsyncFrame
-         * @function getTypeUrl
-         * @memberof protos.RoomDownsyncFrame
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        RoomDownsyncFrame.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.RoomDownsyncFrame";
-        };
-
         return RoomDownsyncFrame;
     })();
 
@@ -3963,22 +3671,22 @@ $root.protos = (function() {
         WsReq.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.msgId != null && Object.hasOwnProperty.call(message, "msgId"))
+            if (message.msgId != null && message.hasOwnProperty("msgId"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.msgId);
-            if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
+            if (message.playerId != null && message.hasOwnProperty("playerId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.playerId);
-            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
+            if (message.act != null && message.hasOwnProperty("act"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
-            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.joinIndex);
-            if (message.ackingFrameId != null && Object.hasOwnProperty.call(message, "ackingFrameId"))
+            if (message.ackingFrameId != null && message.hasOwnProperty("ackingFrameId"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.ackingFrameId);
-            if (message.ackingInputFrameId != null && Object.hasOwnProperty.call(message, "ackingInputFrameId"))
+            if (message.ackingInputFrameId != null && message.hasOwnProperty("ackingInputFrameId"))
                 writer.uint32(/* id 6, wireType 0 =*/48).int32(message.ackingInputFrameId);
             if (message.inputFrameUpsyncBatch != null && message.inputFrameUpsyncBatch.length)
                 for (var i = 0; i < message.inputFrameUpsyncBatch.length; ++i)
                     $root.protos.InputFrameUpsync.encode(message.inputFrameUpsyncBatch[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
-            if (message.hb != null && Object.hasOwnProperty.call(message, "hb"))
+            if (message.hb != null && message.hasOwnProperty("hb"))
                 $root.protos.HeartbeatUpsync.encode(message.hb, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
@@ -4014,40 +3722,32 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.msgId = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.playerId = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.act = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.joinIndex = reader.int32();
-                        break;
-                    }
-                case 5: {
-                        message.ackingFrameId = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.ackingInputFrameId = reader.int32();
-                        break;
-                    }
-                case 7: {
-                        if (!(message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length))
-                            message.inputFrameUpsyncBatch = [];
-                        message.inputFrameUpsyncBatch.push($root.protos.InputFrameUpsync.decode(reader, reader.uint32()));
-                        break;
-                    }
-                case 8: {
-                        message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
-                        break;
-                    }
+                case 1:
+                    message.msgId = reader.int32();
+                    break;
+                case 2:
+                    message.playerId = reader.int32();
+                    break;
+                case 3:
+                    message.act = reader.int32();
+                    break;
+                case 4:
+                    message.joinIndex = reader.int32();
+                    break;
+                case 5:
+                    message.ackingFrameId = reader.int32();
+                    break;
+                case 6:
+                    message.ackingInputFrameId = reader.int32();
+                    break;
+                case 7:
+                    if (!(message.inputFrameUpsyncBatch && message.inputFrameUpsyncBatch.length))
+                        message.inputFrameUpsyncBatch = [];
+                    message.inputFrameUpsyncBatch.push($root.protos.InputFrameUpsync.decode(reader, reader.uint32()));
+                    break;
+                case 8:
+                    message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4217,21 +3917,6 @@ $root.protos = (function() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
-        /**
-         * Gets the default type url for WsReq
-         * @function getTypeUrl
-         * @memberof protos.WsReq
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        WsReq.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.WsReq";
-        };
-
         return WsReq;
     })();
 
@@ -4337,18 +4022,18 @@ $root.protos = (function() {
         WsResp.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.ret != null && Object.hasOwnProperty.call(message, "ret"))
+            if (message.ret != null && message.hasOwnProperty("ret"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.ret);
-            if (message.echoedMsgId != null && Object.hasOwnProperty.call(message, "echoedMsgId"))
+            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.echoedMsgId);
-            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
+            if (message.act != null && message.hasOwnProperty("act"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
-            if (message.rdf != null && Object.hasOwnProperty.call(message, "rdf"))
+            if (message.rdf != null && message.hasOwnProperty("rdf"))
                 $root.protos.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.inputFrameDownsyncBatch != null && message.inputFrameDownsyncBatch.length)
                 for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i)
                     $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
-            if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
+            if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
                 $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
@@ -4384,32 +4069,26 @@ $root.protos = (function() {
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.ret = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.echoedMsgId = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.act = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 5: {
-                        if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
-                            message.inputFrameDownsyncBatch = [];
-                        message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
-                        break;
-                    }
-                case 6: {
-                        message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
-                        break;
-                    }
+                case 1:
+                    message.ret = reader.int32();
+                    break;
+                case 2:
+                    message.echoedMsgId = reader.int32();
+                    break;
+                case 3:
+                    message.act = reader.int32();
+                    break;
+                case 4:
+                    message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
+                    break;
+                case 5:
+                    if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
+                        message.inputFrameDownsyncBatch = [];
+                    message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
+                    break;
+                case 6:
+                    message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4566,21 +4245,6 @@ $root.protos = (function() {
          */
         WsResp.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for WsResp
-         * @function getTypeUrl
-         * @memberof protos.WsResp
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        WsResp.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.WsResp";
         };
 
         return WsResp;
