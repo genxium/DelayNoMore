@@ -40,6 +40,10 @@ cc.Class({
       type: cc.Node,
       default: null,
     },
+    controlledCharacterPrefab: {
+      type: cc.Prefab,
+      default: null,
+    },
     player1Prefab: {
       type: cc.Prefab,
       default: null,
@@ -90,10 +94,6 @@ cc.Class({
     },
     forceBigEndianFloatingNumDecoding: {
       default: false,
-    },
-    backgroundMapTiledIns: {
-      type: cc.TiledMap,
-      default: null
     },
     renderFrameIdLagTolerance: {
       type: cc.Integer,
@@ -292,8 +292,6 @@ cc.Class({
     const self = this;
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
-    self.countdownLabel.string = "";
-    self.countdownNanos = null;
 
     // Clearing previous info of all players. [BEGINS]
     self.collisionPlayerIndexPrefix = (1 << 17); // For tracking the movements of players 
@@ -327,12 +325,20 @@ cc.Class({
 
     self.battleState = ALL_BATTLE_STATES.WAITING;
 
+    if (self.countdownLabel) {
+      self.countdownLabel.string = "";
+    }
+    self.countdownNanos = null;
     if (self.findingPlayerNode) {
       const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
       findingPlayerScriptIns.init();
     }
-    safelyAddChild(self.widgetsAboveAllNode, self.playersInfoNode);
-    safelyAddChild(self.widgetsAboveAllNode, self.findingPlayerNode);
+    if (self.playersInfoNode) {
+      safelyAddChild(self.widgetsAboveAllNode, self.playersInfoNode);
+    }
+    if (self.findingPlayerNode) {
+      safelyAddChild(self.widgetsAboveAllNode, self.findingPlayerNode);
+    }
   },
 
   onLoad() {
@@ -463,8 +469,10 @@ cc.Class({
         for (let boundaryObj of boundaryObjs.barriers) {
           const x0 = boundaryObj.anchor.x,
             y0 = boundaryObj.anchor.y;
-        
-          const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => { return [p.x, p.y]; }));
+
+          const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
+            return [p.x, p.y];
+          }));
 
           if (self.showCriticalCoordinateLabels) {
             for (let i = 0; i < boundaryObj.length; ++i) {
@@ -488,7 +496,7 @@ cc.Class({
               barrierVertLabelNode.setPosition(cc.v2(wx, wy));
               const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
               barrierVertLabel.fontSize = 12;
-              barrierVertLabel.lineHeight = barrierVertLabel.fontSize+1;
+              barrierVertLabel.lineHeight = barrierVertLabel.fontSize + 1;
               barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
               safelyAddChild(self.node, barrierVertLabelNode);
               setLocalZOrder(barrierVertLabelNode, 5);
@@ -608,10 +616,12 @@ cc.Class({
     self._initPlayerRichInfoDict(players, playerMetas);
 
     // Show the top status indicators for IN_BATTLE 
-    const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-    for (let i in playerMetas) {
-      const playerMeta = playerMetas[i];
-      playersInfoScriptIns.updateData(playerMeta);
+    if (self.playersInfoNode) {
+      const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
+      for (let i in playerMetas) {
+        const playerMeta = playerMetas[i];
+        playersInfoScriptIns.updateData(playerMeta);
+      }
     }
 
     self.renderFrameId = rdf.id;
@@ -629,7 +639,7 @@ cc.Class({
     const canvasNode = self.canvasNode;
     self.ctrl = canvasNode.getComponent("TouchEventsManager");
     self.enableInputControls();
-    if (self.countdownToBeginGameNode.parent) {
+    if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
       self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
     }
     self.transitToState(ALL_MAP_STATES.VISUAL);
@@ -751,10 +761,11 @@ cc.Class({
   spawnPlayerNode(joinIndex, vx, vy, playerRichInfo) {
     const self = this;
     const newPlayerNode = 1 == joinIndex ? cc.instantiate(self.player1Prefab) : cc.instantiate(self.player2Prefab); // hardcoded for now, car color determined solely by joinIndex
+    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
     const wpos = self.virtualGridToWorldPos(vx, vy);
 
     newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
-    newPlayerNode.getComponent("SelfPlayer").mapNode = self.node;
+    playerScriptIns.mapNode = self.node;
     const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerRichInfo);
     const d = playerRichInfo.colliderRadius * 2,
       x0 = cpos[0],
@@ -769,7 +780,6 @@ cc.Class({
     setLocalZOrder(newPlayerNode, 5);
 
     newPlayerNode.active = true;
-    const playerScriptIns = newPlayerNode.getComponent("SelfPlayer");
     playerScriptIns.scheduleNewDirection({
       dx: playerRichInfo.dir.dx,
       dy: playerRichInfo.dir.dy
@@ -933,23 +943,29 @@ cc.Class({
     self._initPlayerRichInfoDict(players, playerMetas);
 
     // Show the top status indicators for IN_BATTLE 
-    const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-    for (let i in playerMetas) {
-      const playerMeta = playerMetas[i];
-      playersInfoScriptIns.updateData(playerMeta);
+    if (self.playersInfoNode) {
+      const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
+      for (let i in playerMetas) {
+        const playerMeta = playerMetas[i];
+        playersInfoScriptIns.updateData(playerMeta);
+      }
     }
     console.log("Calling `onBattleReadyToStart` with:", playerMetas);
-    const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-    findingPlayerScriptIns.hideExitButton();
-    findingPlayerScriptIns.updatePlayersInfo(playerMetas);
+    if (self.findingPlayerNode) {
+      const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
+      findingPlayerScriptIns.hideExitButton();
+      findingPlayerScriptIns.updatePlayersInfo(playerMetas);
+    }
 
     // Delay to hide the "finding player" GUI, then show a countdown clock
-    window.setTimeout(() => {
-      self.hideFindingPlayersGUI();
-      const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
-      countDownScriptIns.setData();
-      self.showPopupInCanvas(self.countdownToBeginGameNode);
-    }, 1500);
+    if (self.countdownToBeginGameNode) {
+      window.setTimeout(() => {
+        self.hideFindingPlayersGUI();
+        const countDownScriptIns = self.countdownToBeginGameNode.getComponent("CountdownToBeginGame");
+        countDownScriptIns.setData();
+        self.showPopupInCanvas(self.countdownToBeginGameNode);
+      }, 1500);
+    }
   },
 
   applyRoomDownsyncFrameDynamics(rdf) {

@@ -1,0 +1,7 @@
+{
+  "ver": "1.0.0",
+  "uuid": "24d7bb8f-577c-4e5d-b730-56613ca8685d",
+  "atlasJson": "{\"width\":128,\"imagePath\":\"SoldierElf_tex.png\",\"height\":128,\"name\":\"SoldierElf\",\"SubTexture\":[{\"frameHeight\":45,\"y\":1,\"frameX\":0,\"width\":34,\"frameY\":0,\"height\":44,\"name\":\"cape\",\"frameWidth\":34,\"x\":70},{\"width\":10,\"y\":107,\"height\":14,\"name\":\"shouder_l\",\"x\":74},{\"width\":11,\"y\":107,\"height\":14,\"name\":\"forearm_l\",\"x\":61},{\"width\":15,\"y\":93,\"height\":16,\"name\":\"hand_l\",\"x\":1},{\"width\":30,\"y\":61,\"height\":30,\"name\":\"weapon_hand_l\",\"x\":1},{\"width\":8,\"y\":101,\"height\":11,\"name\":\"thigh_l\",\"x\":86},{\"width\":12,\"y\":93,\"height\":17,\"name\":\"calf_l\",\"x\":18},{\"width\":20,\"y\":113,\"height\":8,\"name\":\"foot_l\",\"x\":39},{\"width\":28,\"y\":61,\"height\":31,\"name\":\"pelvis\",\"x\":33},{\"width\":8,\"y\":88,\"height\":11,\"name\":\"thigh_r\",\"x\":77},{\"width\":12,\"y\":88,\"height\":17,\"name\":\"calf_r\",\"x\":63},{\"width\":20,\"y\":113,\"height\":8,\"name\":\"foot_r\",\"x\":17},{\"width\":13,\"y\":94,\"height\":12,\"name\":\"shouder_r\",\"x\":45},{\"width\":67,\"y\":1,\"height\":58,\"name\":\"chest\",\"x\":1},{\"width\":11,\"y\":94,\"height\":17,\"name\":\"forearm_r\",\"x\":32},{\"width\":14,\"y\":111,\"height\":13,\"name\":\"hand_r\",\"x\":1},{\"frameHeight\":39,\"y\":47,\"frameX\":-2,\"width\":34,\"frameY\":0,\"height\":39,\"name\":\"we_bl_4_f_1\",\"frameWidth\":36,\"x\":70}]}",
+  "texture": "050fb016-1a1f-4341-8367-283bfeddc4a8",
+  "subMetas": {}
+}

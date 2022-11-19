@@ -1,8 +1,7 @@
-const BasePlayer = require("./BasePlayer");
+const AttackingCharacter = require("./AttackingCharacter");
 
 cc.Class({
-  extends: BasePlayer,
-  // LIFE-CYCLE CALLBACKS:
+  extends: AttackingCharacter,
   properties: {
     arrowTipNode: {
       type: cc.Node,
@@ -14,21 +13,11 @@ cc.Class({
     }
   },
   start() {
-    BasePlayer.prototype.start.call(this);
+    AttackingCharacter.prototype.start.call(this);
   },
 
   onLoad() {
-    BasePlayer.prototype.onLoad.call(this);
-    this.attackedClips = {
-      '01': 'attackedLeft',
-      '0-1': 'attackedRight',
-      '-20': 'attackedLeft',
-      '20': 'attackedRight',
-      '-21': 'attackedLeft',
-      '21': 'attackedRight',
-      '-2-1': 'attackedLeft',
-      '2-1': 'attackedRight'
-    };
+    AttackingCharacter.prototype.onLoad.call(this);
     this.arrowTipNode.active = false;
 
     if (!this.mapIns.showCriticalCoordinateLabels) {
@@ -51,7 +40,7 @@ cc.Class({
   },
 
   update(dt) {
-    BasePlayer.prototype.update.call(this, dt);
+    AttackingCharacter.prototype.update.call(this, dt);
     if (this.mapIns.showCriticalCoordinateLabels) {
       this.coordLabel.string = `(${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`;
     }

@@ -17,11 +17,47 @@ cc.Class({
     console.warn("+++++++ Map onDestroy()");
   },
 
+  spawnPlayerNode(joinIndex, vx, vy, playerRichInfo) {
+    const self = this;
+    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
+    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    const wpos = self.virtualGridToWorldPos(vx, vy);
+
+    newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
+
+    playerScriptIns.mapNode = self.node;
+    const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerRichInfo);
+    const d = playerRichInfo.colliderRadius * 2,
+      x0 = cpos[0],
+      y0 = cpos[1];
+    let pts = [[0, 0], [d, 0], [d, d], [0, d]];
+
+    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
+    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
+
+    safelyAddChild(self.node, newPlayerNode);
+    setLocalZOrder(newPlayerNode, 5);
+
+    newPlayerNode.active = true;
+    playerScriptIns.scheduleNewDirection({
+      dx: playerRichInfo.dir.dx,
+      dy: playerRichInfo.dir.dy
+    }, true);
+
+    return [newPlayerNode, playerScriptIns];
+  },
+
   onLoad() {
     const self = this;
     window.mapIns = self;
 
-    self.mainCameraNode = canvasNode.getChildByName("Main Camera");
+    cc.director.getCollisionManager().enabled = false;
+
+    const mapNode = self.node;
+    const canvasNode = mapNode.parent;
+
+    self.mainCameraNode = self.canvasNode.getChildByName("Main Camera");
     self.mainCamera = self.mainCameraNode.getComponent(cc.Camera);
     for (let child of self.mainCameraNode.children) {
       child.setScale(1 / self.mainCamera.zoomRatio);
@@ -31,36 +67,26 @@ cc.Class({
 
     /** Init required prefab ended. */
 
-    self.inputDelayFrames = parsedBattleColliderInfo.inputDelayFrames;
-    self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
-    self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
+    self.inputDelayFrames = 8;
+    self.inputScaleFrames = 2;
+    self.inputFrameUpsyncDelayTolerance = 2;
 
-    self.battleDurationNanos = parsedBattleColliderInfo.battleDurationNanos;
-    self.rollbackEstimatedDt = parsedBattleColliderInfo.rollbackEstimatedDt;
-    self.rollbackEstimatedDtMillis = parsedBattleColliderInfo.rollbackEstimatedDtMillis;
-    self.rollbackEstimatedDtNanos = parsedBattleColliderInfo.rollbackEstimatedDtNanos;
-    self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
+    self.rollbackEstimatedDt = 0.016667;
+    self.rollbackEstimatedDtMillis = 16.667;
+    self.rollbackEstimatedDtNanos = 16666666;
+    self.maxChasingRenderFramesPerUpdate = 5;
 
-    self.worldToVirtualGridRatio = parsedBattleColliderInfo.worldToVirtualGridRatio;
-    self.virtualGridToWorldRatio = parsedBattleColliderInfo.virtualGridToWorldRatio;
+    self.worldToVirtualGridRatio = 1000;
+    self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
-    // It's easier to just use the "barrier"s extracted by the backend (all anchor points in world coordinates), but I'd like to verify frontend tmx parser logic as well.
-    const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", parsedBattleColliderInfo.stageName);
+    const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", "dungeon");
     cc.loader.loadRes(fullPathOfTmxFile, cc.TiledMapAsset, (err, tmxAsset) => {
       if (null != err) {
         console.error(err);
         return;
       }
-
-      /*
-      [WARNING] 
-      
-      - The order of the following statements is important, because we should have finished "_resetCurrentMatch" before the first "RoomDownsyncFrame". 
-      - It's important to assign new "tmxAsset" before "extractBoundaryObjects", to ensure that the correct tilesets are used.
-      - To ensure clearance, put destruction of the "cc.TiledMap" component preceding that of "mapNode.destroyAllChildren()".
-      */
 
       tiledMapIns.tmxAsset = null;
       mapNode.removeAllChildren();
@@ -71,15 +97,6 @@ cc.Class({
       const newTileSize = tiledMapIns.getTileSize();
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
-      /*
-      * Deliberately hiding "ImageLayer"s. This dirty fix is specific to "CocosCreator v2.2.1", where it got back the rendering capability of "ImageLayer of Tiled", yet made incorrectly. In this game our "markers of ImageLayers" are rendered by dedicated prefabs with associated colliders.
-      *
-      * -- YFLu, 2020-01-23
-      */
-      const existingImageLayers = tiledMapIns.getObjectGroups();
-      for (let singleImageLayer of existingImageLayers) {
-        singleImageLayer.node.opacity = 0;
-      }
 
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
@@ -127,6 +144,34 @@ cc.Class({
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
         self.collisionSysMap.set(collisionBarrierIndex, newBarrier);
       }
+
+      const startRdf = {
+        id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
+        players: {
+          10: {
+            id: 10,
+            virtualGridX: 0,
+            virtualGridY: 0,
+            speed: 2*self.worldToVirtualGridRatio,
+            dir: {
+              dx: 0,
+              dy: 0
+            }
+          },
+        },
+        playerMetas: {
+          10: {
+            colliderRadius: 12,
+          },
+        }
+      };
+      self.selfPlayerInfo = {
+        id: 10
+      };
+      self._initPlayerRichInfoDict(startRdf.players, startRdf.playerMetas);
+      self.onRoomDownsyncFrame(startRdf);
+
+      self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
     });
 
   },
