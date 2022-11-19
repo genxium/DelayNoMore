@@ -44,14 +44,6 @@ cc.Class({
       type: cc.Prefab,
       default: null,
     },
-    player1Prefab: {
-      type: cc.Prefab,
-      default: null,
-    },
-    player2Prefab: {
-      type: cc.Prefab,
-      default: null,
-    },
     joystickInputControllerNode: {
       type: cc.Node,
       default: null
@@ -760,8 +752,16 @@ cc.Class({
 
   spawnPlayerNode(joinIndex, vx, vy, playerRichInfo) {
     const self = this;
-    const newPlayerNode = 1 == joinIndex ? cc.instantiate(self.player1Prefab) : cc.instantiate(self.player2Prefab); // hardcoded for now, car color determined solely by joinIndex
+    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    if (1 == joinIndex) {
+      newPlayerNode.color = cc.Color.RED;
+    }
+    if (2 == joinIndex) {
+      newPlayerNode.color = cc.Color.BLUE;
+      playerScriptIns.animNode.scaleX = (-1.0);
+    }
+
     const wpos = self.virtualGridToWorldPos(vx, vy);
 
     newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
@@ -977,13 +977,13 @@ cc.Class({
       const dx = (wpos[0] - playerRichInfo.node.x);
       const dy = (wpos[1] - playerRichInfo.node.y);
       const justJiggling = (self.jigglingEps1D >= Math.abs(dx) && self.jigglingEps1D >= Math.abs(dy));
-      if (!justJiggling) {
-        playerRichInfo.node.setPosition(wpos[0], wpos[1]);
-        playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
-        playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
-        playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
-        playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
-      }
+      //if (!justJiggling) {
+      playerRichInfo.node.setPosition(wpos[0], wpos[1]);
+      playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
+      playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
+      playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
+      playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
+    //}
     });
   },
 
