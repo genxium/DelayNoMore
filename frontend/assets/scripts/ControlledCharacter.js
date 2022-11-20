@@ -12,9 +12,6 @@ cc.Class({
       default: null
     }
   },
-  start() {
-    AttackingCharacter.prototype.start.call(this);
-  },
 
   onLoad() {
     AttackingCharacter.prototype.onLoad.call(this);

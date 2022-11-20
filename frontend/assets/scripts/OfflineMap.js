@@ -149,7 +149,7 @@ cc.Class({
         players: {
           10: {
             id: 10,
-            joinIndex: 2,
+            joinIndex: 1,
             virtualGridX: 0,
             virtualGridY: 0,
             speed: 2 * self.worldToVirtualGridRatio,

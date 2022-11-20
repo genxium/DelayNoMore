@@ -8,16 +8,12 @@ module.export = cc.Class({
     }
   },
 
-  // LIFE-CYCLE CALLBACKS:
-  start() {
-    const self = this;
-    self.activeDirection = {
+  ctor() {
+    this.activeDirection = {
       dx: 0,
       dy: 0
     };
   },
-
-  ctor() {},
 
   onLoad() {
     const self = this;

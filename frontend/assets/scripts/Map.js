@@ -976,14 +976,12 @@ cc.Class({
       const wpos = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
       const dx = (wpos[0] - playerRichInfo.node.x);
       const dy = (wpos[1] - playerRichInfo.node.y);
-      const justJiggling = (self.jigglingEps1D >= Math.abs(dx) && self.jigglingEps1D >= Math.abs(dy));
-      //if (!justJiggling) {
+      //const justJiggling = (self.jigglingEps1D >= Math.abs(dx) && self.jigglingEps1D >= Math.abs(dy));
       playerRichInfo.node.setPosition(wpos[0], wpos[1]);
       playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
       playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
       playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
-    //}
     });
   },
 

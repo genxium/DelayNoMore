@@ -6,6 +6,11 @@ window.ATK_CHARACTER_STATE = {
   Atk1: [2, "Atk1"],
 };
 
+window.ATK_CHARACTER_STATE_ARR = [];
+for (let k in window.ATK_CHARACTER_STATE) {
+  window.ATK_CHARACTER_STATE_ARR.push(window.ATK_CHARACTER_STATE[k]);
+}
+
 cc.Class({
   extends: BaseCharacter,
   properties: {
@@ -44,17 +49,11 @@ cc.Class({
     }
 
     if (newCharacterState != this.characterState) {
-      switch (newCharacterState) {
-        case ATK_CHARACTER_STATE.Idle1[0]:
-          this.animComp.playAnimation(ATK_CHARACTER_STATE.Idle1[1]);
-          break;
-        case ATK_CHARACTER_STATE.Walking[0]:
-          this.animComp.playAnimation(ATK_CHARACTER_STATE.Walking[1]);
-          break;
-        default:
-          break;
-      }
       this.characterState = newCharacterState;
+      const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
+      if (newAnimName != this.animComp.animationName) {
+        this.animComp.playAnimation(newAnimName);
+      }
     }
   },
 });
