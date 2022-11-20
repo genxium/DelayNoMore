@@ -163,8 +163,8 @@ cc.Class({
       return [previousSelfInput, existingInputFrame.inputList[joinIndex - 1]];
     }
     const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.inputList.slice());
-    const discreteDir = self.ctrl.getDiscretizedDirection();
-    prefabbedInputList[(joinIndex - 1)] = discreteDir.encodedIdx;
+    const currSelfInput = self.ctrl.getEncodedInput();
+    prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     const prefabbedInputFrameDownsync = {
       inputFrameId: inputFrameId,
       inputList: prefabbedInputList,
@@ -173,7 +173,7 @@ cc.Class({
 
     self.dumpToInputCache(prefabbedInputFrameDownsync); // A prefabbed inputFrame, would certainly be adding a new inputFrame to the cache, because server only downsyncs "all-confirmed inputFrames" 
 
-    return [previousSelfInput, discreteDir.encodedIdx];
+    return [previousSelfInput, currSelfInput];
   },
 
   shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, lastUpsyncInputFrameId, currInputFrameId) {
@@ -204,7 +204,7 @@ cc.Class({
       } else {
         const inputFrameUpsync = {
           inputFrameId: i,
-          encodedDir: inputFrameDownsync.inputList[self.selfPlayerInfo.joinIndex - 1],
+          encoded: inputFrameDownsync.inputList[self.selfPlayerInfo.joinIndex - 1],
         };
         inputFrameUpsyncBatch.push(inputFrameUpsync);
       }
@@ -338,7 +338,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     console.warn("+++++++ Map onLoad()");
     window.handleClientSessionError = function() {
@@ -754,12 +754,12 @@ cc.Class({
     const self = this;
     const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+
     if (1 == joinIndex) {
-      newPlayerNode.color = cc.Color.RED;
-    }
-    if (2 == joinIndex) {
-      newPlayerNode.color = cc.Color.BLUE;
-      playerScriptIns.animNode.scaleX = (-1.0);
+      playerScriptIns.setSpecies("SoldierElf");
+    } else if (2 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierFireGhost");
+      playerScriptIns.animComp.node.scaleX = (-1.0);
     }
 
     const wpos = self.virtualGridToWorldPos(vx, vy);
@@ -1039,8 +1039,7 @@ cc.Class({
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = currRenderFrame.players[playerId];
 
-        const encodedInput = inputList[joinIndex - 1];
-        const decodedInput = self.ctrl.decodeDirection(encodedInput);
+        const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
 
         // console.log(`Got non-zero inputs for playerId=${playerId}, decodedInput=${JSON.stringify(decodedInput)} @currRenderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.id}`);
         /* 

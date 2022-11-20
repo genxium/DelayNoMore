@@ -6,13 +6,6 @@ const OnlineMap = require('./Map');
 cc.Class({
   extends: OnlineMap,
 
-  properties: {
-    keyboardInputControllerNode: {
-      type: cc.Node,
-      default: null
-    },
-  },
-
   onDestroy() {
     console.warn("+++++++ Map onDestroy()");
   },
@@ -21,6 +14,12 @@ cc.Class({
     const self = this;
     const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    if (1 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierElf");
+    } else if (2 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierFireGhost");
+      playerScriptIns.animComp.node.scaleX = (-1.0);
+    }
     const wpos = self.virtualGridToWorldPos(vx, vy);
 
     newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
@@ -150,9 +149,10 @@ cc.Class({
         players: {
           10: {
             id: 10,
+            joinIndex: 2,
             virtualGridX: 0,
             virtualGridY: 0,
-            speed: 2*self.worldToVirtualGridRatio,
+            speed: 2 * self.worldToVirtualGridRatio,
             dir: {
               dx: 0,
               dy: 0

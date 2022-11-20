@@ -53,9 +53,15 @@ message PlayerDownsyncMeta {
   double colliderRadius = 6;
 }
 
+message InputFrameDecoded {
+  int32 dx = 1;
+  int32 dy = 2;
+  int32 btnALevel = 3;
+}
+
 message InputFrameUpsync {
   int32 inputFrameId = 1;
-  int32 encodedDir = 6;
+  uint64 encoded = 2;
 }
 
 message InputFrameDownsync {

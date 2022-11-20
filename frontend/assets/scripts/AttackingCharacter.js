@@ -16,13 +16,20 @@ cc.Class({
   },
 
   ctor() {
+    this.speciesName = null;
+  },
+
+  setSpecies(speciesName) {
+    this.speciesName = speciesName;
+    this.effAnimNode = this.animNode.getChildByName(this.speciesName);
+    this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
+    this.animComp.playAnimation(ATK_CHARACTER_STATE.Idle1[1]);
+    this.effAnimNode.active = true;
   },
 
   onLoad() {
     BaseCharacter.prototype.onLoad.call(this);
     this.characterState = ATK_CHARACTER_STATE.Idle1[0];
-    this.animComp = this.animNode.getComponent(dragonBones.ArmatureDisplay);
-    this.animComp.playAnimation(ATK_CHARACTER_STATE.Idle1[1]);
   },
 
   scheduleNewDirection(newScheduledDirection, forceAnimSwitch) {
