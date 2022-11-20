@@ -345,13 +345,6 @@ func (pR *Room) ConvertToLastUsedRenderFrameId(inputFrameId int32, inputDelayFra
 	return ((inputFrameId << pR.InputScaleFrames) + inputDelayFrames + (1 << pR.InputScaleFrames) - 1)
 }
 
-func (pR *Room) EncodeUpsyncCmd(upsyncCmd *InputFrameUpsync) uint64 {
-	var ret uint64 = 0
-	// There're 13 possible directions, occupying the first 4 bits, no need to shift
-	ret += uint64(upsyncCmd.EncodedDir)
-	return ret
-}
-
 func (pR *Room) RenderFrameBufferString() string {
 	return fmt.Sprintf("{renderFrameId: %d, stRenderFrameId: %d, edRenderFrameId: %d, lastAllConfirmedRenderFrameId: %d}", pR.RenderFrameId, pR.RenderFrameBuffer.StFrameId, pR.RenderFrameBuffer.EdFrameId, pR.CurDynamicsRenderFrameId)
 }
@@ -1073,7 +1066,7 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync
 			ConfirmedList: uint64(0),
 		}
 	} else {
-		tmp := pR.InputsBuffer.GetByFrameId(inputFrameId - 1)
+		tmp := pR.InputsBuffer.GetByFrameId(inputFrameId - 1) // There's no need for the backend to find the "lastAllConfirmed inputs" for prefabbing, either "BackendDynamicsEnabled" is true or false
 		if nil == tmp {
 			panic(fmt.Sprintf("Error prefabbing inputFrameDownsync: roomId=%v, InputsBuffer=%v", pR.Id, pR.InputsBufferString(false)))
 		}
@@ -1114,7 +1107,7 @@ func (pR *Room) markConfirmationIfApplicable() {
 			}
 			inputFrameUpsync := tmp.(*InputFrameUpsync)
 			indiceInJoinIndexBooleanArr := uint32(player.JoinIndex - 1)
-			inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr] = pR.EncodeUpsyncCmd(inputFrameUpsync)
+			inputFrameDownsync.InputList[indiceInJoinIndexBooleanArr] = inputFrameUpsync.Encoded 
 			inputFrameDownsync.ConfirmedList |= (1 << indiceInJoinIndexBooleanArr)
 		}
 
@@ -1239,9 +1232,8 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			joinIndex := player.JoinIndex
 			effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
 			currPlayerDownsync := currRenderFrame.Players[playerId]
-			encodedInput := inputList[joinIndex-1]
-			decodedInput := DIRECTION_DECODER[encodedInput]
-			proposedVirtualGridDx, proposedVirtualGridDy := (decodedInput[0] + decodedInput[0]*currPlayerDownsync.Speed), (decodedInput[1] + decodedInput[1]*currPlayerDownsync.Speed)
+			decodedInput := pR.decodeInput(inputList[joinIndex-1])
+			proposedVirtualGridDx, proposedVirtualGridDy := (decodedInput.Dx + decodedInput.Dx*currPlayerDownsync.Speed), (decodedInput.Dy + decodedInput.Dy*currPlayerDownsync.Speed)
 			newVx, newVy := (currPlayerDownsync.VirtualGridX + proposedVirtualGridDx), (currPlayerDownsync.VirtualGridY + proposedVirtualGridDy)
 			// Reset playerCollider position from the "virtual grid position"
 			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
@@ -1251,10 +1243,10 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			// Update in the collision system
 			playerCollider.Update()
 
-			if 0 < encodedInput {
+			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
 				Logger.Debug(fmt.Sprintf("Checking collision for playerId=%v: virtual (%d, %d) -> (%d, %d), now playerShape=%v", playerId, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, newVx, newVy, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
-				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput[0]
-				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput[1]
+				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput.Dx
+				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput.Dy
 			}
 		}
 
@@ -1293,6 +1285,16 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 	}
 
 	return toRet
+}
+
+func (pR *Room) decodeInput(encodedInput uint64) *InputFrameDecoded {
+    encodedDirection := (encodedInput & 0xf)
+    btnALevel := int32((encodedInput >> 4) & 1)
+    return &InputFrameDecoded{
+      Dx: DIRECTION_DECODER[encodedDirection][0],
+      Dy: DIRECTION_DECODER[encodedDirection][1],
+      BtnALevel: btnALevel,
+    }
 }
 
 func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {

@@ -94,6 +94,12 @@ cc.Class({
 
   onLoad() {
     this.cachedStickHeadPosition = cc.v2(0.0, 0.0);
+    this.cachedBtnUpLevel = 0;
+    this.cachedBtnDownLevel = 0;
+    this.cachedBtnLeftLevel = 0;
+    this.cachedBtnRightLevel = 0;
+    this.cachedBtnALevel = 0;
+
     this.canvasNode = this.mapNode.parent;
     this.mainCameraNode = this.canvasNode.getChildByName("Main Camera"); // Cannot drag and assign the `mainCameraNode` from CocosCreator EDITOR directly, otherwise it'll cause an infinite loading time, till v2.1.0.
     this.mainCamera = this.mainCameraNode.getComponent(cc.Camera);
@@ -143,6 +149,51 @@ cc.Class({
       self._touchEndEvent(event);
     });
     zoomingListenerNode.inTouchPoints = new Map();
+
+    // Setup keyboard controls for the ease of attach debugging
+    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, function(evt) {
+      switch (evt.keyCode) {
+        case cc.macro.KEY.w:
+          self.cachedBtnUpLevel = 1;
+          break;
+        case cc.macro.KEY.s:
+          self.cachedBtnDownLevel = 1;
+          break;
+        case cc.macro.KEY.a:
+          self.cachedBtnLeftLevel = 1;
+          break;
+        case cc.macro.KEY.d:
+          self.cachedBtnRightLevel = 1;
+          break;
+        case cc.macro.KEY.h:
+          self.cachedBtnALevel = 1;
+          break;
+        default:
+          break;
+      }
+    }, this);
+
+    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, function(evt) {
+      switch (evt.keyCode) {
+        case cc.macro.KEY.w:
+          self.cachedBtnUpLevel = 0;
+          break;
+        case cc.macro.KEY.s:
+          self.cachedBtnDownLevel = 0;
+          break;
+        case cc.macro.KEY.a:
+          self.cachedBtnLeftLevel = 0;
+          break;
+        case cc.macro.KEY.d:
+          self.cachedBtnRightLevel = 0;
+          break;
+        case cc.macro.KEY.h:
+          self.cachedBtnALevel = 0;
+          break;
+        default:
+          break;
+      }
+    }, this);
   },
 
   _isMapOverMoved(mapTargetPos) {
@@ -239,7 +290,6 @@ cc.Class({
 
     // TODO: Handle single-finger-click event.
     } while (false);
-    this.cachedStickHeadPosition = cc.v2(0.0, 0.0);
     for (let touch of event._touches) {
       if (touch) {
         theListenerNode.inTouchPoints.delete(touch._id);
@@ -252,7 +302,42 @@ cc.Class({
   update(dt) {
     if (this.inMultiTouch) return;
     if (true != this.initialized) return;
+    const self = this;
+    // Keyboard takes top priority
+    let keyboardDiffVec = cc.v2(0, 0);
+    if (1 == this.cachedBtnUpLevel) {
+      if (1 == this.cachedBtnLeftLevel) {
+        keyboardDiffVec = cc.v2(-1.0, +1.0);
+      } else if (1 == this.cachedBtnRightLevel) {
+        keyboardDiffVec = cc.v2(+1.0, +1.0);
+      } else {
+        keyboardDiffVec = cc.v2(0.0, +1.0);
+      }
+    } else if (1 == this.cachedBtnDownLevel) {
+      if (1 == this.cachedBtnLeftLevel) {
+        keyboardDiffVec = cc.v2(-1.0, -1.0);
+      } else if (1 == this.cachedBtnRightLevel) {
+        keyboardDiffVec = cc.v2(+1.0, -1.0);
+      } else {
+        keyboardDiffVec = cc.v2(0.0, -1.0);
+      }
+    } else if (1 == this.cachedBtnLeftLevel) {
+      keyboardDiffVec = cc.v2(-1.0, 0.0);
+    } else if (1 == this.cachedBtnRightLevel) {
+      keyboardDiffVec = cc.v2(+1.0, 0.0);
+    }
+    if (0 != keyboardDiffVec.x || 0 != keyboardDiffVec.y) {
+      this.cachedStickHeadPosition = keyboardDiffVec.mul(this.maxHeadDistance / keyboardDiffVec.mag());
+    }
     this.stickhead.setPosition(this.cachedStickHeadPosition);
+
+    const translationListenerNode = (self.translationListenerNode ? self.translationListenerNode : self.mapNode);
+    if (0 == translationListenerNode.inTouchPoints.size
+      &&
+      (0 == keyboardDiffVec.x && 0 == keyboardDiffVec.y)
+    ) {
+      this.cachedStickHeadPosition = cc.v2(0, 0); // Important reset!
+    }
   },
 
   discretizeDirection(continuousDx, continuousDy, eps) {
@@ -312,18 +397,23 @@ cc.Class({
     return ret;
   },
 
-  decodeDirection(encodedDirection) {
-    const mapped = window.DIRECTION_DECODER[encodedDirection];
-    if (null == mapped) {
-      console.error("Unexpected encodedDirection = ", encodedDirection);
-    }
-    return {
-      dx: mapped[0],
-      dy: mapped[1],
-    };
+  getEncodedInput() {
+    const discretizedDir = this.discretizeDirection(this.stickhead.x, this.stickhead.y, this.joyStickEps).encodedIdx; // There're only 9 dirs, thus using only the lower 4-bits
+    const btnALevel = (this.cachedBtnALevel << 4);
+    return (btnALevel + discretizedDir);
   },
 
-  getDiscretizedDirection() {
-    return this.discretizeDirection(this.cachedStickHeadPosition.x, this.cachedStickHeadPosition.y, this.joyStickEps);
-  }
+  decodeInput(encodedInput) {
+    const encodedDirection = (encodedInput & 0xf);
+    const mappedDirection = window.DIRECTION_DECODER[encodedDirection];
+    if (null == mappedDirection) {
+      console.error("Unexpected encodedDirection = ", encodedDirection);
+    }
+    const btnALevel = ((encodedInput >> 4) & 1);
+    return {
+      dx: mappedDirection[0],
+      dy: mappedDirection[1],
+      a: btnALevel,
+    };
+  },
 });

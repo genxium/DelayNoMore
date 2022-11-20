@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="8">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="64" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="12">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <layer id="1" name="Ground" width="64" height="64">
@@ -60,6 +60,30 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
    <polyline points="0,0 -191.667,0.666667 -191.667,17.3333 -0.715174,17.3333"/>
+  </object>
+  <object id="8" x="-9.33333" y="-13.3333">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 0,18.6667 1041.33,21.3333 1041.33,-1.33333"/>
+  </object>
+  <object id="9" x="-9.33333" y="1014.67">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 0,18.6667 1041.33,21.3333 1041.33,-1.33333"/>
+  </object>
+  <object id="10" x="-14" y="-40">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 4,1110 24,1110 24,-8"/>
+  </object>
+  <object id="11" x="1014" y="-42">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 4,1110 24,1110 24,-8"/>
   </object>
  </objectgroup>
 </map>
