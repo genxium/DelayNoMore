@@ -247,8 +247,8 @@ func Serve(c *gin.Context) {
 		bciFrame := &pb.BattleColliderInfo{
 			BoundRoomId:           pRoom.Id,
 			StageName:             pRoom.StageName,
-			StrToVec2DListMap:     pRoom.RawBattleStrToVec2DListMap,
-			StrToPolygon2DListMap: pRoom.RawBattleStrToPolygon2DListMap,
+			StrToVec2DListMap:     pRoom.StrToVec2DListMap,
+			StrToPolygon2DListMap: pRoom.StrToPolygon2DListMap,
 			StageDiscreteW:        pRoom.StageDiscreteW,
 			StageDiscreteH:        pRoom.StageDiscreteH,
 			StageTileW:            pRoom.StageTileW,
@@ -269,6 +269,8 @@ func Serve(c *gin.Context) {
 
 			WorldToVirtualGridRatio: pRoom.WorldToVirtualGridRatio,
 			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
+
+			SpAtkLookupFrames: pRoom.SpAtkLookupFrames,
 		}
 
 		resp := &pb.WsResp{

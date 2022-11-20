@@ -29,6 +29,8 @@ message BattleColliderInfo {
  
   double worldToVirtualGridRatio = 21;
   double virtualGridToWorldRatio = 22;
+
+  int32 spAtkLookupFrames = 23;
 }
 
 message PlayerDownsync {

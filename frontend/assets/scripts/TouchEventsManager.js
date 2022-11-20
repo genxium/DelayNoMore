@@ -404,7 +404,7 @@ cc.Class({
   },
 
   decodeInput(encodedInput) {
-    const encodedDirection = (encodedInput & 0xf);
+    const encodedDirection = (encodedInput & 15);
     const mappedDirection = window.DIRECTION_DECODER[encodedDirection];
     if (null == mappedDirection) {
       console.error("Unexpected encodedDirection = ", encodedDirection);

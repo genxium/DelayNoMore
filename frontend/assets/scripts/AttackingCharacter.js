@@ -38,6 +38,7 @@ cc.Class({
   },
 
   scheduleNewDirection(newScheduledDirection, forceAnimSwitch) {
+    const oldDx = this.activeDirection.dx, oldDy = this.activeDirection.dy; 
     BaseCharacter.prototype.scheduleNewDirection.call(this, newScheduledDirection, forceAnimSwitch);
     if (ATK_CHARACTER_STATE.Atk1[0] == this.characterState) {
       return;
@@ -53,6 +54,7 @@ cc.Class({
       const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
       if (newAnimName != this.animComp.animationName) {
         this.animComp.playAnimation(newAnimName);
+    	// console.log(`JoinIndex=${this.joinIndex}, Resetting anim to ${newAnimName}, dir changed: (${oldDx}, ${oldDy}) -> (${newScheduledDirection.dx}, ${newScheduledDirection.dy})`);
       }
     }
   },

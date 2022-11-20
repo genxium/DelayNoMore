@@ -113,7 +113,7 @@ cc.Class({
 
   dumpToInputCache: function(inputFrameDownsync) {
     const self = this;
-    let minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames); // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding delayedInputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
+    let minToKeepInputFrameId = self._convertToInputFrameId(self.lastAllConfirmedRenderFrameId, self.inputDelayFrames) - self.spAtkLookupFrames; // [WARNING] This could be different from "self.lastAllConfirmedInputFrameId". We'd like to keep the corresponding delayedInputFrame for "self.lastAllConfirmedRenderFrameId" such that a rollback could place "self.chaserRenderFrameId = self.lastAllConfirmedRenderFrameId" for the worst case incorrect prediction.
     if (minToKeepInputFrameId > self.lastAllConfirmedInputFrameId) {
       minToKeepInputFrameId = self.lastAllConfirmedInputFrameId;
     }
@@ -209,6 +209,8 @@ cc.Class({
         inputFrameUpsyncBatch.push(inputFrameUpsync);
       }
     }
+
+	// console.info(`inputFrameUpsyncBatch: ${JSON.stringify(inputFrameUpsyncBatch)}`);
     const reqData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
       playerId: self.selfPlayerInfo.id,
@@ -374,7 +376,8 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {};
+    resultPanelScriptIns.onCloseDelegate = () => {
+    };
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -415,6 +418,7 @@ cc.Class({
       self.rollbackEstimatedDtMillis = parsedBattleColliderInfo.rollbackEstimatedDtMillis;
       self.rollbackEstimatedDtNanos = parsedBattleColliderInfo.rollbackEstimatedDtNanos;
       self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
+      self.spAtkLookupFrames = parsedBattleColliderInfo.spAtkLookupFrames;
 
       self.worldToVirtualGridRatio = parsedBattleColliderInfo.worldToVirtualGridRatio;
       self.virtualGridToWorldRatio = parsedBattleColliderInfo.virtualGridToWorldRatio;
@@ -754,6 +758,7 @@ cc.Class({
     const self = this;
     const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    playerScriptIns.joinIndex = joinIndex;
 
     if (1 == joinIndex) {
       playerScriptIns.setSpecies("SoldierElf");
