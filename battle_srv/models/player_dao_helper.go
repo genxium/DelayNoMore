@@ -10,6 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
+func rowValues(rows *sqlx.Rows, cols []string) []interface{} {
+	results := make([]interface{}, len(cols))
+	for i := range results {
+		results[i] = new(interface{})
+	}
+	if err := rows.Scan(results[:]...); err != nil {
+		panic(err)
+	}
+	return results
+}
+
 func exist(t string, cond sq.Eq) (bool, error) {
 	c, err := getCount(t, cond)
 	if err != nil {

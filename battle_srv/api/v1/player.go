@@ -5,6 +5,7 @@ import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
 	"battle_srv/models"
+	. "battle_srv/protos"
 	"battle_srv/storage"
 	"bytes"
 	"crypto/sha256"
@@ -526,8 +527,10 @@ func (p *playerController) maybeCreatePlayerWechatAuthBinding(userInfo utils.Use
 		}
 		if player != nil {
 			updateInfo := models.Player{
-				Avatar:      userInfo.HeadImgURL,
-				DisplayName: userInfo.Nickname,
+				PlayerDownsync: PlayerDownsync{
+					Avatar:      userInfo.HeadImgURL,
+					DisplayName: userInfo.Nickname,
+				},
 			}
 			tx := storage.MySQLManagerIns.MustBegin()
 			defer tx.Rollback()
@@ -542,10 +545,12 @@ func (p *playerController) maybeCreatePlayerWechatAuthBinding(userInfo utils.Use
 	}
 	now := utils.UnixtimeMilli()
 	player := models.Player{
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		DisplayName: userInfo.Nickname,
-		Avatar:      userInfo.HeadImgURL,
+		PlayerDownsync: PlayerDownsync{
+			DisplayName: userInfo.Nickname,
+			Avatar:      userInfo.HeadImgURL,
+		},
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 	return p.createNewPlayer(player, userInfo.OpenID, int(Constants.AuthChannel.Wechat))
 }
@@ -562,8 +567,10 @@ func (p *playerController) maybeCreatePlayerWechatGameAuthBinding(userInfo utils
 		}
 		if player != nil {
 			updateInfo := models.Player{
-				Avatar:      userInfo.HeadImgURL,
-				DisplayName: userInfo.Nickname,
+				PlayerDownsync: PlayerDownsync{
+					Avatar:      userInfo.HeadImgURL,
+					DisplayName: userInfo.Nickname,
+				},
 			}
 			tx := storage.MySQLManagerIns.MustBegin()
 			defer tx.Rollback()
@@ -578,10 +585,12 @@ func (p *playerController) maybeCreatePlayerWechatGameAuthBinding(userInfo utils
 	}
 	now := utils.UnixtimeMilli()
 	player := models.Player{
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		DisplayName: userInfo.Nickname,
-		Avatar:      userInfo.HeadImgURL,
+		PlayerDownsync: PlayerDownsync{
+			DisplayName: userInfo.Nickname,
+			Avatar:      userInfo.HeadImgURL,
+		},
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 	return p.createNewPlayer(player, userInfo.OpenID, int(Constants.AuthChannel.WechatGame))
 }

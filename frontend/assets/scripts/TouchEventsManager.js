@@ -410,10 +410,10 @@ cc.Class({
       console.error("Unexpected encodedDirection = ", encodedDirection);
     }
     const btnALevel = ((encodedInput >> 4) & 1);
-    return {
+    return window.pb.protos.InputFrameDecoded.create({
       dx: mappedDirection[0],
       dy: mappedDirection[1],
-      a: btnALevel,
-    };
+      btnALevel: btnALevel,
+    });
   },
 });

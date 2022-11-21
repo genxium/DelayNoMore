@@ -1,11 +1,14 @@
 package models
 
 import (
-	"database/sql"
+	. "battle_srv/protos"
+	"battle_srv/storage"
+	. "dnmshared"
 	. "dnmshared/sharedprotos"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type PlayerBattleState struct {
@@ -33,12 +36,7 @@ func InitPlayerBattleStateIns() {
 }
 
 type Player struct {
-	// Meta info fields
-	Id             int32   `json:"id,omitempty" db:"id"`
-	Name           string  `json:"name,omitempty" db:"name"`
-	DisplayName    string  `json:"displayName,omitempty" db:"display_name"`
-	Avatar         string  `json:"avatar,omitempty"`
-	ColliderRadius float64 `json:"-"`
+	PlayerDownsync
 
 	// DB only fields
 	CreatedAt     int64     `db:"created_at"`
@@ -46,19 +44,10 @@ type Player struct {
 	DeletedAt     NullInt64 `db:"deleted_at"`
 	TutorialStage int       `db:"tutorial_stage"`
 
-	// in-battle info fields
-	VirtualGridX         int32
-	VirtualGridY         int32
-	Dir                  *Direction
-	Speed                int32
-	BattleState          int32
-	LastMoveGmtMillis    int32
-	Score                int32
-	Removed              bool
-	JoinIndex            int32
+	// other in-battle info fields
+	LastSentInputFrameId int32
 	AckingFrameId        int32
 	AckingInputFrameId   int32
-	LastSentInputFrameId int32
 }
 
 func ExistPlayerByName(name string) (bool, error) {
@@ -74,15 +63,48 @@ func GetPlayerById(id int) (*Player, error) {
 }
 
 func getPlayer(cond sq.Eq) (*Player, error) {
-	var p Player
-	err := getObj("player", cond, &p)
-	if err == sql.ErrNoRows {
-		return nil, nil
+	p := Player{}
+	pd := PlayerDownsync{
+		Dir: &Direction{
+			Dx: 0,
+			Dy: 0,
+		},
 	}
-	p.Dir = &Direction{
-		Dx: 0,
-		Dy: 0,
+	query, args, err := sq.Select("*").From("player").Where(cond).Limit(1).ToSql()
+	if err != nil {
+		return nil, err
 	}
+	rows, err := storage.MySQLManagerIns.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	cols, err := rows.Columns()
+	if nil != err {
+		panic(err)
+	}
+	for rows.Next() {
+		// TODO: Do it more elegantly, but by now I don't have time to learn reflection of Golang
+		vals := rowValues(rows, cols)
+		for i, col := range cols {
+			val := *vals[i].(*interface{})
+			if "id" == col {
+				pd.Id = int32(val.(int64))
+			}
+			if "name" == col {
+				switch v := val.(type) {
+				case []byte:
+					pd.Name = string(v)
+				default:
+					pd.Name = fmt.Sprintf("%v", v)
+				}
+			}
+			if "created_at" == col {
+				p.CreatedAt = int64(val.(int64))
+			}
+		}
+		Logger.Info("Queried player from db", zap.Any("cond", cond), zap.Any("p", p), zap.Any("pd", pd), zap.Any("cols", cols), zap.Any("rowValues", vals))
+	}
+	p.PlayerDownsync = pd
 	return &p, nil
 }
 
@@ -113,8 +135,6 @@ func Update(tx *sqlx.Tx, id int32, p *Player) (bool, error) {
 	}
 	result, err := tx.Exec(query, args...)
 	if err != nil {
-		fmt.Println("ERRRRRRR:  ")
-		fmt.Println(err)
 		return false, err
 	}
 	rowsAffected, err := result.RowsAffected()

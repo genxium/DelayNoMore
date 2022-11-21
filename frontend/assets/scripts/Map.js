@@ -210,7 +210,7 @@ cc.Class({
       }
     }
 
-	// console.info(`inputFrameUpsyncBatch: ${JSON.stringify(inputFrameUpsyncBatch)}`);
+    // console.info(`inputFrameUpsyncBatch: ${JSON.stringify(inputFrameUpsyncBatch)}`);
     const reqData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
       playerId: self.selfPlayerInfo.id,
@@ -376,8 +376,7 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {
-    };
+    resultPanelScriptIns.onCloseDelegate = () => {};
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -608,15 +607,13 @@ cc.Class({
     }
 
     const players = rdf.players;
-    const playerMetas = rdf.playerMetas;
-    self._initPlayerRichInfoDict(players, playerMetas);
+    self._initPlayerRichInfoDict(players);
 
     // Show the top status indicators for IN_BATTLE 
     if (self.playersInfoNode) {
       const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-      for (let i in playerMetas) {
-        const playerMeta = playerMetas[i];
-        playersInfoScriptIns.updateData(playerMeta);
+      for (let i in players) {
+        playersInfoScriptIns.updateData(players[i]);
       }
     }
 
@@ -716,7 +713,7 @@ cc.Class({
       self.showPopupInCanvas(self.findingPlayerNode);
     }
     let findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-    findingPlayerScriptIns.updatePlayersInfo(rdf.playerMetas);
+    findingPlayerScriptIns.updatePlayersInfo(rdf.players);
   },
 
   logBattleStats() {
@@ -764,7 +761,9 @@ cc.Class({
       playerScriptIns.setSpecies("SoldierElf");
     } else if (2 == joinIndex) {
       playerScriptIns.setSpecies("SoldierFireGhost");
-      playerScriptIns.animComp.node.scaleX = (-1.0);
+      if (0 == playerRichInfo.dir.dx && 0 == playerRichInfo.dir.dy) {
+        playerScriptIns.animComp.node.scaleX = (-1.0);
+      }
     }
 
     const wpos = self.virtualGridToWorldPos(vx, vy);
@@ -937,29 +936,27 @@ cc.Class({
     if (null == self.findingPlayerNode.parent) return;
     self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
     if (null != rdf) {
-      self._initPlayerRichInfoDict(rdf.players, rdf.playerMetas);
+      self._initPlayerRichInfoDict(rdf.players);
     }
   },
 
   onBattleReadyToStart(rdf) {
     const self = this;
     const players = rdf.players;
-    const playerMetas = rdf.playerMetas;
-    self._initPlayerRichInfoDict(players, playerMetas);
+    self._initPlayerRichInfoDict(players);
 
     // Show the top status indicators for IN_BATTLE 
     if (self.playersInfoNode) {
       const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-      for (let i in playerMetas) {
-        const playerMeta = playerMetas[i];
-        playersInfoScriptIns.updateData(playerMeta);
+      for (let i in players) {
+        playersInfoScriptIns.updateData(players[i]);
       }
     }
-    console.log("Calling `onBattleReadyToStart` with:", playerMetas);
+    console.log("Calling `onBattleReadyToStart` with:", players);
     if (self.findingPlayerNode) {
       const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
       findingPlayerScriptIns.hideExitButton();
-      findingPlayerScriptIns.updatePlayersInfo(playerMetas);
+      findingPlayerScriptIns.updatePlayersInfo(players);
     }
 
     // Delay to hide the "finding player" GUI, then show a countdown clock
@@ -975,6 +972,7 @@ cc.Class({
 
   applyRoomDownsyncFrameDynamics(rdf) {
     const self = this;
+    const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(rdf.id - 1, self.inputDelayFrames));
 
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
       const immediatePlayerInfo = rdf.players[playerId];
@@ -985,7 +983,10 @@ cc.Class({
       playerRichInfo.node.setPosition(wpos[0], wpos[1]);
       playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
       playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
-      playerRichInfo.scriptIns.scheduleNewDirection(immediatePlayerInfo.dir, false);
+      if (null != delayedInputFrameForPrevRenderFrame) {
+        const decodedInput = self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[playerRichInfo.joinIndex - 1]);
+        playerRichInfo.scriptIns.scheduleNewDirection(decodedInput, false);
+      }
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
     });
   },
@@ -1053,9 +1054,11 @@ cc.Class({
         const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
         playerCollider.x = newCpos[0];
         playerCollider.y = newCpos[1];
-        // Update directions and thus would eventually update moving animation accordingly
-        nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
-        nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
+        if (0 != decodedInput.dx || 0 != decodedInput.dy) {
+          // Update directions and thus would eventually update moving animation accordingly
+          nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
+          nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
+        }
       }
 
       collisionSys.update();
@@ -1142,15 +1145,13 @@ cc.Class({
     return latestRdf;
   },
 
-  _initPlayerRichInfoDict(players, playerMetas) {
+  _initPlayerRichInfoDict(players) {
     const self = this;
     for (let k in players) {
       const playerId = parseInt(k);
       if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
       const immediatePlayerInfo = players[playerId];
-      const immediatePlayerMeta = playerMetas[playerId];
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
-      Object.assign(self.playerRichInfoDict.get(playerId), immediatePlayerMeta);
 
       const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, self.playerRichInfoDict.get(playerId));
 

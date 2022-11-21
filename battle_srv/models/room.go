@@ -375,7 +375,7 @@ func (pR *Room) StartBattle() {
 	pR.CurDynamicsRenderFrameId = 0
 	kickoffFrame := &RoomDownsyncFrame{
 		Id:             pR.RenderFrameId,
-		Players:        toPbPlayers(pR.Players),
+		Players:        toPbPlayers(pR.Players, false),
 		CountdownNanos: pR.BattleDurationNanos,
 	}
 	pR.RenderFrameBuffer.Put(kickoffFrame)
@@ -669,7 +669,7 @@ func (pR *Room) StopBattleForSettlement() {
 	for playerId, _ := range pR.Players {
 		assembledFrame := RoomDownsyncFrame{
 			Id:             pR.RenderFrameId,
-			Players:        toPbPlayers(pR.Players),
+			Players:        toPbPlayers(pR.Players, false),
 			CountdownNanos: -1, // TODO: Replace this magic constant!
 		}
 		pR.sendSafely(&assembledFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_STOPPED, playerId)
@@ -693,22 +693,9 @@ func (pR *Room) onBattlePrepare(cb BattleStartCbType) {
 	pR.State = RoomBattleStateIns.PREPARE
 	Logger.Info("Battle state transitted to RoomBattleStateIns.PREPARE for:", zap.Any("roomId", pR.Id))
 
-	playerMetas := make(map[int32]*PlayerDownsyncMeta, 0)
-	for _, player := range pR.Players {
-		playerMetas[player.Id] = &PlayerDownsyncMeta{
-			Id:             player.Id,
-			Name:           player.Name,
-			DisplayName:    player.DisplayName,
-			Avatar:         player.Avatar,
-			ColliderRadius: player.ColliderRadius, // hardcoded for now
-			JoinIndex:      player.JoinIndex,
-		}
-	}
-
 	battleReadyToStartFrame := &RoomDownsyncFrame{
 		Id:             DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START,
-		Players:        toPbPlayers(pR.Players),
-		PlayerMetas:    playerMetas,
+		Players:        toPbPlayers(pR.Players, true),
 		CountdownNanos: pR.BattleDurationNanos,
 	}
 
@@ -954,18 +941,6 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 		return false
 	}
 
-	playerMetas := make(map[int32]*PlayerDownsyncMeta, 0)
-	for _, eachPlayer := range pR.Players {
-		playerMetas[eachPlayer.Id] = &PlayerDownsyncMeta{
-			Id:             eachPlayer.Id,
-			Name:           eachPlayer.Name,
-			DisplayName:    eachPlayer.DisplayName,
-			Avatar:         eachPlayer.Avatar,
-			JoinIndex:      eachPlayer.JoinIndex,
-			ColliderRadius: eachPlayer.ColliderRadius,
-		}
-	}
-
 	// Broadcast added or readded player info to all players in the same room
 	for _, eachPlayer := range pR.Players {
 		/*
@@ -979,16 +954,14 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 		switch targetPlayer.BattleState {
 		case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
 			playerAckedFrame := &RoomDownsyncFrame{
-				Id:          pR.RenderFrameId,
-				Players:     toPbPlayers(pR.Players),
-				PlayerMetas: playerMetas,
+				Id:      pR.RenderFrameId,
+				Players: toPbPlayers(pR.Players, true),
 			}
 			pR.sendSafely(playerAckedFrame, nil, DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED, eachPlayer.Id)
 		case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
 			playerAckedFrame := &RoomDownsyncFrame{
-				Id:          pR.RenderFrameId,
-				Players:     toPbPlayers(pR.Players),
-				PlayerMetas: playerMetas,
+				Id:      pR.RenderFrameId,
+				Players: toPbPlayers(pR.Players, true),
 			}
 			pR.sendSafely(playerAckedFrame, nil, DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED, eachPlayer.Id)
 		default:
@@ -1229,9 +1202,10 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 			// Update in the collision system
 			playerCollider.Update()
-
-			nextRenderFramePlayers[playerId].Dir.Dx = decodedInput.Dx
-			nextRenderFramePlayers[playerId].Dir.Dy = decodedInput.Dy
+			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
+				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput.Dx
+				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput.Dy
+			}
 		}
 
 		// handle pushbacks upon collision after all movements treated as simultaneous

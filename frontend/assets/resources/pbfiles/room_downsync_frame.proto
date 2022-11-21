@@ -40,19 +40,15 @@ message PlayerDownsync {
   sharedprotos.Direction dir = 4;
   int32 speed = 5; // in terms of virtual grid units
   int32 battleState = 6;
-  int32 lastMoveGmtMillis = 7;
+  int32 joinIndex = 7;
+  double colliderRadius = 8;
+  bool removed = 9;
   int32 score = 10;
-  bool removed = 11;
-  int32 joinIndex = 12;
-}
+  int32 lastMoveGmtMillis = 11;
 
-message PlayerDownsyncMeta {
-  int32 id = 1;
-  string name = 2;
-  string displayName = 3;
-  string avatar = 4;
-  int32 joinIndex = 5;
-  double colliderRadius = 6;
+  string name = 12;
+  string displayName = 13;
+  string avatar = 14;
 }
 
 message InputFrameDecoded {
@@ -80,7 +76,6 @@ message RoomDownsyncFrame {
   int32 id = 1;
   map<int32, PlayerDownsync> players = 2;
   int64 countdownNanos = 3;
-  map<int32, PlayerDownsyncMeta> playerMetas = 4;
 }
 
 message WsReq {

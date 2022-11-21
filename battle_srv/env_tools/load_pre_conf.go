@@ -4,6 +4,7 @@ import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
 	"battle_srv/models"
+	. "battle_srv/protos"
 	"battle_srv/storage"
 	. "dnmshared"
 	sq "github.com/Masterminds/squirrel"
@@ -71,7 +72,6 @@ func createMysqlData(rows *sqlx.Rows, v string) {
 	}
 }
 
-// 加上tableName参数, 用于pre_conf_data.sqlite里bot_player表的复用 --kobako
 func maybeCreateNewPlayerFromBotTable(db *sqlx.DB, tableName string) {
 	var ls []*dbBotPlayer
 	err := db.Select(&ls, "SELECT name, magic_phone_country_code, magic_phone_num, display_name FROM "+tableName)
@@ -88,7 +88,6 @@ func maybeCreateNewPlayerFromBotTable(db *sqlx.DB, tableName string) {
 		panic(err)
 	}
 	query = storage.MySQLManagerIns.Rebind(query)
-	// existNames := make([]string, len(ls), len(ls))
 	var existPlayers []*models.Player
 	err = storage.MySQLManagerIns.Select(&existPlayers, query, args...)
 	if nil != err {
@@ -99,13 +98,11 @@ func maybeCreateNewPlayerFromBotTable(db *sqlx.DB, tableName string) {
 		var flag bool
 		for _, v := range existPlayers {
 			if botPlayer.Name == v.Name {
-				// 已有数据，合并处理
 				flag = true
 				break
 			}
 		}
 		if !flag {
-			// 找不到，新增
 			Logger.Debug("create", zap.Any(tableName, botPlayer))
 			err := createNewBotPlayer(botPlayer)
 			if err != nil {
@@ -120,11 +117,14 @@ func createNewBotPlayer(p *dbBotPlayer) error {
 	defer tx.Rollback()
 	now := utils.UnixtimeMilli()
 	player := models.Player{
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		Name:        p.Name,
-		DisplayName: p.DisplayName,
+		CreatedAt: now,
+		UpdatedAt: now,
+		PlayerDownsync: PlayerDownsync{
+			Name:        p.Name,
+			DisplayName: p.DisplayName,
+		},
 	}
+
 	err := player.Insert(tx)
 	if err != nil {
 		return err

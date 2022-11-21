@@ -4,6 +4,7 @@ import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
 	"battle_srv/models"
+	. "battle_srv/protos"
 	"battle_srv/storage"
 	. "dnmshared"
 
@@ -75,9 +76,11 @@ func createNewPlayer(p *dbTestPlayer) error {
 	defer tx.Rollback()
 	now := utils.UnixtimeMilli()
 	player := models.Player{
+		PlayerDownsync: PlayerDownsync{
+			Name: p.Name,
+		},
 		CreatedAt: now,
 		UpdatedAt: now,
-		Name:      p.Name,
 	}
 	err := player.Insert(tx)
 	if err != nil {

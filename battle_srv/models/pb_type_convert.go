@@ -5,7 +5,7 @@ import (
 	. "dnmshared/sharedprotos"
 )
 
-func toPbPlayers(modelInstances map[int32]*Player) map[int32]*PlayerDownsync {
+func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]*PlayerDownsync {
 	toRet := make(map[int32]*PlayerDownsync, 0)
 	if nil == modelInstances {
 		return toRet
@@ -20,11 +20,17 @@ func toPbPlayers(modelInstances map[int32]*Player) map[int32]*PlayerDownsync {
 				Dx: last.Dir.Dx,
 				Dy: last.Dir.Dy,
 			},
-			Speed:       last.Speed,
-			BattleState: last.BattleState,
-			Score:       last.Score,
-			Removed:     last.Removed,
-			JoinIndex:   last.JoinIndex,
+			ColliderRadius: last.ColliderRadius,
+			Speed:          last.Speed,
+			BattleState:    last.BattleState,
+			Score:          last.Score,
+			Removed:        last.Removed,
+			JoinIndex:      last.JoinIndex,
+		}
+		if withMetaInfo {
+			toRet[k].Name = last.Name
+			toRet[k].DisplayName = last.DisplayName
+			toRet[k].Avatar = last.Avatar
 		}
 	}
 
