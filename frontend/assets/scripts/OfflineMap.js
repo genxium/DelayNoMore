@@ -15,7 +15,7 @@ cc.Class({
     const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
     if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierElf");
+      playerScriptIns.setSpecies("SoldierWaterGhost");
     } else if (2 == joinIndex) {
       playerScriptIns.setSpecies("SoldierFireGhost");
       playerScriptIns.animComp.node.scaleX = (-1.0);
@@ -153,22 +153,30 @@ cc.Class({
             virtualGridX: 0,
             virtualGridY: 0,
             speed: 2 * self.worldToVirtualGridRatio,
+            colliderRadius: 12,
             dir: {
               dx: 0,
               dy: 0
             }
           },
-        },
-        playerMetas: {
-          10: {
+          11: {
+            id: 11,
+            joinIndex: 2,
+            virtualGridX: 80*self.worldToVirtualGridRatio,
+            virtualGridY: 40*self.worldToVirtualGridRatio,
+            speed: 2 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
+            dir: {
+              dx: 0,
+              dy: 0
+            }
           },
         }
       };
       self.selfPlayerInfo = {
         id: 10
       };
-      self._initPlayerRichInfoDict(startRdf.players, startRdf.playerMetas);
+      self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
