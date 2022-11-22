@@ -300,6 +300,7 @@ cc.Class({
     // Clearing previous info of all players. [ENDS]
 
     self.renderFrameId = 0; // After battle started
+    self.bulletBattleLocalIdCounter = 0;
     self.lastAllConfirmedRenderFrameId = -1;
     self.lastAllConfirmedInputFrameId = -1;
     self.lastUpsyncInputFrameId = -1;
@@ -313,6 +314,7 @@ cc.Class({
     self.collisionSys = new collisions.Collisions();
 
     self.collisionBarrierIndexPrefix = (1 << 16); // For tracking the movements of barriers, though not yet actually used 
+    self.collisionBulletIndexPrefix = (1 << 15); // For tracking the movements of bullets 
     self.collisionSysMap = new Map();
 
     self.transitToState(ALL_MAP_STATES.VISUAL);
@@ -408,19 +410,7 @@ cc.Class({
     /** Init required prefab ended. */
 
     window.handleBattleColliderInfo = function(parsedBattleColliderInfo) {
-      self.inputDelayFrames = parsedBattleColliderInfo.inputDelayFrames;
-      self.inputScaleFrames = parsedBattleColliderInfo.inputScaleFrames;
-      self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
-
-      self.battleDurationNanos = parsedBattleColliderInfo.battleDurationNanos;
-      self.rollbackEstimatedDt = parsedBattleColliderInfo.rollbackEstimatedDt;
-      self.rollbackEstimatedDtMillis = parsedBattleColliderInfo.rollbackEstimatedDtMillis;
-      self.rollbackEstimatedDtNanos = parsedBattleColliderInfo.rollbackEstimatedDtNanos;
-      self.maxChasingRenderFramesPerUpdate = parsedBattleColliderInfo.maxChasingRenderFramesPerUpdate;
-      self.spAtkLookupFrames = parsedBattleColliderInfo.spAtkLookupFrames;
-
-      self.worldToVirtualGridRatio = parsedBattleColliderInfo.worldToVirtualGridRatio;
-      self.virtualGridToWorldRatio = parsedBattleColliderInfo.virtualGridToWorldRatio;
+      Object.assign(self, parsedBattleColliderInfo);
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -758,7 +748,7 @@ cc.Class({
     playerScriptIns.joinIndex = joinIndex;
 
     if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierElf");
+      playerScriptIns.setSpecies("SoldierWaterGhost");
     } else if (2 == joinIndex) {
       playerScriptIns.setSpecies("SoldierFireGhost");
       if (0 == playerRichInfo.dir.dx && 0 == playerRichInfo.dir.dy) {
@@ -1045,7 +1035,6 @@ cc.Class({
 
         const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
 
-        // console.log(`Got non-zero inputs for playerId=${playerId}, decodedInput=${JSON.stringify(decodedInput)} @currRenderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.id}`);
         /* 
         Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
         */

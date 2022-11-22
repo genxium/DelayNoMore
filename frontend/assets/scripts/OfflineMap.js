@@ -3,6 +3,34 @@ i18n.init(window.language); // languageID should be equal to the one we input in
 
 const OnlineMap = require('./Map');
 
+const PunchAtkConfig = {
+  // for offender
+  startupFrames: 2,
+  activeFrames: 2,
+  recoveryFrames: 4, // usually but not always "startupFrames+activeFrames"
+  recoveryFramesOnBlock: 4, // usually but not always the same as "recoveryFrames" 
+  recoveryFramesOnHit: 4, // usually but not always the same as "recoveryFrames"
+  moveforward: {
+    x: 0,
+    y: 0,
+  },
+  hitboxOffset: {
+    x: 24.0, // should be about the radius of the PlayerCollider 
+    y: 0,
+  },
+  hitboxSize: {
+    x: 24.0,
+    y: 24.0,
+  },
+
+  // for defender
+  hitStunFrames: 0,
+  blockStunFrames: 0,
+  pushback: 10.0,
+  releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
+  damage: 5
+};
+
 cc.Class({
   extends: OnlineMap,
 
@@ -162,8 +190,8 @@ cc.Class({
           11: {
             id: 11,
             joinIndex: 2,
-            virtualGridX: 80*self.worldToVirtualGridRatio,
-            virtualGridY: 40*self.worldToVirtualGridRatio,
+            virtualGridX: 80 * self.worldToVirtualGridRatio,
+            virtualGridY: 40 * self.worldToVirtualGridRatio,
             speed: 2 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             dir: {
@@ -212,5 +240,142 @@ cc.Class({
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
       }
     }
+  },
+
+  // Overriding this function to test experimental dynamics
+  applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap) {
+    const self = this;
+    const nextRenderFramePlayers = {}
+    for (let playerId in currRenderFrame.players) {
+      const currPlayerDownsync = currRenderFrame.players[playerId];
+      nextRenderFramePlayers[playerId] = {
+        id: playerId,
+        virtualGridX: currPlayerDownsync.virtualGridX,
+        virtualGridY: currPlayerDownsync.virtualGridY,
+        dir: {
+          dx: currPlayerDownsync.dir.dx,
+          dy: currPlayerDownsync.dir.dy,
+        },
+        speed: currPlayerDownsync.speed,
+        battleState: currPlayerDownsync.battleState,
+        score: currPlayerDownsync.score,
+        removed: currPlayerDownsync.removed,
+        joinIndex: currPlayerDownsync.joinIndex,
+        framesToRecover: (0 < currPlayerDownsync.framesToRecover ? currPlayerDownsync.framesToRecover - 1 : 0),
+        hp: currPlayerDownsync.hp,
+        maxHp: currPlayerDownsync.maxHp,
+      };
+    }
+
+    const toRet = {
+      id: currRenderFrame.id + 1,
+      players: nextRenderFramePlayers,
+      meleeBullets: []
+    };
+
+    if (null != delayedInputFrame) {
+      const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(currRenderFrame.id - 1, self.inputDelayFrames));
+      const inputList = delayedInputFrame.inputList;
+      const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        effPushbacks[joinIndex - 1] = [0.0, 0.0];
+        const playerRichInfo = self.playerRichInfoArr[j];
+        const playerId = playerRichInfo.id;
+        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+        const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+        const player = currRenderFrame.players[playerId];
+
+        const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
+
+        const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
+        const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
+        if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
+          console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+          if (0 == player.framesToRecover) {
+            nextRenderFramePlayers[playerId].framesToRecover = PunchAtkConfig.recoveryFrames;
+            const punch = window.pb.protos.MeleeBullet.create(PunchAtkConfig);
+            punch.battleLocalId = self.bulletBattleLocalIdCounter++;
+            punch.offenderJoinIndex = joinIndex;
+            punch.originatedRenderFrameId = currRenderFrame.id;
+            toRet.meleeBullets.push(punch);
+            console.log(`A rising-edge of meleeBullet=${JSON.stringify(punch)} is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+          }
+        } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
+          console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+        }
+
+        /* 
+        Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
+        */
+        const newVx = player.virtualGridX + (decodedInput.dx + player.speed * decodedInput.dx);
+        const newVy = player.virtualGridY + (decodedInput.dy + player.speed * decodedInput.dy);
+        const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
+        playerCollider.x = newCpos[0];
+        playerCollider.y = newCpos[1];
+        if (0 != decodedInput.dx || 0 != decodedInput.dy) {
+          // Update directions and thus would eventually update moving animation accordingly
+          nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
+          nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
+        }
+      }
+
+      for (let k in currRenderFrame.meleeBullets) {
+        const meleeBullet = currRenderFrame.meleeBullets[k];
+        if (meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > currRenderFrame.id) {
+          // Won't cause any collision
+          const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
+          const bulletCollider = collisionSysMap.get(collisionBulletIndex);
+          if (null != bulletCollider) {
+            console.log(`A rising-edge of meleeBullet=${JSON.stringify(meleeBullet)} is removed from collisionSys at renderFrame.id=${currRenderFrame.id} as active frames ended`);
+            bulletCollider.remove();
+          }
+          continue;
+        }
+        if (meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames == currRenderFrame.id) {
+          // Add meleeBullet to collisionSys (shall we just remove all bullets at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` considering that we might be doing the calculation during rollback? 
+          const collisionBulletIndex = self.collisionBulletIndexPrefix + melee.battleLocalId;
+          const collisionOffenderIndex = self.collisionPlayerIndexPrefix + melee.offenderJoinIndex;
+          const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
+          const x0 = offenderCollider.x + meleeBullet.hitboxOffset.x,
+            y0 = offenderCollider.y + meleeBullet.hitboxOffset.y;
+          const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+          const newBulletCollider = collisionSys.createPolygon(x0, y0, pts);
+          collisionSysMap.set(collisionBulletIndex, newBulletCollider);
+          console.log(`A rising-edge of meleeBullet=${JSON.stringify(meleeBullet)} is added to collisionSys at renderFrame.id=${currRenderFrame.id} as start-up frames ended`);
+        }
+        toRet.meleeBullets.push(meleeBullet);
+      }
+
+      collisionSys.update();
+      const result = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
+
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        const playerId = self.playerRichInfoArr[j].id;
+        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+        const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+        const potentials = playerCollider.potentials();
+        for (const potential of potentials) {
+          // Test if the player collides with the wall
+          if (!playerCollider.collides(potential, result)) continue;
+          // Push the player out of the wall
+          effPushbacks[joinIndex - 1][0] += result.overlap * result.overlap_x;
+          effPushbacks[joinIndex - 1][1] += result.overlap * result.overlap_y;
+        }
+      }
+
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        const playerId = self.playerRichInfoArr[j].id;
+        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+        const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j]);
+        nextRenderFramePlayers[playerId].virtualGridX = newVpos[0];
+        nextRenderFramePlayers[playerId].virtualGridY = newVpos[1];
+      }
+    }
+
+    return toRet;
   },
 });

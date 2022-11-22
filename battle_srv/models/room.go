@@ -266,8 +266,8 @@ func (pR *Room) ChooseStage() error {
 		panic(err)
 	}
 
-	// Obtain the content of `gidBoundariesMapInB2World`.
-	gidBoundariesMapInB2World := make(map[int]StrToPolygon2DListMap, 0)
+	// Obtain the content of `gidBoundariesMap`.
+	gidBoundariesMap := make(map[int]StrToPolygon2DListMap, 0)
 	for _, tileset := range pTmxMapIns.Tilesets {
 		relativeTsxFilePath := fmt.Sprintf("%s/%s", filepath.Join(pwd, relativePathForChosenStage), tileset.Source) // Note that "TmxTileset.Source" can be a string of "relative path".
 		absTsxFilePath, err := filepath.Abs(relativeTsxFilePath)
@@ -283,10 +283,10 @@ func (pR *Room) ChooseStage() error {
 			panic(err)
 		}
 
-		DeserializeTsxToColliderDict(pTmxMapIns, byteArrOfTsxFile, int(tileset.FirstGid), gidBoundariesMapInB2World)
+		DeserializeTsxToColliderDict(pTmxMapIns, byteArrOfTsxFile, int(tileset.FirstGid), gidBoundariesMap)
 	}
 
-	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, strToVec2DListMap, strToPolygon2DListMap, err := ParseTmxLayersAndGroups(pTmxMapIns, gidBoundariesMapInB2World)
+	stageDiscreteW, stageDiscreteH, stageTileW, stageTileH, strToVec2DListMap, strToPolygon2DListMap, err := ParseTmxLayersAndGroups(pTmxMapIns, gidBoundariesMap)
 	if nil != err {
 		panic(err)
 	}

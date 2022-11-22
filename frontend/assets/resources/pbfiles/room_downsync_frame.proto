@@ -45,10 +45,14 @@ message PlayerDownsync {
   bool removed = 9;
   int32 score = 10;
   int32 lastMoveGmtMillis = 11;
+  int32 framesToRecover = 12;
+  int32 hp = 13;
+  int32 maxHp = 14;
+  int32 characterState = 15;
 
-  string name = 12;
-  string displayName = 13;
-  string avatar = 14;
+  string name = 16;
+  string displayName = 17;
+  string avatar = 18;
 }
 
 message InputFrameDecoded {
@@ -72,12 +76,6 @@ message HeartbeatUpsync {
   int64 clientTimestamp = 1;     
 }
 
-message RoomDownsyncFrame {
-  int32 id = 1;
-  map<int32, PlayerDownsync> players = 2;
-  int64 countdownNanos = 3;
-}
-
 message WsReq {
   int32 msgId = 1;
   int32 playerId = 2;
@@ -96,4 +94,37 @@ message WsResp {
   RoomDownsyncFrame rdf = 4; 
   repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
   BattleColliderInfo bciFrame = 6; 
+}
+
+message MeleeBullet { 
+  // Jargon reference https://www.thegamer.com/fighting-games-frame-data-explained/
+  // ALL lengths are in world coordinate
+
+  // for offender  
+  int32 battleLocalId = 1;
+  int32 startupFrames = 2; 
+  int32 activeFrames = 3;  
+  int32 recoveryFrames = 4;
+  int32 recoveryFramesOnBlock = 5; 
+  int32 recoveryFramesOnHit = 6;  
+  sharedprotos.Vec2D moveforward = 7;  
+  sharedprotos.Vec2D hitboxOffset = 8;  
+  sharedprotos.Vec2D hitboxSize = 9;    
+  int32 offenderJoinIndex = 10;    
+  int32 originatedRenderFrameId = 11; 
+
+  // for defender
+  int32 hitStunFrames = 12; 
+  int32 blockStunFrames = 13; 
+  double pushback = 14;  
+
+  int32 releaseTriggerType = 15; // 1: rising-edge, 2: falling-edge  
+  int32 damage = 16;   
+} 
+
+message RoomDownsyncFrame {
+  int32 id = 1;
+  map<int32, PlayerDownsync> players = 2;
+  int64 countdownNanos = 3;
+  repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
 }
