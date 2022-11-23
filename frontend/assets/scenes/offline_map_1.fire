@@ -277,6 +277,7 @@
     "forceBigEndianFloatingNumDecoding": false,
     "renderFrameIdLagTolerance": 4,
     "jigglingEps1D": 0.001,
+    "bulletTriggerEnabled": true,
     "_id": "4b+kZ46VhC0LCBixXEK2dk"
   },
   {

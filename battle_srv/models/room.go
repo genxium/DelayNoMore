@@ -54,6 +54,7 @@ const (
 
 	COLLISION_PLAYER_INDEX_PREFIX  = (1 << 17)
 	COLLISION_BARRIER_INDEX_PREFIX = (1 << 16)
+	COLLISION_BULLET_INDEX_PREFIX  = (1 << 15)
 )
 
 const (
@@ -1147,13 +1148,6 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		}
 
 		nextRenderFrame := pR.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, pR.CollisionSysMap)
-		// Update in the latest player pointers
-		for playerId, playerDownsync := range nextRenderFrame.Players {
-			pR.Players[playerId].VirtualGridX = playerDownsync.VirtualGridX
-			pR.Players[playerId].VirtualGridY = playerDownsync.VirtualGridY
-			pR.Players[playerId].Dir.Dx = playerDownsync.Dir.Dx
-			pR.Players[playerId].Dir.Dy = playerDownsync.Dir.Dy
-		}
 		pR.RenderFrameBuffer.Put(nextRenderFrame)
 		pR.CurDynamicsRenderFrameId++
 	}
@@ -1166,18 +1160,23 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 	// Make a copy first
 	for playerId, currPlayerDownsync := range currRenderFrame.Players {
 		nextRenderFramePlayers[playerId] = &PlayerDownsync{
-			Id:           playerId,
-			VirtualGridX: currPlayerDownsync.VirtualGridX,
-			VirtualGridY: currPlayerDownsync.VirtualGridY,
-			Dir: &Direction{
-				Dx: currPlayerDownsync.Dir.Dx,
-				Dy: currPlayerDownsync.Dir.Dy,
-			},
-			Speed:       currPlayerDownsync.Speed,
-			BattleState: currPlayerDownsync.BattleState,
-			Score:       currPlayerDownsync.Score,
-			Removed:     currPlayerDownsync.Removed,
-			JoinIndex:   currPlayerDownsync.JoinIndex,
+			Id:              playerId,
+			VirtualGridX:    currPlayerDownsync.VirtualGridX,
+			VirtualGridY:    currPlayerDownsync.VirtualGridY,
+			DirX:            currPlayerDownsync.DirX,
+			DirY:            currPlayerDownsync.DirY,
+			CharacterState:  currPlayerDownsync.CharacterState,
+			Speed:           currPlayerDownsync.Speed,
+			BattleState:     currPlayerDownsync.BattleState,
+			Score:           currPlayerDownsync.Score,
+			Removed:         currPlayerDownsync.Removed,
+			JoinIndex:       currPlayerDownsync.JoinIndex,
+			FramesToRecover: currPlayerDownsync.FramesToRecover - 1,
+			Hp:              currPlayerDownsync.Hp,
+			MaxHp:           currPlayerDownsync.MaxHp,
+		}
+		if nextRenderFramePlayers[playerId].FramesToRecover < 0 {
+			nextRenderFramePlayers[playerId].FramesToRecover = 0
 		}
 	}
 
@@ -1185,29 +1184,113 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		Id:             currRenderFrame.Id + 1,
 		Players:        nextRenderFramePlayers,
 		CountdownNanos: (pR.BattleDurationNanos - int64(currRenderFrame.Id)*pR.RollbackEstimatedDtNanos),
+		MeleeBullets:   make([]*MeleeBullet, 0), // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
+	}
+
+	bulletPushbacks := make([]Vec2D, pR.Capacity) // Guaranteed determinism regardless of traversal order
+	effPushbacks := make([]Vec2D, pR.Capacity)    // Guaranteed determinism regardless of traversal order
+
+	// Reset playerCollider position from the "virtual grid position"
+	for playerId, player := range pR.Players {
+		joinIndex := player.JoinIndex
+		bulletPushbacks[joinIndex-1].X, bulletPushbacks[joinIndex-1].Y = float64(0), float64(0)
+		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
+		currPlayerDownsync := currRenderFrame.Players[playerId]
+		newVx, newVy := currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY
+		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
+	}
+
+	// Check bullet-anything collisions first, because the pushbacks caused by bullets might later be reverted by player-barrier collision
+	bulletColliders := make(map[int32]*resolv.Object, 0) // Will all be removed at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` due to the need for being rollback-compatible
+	removedBulletsAtCurrFrame := make(map[int32]int32, 0)
+	for _, meleeBullet := range currRenderFrame.MeleeBullets {
+		if (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id) {
+			collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
+			collisionOffenderIndex := COLLISION_PLAYER_INDEX_PREFIX + meleeBullet.OffenderJoinIndex
+			offenderCollider := collisionSysMap[collisionOffenderIndex]
+			offender := currRenderFrame.Players[meleeBullet.OffenderPlayerId]
+
+			xfac, yfac := float64(1.0), float64(0) // By now, straight Punch offset doesn't respect "y-axis"
+			if 0 > offender.DirX {
+				xfac = float64(-1.0)
+			}
+			offenderWx, offenderWy := PolygonColliderAnchorToWorldPos(offenderCollider.X, offenderCollider.Y, offender.ColliderRadius, offender.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
+
+			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy+yfac*meleeBullet.HitboxOffset
+
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
+			// newBulletCollider.collisionBulletIndex = collisionBulletIndex
+			// newBulletCollider.offenderPlayerId = meleeBullet.offenderPlayerId
+			// newBulletCollider.pushback = meleeBullet.pushback
+			// newBulletCollider.hitStunFrames = meleeBullet.hitStunFrames
+			collisionSysMap[collisionBulletIndex] = newBulletCollider
+			bulletColliders[collisionBulletIndex] = newBulletCollider
+			newBulletCollider.Update()
+		}
+	}
+
+	// for _, bulletCollider := range bulletColliders {
+	// 	shouldRemove := false
+	// 	if collision := bulletCollider.Check(0, 0); collision != nil {
+	// 		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+	// 		for _, obj := range collision.Objects {
+	// 			bShape := obj.Shape.(*resolv.ConvexPolygon)
+	// 			if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, bulletShape, bShape); overlapped {
+	// 				bulletPushbacks[joinIndex-1].X += pushbackX
+	// 				bulletPushbacks[joinIndex-1].Y += pushbackY
+	// 			}
+	// 		}
+	// 		shouldRemove = true
+	// 	}
+	// 	if shouldRemove {
+	// 		removedBulletsAtCurrFrame[bulletCollider.CollisionBulletIndex] = 1
+	// 	}
+	// }
+
+	for _, meleeBullet := range currRenderFrame.MeleeBullets {
+		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
+		if bulletCollider, existent := collisionSysMap[collisionBulletIndex]; existent {
+			bulletCollider.Space.Remove(bulletCollider)
+			delete(collisionSysMap, collisionBulletIndex)
+		}
+		if _, existent := removedBulletsAtCurrFrame[collisionBulletIndex]; existent {
+			continue
+		}
+		toRet.MeleeBullets = append(toRet.MeleeBullets, meleeBullet)
 	}
 
 	if nil != delayedInputFrame {
 		inputList := delayedInputFrame.InputList
-		effPushbacks := make([]Vec2D, pR.Capacity) // Guaranteed determinism regardless of traversal order
+		// Process player inputs
 		for playerId, player := range pR.Players {
 			joinIndex := player.JoinIndex
-			effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
-			currPlayerDownsync := currRenderFrame.Players[playerId]
-			decodedInput := pR.decodeInput(inputList[joinIndex-1])
-			proposedVirtualGridDx, proposedVirtualGridDy := (decodedInput.Dx + decodedInput.Dx*currPlayerDownsync.Speed), (decodedInput.Dy + decodedInput.Dy*currPlayerDownsync.Speed)
-			newVx, newVy := (currPlayerDownsync.VirtualGridX + proposedVirtualGridDx), (currPlayerDownsync.VirtualGridY + proposedVirtualGridDy)
-			// Reset playerCollider position from the "virtual grid position"
 			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
-			playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
+			if 0 < nextRenderFramePlayers[playerId].FramesToRecover {
+				// No need to process inputs for this player, but there might be bullet pushbacks on this player
+				playerCollider.X += bulletPushbacks[joinIndex-1].X
+				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
+				continue
+			}
+			currPlayerDownsync := currRenderFrame.Players[playerId]
+			decodedInput := pR.decodeInput(inputList[joinIndex-1])
+
+			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
+				nextRenderFramePlayers[playerId].DirX = decodedInput.Dx
+				nextRenderFramePlayers[playerId].DirY = decodedInput.Dy
+				nextRenderFramePlayers[playerId].CharacterState = 1
+			} else {
+				nextRenderFramePlayers[playerId].CharacterState = 0
+			}
+
+			movementX, movementY := VirtualGridToWorldPos(decodedInput.Dx+decodedInput.Dx*currPlayerDownsync.Speed, decodedInput.Dy+decodedInput.Dy*currPlayerDownsync.Speed, pR.VirtualGridToWorldRatio)
+			playerCollider.X += movementX
+			playerCollider.Y += movementY
 
 			// Update in the collision system
 			playerCollider.Update()
-			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
-				nextRenderFramePlayers[playerId].Dir.Dx = decodedInput.Dx
-				nextRenderFramePlayers[playerId].Dir.Dy = decodedInput.Dy
-			}
 		}
 
 		// handle pushbacks upon collision after all movements treated as simultaneous

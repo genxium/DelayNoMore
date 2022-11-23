@@ -4,7 +4,6 @@ import (
 	. "battle_srv/protos"
 	"battle_srv/storage"
 	. "dnmshared"
-	. "dnmshared/sharedprotos"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -64,12 +63,7 @@ func GetPlayerById(id int) (*Player, error) {
 
 func getPlayer(cond sq.Eq) (*Player, error) {
 	p := Player{}
-	pd := PlayerDownsync{
-		Dir: &Direction{
-			Dx: 0,
-			Dy: 0,
-		},
-	}
+	pd := PlayerDownsync{}
 	query, args, err := sq.Select("*").From("player").Where(cond).Limit(1).ToSql()
 	if err != nil {
 		return nil, err

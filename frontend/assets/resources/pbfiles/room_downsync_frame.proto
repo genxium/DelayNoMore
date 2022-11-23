@@ -38,22 +38,23 @@ message PlayerDownsync {
   int32 id = 1;
   int32 virtualGridX = 2; 
   int32 virtualGridY = 3; 
-  sharedprotos.Direction dir = 4;
-  int32 speed = 5; // in terms of virtual grid units
-  int32 battleState = 6;
-  int32 joinIndex = 7;
-  double colliderRadius = 8;
-  bool removed = 9;
-  int32 score = 10;
-  int32 lastMoveGmtMillis = 11;
-  int32 framesToRecover = 12;
-  int32 hp = 13;
-  int32 maxHp = 14;
-  int32 characterState = 15;
+  int32 dirX = 4;
+  int32 dirY = 5;
+  int32 speed = 6; // in terms of virtual grid units
+  int32 battleState = 7;
+  int32 joinIndex = 8;
+  double colliderRadius = 9;
+  bool removed = 10;
+  int32 score = 11;
+  int32 lastMoveGmtMillis = 12;
+  int32 framesToRecover = 13;
+  int32 hp = 14;
+  int32 maxHp = 15;
+  int32 characterState = 16;
 
-  string name = 16;
-  string displayName = 17;
-  string avatar = 18;
+  string name = 17;
+  string displayName = 18;
+  string avatar = 19;
 }
 
 message InputFrameDecoded {
@@ -122,8 +123,6 @@ message MeleeBullet {
   int32 damage = 15;   
 
   int32 offenderJoinIndex = 16;    
-  int32 offenderPlayerId = 17;    
-
   int32 offenderPlayerId = 17;    
 } 
 

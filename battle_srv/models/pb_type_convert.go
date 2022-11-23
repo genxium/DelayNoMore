@@ -2,7 +2,6 @@ package models
 
 import (
 	. "battle_srv/protos"
-	. "dnmshared/sharedprotos"
 )
 
 func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]*PlayerDownsync {
@@ -13,13 +12,11 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]
 
 	for k, last := range modelInstances {
 		toRet[k] = &PlayerDownsync{
-			Id:           last.Id,
-			VirtualGridX: last.VirtualGridX,
-			VirtualGridY: last.VirtualGridY,
-			Dir: &Direction{
-				Dx: last.Dir.Dx,
-				Dy: last.Dir.Dy,
-			},
+			Id:             last.Id,
+			VirtualGridX:   last.VirtualGridX,
+			VirtualGridY:   last.VirtualGridY,
+			DirX:           last.DirX,
+			DirY:           last.DirY,
 			ColliderRadius: last.ColliderRadius,
 			Speed:          last.Speed,
 			BattleState:    last.BattleState,
