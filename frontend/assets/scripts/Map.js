@@ -306,10 +306,10 @@ cc.Class({
     self.lastUpsyncInputFrameId = -1;
     self.chaserRenderFrameId = -1; // at any moment, "lastAllConfirmedRenderFrameId <= chaserRenderFrameId <= renderFrameId", but "chaserRenderFrameId" would fluctuate according to "onInputFrameDownsyncBatch"
 
-    self.recentRenderCache = new RingBuffer(1024);
+    self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
-    self.recentInputCache = new RingBuffer(1024);
+    self.recentInputCache = new RingBuffer((self.renderCacheSize >> 2)+1);
 
     self.collisionSys = new collisions.Collisions();
 
@@ -768,6 +768,8 @@ cc.Class({
 
     const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+	newPlayerCollider.collisionPlayerIndex = collisionPlayerIndex;
+	newPlayerCollider.playerId = playerRichInfo.id;
     self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
 
     safelyAddChild(self.node, newPlayerNode);
@@ -973,6 +975,7 @@ cc.Class({
       playerRichInfo.node.setPosition(wpos[0], wpos[1]);
       playerRichInfo.virtualGridX = immediatePlayerInfo.virtualGridX;
       playerRichInfo.virtualGridY = immediatePlayerInfo.virtualGridY;
+      // TODO: check "rdf.players[playerId].characterState" instead, might have to play Atk/Atked anim!
       if (null != delayedInputFrameForPrevRenderFrame) {
         const decodedInput = self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[playerRichInfo.joinIndex - 1]);
         playerRichInfo.scriptIns.scheduleNewDirection(decodedInput, false);

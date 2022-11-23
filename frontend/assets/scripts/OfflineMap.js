@@ -14,10 +14,7 @@ const PunchAtkConfig = {
     x: 0,
     y: 0,
   },
-  hitboxOffset: {
-    x: 24.0, // should be about the radius of the PlayerCollider 
-    y: 0,
-  },
+  hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
   hitboxSize: {
     x: 24.0,
     y: 24.0,
@@ -101,7 +98,6 @@ cc.Class({
     self.rollbackEstimatedDt = 0.016667;
     self.rollbackEstimatedDtMillis = 16.667;
     self.rollbackEstimatedDtNanos = 16666666;
-    self.maxChasingRenderFramesPerUpdate = 5;
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
@@ -256,6 +252,7 @@ cc.Class({
           dx: currPlayerDownsync.dir.dx,
           dy: currPlayerDownsync.dir.dy,
         },
+        characterState: currPlayerDownsync.characterState,
         speed: currPlayerDownsync.speed,
         battleState: currPlayerDownsync.battleState,
         score: currPlayerDownsync.score,
@@ -273,10 +270,92 @@ cc.Class({
       meleeBullets: []
     };
 
+    const bulletPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
+    const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
+    for (let j in self.playerRichInfoArr) {
+      const joinIndex = parseInt(j) + 1;
+      bulletPushbacks[joinIndex - 1] = [0.0, 0.0];
+      effPushbacks[joinIndex - 1] = [0.0, 0.0];
+      const playerRichInfo = self.playerRichInfoArr[j];
+      const playerId = playerRichInfo.id;
+      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+      const player = currRenderFrame.players[playerId];
+
+      const newVx = player.virtualGridX;
+      const newVy = player.virtualGridY;
+      const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
+      playerCollider.x = newCpos[0];
+      playerCollider.y = newCpos[1];
+    }
+
+    // Check bullet-anything collisions first, because the pushbacks caused by bullets might later be reverted by player-barrier collision 
+    const colliderBullets = new Map(); // Will all be removed at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` due to the need for being rollback-compatible
+    const removedBulletsAtCurrFrame = new Set();
+    for (let k in currRenderFrame.meleeBullets) {
+      const meleeBullet = currRenderFrame.meleeBullets[k];
+      if (
+        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames >= currRenderFrame.id
+        &&
+        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames <= currRenderFrame.id
+      ) {
+        const collisionBulletIndex = self.collisionBulletIndexPrefix + melee.battleLocalId;
+        const collisionOffenderIndex = self.collisionPlayerIndexPrefix + melee.offenderJoinIndex;
+        const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
+        const offender = currRenderFrame.players[melee.offenderPlayerId];
+
+        const x0 = offenderCollider.x + offender.dir.dx * meleeBullet.hitboxOffset,
+          y0 = offenderCollider.y + offender.dir.dy * meleeBullet.hitboxOffset;
+        const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const newBulletCollider = collisionSys.createPolygon(x0, y0, pts);
+        newBulletCollider.collisionBulletIndex = collisionBulletIndex;
+        newBulletCollider.pushback = meleeBullet.pushback;
+        collisionSysMap.set(collisionBulletIndex, newBulletCollider);
+        colliderBullets.set(collisionBulletIndex, newBulletCollider);
+        console.log(`A meleeBullet=${JSON.stringify(meleeBullet)} is added to collisionSys at renderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended`);
+      }
+    }
+
+    collisionSys.update();
+    const result1 = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
+
+    colliderBullets.forEach((collisionBulletIndex, bulletCollider) => {
+      const potentials = bulletCollider.potentials();
+      let shouldRemove = false;
+      for (const potential of potentials) {
+        if (null != potential.playerId && potential.playerId == bulletCollider.offenderPlayerId) continue;
+        if (!bulletCollider.collides(potential, result1)) continue;
+        if (null != potential.playerId) {
+          bulletPushbacks[joinIndex - 1][0] += result1.overlap * result1.overlap_x * bulletCollider.pushback;
+          bulletPushbacks[joinIndex - 1][1] += result1.overlap * result1.overlap_y * bulletCollider.pushback;
+          const thatAckedPlayerInNextFrame = nextRenderFramePlayers[potential.playerId];
+          thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
+          const oldFrameToRecover = thatAckedPlayerInNextFrame.framesToRecover;
+          thatAckedPlayerInNextFrame.framesToRecover = oldFrameToRecover > bulletCollider.hitStunFrames ? oldFrameToRecover : bulletCollider.hitStunFrames; // In case the hit player is already stun, we take the larger "hitStunFrames" 
+        }
+        shouldRemove = true;
+      }
+      if (shouldRemove) {
+        removedBulletsAtCurrFrame.add(collisionBulletIndex);
+      }
+    });
+
+    for (let k in currRenderFrame.meleeBullets) {
+      const meleeBullet = currRenderFrame.meleeBullets[k];
+      // [WARNING] remove from collisionSys ANYWAY for the convenience of rollback
+      if (collisionSysMap.has(meleeBullet.collisionBulletIndex)) {
+        const bulletCollider = collisionSysMap.get(meleeBullet.collisionBulletIndex);
+        bulletCollider.remove();
+        collisionSysMap.delete(meleeBullet.collisionBulletIndex);
+      }
+      if (removedBulletsAtCurrFrame.has(meleeBullet)) continue;
+      toRet.meleeBullets.push(meleeBullet);
+    }
+
     if (null != delayedInputFrame) {
       const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(currRenderFrame.id - 1, self.inputDelayFrames));
       const inputList = delayedInputFrame.inputList;
-      const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
+      // Process player inputs
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
         effPushbacks[joinIndex - 1] = [0.0, 0.0];
@@ -285,70 +364,49 @@ cc.Class({
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = currRenderFrame.players[playerId];
+        if (0 < player.framesToRecover) {
+          // No need to process inputs for this player 
+          continue;
+        }
 
         const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
 
         const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
         const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
+
+        const playerInNextFrame = nextRenderFramePlayers[playerId];
         if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
           console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-          if (0 == player.framesToRecover) {
-            nextRenderFramePlayers[playerId].framesToRecover = PunchAtkConfig.recoveryFrames;
-            const punch = window.pb.protos.MeleeBullet.create(PunchAtkConfig);
-            punch.battleLocalId = self.bulletBattleLocalIdCounter++;
-            punch.offenderJoinIndex = joinIndex;
-            punch.originatedRenderFrameId = currRenderFrame.id;
-            toRet.meleeBullets.push(punch);
-            console.log(`A rising-edge of meleeBullet=${JSON.stringify(punch)} is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-          }
+          nextRenderFramePlayers[playerId].framesToRecover = PunchAtkConfig.recoveryFrames;
+          const punch = window.pb.protos.MeleeBullet.create(PunchAtkConfig);
+          punch.battleLocalId = self.bulletBattleLocalIdCounter++;
+          punch.offenderJoinIndex = joinIndex;
+          punch.offenderPlayerId = playerId;
+          punch.originatedRenderFrameId = currRenderFrame.id;
+          toRet.meleeBullets.push(punch);
+          console.log(`A rising-edge of meleeBullet=${JSON.stringify(punch)} is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+
+          playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-        }
-
-        /* 
-        Reset "position" of players in "collisionSys" according to "virtual grid position". The easy part is that we don't have path-dependent-integrals to worry about like that of thermal dynamics.
-        */
-        const newVx = player.virtualGridX + (decodedInput.dx + player.speed * decodedInput.dx);
-        const newVy = player.virtualGridY + (decodedInput.dy + player.speed * decodedInput.dy);
-        const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
-        playerCollider.x = newCpos[0];
-        playerCollider.y = newCpos[1];
-        if (0 != decodedInput.dx || 0 != decodedInput.dy) {
-          // Update directions and thus would eventually update moving animation accordingly
-          nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
-          nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
-        }
-      }
-
-      for (let k in currRenderFrame.meleeBullets) {
-        const meleeBullet = currRenderFrame.meleeBullets[k];
-        if (meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > currRenderFrame.id) {
-          // Won't cause any collision
-          const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
-          const bulletCollider = collisionSysMap.get(collisionBulletIndex);
-          if (null != bulletCollider) {
-            console.log(`A rising-edge of meleeBullet=${JSON.stringify(meleeBullet)} is removed from collisionSys at renderFrame.id=${currRenderFrame.id} as active frames ended`);
-            bulletCollider.remove();
+        } else {
+          // No trigger, process movement inputs
+          if (0 != decodedInput.dx || 0 != decodedInput.dy) {
+            // Update directions and thus would eventually update moving animation accordingly
+            playerInNextFrame.dir.dx = decodedInput.dx;
+            playerInNextFrame.dir.dy = decodedInput.dy;
+            playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
+          } else {
+            playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
           }
-          continue;
+          const movement = self.virtualGridToPlayerColliderPos(decodedInput.dx + player.speed * decodedInput.dx, decodedInput.dy + player.speed * decodedInput.dy, self.playerRichInfoArr[joinIndex - 1]);
+          playerCollider.x += movement[0];
+          playerCollider.y += movement[1];
         }
-        if (meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames == currRenderFrame.id) {
-          // Add meleeBullet to collisionSys (shall we just remove all bullets at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` considering that we might be doing the calculation during rollback? 
-          const collisionBulletIndex = self.collisionBulletIndexPrefix + melee.battleLocalId;
-          const collisionOffenderIndex = self.collisionPlayerIndexPrefix + melee.offenderJoinIndex;
-          const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
-          const x0 = offenderCollider.x + meleeBullet.hitboxOffset.x,
-            y0 = offenderCollider.y + meleeBullet.hitboxOffset.y;
-          const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
-          const newBulletCollider = collisionSys.createPolygon(x0, y0, pts);
-          collisionSysMap.set(collisionBulletIndex, newBulletCollider);
-          console.log(`A rising-edge of meleeBullet=${JSON.stringify(meleeBullet)} is added to collisionSys at renderFrame.id=${currRenderFrame.id} as start-up frames ended`);
-        }
-        toRet.meleeBullets.push(meleeBullet);
       }
 
-      collisionSys.update();
-      const result = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
+      collisionSys.update(); // by now all "bulletCollider"s are removed
+      const result2 = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
 
       for (let j in self.playerRichInfoArr) {
         const joinIndex = parseInt(j) + 1;
@@ -358,10 +416,10 @@ cc.Class({
         const potentials = playerCollider.potentials();
         for (const potential of potentials) {
           // Test if the player collides with the wall
-          if (!playerCollider.collides(potential, result)) continue;
+          if (!playerCollider.collides(potential, result2)) continue;
           // Push the player out of the wall
-          effPushbacks[joinIndex - 1][0] += result.overlap * result.overlap_x;
-          effPushbacks[joinIndex - 1][1] += result.overlap * result.overlap_y;
+          effPushbacks[joinIndex - 1][0] += result2.overlap * result2.overlap_x;
+          effPushbacks[joinIndex - 1][1] += result2.overlap * result2.overlap_y;
         }
       }
 
@@ -374,6 +432,7 @@ cc.Class({
         nextRenderFramePlayers[playerId].virtualGridX = newVpos[0];
         nextRenderFramePlayers[playerId].virtualGridY = newVpos[1];
       }
+
     }
 
     return toRet;

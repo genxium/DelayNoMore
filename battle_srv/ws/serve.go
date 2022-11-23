@@ -271,6 +271,7 @@ func Serve(c *gin.Context) {
 			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
 
 			SpAtkLookupFrames: pRoom.SpAtkLookupFrames,
+			RenderCacheSize: pRoom.RenderCacheSize,
 		}
 
 		resp := &pb.WsResp{

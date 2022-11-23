@@ -773,9 +773,10 @@ func (pR *Room) OnDismissed() {
 	pR.PlayerSignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.JoinIndexBooleanArr = make([]bool, pR.Capacity)
 	pR.Barriers = make(map[int32]*Barrier)
-	pR.InputsBuffer = NewRingBuffer(1024)
+	pR.RenderCacheSize = 256
+	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.DiscreteInputsBuffer = sync.Map{}
-	pR.RenderFrameBuffer = NewRingBuffer(1024)
+	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 2)+1)
 
 	pR.LastAllConfirmedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameIdWithChange = -1

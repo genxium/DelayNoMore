@@ -4,6 +4,7 @@ window.ATK_CHARACTER_STATE = {
   Idle1: [0, "Idle1"],
   Walking: [1, "Walking"],
   Atk1: [2, "Atk1"],
+  Atked1: [3, "Atked1"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];
