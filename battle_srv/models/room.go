@@ -776,7 +776,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderCacheSize = 256
 	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.DiscreteInputsBuffer = sync.Map{}
-	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 2)+1)
+	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 2) + 1)
 
 	pR.LastAllConfirmedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameIdWithChange = -1
@@ -1161,6 +1161,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 
 // TODO: Write unit-test for this function to compare with its frontend counter part
 func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *InputFrameDownsync, currRenderFrame *RoomDownsyncFrame, collisionSysMap map[int32]*resolv.Object) *RoomDownsyncFrame {
+	// TODO: Derive "nextRenderFramePlayers[*].CharacterState" as the frontend counter-part!
 	nextRenderFramePlayers := make(map[int32]*PlayerDownsync, pR.Capacity)
 	// Make a copy first
 	for playerId, currPlayerDownsync := range currRenderFrame.Players {

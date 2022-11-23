@@ -5,25 +5,25 @@ const OnlineMap = require('./Map');
 
 const PunchAtkConfig = {
   // for offender
-  startupFrames: 2,
-  activeFrames: 2,
-  recoveryFrames: 4, // usually but not always "startupFrames+activeFrames"
-  recoveryFramesOnBlock: 4, // usually but not always the same as "recoveryFrames" 
-  recoveryFramesOnHit: 4, // usually but not always the same as "recoveryFrames"
+  startupFrames: 18,
+  activeFrames: 42,
+  recoveryFrames: 60, // usually but not always "startupFrames+activeFrames"
+  recoveryFramesOnBlock: 60, // usually but not always the same as "recoveryFrames" 
+  recoveryFramesOnHit: 60, // usually but not always the same as "recoveryFrames"
   moveforward: {
     x: 0,
     y: 0,
   },
   hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
   hitboxSize: {
-    x: 24.0,
-    y: 24.0,
+    x: 32.0,
+    y: 32.0,
   },
 
   // for defender
-  hitStunFrames: 0,
-  blockStunFrames: 0,
-  pushback: 10.0,
+  hitStunFrames: 18,
+  blockStunFrames: 9,
+  pushback: 11.0,
   releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
   damage: 5
 };
@@ -58,16 +58,18 @@ cc.Class({
 
     const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+    newPlayerCollider.collisionPlayerIndex = parseInt(collisionPlayerIndex);
+    newPlayerCollider.playerId = parseInt(playerRichInfo.id);
     self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);
 
     newPlayerNode.active = true;
-    playerScriptIns.scheduleNewDirection({
+    playerScriptIns.updateCharacterAnim({
       dx: playerRichInfo.dir.dx,
       dy: playerRichInfo.dir.dy
-    }, true);
+    }, playerRichInfo, true);
 
     return [newPlayerNode, playerScriptIns];
   },
@@ -178,6 +180,8 @@ cc.Class({
             virtualGridY: 0,
             speed: 2 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            framesToRecover: 0,
             dir: {
               dx: 0,
               dy: 0
@@ -190,6 +194,8 @@ cc.Class({
             virtualGridY: 40 * self.worldToVirtualGridRatio,
             speed: 2 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            framesToRecover: 0,
             dir: {
               dx: 0,
               dy: 0
@@ -295,21 +301,25 @@ cc.Class({
     for (let k in currRenderFrame.meleeBullets) {
       const meleeBullet = currRenderFrame.meleeBullets[k];
       if (
-        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames >= currRenderFrame.id
+        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames <= currRenderFrame.id
         &&
-        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames <= currRenderFrame.id
+        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > currRenderFrame.id
       ) {
-        const collisionBulletIndex = self.collisionBulletIndexPrefix + melee.battleLocalId;
-        const collisionOffenderIndex = self.collisionPlayerIndexPrefix + melee.offenderJoinIndex;
+        const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
+        const collisionOffenderIndex = self.collisionPlayerIndexPrefix + meleeBullet.offenderJoinIndex;
         const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
-        const offender = currRenderFrame.players[melee.offenderPlayerId];
+        const offender = currRenderFrame.players[meleeBullet.offenderPlayerId];
 
-        const x0 = offenderCollider.x + offender.dir.dx * meleeBullet.hitboxOffset,
-          y0 = offenderCollider.y + offender.dir.dy * meleeBullet.hitboxOffset;
-        const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const xfac = Math.sign(offender.dir.dx),
+          yfac = 0; // By now, straight Punch offset doesn't respect "y-axis" 
+        const x0 = offenderCollider.x + xfac * meleeBullet.hitboxOffset,
+          y0 = offenderCollider.y + yfac * meleeBullet.hitboxOffset;
+        const pts = [[0, 0], [xfac * meleeBullet.hitboxSize.x, 0], [xfac * meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
         const newBulletCollider = collisionSys.createPolygon(x0, y0, pts);
         newBulletCollider.collisionBulletIndex = collisionBulletIndex;
+        newBulletCollider.offenderPlayerId = meleeBullet.offenderPlayerId;
         newBulletCollider.pushback = meleeBullet.pushback;
+        newBulletCollider.hitStunFrames = meleeBullet.hitStunFrames;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
         colliderBullets.set(collisionBulletIndex, newBulletCollider);
         console.log(`A meleeBullet=${JSON.stringify(meleeBullet)} is added to collisionSys at renderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended`);
@@ -319,15 +329,16 @@ cc.Class({
     collisionSys.update();
     const result1 = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
 
-    colliderBullets.forEach((collisionBulletIndex, bulletCollider) => {
+    colliderBullets.forEach((bulletCollider, collisionBulletIndex) => {
       const potentials = bulletCollider.potentials();
       let shouldRemove = false;
       for (const potential of potentials) {
         if (null != potential.playerId && potential.playerId == bulletCollider.offenderPlayerId) continue;
         if (!bulletCollider.collides(potential, result1)) continue;
         if (null != potential.playerId) {
-          bulletPushbacks[joinIndex - 1][0] += result1.overlap * result1.overlap_x * bulletCollider.pushback;
-          bulletPushbacks[joinIndex - 1][1] += result1.overlap * result1.overlap_y * bulletCollider.pushback;
+          const joinIndex = potential.collisionPlayerIndex - self.collisionPlayerIndexPrefix;
+          bulletPushbacks[joinIndex - 1][0] += result1.overlap_x * bulletCollider.pushback;
+          bulletPushbacks[joinIndex - 1][1] += result1.overlap_y * bulletCollider.pushback;
           const thatAckedPlayerInNextFrame = nextRenderFramePlayers[potential.playerId];
           thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
           const oldFrameToRecover = thatAckedPlayerInNextFrame.framesToRecover;
@@ -343,12 +354,13 @@ cc.Class({
     for (let k in currRenderFrame.meleeBullets) {
       const meleeBullet = currRenderFrame.meleeBullets[k];
       // [WARNING] remove from collisionSys ANYWAY for the convenience of rollback
-      if (collisionSysMap.has(meleeBullet.collisionBulletIndex)) {
-        const bulletCollider = collisionSysMap.get(meleeBullet.collisionBulletIndex);
+      const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
+      if (collisionSysMap.has(collisionBulletIndex)) {
+        const bulletCollider = collisionSysMap.get(collisionBulletIndex);
         bulletCollider.remove();
-        collisionSysMap.delete(meleeBullet.collisionBulletIndex);
+        collisionSysMap.delete(collisionBulletIndex);
       }
-      if (removedBulletsAtCurrFrame.has(meleeBullet)) continue;
+      if (removedBulletsAtCurrFrame.has(collisionBulletIndex)) continue;
       toRet.meleeBullets.push(meleeBullet);
     }
 
@@ -364,8 +376,13 @@ cc.Class({
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
         const player = currRenderFrame.players[playerId];
-        if (0 < player.framesToRecover) {
-          // No need to process inputs for this player 
+        if (0 < nextRenderFramePlayers[playerId].framesToRecover) {
+          // No need to process inputs for this player, but there might be bullet pushbacks on this player  
+          if (0 != bulletPushbacks[joinIndex - 1][0] || 0 != bulletPushbacks[joinIndex - 1][1]) {
+            playerCollider.x += bulletPushbacks[joinIndex - 1][0];
+            playerCollider.y += bulletPushbacks[joinIndex - 1][1];
+            console.log(`playerId=${playerId}, joinIndex=${joinIndex} is pushbacked back by ${bulletPushbacks[joinIndex - 1]} by bullet impacts, now its framesToRecover is ${player.framesToRecover}`);
+          }
           continue;
         }
 
@@ -374,7 +391,6 @@ cc.Class({
         const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
         const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
 
-        const playerInNextFrame = nextRenderFramePlayers[playerId];
         if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
           console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
           nextRenderFramePlayers[playerId].framesToRecover = PunchAtkConfig.recoveryFrames;
@@ -386,20 +402,20 @@ cc.Class({
           toRet.meleeBullets.push(punch);
           console.log(`A rising-edge of meleeBullet=${JSON.stringify(punch)} is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
-          playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
+          nextRenderFramePlayers[playerId].characterState = window.ATK_CHARACTER_STATE.Atk1[0];
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
         } else {
           // No trigger, process movement inputs
           if (0 != decodedInput.dx || 0 != decodedInput.dy) {
             // Update directions and thus would eventually update moving animation accordingly
-            playerInNextFrame.dir.dx = decodedInput.dx;
-            playerInNextFrame.dir.dy = decodedInput.dy;
-            playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
+            nextRenderFramePlayers[playerId].dir.dx = decodedInput.dx;
+            nextRenderFramePlayers[playerId].dir.dy = decodedInput.dy;
+            nextRenderFramePlayers[playerId].characterState = window.ATK_CHARACTER_STATE.Walking[0];
           } else {
-            playerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
+            nextRenderFramePlayers[playerId].characterState = window.ATK_CHARACTER_STATE.Idle1[0];
           }
-          const movement = self.virtualGridToPlayerColliderPos(decodedInput.dx + player.speed * decodedInput.dx, decodedInput.dy + player.speed * decodedInput.dy, self.playerRichInfoArr[joinIndex - 1]);
+          const movement = self.virtualGridToWorldPos(decodedInput.dx + player.speed * decodedInput.dx, decodedInput.dy + player.speed * decodedInput.dy);
           playerCollider.x += movement[0];
           playerCollider.y += movement[1];
         }

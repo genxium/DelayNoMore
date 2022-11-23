@@ -123,6 +123,8 @@ message MeleeBullet {
 
   int32 offenderJoinIndex = 16;    
   int32 offenderPlayerId = 17;    
+
+  int32 offenderPlayerId = 17;    
 } 
 
 message RoomDownsyncFrame {
