@@ -860,7 +860,7 @@
     "_cacheMode": 0,
     "playTimes": -1,
     "premultipliedAlpha": false,
-    "_armatureKey": "73b7e7d4-6ad0-41ea-9d17-1104c463aad2#2f5ba371-9006-4e2d-8dd4-df91fcea1df2",
+    "_armatureKey": "a9d7bbc2-134b-4eb4-ba16-6541f3e51e06#e9e703e9-3589-4713-b889-28b23406d220",
     "_accTime": 0,
     "_playCount": 0,
     "_frameCache": null,
@@ -868,10 +868,10 @@
     "_playing": false,
     "_armatureCache": null,
     "_N$dragonAsset": {
-      "__uuid__": "73b7e7d4-6ad0-41ea-9d17-1104c463aad2"
+      "__uuid__": "a9d7bbc2-134b-4eb4-ba16-6541f3e51e06"
     },
     "_N$dragonAtlasAsset": {
-      "__uuid__": "2f5ba371-9006-4e2d-8dd4-df91fcea1df2"
+      "__uuid__": "e9e703e9-3589-4713-b889-28b23406d220"
     },
     "_N$_defaultArmatureIndex": 0,
     "_N$_animationIndex": 8,

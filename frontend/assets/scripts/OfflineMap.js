@@ -3,31 +3,6 @@ i18n.init(window.language); // languageID should be equal to the one we input in
 
 const OnlineMap = require('./Map');
 
-window.PunchAtkConfig = {
-  // for offender
-  startupFrames: 18,
-  activeFrames: 42,
-  recoveryFrames: 61, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-  recoveryFramesOnBlock: 61,
-  recoveryFramesOnHit: 61,
-  moveforward: {
-    x: 0,
-    y: 0,
-  },
-  hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
-  hitboxSize: {
-    x: 45.0,
-    y: 32.0,
-  },
-
-  // for defender
-  hitStunFrames: 18,
-  blockStunFrames: 9,
-  pushback: 22.0,
-  releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
-  damage: 5
-};
-
 cc.Class({
   extends: OnlineMap,
 
@@ -64,6 +39,32 @@ cc.Class({
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
+    self.meleeSkillConfig = {
+      1: {
+        // for offender
+        startupFrames: 18,
+        activeFrames: 42,
+        recoveryFrames: 61, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+        recoveryFramesOnBlock: 61,
+        recoveryFramesOnHit: 61,
+        moveforward: {
+          x: 0,
+          y: 0,
+        },
+        hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
+        hitboxSize: {
+          x: 45.0,
+          y: 32.0,
+        },
+
+        // for defender
+        hitStunFrames: 18,
+        blockStunFrames: 9,
+        pushback: 22.0,
+        releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
+        damage: 5
+      }
+    };
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 

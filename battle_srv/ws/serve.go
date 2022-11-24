@@ -272,6 +272,7 @@ func Serve(c *gin.Context) {
 
 			SpAtkLookupFrames: pRoom.SpAtkLookupFrames,
 			RenderCacheSize:   pRoom.RenderCacheSize,
+			MeleeSkillConfig:  pRoom.MeleeSkillConfig,
 		}
 
 		resp := &pb.WsResp{

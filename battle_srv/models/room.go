@@ -150,11 +150,6 @@ type Room struct {
 	Index                                  int
 	RenderFrameId                          int32
 	CurDynamicsRenderFrameId               int32 // [WARNING] The dynamics of backend is ALWAYS MOVING FORWARD BY ALL-CONFIRMED INPUTFRAMES (either by upsync or forced), i.e. no rollback
-	ServerFps                              int32
-	BattleDurationFrames                   int32
-	BattleDurationNanos                    int64
-	InputFrameUpsyncDelayTolerance         int32
-	MaxChasingRenderFramesPerUpdate        int32
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
 	Barriers                               map[int32]*Barrier
@@ -164,17 +159,15 @@ type Room struct {
 	LastAllConfirmedInputFrameId           int32
 	LastAllConfirmedInputFrameIdWithChange int32
 	LastAllConfirmedInputList              []uint64
-	InputDelayFrames                       int32  // in the count of render frames
-	NstDelayFrames                         int32  // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
-	InputScaleFrames                       uint32 // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	JoinIndexBooleanArr                    []bool
 
 	BackendDynamicsEnabled       bool
 	LastRenderFrameIdTriggeredAt int64
 	PlayerDefaultSpeed           int32
 
-	BulletBattleLocalIdCounter int32
-	BattleColliderInfo         // Compositing to send centralized magic numbers
+	BulletBattleLocalIdCounter      int32
+	dilutedRollbackEstimatedDtNanos int64
+	BattleColliderInfo              // Compositing to send centralized magic numbers
 }
 
 func (pR *Room) updateScore() {
@@ -377,8 +370,6 @@ func (pR *Room) StartBattle() {
 		return
 	}
 
-	// Always instantiates a new channel and let the old one die out due to not being retained by any root reference.
-	nanosPerFrame := 1000000000 / int64(pR.ServerFps)
 	pR.RenderFrameId = 0
 
 	// Initialize the "collisionSys" as well as "RenderFrameBuffer"
@@ -418,7 +409,7 @@ func (pR *Room) StartBattle() {
 			stCalculation := utils.UnixtimeNano()
 
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
-			if elapsedNanosSinceLastFrameIdTriggered < pR.RollbackEstimatedDtNanos {
+			if elapsedNanosSinceLastFrameIdTriggered < pR.dilutedRollbackEstimatedDtNanos {
 				Logger.Debug(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, elapsedNanosSinceLastFrameIdTriggered))
 				continue
 			}
@@ -580,10 +571,10 @@ func (pR *Room) StartBattle() {
 
 			pR.RenderFrameId++
 			elapsedInCalculation := (utils.UnixtimeNano() - stCalculation)
-			if elapsedInCalculation > nanosPerFrame {
-				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v ns, dynamicsDuration=%v ns, expected nanosPerFrame=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, nanosPerFrame))
+			if elapsedInCalculation > pR.dilutedRollbackEstimatedDtNanos {
+				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v ns, dynamicsDuration=%v ns, dilutedRollbackEstimatedDtNanos=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, pR.dilutedRollbackEstimatedDtNanos))
 			}
-			time.Sleep(time.Duration(nanosPerFrame - elapsedInCalculation))
+			time.Sleep(time.Duration(pR.dilutedRollbackEstimatedDtNanos - elapsedInCalculation))
 		}
 	}
 
@@ -783,7 +774,7 @@ func (pR *Room) OnDismissed() {
 	pR.PlayerSignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.JoinIndexBooleanArr = make([]bool, pR.Capacity)
 	pR.Barriers = make(map[int32]*Barrier)
-	pR.RenderCacheSize = 512
+	pR.RenderCacheSize = 1024
 	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.DiscreteInputsBuffer = sync.Map{}
 	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 2) + 1)
@@ -800,6 +791,8 @@ func (pR *Room) OnDismissed() {
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
+	dilutionFactor := 8
+	pR.dilutedRollbackEstimatedDtNanos = int64(16666666 * (dilutionFactor) / (dilutionFactor - 1)) // [WARNING] Only used in controlling "battleMainLoop" to be keep a frame rate lower than that of the frontends, such that upon resync(i.e. BackendDynamicsEnabled=true), the frontends would have bigger chances to keep up with or even surpass the backend calculation
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
@@ -807,32 +800,30 @@ func (pR *Room) OnDismissed() {
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	punchSkillId := int32(1)
-	if _, existent := pR.MeleeSkillConfig[punchSkillId]; !existent {
-		pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
-		pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
-			// for offender
-			StartupFrames:         int32(18),
-			ActiveFrames:          int32(42),
-			RecoveryFrames:        int32(61), // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-			RecoveryFramesOnBlock: int32(61),
-			RecoveryFramesOnHit:   int32(61),
-			Moveforward: &Vec2D{
-				X: 0,
-				Y: 0,
-			},
-			HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
-			HitboxSize: &Vec2D{
-				X: float64(45.0),
-				Y: float64(32.0),
-			},
+	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
+	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
+		// for offender
+		StartupFrames:         int32(18),
+		ActiveFrames:          int32(42),
+		RecoveryFrames:        int32(61), // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+		RecoveryFramesOnBlock: int32(61),
+		RecoveryFramesOnHit:   int32(61),
+		Moveforward: &Vec2D{
+			X: 0,
+			Y: 0,
+		},
+		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
+		HitboxSize: &Vec2D{
+			X: float64(45.0),
+			Y: float64(32.0),
+		},
 
-			// for defender
-			HitStunFrames:      int32(18),
-			BlockStunFrames:    int32(9),
-			Pushback:           float64(22.0),
-			ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
-			Damage:             int32(5),
-		}
+		// for defender
+		HitStunFrames:      int32(18),
+		BlockStunFrames:    int32(9),
+		Pushback:           float64(22.0),
+		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
+		Damage:             int32(5),
 	}
 
 	pR.ChooseStage()
@@ -1078,7 +1069,7 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync
 		prevInputFrameDownsync := tmp.(*InputFrameDownsync)
 		currInputList := make([]uint64, pR.Capacity) // Would be a clone of the values
 		for i, _ := range currInputList {
-			currInputList[i] = (prevInputFrameDownsync.InputList[i] & uint64(15)) // Don't predict attack input
+			currInputList[i] = (prevInputFrameDownsync.InputList[i] & uint64(15)) // Don't predict attack input!
 		}
 		currInputFrameDownsync = &InputFrameDownsync{
 			InputFrameId:  inputFrameId,
@@ -1098,7 +1089,7 @@ func (pR *Room) markConfirmationIfApplicable() {
 	for inputFrameId := inputFrameId1; inputFrameId < pR.InputsBuffer.EdFrameId; inputFrameId++ {
 		tmp := pR.InputsBuffer.GetByFrameId(inputFrameId)
 		if nil == tmp {
-			panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", inputFrameId, pR.Id, pR.InputsBufferString(false)))
+			panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic (Or maybe you're having a 'Room.RenderCacheSize' too small)! InputsBuffer=%v", inputFrameId, pR.Id, pR.InputsBufferString(false)))
 		}
 		inputFrameDownsync := tmp.(*InputFrameDownsync)
 		for _, player := range pR.Players {
@@ -1334,6 +1325,9 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
 				// Update in the collision system
 				playerCollider.Update()
+				if 0 != bulletPushbacks[joinIndex-1].X || 0 != bulletPushbacks[joinIndex-1].Y {
+					Logger.Info(fmt.Sprintf("roomId=%v, playerId=%v is pushed back by (%.2f, %.2f) by bullet impacts, now its framesToRecover is %d at currRenderFrame.id=%v", pR.Id, playerId, bulletPushbacks[joinIndex-1].X, bulletPushbacks[joinIndex-1].Y, thatPlayerInNextFrame.FramesToRecover, currRenderFrame.Id))
+				}
 				continue
 			}
 			currPlayerDownsync := currRenderFrame.Players[playerId]

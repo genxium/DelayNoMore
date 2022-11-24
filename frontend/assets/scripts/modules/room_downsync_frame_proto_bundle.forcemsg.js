@@ -4151,6 +4151,7 @@ $root.protos = (function() {
          * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
          * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
          * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
+         * @property {number|null} [battleDurationFrames] BattleColliderInfo battleDurationFrames
          * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
          * @property {number|null} [serverFps] BattleColliderInfo serverFps
          * @property {number|null} [inputDelayFrames] BattleColliderInfo inputDelayFrames
@@ -4265,6 +4266,14 @@ $root.protos = (function() {
          * @instance
          */
         BattleColliderInfo.prototype.boundRoomId = 0;
+
+        /**
+         * BattleColliderInfo battleDurationFrames.
+         * @member {number} battleDurationFrames
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.battleDurationFrames = 0;
 
         /**
          * BattleColliderInfo battleDurationNanos.
@@ -4436,37 +4445,39 @@ $root.protos = (function() {
                 writer.uint32(/* id 9, wireType 0 =*/72).int32(message.willKickIfInactiveFor);
             if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.boundRoomId);
+            if (message.battleDurationFrames != null && Object.hasOwnProperty.call(message, "battleDurationFrames"))
+                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.battleDurationFrames);
             if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
-                writer.uint32(/* id 11, wireType 0 =*/88).int64(message.battleDurationNanos);
+                writer.uint32(/* id 13, wireType 0 =*/104).int64(message.battleDurationNanos);
             if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
-                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.serverFps);
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.serverFps);
             if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
-                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.inputDelayFrames);
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.inputDelayFrames);
             if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
-                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.inputScaleFrames);
+                writer.uint32(/* id 16, wireType 0 =*/128).uint32(message.inputScaleFrames);
             if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
-                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.nstDelayFrames);
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.nstDelayFrames);
             if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
-                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.inputFrameUpsyncDelayTolerance);
+                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.inputFrameUpsyncDelayTolerance);
             if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
-                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxChasingRenderFramesPerUpdate);
+                writer.uint32(/* id 19, wireType 0 =*/152).int32(message.maxChasingRenderFramesPerUpdate);
             if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
-                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.playerBattleState);
+                writer.uint32(/* id 20, wireType 0 =*/160).int32(message.playerBattleState);
             if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
-                writer.uint32(/* id 19, wireType 1 =*/153).double(message.rollbackEstimatedDtMillis);
+                writer.uint32(/* id 21, wireType 1 =*/169).double(message.rollbackEstimatedDtMillis);
             if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
-                writer.uint32(/* id 20, wireType 0 =*/160).int64(message.rollbackEstimatedDtNanos);
+                writer.uint32(/* id 22, wireType 0 =*/176).int64(message.rollbackEstimatedDtNanos);
             if (message.worldToVirtualGridRatio != null && Object.hasOwnProperty.call(message, "worldToVirtualGridRatio"))
-                writer.uint32(/* id 21, wireType 1 =*/169).double(message.worldToVirtualGridRatio);
+                writer.uint32(/* id 23, wireType 1 =*/185).double(message.worldToVirtualGridRatio);
             if (message.virtualGridToWorldRatio != null && Object.hasOwnProperty.call(message, "virtualGridToWorldRatio"))
-                writer.uint32(/* id 22, wireType 1 =*/177).double(message.virtualGridToWorldRatio);
+                writer.uint32(/* id 24, wireType 1 =*/193).double(message.virtualGridToWorldRatio);
             if (message.spAtkLookupFrames != null && Object.hasOwnProperty.call(message, "spAtkLookupFrames"))
-                writer.uint32(/* id 23, wireType 0 =*/184).int32(message.spAtkLookupFrames);
+                writer.uint32(/* id 25, wireType 0 =*/200).int32(message.spAtkLookupFrames);
             if (message.renderCacheSize != null && Object.hasOwnProperty.call(message, "renderCacheSize"))
-                writer.uint32(/* id 24, wireType 0 =*/192).int32(message.renderCacheSize);
+                writer.uint32(/* id 26, wireType 0 =*/208).int32(message.renderCacheSize);
             if (message.meleeSkillConfig != null && Object.hasOwnProperty.call(message, "meleeSkillConfig"))
                 for (var keys = Object.keys(message.meleeSkillConfig), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 25, wireType 2 =*/202).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    writer.uint32(/* id 27, wireType 2 =*/218).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.protos.MeleeBullet.encode(message.meleeSkillConfig[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
             return writer;
@@ -4581,63 +4592,67 @@ $root.protos = (function() {
                         message.boundRoomId = reader.int32();
                         break;
                     }
-                case 11: {
-                        message.battleDurationNanos = reader.int64();
-                        break;
-                    }
                 case 12: {
-                        message.serverFps = reader.int32();
+                        message.battleDurationFrames = reader.int32();
                         break;
                     }
                 case 13: {
-                        message.inputDelayFrames = reader.int32();
+                        message.battleDurationNanos = reader.int64();
                         break;
                     }
                 case 14: {
-                        message.inputScaleFrames = reader.uint32();
+                        message.serverFps = reader.int32();
                         break;
                     }
                 case 15: {
-                        message.nstDelayFrames = reader.int32();
+                        message.inputDelayFrames = reader.int32();
                         break;
                     }
                 case 16: {
-                        message.inputFrameUpsyncDelayTolerance = reader.int32();
+                        message.inputScaleFrames = reader.uint32();
                         break;
                     }
                 case 17: {
-                        message.maxChasingRenderFramesPerUpdate = reader.int32();
+                        message.nstDelayFrames = reader.int32();
                         break;
                     }
                 case 18: {
-                        message.playerBattleState = reader.int32();
+                        message.inputFrameUpsyncDelayTolerance = reader.int32();
                         break;
                     }
                 case 19: {
-                        message.rollbackEstimatedDtMillis = reader.double();
+                        message.maxChasingRenderFramesPerUpdate = reader.int32();
                         break;
                     }
                 case 20: {
-                        message.rollbackEstimatedDtNanos = reader.int64();
+                        message.playerBattleState = reader.int32();
                         break;
                     }
                 case 21: {
-                        message.worldToVirtualGridRatio = reader.double();
+                        message.rollbackEstimatedDtMillis = reader.double();
                         break;
                     }
                 case 22: {
-                        message.virtualGridToWorldRatio = reader.double();
+                        message.rollbackEstimatedDtNanos = reader.int64();
                         break;
                     }
                 case 23: {
-                        message.spAtkLookupFrames = reader.int32();
+                        message.worldToVirtualGridRatio = reader.double();
                         break;
                     }
                 case 24: {
-                        message.renderCacheSize = reader.int32();
+                        message.virtualGridToWorldRatio = reader.double();
                         break;
                     }
                 case 25: {
+                        message.spAtkLookupFrames = reader.int32();
+                        break;
+                    }
+                case 26: {
+                        message.renderCacheSize = reader.int32();
+                        break;
+                    }
+                case 27: {
                         if (message.meleeSkillConfig === $util.emptyObject)
                             message.meleeSkillConfig = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -4739,6 +4754,9 @@ $root.protos = (function() {
             if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
                 if (!$util.isInteger(message.boundRoomId))
                     return "boundRoomId: integer expected";
+            if (message.battleDurationFrames != null && message.hasOwnProperty("battleDurationFrames"))
+                if (!$util.isInteger(message.battleDurationFrames))
+                    return "battleDurationFrames: integer expected";
             if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
                 if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
                     return "battleDurationNanos: integer|Long expected";
@@ -4846,6 +4864,8 @@ $root.protos = (function() {
                 message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
             if (object.boundRoomId != null)
                 message.boundRoomId = object.boundRoomId | 0;
+            if (object.battleDurationFrames != null)
+                message.battleDurationFrames = object.battleDurationFrames | 0;
             if (object.battleDurationNanos != null)
                 if ($util.Long)
                     (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
@@ -4928,6 +4948,7 @@ $root.protos = (function() {
                 object.intervalToPing = 0;
                 object.willKickIfInactiveFor = 0;
                 object.boundRoomId = 0;
+                object.battleDurationFrames = 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, false);
                     object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
@@ -4978,6 +4999,8 @@ $root.protos = (function() {
                 object.willKickIfInactiveFor = message.willKickIfInactiveFor;
             if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
                 object.boundRoomId = message.boundRoomId;
+            if (message.battleDurationFrames != null && message.hasOwnProperty("battleDurationFrames"))
+                object.battleDurationFrames = message.battleDurationFrames;
             if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
                 if (typeof message.battleDurationNanos === "number")
                     object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;

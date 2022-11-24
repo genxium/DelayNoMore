@@ -1,7 +1,7 @@
 {
   "ver": "1.0.0",
-  "uuid": "2f5ba371-9006-4e2d-8dd4-df91fcea1df2",
+  "uuid": "e9e703e9-3589-4713-b889-28b23406d220",
   "atlasJson": "{\"SubTexture\":[{\"y\":50,\"frameX\":-2,\"frameY\":-2,\"width\":19,\"frameWidth\":23,\"height\":19,\"name\":\"biu\",\"frameHeight\":22,\"x\":1},{\"width\":9,\"y\":50,\"height\":14,\"name\":\"rightArm\",\"x\":42},{\"y\":34,\"frameX\":-6,\"frameY\":0,\"width\":20,\"frameWidth\":29,\"height\":32,\"name\":\"yinmoqe00\",\"frameHeight\":32,\"x\":88},{\"y\":1,\"frameX\":0,\"frameY\":0,\"width\":33,\"frameWidth\":34,\"height\":39,\"name\":\"body\",\"frameHeight\":41,\"x\":53},{\"width\":9,\"y\":56,\"height\":13,\"name\":\"rightShoulder\",\"x\":74},{\"y\":50,\"frameX\":0,\"frameY\":0,\"width\":18,\"frameWidth\":19,\"height\":17,\"name\":\"rightFrontArm\",\"frameHeight\":18,\"x\":22},{\"width\":14,\"y\":50,\"height\":14,\"name\":\"rightHand\",\"x\":110},{\"width\":12,\"y\":42,\"height\":12,\"name\":\"leftArm\",\"x\":74},{\"width\":13,\"y\":66,\"height\":12,\"name\":\"leftShoulder\",\"x\":110},{\"y\":42,\"frameX\":-1,\"frameY\":0,\"width\":19,\"frameWidth\":20,\"height\":21,\"name\":\"leftFrontArm\",\"frameHeight\":21,\"x\":53},{\"width\":50,\"y\":1,\"height\":47,\"name\":\"head2\",\"x\":1},{\"y\":1,\"frameX\":-1,\"frameY\":0,\"width\":32,\"frameWidth\":33,\"height\":31,\"name\":\"head\",\"frameHeight\":32,\"x\":88},{\"width\":16,\"y\":34,\"height\":14,\"name\":\"leftHand\",\"x\":110},{\"y\":1,\"frameX\":-2,\"frameY\":-3,\"width\":2,\"frameWidth\":8,\"height\":2,\"name\":\"huomiao01\",\"frameHeight\":8,\"x\":122}],\"width\":128,\"height\":128,\"name\":\"SoldierWaterGhost\",\"imagePath\":\"SoldierWaterGhost_tex.png\"}",
-  "texture": "62ea1a78-b096-4b8c-afb4-8edd4be142f7",
+  "texture": "def168c3-3f07-43f9-a460-36b397c70a57",
   "subMetas": {}
 }

@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "62ea1a78-b096-4b8c-afb4-8edd4be142f7",
+  "uuid": "def168c3-3f07-43f9-a460-36b397c70a57",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -11,8 +11,8 @@
   "subMetas": {
     "SoldierWaterGhost_tex": {
       "ver": "1.0.4",
-      "uuid": "e7b96c0e-a9b8-40eb-8568-73bd2803cd31",
-      "rawTextureUuid": "62ea1a78-b096-4b8c-afb4-8edd4be142f7",
+      "uuid": "52fb0606-bbea-433c-803b-bf5ce936a0df",
+      "rawTextureUuid": "def168c3-3f07-43f9-a460-36b397c70a57",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

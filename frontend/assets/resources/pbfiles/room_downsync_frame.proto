@@ -108,24 +108,25 @@ message BattleColliderInfo {
   int32 intervalToPing        = 8;
   int32 willKickIfInactiveFor = 9;
   int32 boundRoomId           = 10;
-  int64 battleDurationNanos   = 11;
-  int32 serverFps             = 12;
-  int32 inputDelayFrames      = 13;
-  uint32 inputScaleFrames     = 14;
-  int32 nstDelayFrames        = 15;
-  int32 inputFrameUpsyncDelayTolerance = 16;  
-  int32 maxChasingRenderFramesPerUpdate = 17;
-  int32 playerBattleState = 18;
-  double rollbackEstimatedDtMillis = 19;
-  int64 rollbackEstimatedDtNanos = 20;
+  int32 battleDurationFrames  = 12;
+  int64 battleDurationNanos   = 13;
+  int32 serverFps             = 14;
+  int32 inputDelayFrames      = 15; // in the count of render frames
+  uint32 inputScaleFrames     = 16; // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
+  int32 nstDelayFrames        = 17; // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
+  int32 inputFrameUpsyncDelayTolerance = 18;  
+  int32 maxChasingRenderFramesPerUpdate = 19;
+  int32 playerBattleState = 20;
+  double rollbackEstimatedDtMillis = 21;
+  int64 rollbackEstimatedDtNanos = 22;
  
-  double worldToVirtualGridRatio = 21;
-  double virtualGridToWorldRatio = 22;
+  double worldToVirtualGridRatio = 23;
+  double virtualGridToWorldRatio = 24;
 
-  int32 spAtkLookupFrames = 23;
-  int32 renderCacheSize = 24;
+  int32 spAtkLookupFrames = 25;
+  int32 renderCacheSize = 26;
 
-  map<int32, MeleeBullet> meleeSkillConfig = 25; // skillId -> skill
+  map<int32, MeleeBullet> meleeSkillConfig = 27; // skillId -> skill
 }
 
 message RoomDownsyncFrame {

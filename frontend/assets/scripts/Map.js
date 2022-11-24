@@ -991,7 +991,7 @@ cc.Class({
       const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId);
       for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
         if (i == self.selfPlayerInfo.joinIndex - 1) continue;
-        inputFrameDownsync.inputList[i] = lastAllConfirmedInputFrame.inputList[i];
+        inputFrameDownsync.inputList[i] = (lastAllConfirmedInputFrame.inputList[i] & 15); // Don't predict attack input!
       }
     }
 
@@ -1141,7 +1141,7 @@ cc.Class({
           playerCollider.x += bulletPushbacks[joinIndex - 1][0];
           playerCollider.y += bulletPushbacks[joinIndex - 1][1];
           if (0 != bulletPushbacks[joinIndex - 1][0] || 0 != bulletPushbacks[joinIndex - 1][1]) {
-            console.log(`playerId=${playerId}, joinIndex=${joinIndex} is pushbacked back by ${bulletPushbacks[joinIndex - 1]} by bullet impacts, now its framesToRecover is ${currPlayerDownsync.framesToRecover}`);
+            console.log(`playerId=${playerId}, joinIndex=${joinIndex} is pushbacked back by ${bulletPushbacks[joinIndex - 1]} by bullet impacts, now its framesToRecover is ${thatPlayerInNextFrame.framesToRecover}`);
           }
           continue;
         }
@@ -1154,14 +1154,16 @@ cc.Class({
         if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
           if (self.bulletTriggerEnabled) {
-            thatPlayerInNextFrame.framesToRecover = window.PunchAtkConfig.recoveryFrames;
-            const punch = window.pb.protos.MeleeBullet.create(window.PunchAtkConfig);
+            const punchSkillId = 1;
+            const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
+            thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
             punch.battleLocalId = self.bulletBattleLocalIdCounter++;
             punch.offenderJoinIndex = joinIndex;
             punch.offenderPlayerId = playerId;
             punch.originatedRenderFrameId = currRenderFrame.id;
             toRet.meleeBullets.push(punch);
-            console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
+            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
+            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
           }
