@@ -124,6 +124,7 @@ type Room struct {
 	collisionSpaceOffsetY float64
 	Players               map[int32]*Player
 	PlayersArr            []*Player // ordered by joinIndex
+	Space                 *resolv.Space
 	CollisionSysMap       map[int32]*resolv.Object
 	/**
 		 * The following `PlayerDownsyncSessionDict` is NOT individually put
@@ -1250,11 +1251,13 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 			bulletCx, bulletCy := offenderCollider.X+xfac*meleeBullet.HitboxOffset, offenderCollider.Y+yfac*meleeBullet.HitboxOffset
 
-			newBulletCollider := GenerateRectCollider(bulletCx, bulletCy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
+			newBulletCollider := GenerateRectColliderInCollisionSpace(bulletCx, bulletCy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, "MeleeBullet")
 			newBulletCollider.Data = meleeBullet
+			pR.Space.Add(newBulletCollider)
 			collisionSysMap[collisionBulletIndex] = newBulletCollider
 			bulletColliders[collisionBulletIndex] = newBulletCollider
-			newBulletCollider.Update()
+
+			Logger.Debug(fmt.Sprintf("roomId=%v, a meleeBullet is added to collisionSys at currRenderFrame.id=%v as start-up frames ended and active frame is not yet ended: %v, from offenderCollider=%v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(newBulletCollider.Shape.(*resolv.ConvexPolygon)), ConvexPolygonStr(offenderCollider.Shape.(*resolv.ConvexPolygon))))
 		}
 	}
 
@@ -1262,9 +1265,11 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		shouldRemove := false
 		meleeBullet := bulletCollider.Data.(*MeleeBullet)
 		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
+		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
 		if collision := bulletCollider.Check(0, 0); collision != nil {
+			// FIXME: A bullet going to the "right" can hit a wall or a player (though couldn't identify the player), but if it goes to the "left" then it couldn't hit anything, why?
 			offender := currRenderFrame.Players[meleeBullet.OffenderPlayerId]
-			bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+			Logger.Info(fmt.Sprintf("roomId=%v, a meleeBullet collides w/ sth at currRenderFrame.id=%v: %v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape)))
 			for _, obj := range collision.Objects {
 				switch t := obj.Data.(type) {
 				case Player:
@@ -1284,10 +1289,12 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 						}
 					}
 				default:
-					Logger.Debug(fmt.Sprintf("Bullet collided with non-player: roomId=%v, currRenderFrame.Id=%v, delayedInputFrame.Id=%v", pR.Id, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+					Logger.Debug(fmt.Sprintf("Bullet %v collided with non-player: roomId=%v, currRenderFrame.Id=%v, delayedInputFrame.Id=%v", bulletShape, pR.Id, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 				}
 			}
 			shouldRemove = true
+		} else {
+			Logger.Info(fmt.Sprintf("roomId=%v, meleeBullet doesn't collider w/ anything at currRenderFrame.id=%v: %v; p1=%v, p2=%v; bulletSpace=%p, p1Space=%p, p2Space=%p", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape), ConvexPolygonStr(collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+1].Shape.(*resolv.ConvexPolygon)), ConvexPolygonStr(collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+2].Shape.(*resolv.ConvexPolygon)), bulletCollider.Space, collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+1].Space, collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+2].Space))
 		}
 		if shouldRemove {
 			removedBulletsAtCurrFrame[collisionBulletIndex] = 1
@@ -1427,13 +1434,13 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 2) // the approx minimum distance a player can move per frame in world coordinate
-	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)             // allocate a new collision space everytime after a battle is settled
+	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) >> 1) // the approx minimum distance a player can move per frame in world coordinate
+	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
 		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		playerCollider.Data = player
-		space.Add(playerCollider)
+		pR.Space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
 		pR.PlayersArr[joinIndex-1] = player
@@ -1444,7 +1451,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	for _, barrier := range pR.Barriers {
 		boundaryUnaligned := barrier.Boundary
 		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Barrier")
-		space.Add(barrierCollider)
+		pR.Space.Add(barrierCollider)
 	}
 }
 
