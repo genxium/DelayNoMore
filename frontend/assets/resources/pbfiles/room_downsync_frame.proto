@@ -4,6 +4,98 @@ option go_package = "battle_srv/protos"; // here "./" corresponds to the "--go_o
 package protos;
 import "geometry.proto"; // The import path here is only w.r.t. the proto file, not the Go package.
 
+message PlayerDownsync {
+  int32 id = 1;
+  int32 virtualGridX = 2; 
+  int32 virtualGridY = 3; 
+  int32 dirX = 4;
+  int32 dirY = 5;
+  int32 speed = 6; // in terms of virtual grid units
+  int32 battleState = 7;
+  int32 joinIndex = 8;
+  double colliderRadius = 9;
+  bool removed = 10;
+  int32 score = 11;
+  int32 lastMoveGmtMillis = 12;
+  int32 framesToRecover = 13;
+  int32 hp = 14;
+  int32 maxHp = 15;
+  int32 characterState = 16;
+
+  string name = 17;
+  string displayName = 18;
+  string avatar = 19;
+}
+
+message InputFrameDecoded {
+  int32 dx = 1;
+  int32 dy = 2;
+  int32 btnALevel = 3;
+}
+
+message InputFrameUpsync {
+  int32 inputFrameId = 1;
+  uint64 encoded = 2;
+}
+
+message InputFrameDownsync {
+  int32 inputFrameId = 1;
+  repeated uint64 inputList = 2; // Indexed by "joinIndex", we try to compress the "single player input" into 1 word (64-bit for 64-bit Golang runtime) because atomic compare-and-swap only works on 1 word. Although CAS on custom struct is possible in Golang 1.19 https://pkg.go.dev/sync/atomic@go1.19.1#Value.CompareAndSwap, using a single word is still faster whenever possible. 
+  uint64 confirmedList = 3; // Indexed by "joinIndex", same compression concern as above
+}
+
+message HeartbeatUpsync {
+  int64 clientTimestamp = 1;     
+}
+
+message WsReq {
+  int32 msgId = 1;
+  int32 playerId = 2;
+  int32 act = 3;    
+  int32 joinIndex = 4;
+  int32 ackingFrameId = 5;
+  int32 ackingInputFrameId = 6;
+  repeated InputFrameUpsync inputFrameUpsyncBatch = 7; 
+  HeartbeatUpsync hb = 8; 
+}
+
+message WsResp {
+  int32 ret = 1;
+  int32 echoedMsgId = 2;    
+  int32 act = 3; 
+  RoomDownsyncFrame rdf = 4; 
+  repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
+  BattleColliderInfo bciFrame = 6; 
+}
+
+message MeleeBullet { 
+  // Jargon reference https://www.thegamer.com/fighting-games-frame-data-explained/
+  // ALL lengths are in world coordinate
+
+  // for offender  
+  int32 battleLocalId = 1;
+  int32 startupFrames = 2; 
+  int32 activeFrames = 3;  
+  int32 recoveryFrames = 4;
+  int32 recoveryFramesOnBlock = 5; 
+  int32 recoveryFramesOnHit = 6;  
+  sharedprotos.Vec2D moveforward = 7;  
+  double hitboxOffset = 8;  
+  sharedprotos.Vec2D hitboxSize = 9;    
+  int32 originatedRenderFrameId = 10; 
+
+  // for defender
+  int32 hitStunFrames = 11; 
+  int32 blockStunFrames = 12; 
+  double pushback = 13;  
+
+  int32 releaseTriggerType = 14; // 1: rising-edge, 2: falling-edge  
+  int32 damage = 15;   
+
+  int32 offenderJoinIndex = 16;    
+  int32 offenderPlayerId = 17;    
+} 
+
 message BattleColliderInfo {
   string stageName = 1;
   map<string, sharedprotos.Vec2DList> strToVec2DListMap = 2; 
@@ -31,69 +123,14 @@ message BattleColliderInfo {
   double virtualGridToWorldRatio = 22;
 
   int32 spAtkLookupFrames = 23;
-}
+  int32 renderCacheSize = 24;
 
-message PlayerDownsync {
-  int32 id = 1;
-  int32 virtualGridX = 2; 
-  int32 virtualGridY = 3; 
-  sharedprotos.Direction dir = 4;
-  int32 speed = 5; // in terms of virtual grid units
-  int32 battleState = 6;
-  int32 joinIndex = 7;
-  double colliderRadius = 8;
-  bool removed = 9;
-  int32 score = 10;
-  int32 lastMoveGmtMillis = 11;
-
-  string name = 12;
-  string displayName = 13;
-  string avatar = 14;
-}
-
-message InputFrameDecoded {
-  int32 dx = 1;
-  int32 dy = 2;
-  int32 btnALevel = 3;
-}
-
-message InputFrameUpsync {
-  int32 inputFrameId = 1;
-  uint64 encoded = 2;
-}
-
-message InputFrameDownsync {
-  int32 inputFrameId = 1;
-  repeated uint64 inputList = 2; // Indexed by "joinIndex", we try to compress the "single player input" into 1 word (64-bit for 64-bit Golang runtime) because atomic compare-and-swap only works on 1 word. Although CAS on custom struct is possible in Golang 1.19 https://pkg.go.dev/sync/atomic@go1.19.1#Value.CompareAndSwap, using a single word is still faster whenever possible. 
-  uint64 confirmedList = 3; // Indexed by "joinIndex", same compression concern as above
-}
-
-message HeartbeatUpsync {
-  int64 clientTimestamp = 1;     
+  map<int32, MeleeBullet> meleeSkillConfig = 25; // skillId -> skill
 }
 
 message RoomDownsyncFrame {
   int32 id = 1;
   map<int32, PlayerDownsync> players = 2;
   int64 countdownNanos = 3;
-}
-
-message WsReq {
-  int32 msgId = 1;
-  int32 playerId = 2;
-  int32 act = 3;    
-  int32 joinIndex = 4;
-  int32 ackingFrameId = 5;
-  int32 ackingInputFrameId = 6;
-  repeated InputFrameUpsync inputFrameUpsyncBatch = 7; 
-  HeartbeatUpsync hb = 8; 
-}
-
-message WsResp {
-  int32 ret = 1;
-  int32 echoedMsgId = 2;    
-  int32 act = 3; 
-  RoomDownsyncFrame rdf = 4; 
-  repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
-  BattleColliderInfo bciFrame = 6; 
+  repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
 }

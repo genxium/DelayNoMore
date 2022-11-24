@@ -23,23 +23,6 @@ module.export = cc.Class({
     self.ctrl = joystickInputControllerScriptIns;
   },
 
-  scheduleNewDirection(newScheduledDirection, forceAnimSwitch) {
-    if (!newScheduledDirection) {
-      return;
-    }
-
-    if (forceAnimSwitch || null == this.activeDirection || (newScheduledDirection.dx != this.activeDirection.dx || newScheduledDirection.dy != this.activeDirection.dy)) {
-      this.activeDirection = newScheduledDirection;
-      if (this.animComp && this.animComp.node) {
-        if (0 > newScheduledDirection.dx) {
-          this.animComp.node.scaleX = (-1.0);
-        } else if (0 < newScheduledDirection.dx) {
-          this.animComp.node.scaleX = (1.0);
-        }
-      }
-    }
-  },
-
   update(dt) {},
 
   lateUpdate(dt) {},

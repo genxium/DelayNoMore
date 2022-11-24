@@ -3,48 +3,36 @@ i18n.init(window.language); // languageID should be equal to the one we input in
 
 const OnlineMap = require('./Map');
 
+window.PunchAtkConfig = {
+  // for offender
+  startupFrames: 18,
+  activeFrames: 42,
+  recoveryFrames: 61, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+  recoveryFramesOnBlock: 61,
+  recoveryFramesOnHit: 61,
+  moveforward: {
+    x: 0,
+    y: 0,
+  },
+  hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
+  hitboxSize: {
+    x: 45.0,
+    y: 32.0,
+  },
+
+  // for defender
+  hitStunFrames: 18,
+  blockStunFrames: 9,
+  pushback: 22.0,
+  releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
+  damage: 5
+};
+
 cc.Class({
   extends: OnlineMap,
 
   onDestroy() {
     console.warn("+++++++ Map onDestroy()");
-  },
-
-  spawnPlayerNode(joinIndex, vx, vy, playerRichInfo) {
-    const self = this;
-    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
-    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
-    if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierElf");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierFireGhost");
-      playerScriptIns.animComp.node.scaleX = (-1.0);
-    }
-    const wpos = self.virtualGridToWorldPos(vx, vy);
-
-    newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
-
-    playerScriptIns.mapNode = self.node;
-    const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerRichInfo);
-    const d = playerRichInfo.colliderRadius * 2,
-      x0 = cpos[0],
-      y0 = cpos[1];
-    let pts = [[0, 0], [d, 0], [d, d], [0, d]];
-
-    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
-
-    safelyAddChild(self.node, newPlayerNode);
-    setLocalZOrder(newPlayerNode, 5);
-
-    newPlayerNode.active = true;
-    playerScriptIns.scheduleNewDirection({
-      dx: playerRichInfo.dir.dx,
-      dy: playerRichInfo.dir.dy
-    }, true);
-
-    return [newPlayerNode, playerScriptIns];
   },
 
   onLoad() {
@@ -73,7 +61,6 @@ cc.Class({
     self.rollbackEstimatedDt = 0.016667;
     self.rollbackEstimatedDtMillis = 16.667;
     self.rollbackEstimatedDtNanos = 16666666;
-    self.maxChasingRenderFramesPerUpdate = 5;
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
@@ -153,22 +140,30 @@ cc.Class({
             virtualGridX: 0,
             virtualGridY: 0,
             speed: 2 * self.worldToVirtualGridRatio,
-            dir: {
-              dx: 0,
-              dy: 0
-            }
-          },
-        },
-        playerMetas: {
-          10: {
             colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            framesToRecover: 0,
+            dirX: 0,
+            dirY: 0,
+          },
+          11: {
+            id: 11,
+            joinIndex: 2,
+            virtualGridX: 80 * self.worldToVirtualGridRatio,
+            virtualGridY: 40 * self.worldToVirtualGridRatio,
+            speed: 2 * self.worldToVirtualGridRatio,
+            colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            framesToRecover: 0,
+            dirX: 0,
+            dirY: 0,
           },
         }
       };
       self.selfPlayerInfo = {
         id: 10
       };
-      self._initPlayerRichInfoDict(startRdf.players, startRdf.playerMetas);
+      self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;

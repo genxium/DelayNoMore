@@ -4,6 +4,7 @@ window.ATK_CHARACTER_STATE = {
   Idle1: [0, "Idle1"],
   Walking: [1, "Walking"],
   Atk1: [2, "Atk1"],
+  Atked1: [3, "Atked1"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];
@@ -22,6 +23,9 @@ cc.Class({
 
   ctor() {
     this.speciesName = null;
+    this.hp = 100;
+    this.maxHp = 100;
+    this.framesToRecover = 0;
   },
 
   setSpecies(speciesName) {
@@ -34,28 +38,29 @@ cc.Class({
 
   onLoad() {
     BaseCharacter.prototype.onLoad.call(this);
-    this.characterState = ATK_CHARACTER_STATE.Idle1[0];
   },
 
-  scheduleNewDirection(newScheduledDirection, forceAnimSwitch) {
-    const oldDx = this.activeDirection.dx, oldDy = this.activeDirection.dy; 
-    BaseCharacter.prototype.scheduleNewDirection.call(this, newScheduledDirection, forceAnimSwitch);
-    if (ATK_CHARACTER_STATE.Atk1[0] == this.characterState) {
-      return;
-    }
-
-    let newCharacterState = ATK_CHARACTER_STATE.Idle1[0];
-    if (0 != newScheduledDirection.dx || 0 != newScheduledDirection.dy) {
-      newCharacterState = ATK_CHARACTER_STATE.Walking[0];
-    }
-
-    if (newCharacterState != this.characterState) {
-      this.characterState = newCharacterState;
-      const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
-      if (newAnimName != this.animComp.animationName) {
-        this.animComp.playAnimation(newAnimName);
-    	// console.log(`JoinIndex=${this.joinIndex}, Resetting anim to ${newAnimName}, dir changed: (${oldDx}, ${oldDy}) -> (${newScheduledDirection.dx}, ${newScheduledDirection.dy})`);
+  updateCharacterAnim(newScheduledDirection, rdfPlayer, forceAnimSwitch) {
+    if (0 == rdfPlayer.framesToRecover) {
+      // Update directions
+      if (forceAnimSwitch || null == this.activeDirection || (null != newScheduledDirection && (newScheduledDirection.dx != this.activeDirection.dx || newScheduledDirection.dy != this.activeDirection.dy))) {
+        this.activeDirection = newScheduledDirection;
+        if (this.animComp && this.animComp.node) {
+          if (0 > newScheduledDirection.dx) {
+            this.animComp.node.scaleX = (-1.0);
+          } else if (0 < newScheduledDirection.dx) {
+            this.animComp.node.scaleX = (1.0);
+          }
+        }
       }
+    }
+
+    // Update per character state
+    let newCharacterState = rdfPlayer.characterState;
+    const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
+    if (newAnimName != this.animComp.animationName) {
+      this.animComp.playAnimation(newAnimName);
+    // console.log(`JoinIndex=${this.joinIndex}, Resetting anim to ${newAnimName}, dir changed: (${oldDx}, ${oldDy}) -> (${newScheduledDirection.dx}, ${newScheduledDirection.dy})`);
     }
   },
 });
