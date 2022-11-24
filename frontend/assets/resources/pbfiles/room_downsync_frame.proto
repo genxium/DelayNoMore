@@ -4,36 +4,6 @@ option go_package = "battle_srv/protos"; // here "./" corresponds to the "--go_o
 package protos;
 import "geometry.proto"; // The import path here is only w.r.t. the proto file, not the Go package.
 
-message BattleColliderInfo {
-  string stageName = 1;
-  map<string, sharedprotos.Vec2DList> strToVec2DListMap = 2; 
-  map<string, sharedprotos.Polygon2DList> strToPolygon2DListMap = 3; 
-  int32 stageDiscreteW = 4;
-  int32 stageDiscreteH = 5;
-  int32 stageTileW = 6;
-  int32 stageTileH = 7;
-
-  int32 intervalToPing        = 8;
-  int32 willKickIfInactiveFor = 9;
-  int32 boundRoomId           = 10;
-  int64 battleDurationNanos   = 11;
-  int32 serverFps             = 12;
-  int32 inputDelayFrames      = 13;
-  uint32 inputScaleFrames     = 14;
-  int32 nstDelayFrames        = 15;
-  int32 inputFrameUpsyncDelayTolerance = 16;  
-  int32 maxChasingRenderFramesPerUpdate = 17;
-  int32 playerBattleState = 18;
-  double rollbackEstimatedDtMillis = 19;
-  int64 rollbackEstimatedDtNanos = 20;
- 
-  double worldToVirtualGridRatio = 21;
-  double virtualGridToWorldRatio = 22;
-
-  int32 spAtkLookupFrames = 23;
-  int32 renderCacheSize = 24;
-}
-
 message PlayerDownsync {
   int32 id = 1;
   int32 virtualGridX = 2; 
@@ -125,6 +95,38 @@ message MeleeBullet {
   int32 offenderJoinIndex = 16;    
   int32 offenderPlayerId = 17;    
 } 
+
+message BattleColliderInfo {
+  string stageName = 1;
+  map<string, sharedprotos.Vec2DList> strToVec2DListMap = 2; 
+  map<string, sharedprotos.Polygon2DList> strToPolygon2DListMap = 3; 
+  int32 stageDiscreteW = 4;
+  int32 stageDiscreteH = 5;
+  int32 stageTileW = 6;
+  int32 stageTileH = 7;
+
+  int32 intervalToPing        = 8;
+  int32 willKickIfInactiveFor = 9;
+  int32 boundRoomId           = 10;
+  int64 battleDurationNanos   = 11;
+  int32 serverFps             = 12;
+  int32 inputDelayFrames      = 13;
+  uint32 inputScaleFrames     = 14;
+  int32 nstDelayFrames        = 15;
+  int32 inputFrameUpsyncDelayTolerance = 16;  
+  int32 maxChasingRenderFramesPerUpdate = 17;
+  int32 playerBattleState = 18;
+  double rollbackEstimatedDtMillis = 19;
+  int64 rollbackEstimatedDtNanos = 20;
+ 
+  double worldToVirtualGridRatio = 21;
+  double virtualGridToWorldRatio = 22;
+
+  int32 spAtkLookupFrames = 23;
+  int32 renderCacheSize = 24;
+
+  map<int32, MeleeBullet> meleeSkillConfig = 25; // skillId -> skill
+}
 
 message RoomDownsyncFrame {
   int32 id = 1;

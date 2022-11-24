@@ -343,6 +343,7 @@
     "forceBigEndianFloatingNumDecoding": false,
     "renderFrameIdLagTolerance": 4,
     "jigglingEps1D": 0.001,
+    "bulletTriggerEnabled": true,
     "_id": "d12gkAmppNlIzqcRDELa91"
   },
   {
@@ -522,7 +523,7 @@
       "array": [
         0,
         0,
-        239.32248305180272,
+        210.23252687912068,
         0,
         0,
         0,
@@ -1482,7 +1483,6 @@
     "zoomingListenerNode": {
       "__id__": 5
     },
-    "actionBtnListenerNode": null,
     "stickhead": {
       "__id__": 25
     },

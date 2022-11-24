@@ -1085,18 +1085,23 @@ cc.Class({
 
     bulletColliders.forEach((bulletCollider, collisionBulletIndex) => {
       const potentials = bulletCollider.potentials();
+      const offender = currRenderFrame.players[bulletCollider.data.offenderPlayerId];
       let shouldRemove = false;
       for (const potential of potentials) {
         if (null != potential.data && potential.data.joinIndex == bulletCollider.data.offenderJoinIndex) continue;
         if (!bulletCollider.collides(potential, result1)) continue;
         if (null != potential.data && null !== potential.data.joinIndex) {
           const joinIndex = potential.data.joinIndex;
-          bulletPushbacks[joinIndex - 1][0] += bulletCollider.data.pushback; // Only for straight punch, there's no y-pushback
+          let xfac = 1;
+          if (0 > offender.dirX) {
+            xfac = -1;
+          }
+          bulletPushbacks[joinIndex - 1][0] += xfac * bulletCollider.data.pushback; // Only for straight punch, there's no y-pushback
           bulletPushbacks[joinIndex - 1][1] += 0;
           const thatAckedPlayerInNextFrame = nextRenderFramePlayers[potential.data.id];
           thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
-          const oldFrameToRecover = thatAckedPlayerInNextFrame.framesToRecover;
-          thatAckedPlayerInNextFrame.framesToRecover = (oldFrameToRecover > bulletCollider.data.hitStunFrames ? oldFrameToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
+          const oldFramesToRecover = thatAckedPlayerInNextFrame.framesToRecover;
+          thatAckedPlayerInNextFrame.framesToRecover = (oldFramesToRecover > bulletCollider.data.hitStunFrames ? oldFramesToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
         }
         shouldRemove = true;
       }
@@ -1156,14 +1161,14 @@ cc.Class({
             punch.offenderPlayerId = playerId;
             punch.originatedRenderFrameId = currRenderFrame.id;
             toRet.meleeBullets.push(punch);
-            console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${JSON.stringify(punch)}`);
+            console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
 
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
           }
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
         } else {
-          // No trigger, process movement inputs
+          // No bullet trigger, process movement inputs
           if (0 != decodedInput.dx || 0 != decodedInput.dy) {
             // Update directions and thus would eventually update moving animation accordingly
             thatPlayerInNextFrame.dirX = decodedInput.dx;

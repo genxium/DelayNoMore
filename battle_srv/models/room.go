@@ -62,6 +62,13 @@ const (
 	MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED      = -2
 )
 
+const (
+	ATK_CHARACTER_STATE_IDLE1   = 0
+	ATK_CHARACTER_STATE_WALKING = 1
+	ATK_CHARACTER_STATE_ATK1    = 2
+	ATK_CHARACTER_STATE_ATKED1  = 3
+)
+
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
 var DIRECTION_DECODER = [][]int32{
 	{0, 0},
@@ -166,7 +173,8 @@ type Room struct {
 	LastRenderFrameIdTriggeredAt int64
 	PlayerDefaultSpeed           int32
 
-	BattleColliderInfo // Compositing to send centralized magic numbers
+	BulletBattleLocalIdCounter int32
+	BattleColliderInfo         // Compositing to send centralized magic numbers
 }
 
 func (pR *Room) updateScore() {
@@ -353,6 +361,7 @@ func (pR *Room) InputsBufferString(allDetails bool) string {
 				break
 			}
 			f := tmp.(*InputFrameDownsync)
+			//s = append(s, fmt.Sprintf("{inputFrameId: %v, inputList: %v, &inputList: %p, confirmedList: %v}", f.InputFrameId, f.InputList, &(f.InputList), f.ConfirmedList))
 			s = append(s, fmt.Sprintf("{inputFrameId: %v, inputList: %v, confirmedList: %v}", f.InputFrameId, f.InputList, f.ConfirmedList))
 		}
 
@@ -618,7 +627,6 @@ func (pR *Room) OnBattleCmdReceived(pReq *WsReq) {
 			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
-
 		bufIndex := pR.toDiscreteInputsBufferIndex(clientInputFrameId, pReq.JoinIndex)
 		pR.DiscreteInputsBuffer.Store(bufIndex, inputFrameUpsync)
 
@@ -763,6 +771,7 @@ func (pR *Room) Dismiss() {
 func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
+	pR.BulletBattleLocalIdCounter = 0
 	pR.WorldToVirtualGridRatio = float64(1000)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
 	pR.SpAtkLookupFrames = 5
@@ -774,7 +783,7 @@ func (pR *Room) OnDismissed() {
 	pR.PlayerSignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.JoinIndexBooleanArr = make([]bool, pR.Capacity)
 	pR.Barriers = make(map[int32]*Barrier)
-	pR.RenderCacheSize = 256
+	pR.RenderCacheSize = 512
 	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.DiscreteInputsBuffer = sync.Map{}
 	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 2) + 1)
@@ -797,6 +806,34 @@ func (pR *Room) OnDismissed() {
 	pR.MaxChasingRenderFramesPerUpdate = 8
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	punchSkillId := int32(1)
+	if _, existent := pR.MeleeSkillConfig[punchSkillId]; !existent {
+		pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
+		pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
+			// for offender
+			StartupFrames:         int32(18),
+			ActiveFrames:          int32(42),
+			RecoveryFrames:        int32(61), // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+			RecoveryFramesOnBlock: int32(61),
+			RecoveryFramesOnHit:   int32(61),
+			Moveforward: &Vec2D{
+				X: 0,
+				Y: 0,
+			},
+			HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
+			HitboxSize: &Vec2D{
+				X: float64(45.0),
+				Y: float64(32.0),
+			},
+
+			// for defender
+			HitStunFrames:      int32(18),
+			BlockStunFrames:    int32(9),
+			Pushback:           float64(22.0),
+			ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
+			Damage:             int32(5),
+		}
+	}
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1039,7 +1076,10 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync
 			panic(fmt.Sprintf("Error prefabbing inputFrameDownsync: roomId=%v, InputsBuffer=%v", pR.Id, pR.InputsBufferString(false)))
 		}
 		prevInputFrameDownsync := tmp.(*InputFrameDownsync)
-		currInputList := prevInputFrameDownsync.InputList // Would be a clone of the values
+		currInputList := make([]uint64, pR.Capacity) // Would be a clone of the values
+		for i, _ := range currInputList {
+			currInputList[i] = (prevInputFrameDownsync.InputList[i] & uint64(15)) // Don't predict attack input
+		}
 		currInputFrameDownsync = &InputFrameDownsync{
 			InputFrameId:  inputFrameId,
 			InputList:     currInputList,
@@ -1216,38 +1256,52 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			if 0 > offender.DirX {
 				xfac = float64(-1.0)
 			}
-			offenderWx, offenderWy := PolygonColliderAnchorToWorldPos(offenderCollider.X, offenderCollider.Y, offender.ColliderRadius, offender.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 
-			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy+yfac*meleeBullet.HitboxOffset
+			bulletCx, bulletCy := offenderCollider.X+xfac*meleeBullet.HitboxOffset, offenderCollider.Y+yfac*meleeBullet.HitboxOffset
 
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
-			// newBulletCollider.collisionBulletIndex = collisionBulletIndex
-			// newBulletCollider.offenderPlayerId = meleeBullet.offenderPlayerId
-			// newBulletCollider.pushback = meleeBullet.pushback
-			// newBulletCollider.hitStunFrames = meleeBullet.hitStunFrames
+			newBulletCollider := GenerateRectCollider(bulletCx, bulletCy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
+			newBulletCollider.Data = meleeBullet
 			collisionSysMap[collisionBulletIndex] = newBulletCollider
 			bulletColliders[collisionBulletIndex] = newBulletCollider
 			newBulletCollider.Update()
 		}
 	}
 
-	// for _, bulletCollider := range bulletColliders {
-	// 	shouldRemove := false
-	// 	if collision := bulletCollider.Check(0, 0); collision != nil {
-	// 		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-	// 		for _, obj := range collision.Objects {
-	// 			bShape := obj.Shape.(*resolv.ConvexPolygon)
-	// 			if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, bulletShape, bShape); overlapped {
-	// 				bulletPushbacks[joinIndex-1].X += pushbackX
-	// 				bulletPushbacks[joinIndex-1].Y += pushbackY
-	// 			}
-	// 		}
-	// 		shouldRemove = true
-	// 	}
-	// 	if shouldRemove {
-	// 		removedBulletsAtCurrFrame[bulletCollider.CollisionBulletIndex] = 1
-	// 	}
-	// }
+	for _, bulletCollider := range bulletColliders {
+		shouldRemove := false
+		meleeBullet := bulletCollider.Data.(*MeleeBullet)
+		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
+		if collision := bulletCollider.Check(0, 0); collision != nil {
+			offender := currRenderFrame.Players[meleeBullet.OffenderPlayerId]
+			bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+			for _, obj := range collision.Objects {
+				switch t := obj.Data.(type) {
+				case Player:
+					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+					if meleeBullet.OffenderPlayerId != t.Id {
+						if overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape); overlapped {
+							xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
+							if 0 > offender.DirX {
+								xfac = float64(-1.0)
+							}
+							bulletPushbacks[t.JoinIndex-1].X += xfac * meleeBullet.Pushback
+							nextRenderFramePlayers[t.Id].CharacterState = ATK_CHARACTER_STATE_ATKED1
+							oldFramesToRecover := nextRenderFramePlayers[t.Id].FramesToRecover
+							if meleeBullet.HitStunFrames > oldFramesToRecover {
+								nextRenderFramePlayers[t.Id].FramesToRecover = meleeBullet.HitStunFrames
+							}
+						}
+					}
+				default:
+					Logger.Debug(fmt.Sprintf("Bullet collided with non-player: roomId=%v, currRenderFrame.Id=%v, delayedInputFrame.Id=%v", pR.Id, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+				}
+			}
+			shouldRemove = true
+		}
+		if shouldRemove {
+			removedBulletsAtCurrFrame[collisionBulletIndex] = 1
+		}
+	}
 
 	for _, meleeBullet := range currRenderFrame.MeleeBullets {
 		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
@@ -1262,27 +1316,59 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 	}
 
 	if nil != delayedInputFrame {
+		var delayedInputFrameForPrevRenderFrame *InputFrameDownsync = nil
+		tmp := pR.InputsBuffer.GetByFrameId(pR.ConvertToInputFrameId(currRenderFrame.Id-1, pR.InputDelayFrames))
+		if nil != tmp {
+			delayedInputFrameForPrevRenderFrame = tmp.(*InputFrameDownsync)
+		}
 		inputList := delayedInputFrame.InputList
 		// Process player inputs
 		for playerId, player := range pR.Players {
 			joinIndex := player.JoinIndex
 			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 			playerCollider := collisionSysMap[collisionPlayerIndex]
-			if 0 < nextRenderFramePlayers[playerId].FramesToRecover {
+			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
+			if 0 < thatPlayerInNextFrame.FramesToRecover {
 				// No need to process inputs for this player, but there might be bullet pushbacks on this player
 				playerCollider.X += bulletPushbacks[joinIndex-1].X
 				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
+				// Update in the collision system
+				playerCollider.Update()
 				continue
 			}
 			currPlayerDownsync := currRenderFrame.Players[playerId]
 			decodedInput := pR.decodeInput(inputList[joinIndex-1])
+			prevBtnALevel := int32(0)
+			if nil != delayedInputFrameForPrevRenderFrame {
+				prevDecodedInput := pR.decodeInput(delayedInputFrameForPrevRenderFrame.InputList[joinIndex-1])
+				prevBtnALevel = prevDecodedInput.BtnALevel
+			}
 
-			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
-				nextRenderFramePlayers[playerId].DirX = decodedInput.Dx
-				nextRenderFramePlayers[playerId].DirY = decodedInput.Dy
-				nextRenderFramePlayers[playerId].CharacterState = 1
+			if decodedInput.BtnALevel > prevBtnALevel {
+				punchSkillId := int32(1)
+				punchConfig := pR.MeleeSkillConfig[punchSkillId]
+				var newMeleeBullet MeleeBullet = *punchConfig
+				newMeleeBullet.BattleLocalId = pR.BulletBattleLocalIdCounter
+				pR.BulletBattleLocalIdCounter += 1
+				newMeleeBullet.OffenderJoinIndex = joinIndex
+				newMeleeBullet.OffenderPlayerId = playerId
+				newMeleeBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				toRet.MeleeBullets = append(toRet.MeleeBullets, &newMeleeBullet)
+				thatPlayerInNextFrame.FramesToRecover = newMeleeBullet.RecoveryFrames
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
+				Logger.Info(fmt.Sprintf("roomId=%v, playerId=%v triggered a rising-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+
+			} else if decodedInput.BtnALevel < prevBtnALevel {
+				Logger.Info(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 			} else {
-				nextRenderFramePlayers[playerId].CharacterState = 0
+				// No bullet trigger, process movement inputs
+				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
+					thatPlayerInNextFrame.DirX = decodedInput.Dx
+					thatPlayerInNextFrame.DirY = decodedInput.Dy
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+				}
 			}
 
 			movementX, movementY := VirtualGridToWorldPos(decodedInput.Dx+decodedInput.Dx*currPlayerDownsync.Speed, decodedInput.Dy+decodedInput.Dy*currPlayerDownsync.Speed, pR.VirtualGridToWorldRatio)
@@ -1320,8 +1406,8 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 			// Update "virtual grid position"
 			newVx, newVy := PolygonColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
-			nextRenderFramePlayers[playerId].VirtualGridX = newVx
-			nextRenderFramePlayers[playerId].VirtualGridY = newVy
+			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
+			thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = newVx, newVy
 		}
 
 		Logger.Debug(fmt.Sprintf("After applyInputFrameDownsyncDynamicsOnSingleRenderFrame: currRenderFrame.Id=%v, inputList=%v, currRenderFrame.Players=%v, nextRenderFramePlayers=%v", currRenderFrame.Id, inputList, currRenderFrame.Players, nextRenderFramePlayers))
@@ -1352,6 +1438,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
 		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
+		playerCollider.Data = player
 		space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
