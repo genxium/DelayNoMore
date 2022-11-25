@@ -59,6 +59,9 @@ cc.Class({
     if (newCharacterState != prevCharacterState) {
       if (newAnimName == this.animComp.animationName) {
         if (ATK_CHARACTER_STATE.Idle1[0] == newCharacterState || ATK_CHARACTER_STATE.Walking[0] == newCharacterState) {
+          if (false == this.animComp._playing) {
+            this.animComp.playAnimation(newAnimName);
+          }
           // No need to interrupt
           // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
           return;
@@ -71,6 +74,7 @@ cc.Class({
         // the playing animation was falsely predicted
         this._interruptPlayingAnimAndPlayNewAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName);
       }
+    // TODO: What if (newAnimName == this.animComp.animationName) but (false == this.animComp._playing) by now? Do we just force it to play from beginning or use "this._interruptPlayingAnimAndPlayNewAnim"? 
     }
   },
 
