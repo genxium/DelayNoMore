@@ -53,13 +53,43 @@ cc.Class({
     // Update per character state
     let newCharacterState = rdfPlayer.characterState;
     let prevCharacterState = (null == prevRdfPlayer ? window.ATK_CHARACTER_STATE.Idle1[0] : prevRdfPlayer.characterState);
+    const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
+
+    // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevCharacterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
     if (newCharacterState != prevCharacterState) {
-      const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
-      // Anim is edge-triggered
       if (newAnimName == this.animComp.animationName) {
-        console.warn(`JoinIndex=${rdfPlayer.joinIndex}, possibly playing weird anim by resetting anim to ${newAnimName} while the playing anim is also ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, to: ${JSON.stringify(rdfPlayer)}`);
+        if (ATK_CHARACTER_STATE.Idle1[0] == newCharacterState || ATK_CHARACTER_STATE.Walking[0] == newCharacterState) {
+          // No need to interrupt
+          // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
+          return;
+        }
       }
+      this._interruptPlayingAnimAndPlayNewAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName);
+    } else {
+      // newCharacterState == prevCharacterState
+      if (newAnimName != this.animComp.animationName) {
+        // the playing animation was falsely predicted
+        this._interruptPlayingAnimAndPlayNewAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName);
+      }
+    }
+  },
+
+  _interruptPlayingAnimAndPlayNewAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName) {
+    if (ATK_CHARACTER_STATE.Idle1[0] == newCharacterState || ATK_CHARACTER_STATE.Walking[0] == newCharacterState) {
+      // No "framesToRecover"
+      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, playing new ${newAnimName} from the beginning: while the playing anim is ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
       this.animComp.playAnimation(newAnimName);
+    } else {
+      const animationData = this.animComp._armature.animation._animations[newAnimName];
+      let fromAnimFrame = (animationData.frameCount - rdfPlayer.framesToRecover);
+      if (fromAnimFrame > 0) {
+        // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, playing ${newAnimName} from the middle: rdfPlayer.framesToRecover=${rdfPlayer.framesToRecover} while the playing anim is ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}`);
+      } else if (fromAnimFrame < 0) {
+        // For Atk1 or Atk2, it's possible that the "meleeBullet.recoveryFrames" is configured to be slightly larger than corresponding animation duration frames
+        fromAnimFrame = 0;
+      }
+      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, playing ${newAnimName} from the middle: fromAnimFrame=${fromAnimFrame}, animFrameCount=${animationData.frameCount}, rdfPlayer.framesToRecover=${rdfPlayer.framesToRecover} while the playing anim is ${this.animComp.animationName}`);
+      this.animComp._armature.animation.gotoAndPlayByFrame(newAnimName, fromAnimFrame);
     }
   },
 });
