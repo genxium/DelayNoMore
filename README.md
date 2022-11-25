@@ -2,9 +2,10 @@
 
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
 
-![gif_demo](./charts/along_wall_interaction_with_reconnection.gif)
+_(the following gif is sped up to 2x for file size reduction)_
+![gif_demo](./charts/melee_attack_2.gif)
 
-Please also checkout [this demo video](https://pan.baidu.com/s/1YkfuHjNLzlFVnKiEj6wrDQ?pwd=tkr5) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
+Please also checkout [this demo video](https://pan.baidu.com/s/1fy0CuFKnVP_Gn2cDfrj6yg?pwd=q5uc) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
 The video mainly shows the following features.
 - The backend receives inputs from frontend peers and broadcasts back for synchronization.

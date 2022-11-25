@@ -69,6 +69,10 @@ const (
 	ATK_CHARACTER_STATE_ATKED1  = 3
 )
 
+const (
+	DEFAULT_PLAYER_RADIUS = float64(16)
+)
+
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
 var DIRECTION_DECODER = [][]int32{
 	{0, 0},
@@ -192,8 +196,8 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
-	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed // Hardcoded
-	pPlayerFromDbInit.ColliderRadius = float64(12)  // Hardcoded
+	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed          // Hardcoded
+	pPlayerFromDbInit.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -218,15 +222,16 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	 * -- YFLu
 	 */
 	defer pR.onPlayerReAdded(playerId)
-	pR.PlayerDownsyncSessionDict[playerId] = session
-	pR.PlayerSignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
 	pEffectiveInRoomPlayerInstance := pR.Players[playerId]
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
-	pEffectiveInRoomPlayerInstance.Speed = pR.PlayerDefaultSpeed // Hardcoded
-	pEffectiveInRoomPlayerInstance.ColliderRadius = float64(16)  // Hardcoded
+	pEffectiveInRoomPlayerInstance.Speed = pR.PlayerDefaultSpeed          // Hardcoded
+	pEffectiveInRoomPlayerInstance.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
+
+	pR.PlayerDownsyncSessionDict[playerId] = session
+	pR.PlayerSignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("joinIndex", pEffectiveInRoomPlayerInstance.JoinIndex), zap.Any("playerBattleState", pEffectiveInRoomPlayerInstance.BattleState), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId), zap.Any("LastSentInputFrameId", pEffectiveInRoomPlayerInstance.LastSentInputFrameId))
 	return true
@@ -813,7 +818,7 @@ func (pR *Room) OnDismissed() {
 			X: 0,
 			Y: 0,
 		},
-		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
+		HitboxOffset: float64(24.0), // should be about the radius of the PlayerCollider
 		HitboxSize: &Vec2D{
 			X: float64(45.0),
 			Y: float64(32.0),
@@ -945,6 +950,14 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 				panic(fmt.Sprintf("onPlayerAdded error, nil == playerPos, roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
 			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = WorldToVirtualGridPos(playerPos.X, playerPos.Y, pR.WorldToVirtualGridRatio)
+			// Hardcoded initial character orientation/facing
+			if 0 == (pR.Players[playerId].JoinIndex % 2) {
+				pR.Players[playerId].DirX = -2
+				pR.Players[playerId].DirY = 0
+			} else {
+				pR.Players[playerId].DirX = +2
+				pR.Players[playerId].DirY = 0
+			}
 
 			break
 		}

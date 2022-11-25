@@ -191,8 +191,8 @@ cc.Class({
           currSelfInput = prevAndCurrInputs[1];
         }
 
-        const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
-        self.applyRoomDownsyncFrameDynamics(rdf);
+        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
+        self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         let t3 = performance.now();
       } catch (err) {
         console.error("Error during Map.update", err);

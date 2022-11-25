@@ -537,7 +537,7 @@ cc.Class({
       window.initPersistentSessionClient(self.initAfterWSConnected, boundRoomId);
     } else {
       self.showPopupInCanvas(self.gameRuleNode);
-    // Deliberately left blank. -- YFLu
+      // Deliberately left blank. -- YFLu
     }
   },
 
@@ -630,7 +630,7 @@ cc.Class({
     }
     self.transitToState(ALL_MAP_STATES.VISUAL);
     self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
-    self.applyRoomDownsyncFrameDynamics(rdf);
+    self.applyRoomDownsyncFrameDynamics(rdf, self.recentRenderCache.getByFrameId(rdf.id - 1));
 
     return dumpRenderCacheRet;
   },
@@ -752,20 +752,14 @@ cc.Class({
       playerScriptIns.setSpecies("SoldierWaterGhost");
     } else if (2 == joinIndex) {
       playerScriptIns.setSpecies("SoldierFireGhost");
-      if (0 == playerDownsyncInfo.dirX && 0 == playerDownsyncInfo.dirY) {
-        playerScriptIns.animComp.node.scaleX = (-1.0);
-      }
     }
 
-    const wpos = self.virtualGridToWorldPos(vx, vy);
-
-    newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
+    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const cpos = self.virtualGridToPolygonColliderAnchorPos(vx, vy, playerDownsyncInfo.colliderRadius, playerDownsyncInfo.colliderRadius);
     const d = playerDownsyncInfo.colliderRadius * 2,
-      x0 = cpos[0],
-      y0 = cpos[1];
-    let pts = [[0, 0], [d, 0], [d, d], [0, d]];
+      [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, playerDownsyncInfo.colliderRadius, playerDownsyncInfo.colliderRadius),
+      pts = [[0, 0], [d, 0], [d, d], [0, d]];
 
     const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
@@ -776,10 +770,7 @@ cc.Class({
     setLocalZOrder(newPlayerNode, 5);
 
     newPlayerNode.active = true;
-    playerScriptIns.updateCharacterAnim({
-      dx: playerDownsyncInfo.dirX,
-      dy: playerDownsyncInfo.dirY,
-    }, playerDownsyncInfo, true);
+    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
 
     return [newPlayerNode, playerScriptIns];
   },
@@ -798,9 +789,7 @@ cc.Class({
           currSelfInput = null;
         const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
         if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId);
-          prevSelfInput = prevAndCurrInputs[0];
-          currSelfInput = prevAndCurrInputs[1];
+          [prevSelfInput, currSelfInput] = self._generateInputFrameUpsync(noDelayInputFrameId);
         }
 
         let t0 = performance.now();
@@ -820,14 +809,15 @@ cc.Class({
         let t2 = performance.now();
 
         // Inside the following "self.rollbackAndChase" actually ROLLS FORWARD w.r.t. the corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
-        const rdf = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
+        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
         /*
         const nonTrivialChaseEnded = (prevChaserRenderFrameId < nextChaserRenderFrameId && nextChaserRenderFrameId == self.renderFrameId); 
         if (nonTrivialChaseEnded) {
             console.debug("Non-trivial chase ended, prevChaserRenderFrameId=" + prevChaserRenderFrameId + ", nextChaserRenderFrameId=" + nextChaserRenderFrameId);
         }  
         */
-        self.applyRoomDownsyncFrameDynamics(rdf);
+        // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.getByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
+        self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         let t3 = performance.now();
       } catch (err) {
         console.error("Error during Map.update", err);
@@ -962,26 +952,17 @@ cc.Class({
     }
   },
 
-  applyRoomDownsyncFrameDynamics(rdf) {
+  applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
-    const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(rdf.id - 1, self.inputDelayFrames));
-
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
+    for (let [playerId, playerRichInfo] of self.playerRichInfoDict.entries()) {
       const immediatePlayerInfo = rdf.players[playerId];
-      const wpos = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
-      const dx = (wpos[0] - playerRichInfo.node.x);
-      const dy = (wpos[1] - playerRichInfo.node.y);
-      //const justJiggling = (self.jigglingEps1D >= Math.abs(dx) && self.jigglingEps1D >= Math.abs(dy));
-      playerRichInfo.node.setPosition(wpos[0], wpos[1]);
-      // TODO: check "rdf.players[playerId].characterState" instead, might have to play Atk/Atked anim!
-      if (null != delayedInputFrameForPrevRenderFrame) {
-        const decodedInput = self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[playerRichInfo.joinIndex - 1]);
-        playerRichInfo.scriptIns.updateCharacterAnim(decodedInput, immediatePlayerInfo, false);
-      } else {
-        playerRichInfo.scriptIns.updateCharacterAnim(null, immediatePlayerInfo, false);
-      }
+      const prevRdfPlayer = (null == prevRdf ? null : prevRdf.players[playerId]);
+      const [wx, wy] = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
+      //const justJiggling = (self.jigglingEps1D >= Math.abs(wx - playerRichInfo.node.x) && self.jigglingEps1D >= Math.abs(wy - playerRichInfo.node.y));
+      playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
-    });
+      playerRichInfo.scriptIns.updateCharacterAnim(immediatePlayerInfo, prevRdfPlayer, false);
+    }
   },
 
   getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
@@ -1044,9 +1025,7 @@ cc.Class({
 
       const newVx = currPlayerDownsync.virtualGridX;
       const newVy = currPlayerDownsync.virtualGridY;
-      const newCpos = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
-      playerCollider.x = newCpos[0];
-      playerCollider.y = newCpos[1];
+      [playerCollider.x, playerCollider.y] = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
     }
 
     // Check bullet-anything collisions first, because the pushbacks caused by bullets might later be reverted by player-barrier collision 
@@ -1068,16 +1047,15 @@ cc.Class({
         if (0 > offender.dirX) {
           xfac = -1;
         }
-        const offenderWpos = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
-        const bulletWx = offenderWpos[0] + xfac * meleeBullet.hitboxOffset;
-        const bulletWy = offenderWpos[1];
-        const bulletCpos = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5);
-        const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
-        const newBulletCollider = collisionSys.createPolygon(bulletCpos[0], bulletCpos[1], pts);
+        const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
+        const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
+        const bulletWy = offenderWy;
+        const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5), pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const newBulletCollider = collisionSys.createPolygon(bulletCx, bulletCy, pts);
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
         bulletColliders.set(collisionBulletIndex, newBulletCollider);
-      // console.log(`A meleeBullet is added to collisionSys at currRenderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended: ${JSON.stringify(meleeBullet)}`);
+        // console.log(`A meleeBullet is added to collisionSys at currRenderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended: ${JSON.stringify(meleeBullet)}`);
       }
     }
 
@@ -1180,9 +1158,9 @@ cc.Class({
           } else {
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
           }
-          const movement = self.virtualGridToWorldPos(decodedInput.dx + currPlayerDownsync.speed * decodedInput.dx, decodedInput.dy + currPlayerDownsync.speed * decodedInput.dy);
-          playerCollider.x += movement[0];
-          playerCollider.y += movement[1];
+          const [movementX, movementY] = self.virtualGridToWorldPos(decodedInput.dx + currPlayerDownsync.speed * decodedInput.dx, decodedInput.dy + currPlayerDownsync.speed * decodedInput.dy);
+          playerCollider.x += movementX;
+          playerCollider.y += movementY;
         }
       }
 
@@ -1209,10 +1187,8 @@ cc.Class({
         const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-        const newVpos = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
         const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-        thatPlayerInNextFrame.virtualGridX = newVpos[0];
-        thatPlayerInNextFrame.virtualGridY = newVpos[1];
+        [thatPlayerInNextFrame.virtualGridX, thatPlayerInNextFrame.virtualGridY] = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
       }
 
     }
@@ -1225,29 +1201,30 @@ cc.Class({
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd" if not interruptted.
     */
     const self = this;
+    let prevLatestRdf = null;
     let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
     if (null == latestRdf) {
       console.error(`Couldn't find renderFrameId=${renderFrameIdSt}, to rollback, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
-      return latestRdf;
+      return [prevLatestRdf, latestRdf];
     }
 
     if (renderFrameIdSt >= renderFrameIdEd) {
-      return latestRdf;
+      return [prevLatestRdf, latestRdf];
     }
 
     for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
       const currRenderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing", this function can be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
       if (null == currRenderFrame) {
         console.warn(`Couldn't find renderFrame for i=${i} to rollback, self.renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`);
-        return latestRdf;
+        return [prevLatestRdf, latestRdf];
       }
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
       const delayedInputFrame = self.getCachedInputFrameDownsyncWithPrediction(j);
       if (null == delayedInputFrame) {
         console.warn(`Failed to get cached delayedInputFrame for i=${i}, j=${j}, self.renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
-        return latestRdf;
+        return [prevLatestRdf, latestRdf];
       }
-
+      prevLatestRdf = latestRdf;
       latestRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap);
       if (
         self._allConfirmed(delayedInputFrame.confirmedList)
@@ -1269,7 +1246,7 @@ cc.Class({
       self.dumpToRenderCache(latestRdf);
     }
 
-    return latestRdf;
+    return [prevLatestRdf, latestRdf];
   },
 
   _initPlayerRichInfoDict(players) {
@@ -1280,16 +1257,16 @@ cc.Class({
       const immediatePlayerInfo = players[playerId];
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
 
-      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, self.playerRichInfoDict.get(playerId));
+      const [theNode, theScriptIns] = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, immediatePlayerInfo);
 
       Object.assign(self.playerRichInfoDict.get(playerId), {
-        node: nodeAndScriptIns[0],
-        scriptIns: nodeAndScriptIns[1]
+        node: theNode,
+        scriptIns: theScriptIns,
       });
 
       if (self.selfPlayerInfo.id == playerId) {
         self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
-        nodeAndScriptIns[1].showArrowTipNode();
+        theScriptIns.showArrowTipNode();
       }
     }
     self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
@@ -1351,13 +1328,13 @@ cc.Class({
 
   polygonColliderAnchorToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH) {
     const self = this;
-    const wpos = self.polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
-    return self.worldToVirtualGridPos(wpos[0], wpos[1])
+    const [wx, wy] = self.polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
+    return self.worldToVirtualGridPos(wx, wy)
   },
 
   virtualGridToPolygonColliderAnchorPos(vx, vy, halfBoundingW, halfBoundingH) {
     const self = this;
-    const wpos = self.virtualGridToWorldPos(vx, vy);
-    return self.worldToPolygonColliderAnchorPos(wpos[0], wpos[1], halfBoundingW, halfBoundingH)
+    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    return self.worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH)
   },
 });

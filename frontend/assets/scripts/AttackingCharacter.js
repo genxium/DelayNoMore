@@ -40,27 +40,26 @@ cc.Class({
     BaseCharacter.prototype.onLoad.call(this);
   },
 
-  updateCharacterAnim(newScheduledDirection, rdfPlayer, forceAnimSwitch) {
-    if (0 == rdfPlayer.framesToRecover) {
-      // Update directions
-      if (forceAnimSwitch || null == this.activeDirection || (null != newScheduledDirection && (newScheduledDirection.dx != this.activeDirection.dx || newScheduledDirection.dy != this.activeDirection.dy))) {
-        this.activeDirection = newScheduledDirection;
-        if (this.animComp && this.animComp.node) {
-          if (0 > newScheduledDirection.dx) {
-            this.animComp.node.scaleX = (-1.0);
-          } else if (0 < newScheduledDirection.dx) {
-            this.animComp.node.scaleX = (1.0);
-          }
-        }
+  updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch) {
+    // Update directions
+    if (this.animComp && this.animComp.node) {
+      if (0 > rdfPlayer.dirX) {
+        this.animComp.node.scaleX = (-1.0);
+      } else if (0 < rdfPlayer.dirX) {
+        this.animComp.node.scaleX = (1.0);
       }
     }
 
     // Update per character state
     let newCharacterState = rdfPlayer.characterState;
-    const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
-    if (newAnimName != this.animComp.animationName) {
-      this.animComp.playAnimation(newAnimName);
-    // console.log(`JoinIndex=${this.joinIndex}, Resetting anim to ${newAnimName}, dir changed: (${oldDx}, ${oldDy}) -> (${newScheduledDirection.dx}, ${newScheduledDirection.dy})`);
+    let prevCharacterState = (null == prevRdfPlayer ? window.ATK_CHARACTER_STATE.Idle1[0] : prevRdfPlayer.characterState);
+    if (newCharacterState != prevCharacterState) {
+      // Anim is edge-triggered
+      const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
+      if (newAnimName != this.animComp.animationName) {
+        this.animComp.playAnimation(newAnimName);
+        console.log(`JoinIndex=${rdfPlayer.joinIndex}, Resetting anim to ${newAnimName}, state changed: (${prevCharacterState}, prevRdfPlayer is null? ${null == prevRdfPlayer}) -> (${newCharacterState})`);
+      }
     }
   },
 });
