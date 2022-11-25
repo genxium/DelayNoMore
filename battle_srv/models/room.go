@@ -193,7 +193,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed // Hardcoded
-	pPlayerFromDbInit.ColliderRadius = float64(24)  // Hardcoded
+	pPlayerFromDbInit.ColliderRadius = float64(12)  // Hardcoded
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -787,26 +787,26 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
 	pR.InputDelayFrames = 8
-	pR.NstDelayFrames = 8
+	pR.NstDelayFrames = 4
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
-	dilutionFactor := 8
+	dilutionFactor := 12
 	pR.dilutedRollbackEstimatedDtNanos = int64(16666666 * (dilutionFactor) / (dilutionFactor - 1)) // [WARNING] Only used in controlling "battleMainLoop" to be keep a frame rate lower than that of the frontends, such that upon resync(i.e. BackendDynamicsEnabled=true), the frontends would have bigger chances to keep up with or even surpass the backend calculation
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
-	pR.MaxChasingRenderFramesPerUpdate = 8
+	pR.MaxChasingRenderFramesPerUpdate = 5
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	punchSkillId := int32(1)
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
 		// for offender
-		StartupFrames:         int32(18),
-		ActiveFrames:          int32(42),
-		RecoveryFrames:        int32(61), // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+		StartupFrames:         int32(23),
+		ActiveFrames:          int32(3),
+		RecoveryFrames:        int32(61), // I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
 		RecoveryFramesOnBlock: int32(61),
 		RecoveryFramesOnHit:   int32(61),
 		Moveforward: &Vec2D{
@@ -822,7 +822,7 @@ func (pR *Room) OnDismissed() {
 		// for defender
 		HitStunFrames:      int32(18),
 		BlockStunFrames:    int32(9),
-		Pushback:           float64(22.0),
+		Pushback:           float64(11.0),
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
@@ -1244,20 +1244,20 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			offenderCollider := collisionSysMap[collisionOffenderIndex]
 			offender := currRenderFrame.Players[meleeBullet.OffenderPlayerId]
 
-			xfac, yfac := float64(1.0), float64(0) // By now, straight Punch offset doesn't respect "y-axis"
+			xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
 			if 0 > offender.DirX {
 				xfac = float64(-1.0)
 			}
+			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, pR.VirtualGridToWorldRatio)
+			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
 
-			bulletCx, bulletCy := offenderCollider.X+xfac*meleeBullet.HitboxOffset, offenderCollider.Y+yfac*meleeBullet.HitboxOffset
-
-			newBulletCollider := GenerateRectColliderInCollisionSpace(bulletCx, bulletCy, xfac*meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, "MeleeBullet")
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
 			newBulletCollider.Data = meleeBullet
 			pR.Space.Add(newBulletCollider)
 			collisionSysMap[collisionBulletIndex] = newBulletCollider
 			bulletColliders[collisionBulletIndex] = newBulletCollider
 
-			Logger.Debug(fmt.Sprintf("roomId=%v, a meleeBullet is added to collisionSys at currRenderFrame.id=%v as start-up frames ended and active frame is not yet ended: %v, from offenderCollider=%v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(newBulletCollider.Shape.(*resolv.ConvexPolygon)), ConvexPolygonStr(offenderCollider.Shape.(*resolv.ConvexPolygon))))
+			Logger.Debug(fmt.Sprintf("roomId=%v, a meleeBullet is added to collisionSys at currRenderFrame.id=%v as start-up frames ended and active frame is not yet ended: %v, from offenderCollider=%v, xfac=%v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(newBulletCollider.Shape.(*resolv.ConvexPolygon)), ConvexPolygonStr(offenderCollider.Shape.(*resolv.ConvexPolygon)), xfac))
 		}
 	}
 
@@ -1267,13 +1267,11 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
 		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
 		if collision := bulletCollider.Check(0, 0); collision != nil {
-			// FIXME: A bullet going to the "right" can hit a wall or a player (though couldn't identify the player), but if it goes to the "left" then it couldn't hit anything, why?
 			offender := currRenderFrame.Players[meleeBullet.OffenderPlayerId]
-			Logger.Info(fmt.Sprintf("roomId=%v, a meleeBullet collides w/ sth at currRenderFrame.id=%v: %v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape)))
 			for _, obj := range collision.Objects {
+				defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 				switch t := obj.Data.(type) {
-				case Player:
-					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+				case *Player:
 					if meleeBullet.OffenderPlayerId != t.Id {
 						if overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape); overlapped {
 							xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
@@ -1286,15 +1284,14 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 							if meleeBullet.HitStunFrames > oldFramesToRecover {
 								nextRenderFramePlayers[t.Id].FramesToRecover = meleeBullet.HitStunFrames
 							}
+							Logger.Debug(fmt.Sprintf("roomId=%v, a meleeBullet collides w/ player at currRenderFrame.id=%v: b=%v, p=%v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape), ConvexPolygonStr(defenderShape)))
 						}
 					}
 				default:
-					Logger.Debug(fmt.Sprintf("Bullet %v collided with non-player: roomId=%v, currRenderFrame.Id=%v, delayedInputFrame.Id=%v", bulletShape, pR.Id, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+					Logger.Debug(fmt.Sprintf("Bullet %v collided with non-player %v: roomId=%v, currRenderFrame.Id=%v, delayedInputFrame.Id=%v, objDataType=%t, objData=%v", ConvexPolygonStr(bulletShape), ConvexPolygonStr(defenderShape), pR.Id, currRenderFrame.Id, delayedInputFrame.InputFrameId, obj.Data, obj.Data))
 				}
 			}
 			shouldRemove = true
-		} else {
-			Logger.Info(fmt.Sprintf("roomId=%v, meleeBullet doesn't collider w/ anything at currRenderFrame.id=%v: %v; p1=%v, p2=%v; bulletSpace=%p, p1Space=%p, p2Space=%p", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape), ConvexPolygonStr(collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+1].Shape.(*resolv.ConvexPolygon)), ConvexPolygonStr(collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+2].Shape.(*resolv.ConvexPolygon)), bulletCollider.Space, collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+1].Space, collisionSysMap[COLLISION_PLAYER_INDEX_PREFIX+2].Space))
 		}
 		if shouldRemove {
 			removedBulletsAtCurrFrame[collisionBulletIndex] = 1
@@ -1360,7 +1357,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				Logger.Info(fmt.Sprintf("roomId=%v, playerId=%v triggered a rising-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 
 			} else if decodedInput.BtnALevel < prevBtnALevel {
-				Logger.Info(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 			} else {
 				// No bullet trigger, process movement inputs
 				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
@@ -1434,7 +1431,7 @@ func (pR *Room) inputFrameIdDebuggable(inputFrameId int32) bool {
 func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	// Kindly note that by now, we've already got all the shapes in the tmx file into "pR.(Players | Barriers)" from "ParseTmxLayersAndGroups"
 
-	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) >> 1) // the approx minimum distance a player can move per frame in world coordinate
+	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 1) // the approx minimum distance a player can move per frame in world coordinate
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)

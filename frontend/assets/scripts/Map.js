@@ -761,7 +761,7 @@ cc.Class({
 
     newPlayerNode.setPosition(cc.v2(wpos[0], wpos[1]));
     playerScriptIns.mapNode = self.node;
-    const cpos = self.virtualGridToPlayerColliderPos(vx, vy, playerDownsyncInfo);
+    const cpos = self.virtualGridToPolygonColliderAnchorPos(vx, vy, playerDownsyncInfo.colliderRadius, playerDownsyncInfo.colliderRadius);
     const d = playerDownsyncInfo.colliderRadius * 2,
       x0 = cpos[0],
       y0 = cpos[1];
@@ -1044,7 +1044,7 @@ cc.Class({
 
       const newVx = currPlayerDownsync.virtualGridX;
       const newVy = currPlayerDownsync.virtualGridY;
-      const newCpos = self.virtualGridToPlayerColliderPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1]);
+      const newCpos = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
       playerCollider.x = newCpos[0];
       playerCollider.y = newCpos[1];
     }
@@ -1064,15 +1064,16 @@ cc.Class({
         const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
         const offender = currRenderFrame.players[meleeBullet.offenderPlayerId];
 
-        let xfac = 1,
-          yfac = 0; // By now, straight Punch offset doesn't respect "y-axis"
+        let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
         if (0 > offender.dirX) {
           xfac = -1;
         }
-        const x0 = offenderCollider.x + xfac * meleeBullet.hitboxOffset,
-          y0 = offenderCollider.y + yfac * meleeBullet.hitboxOffset;
-        const pts = [[0, 0], [xfac * meleeBullet.hitboxSize.x, 0], [xfac * meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
-        const newBulletCollider = collisionSys.createPolygon(x0, y0, pts);
+        const offenderWpos = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
+        const bulletWx = offenderWpos[0] + xfac * meleeBullet.hitboxOffset;
+        const bulletWy = offenderWpos[1];
+        const bulletCpos = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5);
+        const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const newBulletCollider = collisionSys.createPolygon(bulletCpos[0], bulletCpos[1], pts);
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
         bulletColliders.set(collisionBulletIndex, newBulletCollider);
@@ -1208,7 +1209,7 @@ cc.Class({
         const playerId = self.playerRichInfoArr[j].id;
         const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-        const newVpos = self.playerColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j]);
+        const newVpos = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
         const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
         thatPlayerInNextFrame.virtualGridX = newVpos[0];
         thatPlayerInNextFrame.virtualGridY = newVpos[1];
@@ -1340,23 +1341,23 @@ cc.Class({
     return [wx, wy];
   },
 
-  playerWorldToCollisionPos(wx, wy, playerRichInfo) {
-    return [wx - playerRichInfo.colliderRadius, wy - playerRichInfo.colliderRadius];
+  worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH) {
+    return [wx - halfBoundingW, wy - halfBoundingH];
   },
 
-  playerColliderAnchorToWorldPos(cx, cy, playerRichInfo) {
-    return [cx + playerRichInfo.colliderRadius, cy + playerRichInfo.colliderRadius];
+  polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH) {
+    return [cx + halfBoundingW, cy + halfBoundingH];
   },
 
-  playerColliderAnchorToVirtualGridPos(cx, cy, playerRichInfo) {
+  polygonColliderAnchorToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH) {
     const self = this;
-    const wpos = self.playerColliderAnchorToWorldPos(cx, cy, playerRichInfo);
+    const wpos = self.polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
     return self.worldToVirtualGridPos(wpos[0], wpos[1])
   },
 
-  virtualGridToPlayerColliderPos(vx, vy, playerRichInfo) {
+  virtualGridToPolygonColliderAnchorPos(vx, vy, halfBoundingW, halfBoundingH) {
     const self = this;
     const wpos = self.virtualGridToWorldPos(vx, vy);
-    return self.playerWorldToCollisionPos(wpos[0], wpos[1], playerRichInfo)
+    return self.worldToPolygonColliderAnchorPos(wpos[0], wpos[1], halfBoundingW, halfBoundingH)
   },
 });

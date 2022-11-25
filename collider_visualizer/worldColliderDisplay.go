@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "battle_srv/protos"
 	. "dnmshared"
 	. "dnmshared/sharedprotos"
 	"fmt"
@@ -36,7 +37,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	virtualGridToWorldRatio := 0.1
 	playerDefaultSpeed := 20
 	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 2)
-	playerColliderRadius := float64(16)
+	playerColliderRadius := float64(24)
 	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
 	for i, playerPos := range playerPosList.Eles {
@@ -84,6 +85,75 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 			Logger.Info(fmt.Sprintf("effPushback={%v, %v}", effPushback.X, effPushback.Y))
 		}
 	}
+	meleeBullet := &MeleeBullet{
+		// for offender
+		StartupFrames:         int32(18),
+		ActiveFrames:          int32(1),
+		RecoveryFrames:        int32(61),
+		RecoveryFramesOnBlock: int32(61),
+		RecoveryFramesOnHit:   int32(61),
+		Moveforward: &Vec2D{
+			X: 0,
+			Y: 0,
+		},
+		HitboxOffset: float64(24.0),
+		HitboxSize: &Vec2D{
+			X: float64(45.0),
+			Y: float64(32.0),
+		},
+
+		// for defender
+		HitStunFrames:      int32(18),
+		BlockStunFrames:    int32(9),
+		Pushback:           float64(22.0),
+		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
+		Damage:             int32(5),
+	}
+	bulletLeftToRight := true
+	if bulletLeftToRight {
+		xfac := float64(1.0)
+		offenderWx, offenderWy := playerPosList.Eles[0].X, playerPosList.Eles[0].Y
+		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
+
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		space.Add(newBulletCollider)
+		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
+		Logger.Warn(fmt.Sprintf("bullet ->: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
+
+		if collision := newBulletCollider.Check(0, 0); collision != nil {
+			for _, obj := range collision.Objects {
+				objShape := obj.Shape.(*resolv.ConvexPolygon)
+				if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, bulletShape, objShape); overlapped {
+					Logger.Warn(fmt.Sprintf("bullet ->: Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(bulletShape), ConvexPolygonStr(objShape), pushbackX, pushbackY))
+				} else {
+					Logger.Warn(fmt.Sprintf("bullet ->: Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(bulletShape), ConvexPolygonStr(objShape), overlapResult))
+				}
+			}
+		}
+	}
+
+	bulletRightToLeft := true
+	if bulletRightToLeft {
+		xfac := float64(-1.0)
+		offenderWx, offenderWy := playerPosList.Eles[1].X, playerPosList.Eles[1].Y
+		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
+
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		space.Add(newBulletCollider)
+		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
+		Logger.Warn(fmt.Sprintf("bullet <-: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
+
+		if collision := newBulletCollider.Check(0, 0); collision != nil {
+			for _, obj := range collision.Objects {
+				objShape := obj.Shape.(*resolv.ConvexPolygon)
+				if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, bulletShape, objShape); overlapped {
+					Logger.Warn(fmt.Sprintf("bullet <-: Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(bulletShape), ConvexPolygonStr(objShape), pushbackX, pushbackY))
+				} else {
+					Logger.Warn(fmt.Sprintf("bullet <-: Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(bulletShape), ConvexPolygonStr(objShape), overlapResult))
+				}
+			}
+		}
+	}
 
 	return world
 }
@@ -97,6 +167,9 @@ func (world *WorldColliderDisplay) Draw(screen *ebiten.Image) {
 	for _, o := range world.Space.Objects() {
 		if o.HasTags("Player") {
 			drawColor := color.RGBA{0, 255, 0, 255}
+			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
+		} else if o.HasTags("MeleeBullet") {
+			drawColor := color.RGBA{0, 0, 255, 255}
 			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
 		} else {
 			drawColor := color.RGBA{60, 60, 60, 255}

@@ -529,8 +529,8 @@
         0,
         0,
         1,
-        1,
-        1,
+        0.5,
+        0.5,
         1
       ]
     },
@@ -648,7 +648,7 @@
     "_N$_defaultCacheMode": 0,
     "_N$timeScale": 1,
     "_N$debugBones": false,
-    "_N$enableBatch": false,
+    "_N$enableBatch": true,
     "_id": ""
   },
   {
@@ -763,7 +763,7 @@
     "_N$_defaultCacheMode": 0,
     "_N$timeScale": 1,
     "_N$debugBones": false,
-    "_N$enableBatch": false,
+    "_N$enableBatch": true,
     "_id": ""
   },
   {
@@ -878,7 +878,7 @@
     "_N$_defaultCacheMode": 0,
     "_N$timeScale": 1,
     "_N$debugBones": false,
-    "_N$enableBatch": false,
+    "_N$enableBatch": true,
     "_id": ""
   },
   {

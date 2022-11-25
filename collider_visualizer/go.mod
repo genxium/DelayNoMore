@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	dnmshared v0.0.0
+	battle_srv v0.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.4.7
 	github.com/solarlune/resolv v0.5.1
@@ -26,3 +27,4 @@ require (
 )
 
 replace dnmshared => ../dnmshared
+replace battle_srv => ../battle_srv

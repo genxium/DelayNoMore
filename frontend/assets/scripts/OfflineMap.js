@@ -42,8 +42,8 @@ cc.Class({
     self.meleeSkillConfig = {
       1: {
         // for offender
-        startupFrames: 18,
-        activeFrames: 42,
+        startupFrames: 23,
+        activeFrames: 3,
         recoveryFrames: 61, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
         recoveryFramesOnBlock: 61,
         recoveryFramesOnHit: 61,
@@ -60,7 +60,7 @@ cc.Class({
         // for defender
         hitStunFrames: 18,
         blockStunFrames: 9,
-        pushback: 22.0,
+        pushback: 11.0,
         releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
         damage: 5
       }
@@ -140,7 +140,7 @@ cc.Class({
             joinIndex: 1,
             virtualGridX: 0,
             virtualGridY: 0,
-            speed: 2 * self.worldToVirtualGridRatio,
+            speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.Idle1[0],
             framesToRecover: 0,
@@ -152,7 +152,7 @@ cc.Class({
             joinIndex: 2,
             virtualGridX: 80 * self.worldToVirtualGridRatio,
             virtualGridY: 40 * self.worldToVirtualGridRatio,
-            speed: 2 * self.worldToVirtualGridRatio,
+            speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.Idle1[0],
             framesToRecover: 0,
