@@ -106,7 +106,7 @@ cc.Class({
 
   dumpToRenderCache: function(rdf) {
     const self = this;
-    const minToKeepRenderFrameId = self.lastAllConfirmedRenderFrameId;
+    const minToKeepRenderFrameId = self.lastAllConfirmedRenderFrameId - 1; // Keep at least 1 prev render frame for anim triggering 
     while (0 < self.recentRenderCache.cnt && self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
       self.recentRenderCache.pop();
     }
@@ -537,7 +537,7 @@ cc.Class({
       window.initPersistentSessionClient(self.initAfterWSConnected, boundRoomId);
     } else {
       self.showPopupInCanvas(self.gameRuleNode);
-      // Deliberately left blank. -- YFLu
+    // Deliberately left blank. -- YFLu
     }
   },
 
@@ -610,28 +610,32 @@ cc.Class({
       }
     }
 
-    self.renderFrameId = rdf.id;
-    self.lastRenderFrameIdTriggeredAt = performance.now();
-    // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
-    self.lastAllConfirmedRenderFrameId = rdf.id;
-    self.chaserRenderFrameId = rdf.id;
+    if (null == self.renderFrameId || self.renderFrameId <= rdf.id) {
+      // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
+      self.renderFrameId = rdf.id;
+      self.lastRenderFrameIdTriggeredAt = performance.now();
+      // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
+      self.lastAllConfirmedRenderFrameId = rdf.id;
+      self.chaserRenderFrameId = rdf.id;
 
-    if (null != rdf.countdownNanos) {
-      self.countdownNanos = rdf.countdownNanos;
-    }
-    if (null != self.musicEffectManagerScriptIns) {
-      self.musicEffectManagerScriptIns.playBGM();
-    }
-    const canvasNode = self.canvasNode;
-    self.ctrl = canvasNode.getComponent("TouchEventsManager");
-    self.enableInputControls();
-    if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
-      self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
-    }
-    self.transitToState(ALL_MAP_STATES.VISUAL);
-    self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
-    self.applyRoomDownsyncFrameDynamics(rdf, self.recentRenderCache.getByFrameId(rdf.id - 1));
+      const canvasNode = self.canvasNode;
+      self.ctrl = canvasNode.getComponent("TouchEventsManager");
+      self.enableInputControls();
+      self.transitToState(ALL_MAP_STATES.VISUAL);
+      self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
 
+      if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
+        self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
+      }
+
+      if (null != self.musicEffectManagerScriptIns) {
+        self.musicEffectManagerScriptIns.playBGM();
+      }
+    } else {
+      console.warn(`Anomaly when onRoomDownsyncFrame is called by rdf=${JSON.stringify(rdf)}`);
+    }
+
+    // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
     return dumpRenderCacheRet;
   },
 
@@ -1050,12 +1054,13 @@ cc.Class({
         const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
         const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
         const bulletWy = offenderWy;
-        const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5), pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
+          pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
         const newBulletCollider = collisionSys.createPolygon(bulletCx, bulletCy, pts);
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
         bulletColliders.set(collisionBulletIndex, newBulletCollider);
-        // console.log(`A meleeBullet is added to collisionSys at currRenderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended: ${JSON.stringify(meleeBullet)}`);
+      // console.log(`A meleeBullet is added to collisionSys at currRenderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended: ${JSON.stringify(meleeBullet)}`);
       }
     }
 

@@ -132,7 +132,7 @@ cc.Class({
         self.collisionSysMap.set(collisionBarrierIndex, newBarrier);
       }
 
-      const startRdf = {
+      const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
         players: {
           10: {
@@ -160,7 +160,7 @@ cc.Class({
             dirY: 0,
           },
         }
-      };
+      });
       self.selfPlayerInfo = {
         id: 10
       };
