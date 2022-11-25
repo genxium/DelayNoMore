@@ -632,7 +632,7 @@ cc.Class({
         self.musicEffectManagerScriptIns.playBGM();
       }
     } else {
-      console.warn(`Anomaly when onRoomDownsyncFrame is called by rdf=${JSON.stringify(rdf)}`);
+      console.warn(`Anomaly when onRoomDownsyncFrame is called by rdf=${JSON.stringify(rdf)}, recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
     }
 
     // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
@@ -827,17 +827,17 @@ cc.Class({
         console.error("Error during Map.update", err);
       } finally {
         // Update countdown
-        if (null != self.countdownNanos) {
-          self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
-          if (self.countdownNanos <= 0) {
-            self.onBattleStopped(self.playerRichInfoDict);
-            return;
-          }
+        self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
+        if (self.countdownNanos <= 0) {
+          self.onBattleStopped(self.playerRichInfoDict);
+          return;
+        }
 
-          const countdownSeconds = parseInt(self.countdownNanos / 1000000000);
-          if (isNaN(countdownSeconds)) {
-            console.warn(`countdownSeconds is NaN for countdownNanos == ${self.countdownNanos}.`);
-          }
+        const countdownSeconds = parseInt(self.countdownNanos / 1000000000);
+        if (isNaN(countdownSeconds)) {
+          console.warn(`countdownSeconds is NaN for countdownNanos == ${self.countdownNanos}.`);
+        }
+        if (null != self.countdownLabel) {
           self.countdownLabel.string = countdownSeconds;
         }
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!

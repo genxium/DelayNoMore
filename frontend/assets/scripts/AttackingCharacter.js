@@ -54,12 +54,12 @@ cc.Class({
     let newCharacterState = rdfPlayer.characterState;
     let prevCharacterState = (null == prevRdfPlayer ? window.ATK_CHARACTER_STATE.Idle1[0] : prevRdfPlayer.characterState);
     if (newCharacterState != prevCharacterState) {
-      // Anim is edge-triggered
       const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
-      if (newAnimName != this.animComp.animationName) {
-        this.animComp.playAnimation(newAnimName);
-        console.log(`JoinIndex=${rdfPlayer.joinIndex}, Resetting anim to ${newAnimName}, state changed: (${prevCharacterState}, prevRdfPlayer is null? ${null == prevRdfPlayer}) -> (${newCharacterState})`);
+      // Anim is edge-triggered
+      if (newAnimName == this.animComp.animationName) {
+        console.warn(`JoinIndex=${rdfPlayer.joinIndex}, possibly playing weird anim by resetting anim to ${newAnimName} while the playing anim is also ${this.animComp.animationName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, to: ${JSON.stringify(rdfPlayer)}`);
       }
+      this.animComp.playAnimation(newAnimName);
     }
   },
 });

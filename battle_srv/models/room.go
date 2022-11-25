@@ -1338,6 +1338,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
 			if 0 < thatPlayerInNextFrame.FramesToRecover {
 				// No need to process inputs for this player, but there might be bullet pushbacks on this player
+                // Also note that in this case we keep "CharacterState" of this player from last render frame
 				playerCollider.X += bulletPushbacks[joinIndex-1].X
 				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
 				// Update in the collision system
@@ -1373,6 +1374,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 			} else {
 				// No bullet trigger, process movement inputs
+                // Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
 				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
 					thatPlayerInNextFrame.DirX = decodedInput.Dx
 					thatPlayerInNextFrame.DirY = decodedInput.Dy
