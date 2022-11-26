@@ -5,6 +5,7 @@ import (
 	. "dnmshared"
 	"fmt"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 )
 
@@ -21,11 +22,13 @@ var (
 
 func (pPq *RoomHeap) PrintInOrder() {
 	pq := *pPq
-	fmt.Printf("The RoomHeap instance now contains:\n")
+	s := make([]string, 0)
+	s = append(s, fmt.Sprintf("The RoomHeap instance now contains:"))
 	for i := 0; i < len(pq); i++ {
-		fmt.Printf("{index: %d, roomID: %d, score: %.2f} ", i, pq[i].Id, pq[i].Score)
+		s = append(s, fmt.Sprintf("{index: %d, roomID: %d, score: %.2f} ", i, pq[i].Id, pq[i].Score))
 	}
-	fmt.Printf("\n")
+
+	Logger.Debug(strings.Join(s, "\n"))
 }
 
 func (pq RoomHeap) Len() int { return len(pq) }

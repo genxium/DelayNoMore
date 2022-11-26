@@ -12,6 +12,11 @@ for (let k in window.ATK_CHARACTER_STATE) {
   window.ATK_CHARACTER_STATE_ARR.push(window.ATK_CHARACTER_STATE[k]);
 }
 
+/*
+Kindly note that the use of dragonBones anim is an informed choice for the feasibility of "gotoAndPlayByFrame", which is a required feature by "Map.rollbackAndChase". You might find that "cc.Animation" -- the traditional frame animation -- can also suffice this requirement, yet if we want to develop 3D frontend in the future, working with skeletal animation will make a smoother transition.
+
+I've also spent sometime in extending "ccc wrapped dragoneBones.ArmatureDisplay" for enabling "gotoAndPlayByFrame" in CACHE mode (in REALTIME mode it's just the same as what's done here), but the debugging is an unexpected brainteaser -- not worth the time.
+*/
 cc.Class({
   extends: BaseCharacter,
   properties: {

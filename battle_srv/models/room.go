@@ -476,7 +476,7 @@ func (pR *Room) StartBattle() {
 
 			for playerId, player := range pR.Players {
 				if swapped := atomic.CompareAndSwapInt32(&player.BattleState, PlayerBattleStateIns.ACTIVE, PlayerBattleStateIns.ACTIVE); !swapped {
-					// [WARNING] DON'T send anything if the player is disconnected, because it could jam the channel and cause significant delay upon "battle recovery for reconnected player".
+					// [WARNING] DON'T send anything if the player is not yet active, because it could jam the channel and cause significant delay upon "battle recovery for reconnected player".
 					continue
 				}
 				if 0 == pR.RenderFrameId {
@@ -995,6 +995,12 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 
 			           This function is triggered by an upsync message via WebSocket, thus downsync sending is also available by now.
 		*/
+		currPlayerBattleState := atomic.LoadInt32(&(eachPlayer.BattleState))
+		if PlayerBattleStateIns.DISCONNECTED == currPlayerBattleState || PlayerBattleStateIns.LOST == currPlayerBattleState {
+			// [WARNING] DON'T try to send any message to an inactive player!
+			continue
+		}
+
 		switch targetPlayer.BattleState {
 		case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
 			playerAckedFrame := &RoomDownsyncFrame{
@@ -1338,7 +1344,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
 			if 0 < thatPlayerInNextFrame.FramesToRecover {
 				// No need to process inputs for this player, but there might be bullet pushbacks on this player
-                // Also note that in this case we keep "CharacterState" of this player from last render frame
+				// Also note that in this case we keep "CharacterState" of this player from last render frame
 				playerCollider.X += bulletPushbacks[joinIndex-1].X
 				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
 				// Update in the collision system
@@ -1374,7 +1380,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
 			} else {
 				// No bullet trigger, process movement inputs
-                // Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
+				// Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
 				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
 					thatPlayerInNextFrame.DirX = decodedInput.Dx
 					thatPlayerInNextFrame.DirY = decodedInput.Dy

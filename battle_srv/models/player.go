@@ -96,7 +96,7 @@ func getPlayer(cond sq.Eq) (*Player, error) {
 				p.CreatedAt = int64(val.(int64))
 			}
 		}
-		Logger.Info("Queried player from db", zap.Any("cond", cond), zap.Any("p", p), zap.Any("pd", pd), zap.Any("cols", cols), zap.Any("rowValues", vals))
+		Logger.Debug("Queried player from db", zap.Any("cond", cond), zap.Any("p", p), zap.Any("pd", pd), zap.Any("cols", cols), zap.Any("rowValues", vals))
 	}
 	p.PlayerDownsync = pd
 	return &p, nil

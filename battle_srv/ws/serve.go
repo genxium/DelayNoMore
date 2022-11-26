@@ -16,7 +16,6 @@ import (
 	"time"
 
 	. "dnmshared"
-	"runtime/debug"
 )
 
 const (
@@ -47,9 +46,8 @@ func Serve(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	Logger.Info("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token))
 	boundRoomId := 0
-	expectRoomId := 0
+	expectedRoomId := 0
 	var err error
 	if boundRoomIdStr, hasBoundRoomId := c.GetQuery("boundRoomId"); hasBoundRoomId {
 		boundRoomId, err = strconv.Atoi(boundRoomIdStr)
@@ -58,27 +56,28 @@ func Serve(c *gin.Context) {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		Logger.Info("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId))
-	}
-	if expectRoomIdStr, hasExpectRoomId := c.GetQuery("expectedRoomId"); hasExpectRoomId {
-		expectRoomId, err = strconv.Atoi(expectRoomIdStr)
+		Logger.Debug("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId))
+	} else if expectedRoomIdStr, hasExpectRoomId := c.GetQuery("expectedRoomId"); hasExpectRoomId {
+		expectedRoomId, err = strconv.Atoi(expectedRoomIdStr)
 		if err != nil {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		Logger.Info("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token), zap.Any("expectedRoomId", expectRoomId))
+		Logger.Debug("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token), zap.Any("expectedRoomId", expectedRoomId))
+	} else {
+		Logger.Debug("Finding PlayerLogin record for ws authentication:", zap.Any("intAuthToken", token))
 	}
 
 	// TODO: Wrap the following 2 stmts by sql transaction!
 	playerId, err := models.GetPlayerIdByToken(token)
 	if err != nil || playerId == 0 {
 		// TODO: Abort with specific message.
-		Logger.Info("PlayerLogin record not found for ws authentication:", zap.Any("intAuthToken", token))
+		Logger.Warn("PlayerLogin record not found for ws authentication:", zap.Any("intAuthToken", token))
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	Logger.Info("PlayerLogin record has been found for ws authentication:", zap.Any("playerId", playerId))
+	Logger.Info("PlayerLogin record has been found for ws authentication:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId), zap.Any("expectedRoomId", expectedRoomId))
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -160,14 +159,14 @@ func Serve(c *gin.Context) {
 		signalToCloseConnOfThisPlayer(Constants.RetCode.PlayerNotFound, "")
 	}
 
-	Logger.Info("Player has logged in and its profile is found from persistent storage:", zap.Any("playerId", playerId), zap.Any("play", pPlayer))
+	Logger.Debug("Player has logged in and its profile is found from persistent storage:", zap.Any("playerId", playerId), zap.Any("player", pPlayer))
 
 	// Find a room to join.
-	Logger.Info("About to acquire RoomHeapMux for player:", zap.Any("playerId", playerId))
+	Logger.Debug("About to acquire RoomHeapMux for player:", zap.Any("playerId", playerId))
 	(*(models.RoomHeapMux)).Lock()
 	defer func() {
 		(*(models.RoomHeapMux)).Unlock()
-		Logger.Info("Released RoomHeapMux for player:", zap.Any("playerId", playerId))
+		Logger.Debug("Released RoomHeapMux for player:", zap.Any("playerId", playerId))
 	}()
 	defer func() {
 		if r := recover(); r != nil {
@@ -175,13 +174,12 @@ func Serve(c *gin.Context) {
 			signalToCloseConnOfThisPlayer(Constants.RetCode.UnknownError, "")
 		}
 	}()
-	Logger.Info("Acquired RoomHeapMux for player:", zap.Any("playerId", playerId))
+	Logger.Debug("Acquired RoomHeapMux for player:", zap.Any("playerId", playerId))
 	// Logger.Info("The RoomHeapManagerIns has:", zap.Any("addr", fmt.Sprintf("%p", models.RoomHeapManagerIns)), zap.Any("size", len(*(models.RoomHeapManagerIns))))
 	playerSuccessfullyAddedToRoom := false
 	if 0 < boundRoomId {
 		if tmpPRoom, existent := (*models.RoomMapManagerIns)[int32(boundRoomId)]; existent {
 			pRoom = tmpPRoom
-			Logger.Info("Successfully got:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forBoundRoomId", boundRoomId))
 			res := pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
 			if !res {
 				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forBoundRoomId", boundRoomId))
@@ -189,19 +187,16 @@ func Serve(c *gin.Context) {
 				playerSuccessfullyAddedToRoom = true
 			}
 		}
-	}
-
-	if 0 < expectRoomId {
-		if tmpRoom, existent := (*models.RoomMapManagerIns)[int32(expectRoomId)]; existent {
+	} else if 0 < expectedRoomId {
+		if tmpRoom, existent := (*models.RoomMapManagerIns)[int32(expectedRoomId)]; existent {
 			pRoom = tmpRoom
-			Logger.Info("Successfully got:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectRoomId))
 
 			if pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer) {
 				playerSuccessfullyAddedToRoom = true
 			} else if pRoom.AddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer) {
 				playerSuccessfullyAddedToRoom = true
 			} else {
-				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectRoomId))
+				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectedRoomId))
 				playerSuccessfullyAddedToRoom = false
 			}
 
@@ -221,7 +216,7 @@ func Serve(c *gin.Context) {
 			signalToCloseConnOfThisPlayer(Constants.RetCode.LocallyNoAvailableRoom, fmt.Sprintf("Cannot pop a (*Room) for playerId == %v!", playerId))
 		} else {
 			pRoom = tmpRoom
-			Logger.Info("Successfully popped:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId))
+			Logger.Info("Successfully popped:\n", zap.Any("roomId", pRoom.Id), zap.Any("forPlayerId", playerId))
 			res := pRoom.AddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
 			if !res {
 				signalToCloseConnOfThisPlayer(Constants.RetCode.PlayerNotAddableToRoom, fmt.Sprintf("AddPlayerIfPossible returns false for roomId == %v, playerId == %v!", pRoom.Id, playerId))
@@ -361,7 +356,7 @@ func Serve(c *gin.Context) {
 	receivingLoopAgainstPlayer := func() error {
 		defer func() {
 			if r := recover(); r != nil {
-				Logger.Error("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r), zap.Any("callstack", debug.Stack()))
+				Logger.Error("Goroutine `receivingLoopAgainstPlayer`, recovery spot#1, recovered from: ", zap.Any("panic", r))
 			}
 			Logger.Info("Goroutine `receivingLoopAgainstPlayer` is stopped for:", zap.Any("playerId", playerId), zap.Any("roomId", pRoom.Id))
 		}()
