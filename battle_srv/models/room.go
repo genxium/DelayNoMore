@@ -70,7 +70,7 @@ const (
 )
 
 const (
-	DEFAULT_PLAYER_RADIUS = float64(16)
+	DEFAULT_PLAYER_RADIUS = float64(8)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -809,25 +809,25 @@ func (pR *Room) OnDismissed() {
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
 		// for offender
-		StartupFrames:         int32(23),
+		StartupFrames:         int32(10),
 		ActiveFrames:          int32(3),
-		RecoveryFrames:        int32(61), // I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-		RecoveryFramesOnBlock: int32(61),
-		RecoveryFramesOnHit:   int32(61),
+		RecoveryFrames:        int32(34), 
+		RecoveryFramesOnBlock: int32(34),
+		RecoveryFramesOnHit:   int32(34),
 		Moveforward: &Vec2D{
 			X: 0,
 			Y: 0,
 		},
-		HitboxOffset: float64(24.0), // should be about the radius of the PlayerCollider
+		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
 		HitboxSize: &Vec2D{
-			X: float64(45.0),
-			Y: float64(32.0),
+			X: float64(23.0),
+			Y: float64(20.0),
 		},
 
 		// for defender
 		HitStunFrames:      int32(18),
 		BlockStunFrames:    int32(9),
-		Pushback:           float64(11.0),
+		Pushback:           float64(8.0),
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
