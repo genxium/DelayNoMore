@@ -54,7 +54,7 @@ cc.Class({
         hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
         hitboxSize: {
           x: 23.0,
-          y: 20.0,
+          y: 32.0,
         },
 
         // for defender
@@ -151,7 +151,7 @@ cc.Class({
             id: 11,
             joinIndex: 2,
             virtualGridX: 80 * self.worldToVirtualGridRatio,
-            virtualGridY: 40 * self.worldToVirtualGridRatio,
+            virtualGridY: 0 * self.worldToVirtualGridRatio,
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.Idle1[0],
@@ -162,7 +162,7 @@ cc.Class({
         }
       });
       self.selfPlayerInfo = {
-        id: 10
+        id: 11
       };
       self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);

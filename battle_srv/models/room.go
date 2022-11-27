@@ -70,7 +70,7 @@ const (
 )
 
 const (
-	DEFAULT_PLAYER_RADIUS = float64(8)
+	DEFAULT_PLAYER_RADIUS = float64(12)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -772,7 +772,7 @@ func (pR *Room) OnDismissed() {
 	pR.WorldToVirtualGridRatio = float64(1000)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
 	pR.SpAtkLookupFrames = 5
-	pR.PlayerDefaultSpeed = int32(float64(2) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
+	pR.PlayerDefaultSpeed = int32(float64(1) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -811,7 +811,7 @@ func (pR *Room) OnDismissed() {
 		// for offender
 		StartupFrames:         int32(10),
 		ActiveFrames:          int32(3),
-		RecoveryFrames:        int32(34), 
+		RecoveryFrames:        int32(34),
 		RecoveryFramesOnBlock: int32(34),
 		RecoveryFramesOnHit:   int32(34),
 		Moveforward: &Vec2D{
@@ -821,7 +821,7 @@ func (pR *Room) OnDismissed() {
 		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
 		HitboxSize: &Vec2D{
 			X: float64(23.0),
-			Y: float64(20.0),
+			Y: float64(32.0),
 		},
 
 		// for defender
@@ -1456,7 +1456,8 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*3
+		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		playerCollider.Data = player
 		pR.Space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
