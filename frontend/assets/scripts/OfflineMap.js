@@ -42,25 +42,25 @@ cc.Class({
     self.meleeSkillConfig = {
       1: {
         // for offender
-        startupFrames: 23,
+        startupFrames: 10,
         activeFrames: 3,
-        recoveryFrames: 61, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-        recoveryFramesOnBlock: 61,
-        recoveryFramesOnHit: 61,
+        recoveryFrames: 34, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
+        recoveryFramesOnBlock: 34,
+        recoveryFramesOnHit: 34,
         moveforward: {
           x: 0,
           y: 0,
         },
         hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
         hitboxSize: {
-          x: 45.0,
+          x: 23.0,
           y: 32.0,
         },
 
         // for defender
         hitStunFrames: 18,
         blockStunFrames: 9,
-        pushback: 11.0,
+        pushback: 8.0,
         releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
         damage: 5
       }
@@ -151,7 +151,7 @@ cc.Class({
             id: 11,
             joinIndex: 2,
             virtualGridX: 80 * self.worldToVirtualGridRatio,
-            virtualGridY: 40 * self.worldToVirtualGridRatio,
+            virtualGridY: 0 * self.worldToVirtualGridRatio,
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.Idle1[0],
@@ -162,7 +162,7 @@ cc.Class({
         }
       });
       self.selfPlayerInfo = {
-        id: 10
+        id: 11
       };
       self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);

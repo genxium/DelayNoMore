@@ -70,7 +70,7 @@ const (
 )
 
 const (
-	DEFAULT_PLAYER_RADIUS = float64(16)
+	DEFAULT_PLAYER_RADIUS = float64(12)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -772,7 +772,7 @@ func (pR *Room) OnDismissed() {
 	pR.WorldToVirtualGridRatio = float64(1000)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
 	pR.SpAtkLookupFrames = 5
-	pR.PlayerDefaultSpeed = int32(float64(2) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
+	pR.PlayerDefaultSpeed = int32(float64(1) * pR.WorldToVirtualGridRatio) // in virtual grids per frame
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.CollisionSysMap = make(map[int32]*resolv.Object)
@@ -809,25 +809,25 @@ func (pR *Room) OnDismissed() {
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
 		// for offender
-		StartupFrames:         int32(23),
+		StartupFrames:         int32(10),
 		ActiveFrames:          int32(3),
-		RecoveryFrames:        int32(61), // I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-		RecoveryFramesOnBlock: int32(61),
-		RecoveryFramesOnHit:   int32(61),
+		RecoveryFrames:        int32(34),
+		RecoveryFramesOnBlock: int32(34),
+		RecoveryFramesOnHit:   int32(34),
 		Moveforward: &Vec2D{
 			X: 0,
 			Y: 0,
 		},
-		HitboxOffset: float64(24.0), // should be about the radius of the PlayerCollider
+		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
 		HitboxSize: &Vec2D{
-			X: float64(45.0),
+			X: float64(23.0),
 			Y: float64(32.0),
 		},
 
 		// for defender
 		HitStunFrames:      int32(18),
 		BlockStunFrames:    int32(9),
-		Pushback:           float64(11.0),
+		Pushback:           float64(8.0),
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
@@ -1456,7 +1456,8 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		playerCollider := GenerateRectCollider(wx, wy, player.ColliderRadius*2, player.ColliderRadius*2, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*3
+		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		playerCollider.Data = player
 		pR.Space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"

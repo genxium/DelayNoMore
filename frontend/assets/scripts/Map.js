@@ -761,9 +761,9 @@ cc.Class({
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const d = playerDownsyncInfo.colliderRadius * 2,
-      [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, playerDownsyncInfo.colliderRadius, playerDownsyncInfo.colliderRadius),
-      pts = [[0, 0], [d, 0], [d, d], [0, d]];
+    const colliderWidth = playerDownsyncInfo.colliderRadius * 2, colliderHeight = playerDownsyncInfo.colliderRadius * 3; 
+    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
+      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
 
     const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
