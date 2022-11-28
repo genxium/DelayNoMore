@@ -1,5 +1,6 @@
 PROJECTNAME=server.exe
 ROOT_DIR=.
+GOPROXY=https://mirrors.aliyun.com/goproxy 
 all: help
 
 gen-constants:
@@ -13,13 +14,13 @@ run-test-and-hotreload:
 	ServerEnv=TEST CompileDaemon -log-prefix=false -build="go build"  -command="./$(PROJECTNAME)"
 
 build:
-	go build -o $(ROOT_DIR)/$(PROJECTNAME)
+	GOPROXY=$(GOPROXY) go build -o $(ROOT_DIR)/$(PROJECTNAME)
 
 run-prod: build-prod
 	./$(PROJECTNAME)
 
 build-prod:
-	go build -ldflags "-s -w -X main.VERSION=$(shell git rev-parse --short HEAD)-$(shell date "+%Y%m%d-%H:%M:%S")" -o $(ROOT_DIR)/$(PROJECTNAME)
+	GOPROXY=$(GOPROXY) go build -ldflags "-s -w -X main.VERSION=$(shell git rev-parse --short HEAD)-$(shell date "+%Y%m%d-%H:%M:%S")" -o $(ROOT_DIR)/$(PROJECTNAME)
 
 .PHONY: help
 

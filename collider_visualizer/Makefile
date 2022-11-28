@@ -5,7 +5,7 @@ all: help
 GOPROXY=https://mirrors.aliyun.com/goproxy 
 
 build:
-	go build -o $(ROOT_DIR)/$(PROJECTNAME)
+	GOPROXY=$(GOPROXY) go build -o $(ROOT_DIR)/$(PROJECTNAME)
 
 run: build
 	./$(PROJECTNAME)
