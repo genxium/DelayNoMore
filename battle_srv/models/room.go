@@ -335,10 +335,6 @@ func (pR *Room) ConvertToGeneratingRenderFrameId(inputFrameId int32) int32 {
 	return (inputFrameId << pR.InputScaleFrames)
 }
 
-func (pR *Room) ConvertToJustBeforeNextGeneratingRenderFrameId(inputFrameId int32) int32 {
-	return (inputFrameId << pR.InputScaleFrames) + (1 << pR.InputScaleFrames) - 1
-}
-
 func (pR *Room) ConvertToFirstUsedRenderFrameId(inputFrameId int32, inputDelayFrames int32) int32 {
 	return ((inputFrameId << pR.InputScaleFrames) + inputDelayFrames)
 }
@@ -413,7 +409,6 @@ func (pR *Room) StartBattle() {
 			pR.onBattleStoppedForSettlement()
 		}()
 
-		battleStartedAtNanos := utils.UnixtimeNano()
 		pR.LastRenderFrameIdTriggeredAt = utils.UnixtimeNano()
 
 		Logger.Info("The `battleMainLoop` is started for:", zap.Any("roomId", pR.Id))
@@ -422,11 +417,7 @@ func (pR *Room) StartBattle() {
 
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
 			if elapsedNanosSinceLastFrameIdTriggered < pR.dilutedRollbackEstimatedDtNanos {
-				totalElapsedNanos := (stCalculation - battleStartedAtNanos)
-				serverFpsByFar := float64(pR.RenderFrameId) * float64(1000000000) / float64(totalElapsedNanos)
-				Logger.Info(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v, totalElapsedNanos=%v, serverFpsByFar=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, totalElapsedNanos, serverFpsByFar, elapsedNanosSinceLastFrameIdTriggered))
-				time.Sleep(time.Duration(pR.dilutedRollbackEstimatedDtNanos - elapsedNanosSinceLastFrameIdTriggered))
-				continue
+				Logger.Info(fmt.Sprintf("renderFrameId=%v@roomId=%v: Is backend running too fast? elapsedNanosSinceLastFrameIdTriggered=%v", pR.RenderFrameId, pR.Id, elapsedNanosSinceLastFrameIdTriggered))
 			}
 
 			if pR.RenderFrameId > pR.BattleDurationFrames {
@@ -461,7 +452,7 @@ func (pR *Room) StartBattle() {
 
 			   Upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId" -- and this is allowed.
 			*/
-			refRenderFrameId := pR.ConvertToJustBeforeNextGeneratingRenderFrameId(upperToSendInputFrameId)
+			refRenderFrameId := pR.ConvertToGeneratingRenderFrameId(upperToSendInputFrameId + 1) // for the frontend to jump immediately into generating & upsyncing the next input frame, thus getting rid of "resync avalanche"
 
 			dynamicsDuration := int64(0)
 			if pR.BackendDynamicsEnabled {
@@ -480,10 +471,13 @@ func (pR *Room) StartBattle() {
 			}
 
 			for playerId, player := range pR.Players {
-				if swapped := atomic.CompareAndSwapInt32(&player.BattleState, PlayerBattleStateIns.ACTIVE, PlayerBattleStateIns.ACTIVE); !swapped {
-					// [WARNING] DON'T send anything if the player is not yet active, because it could jam the channel and cause significant delay upon "battle recovery for reconnected player".
+
+				currPlayerBattleState := atomic.LoadInt32(&(player.BattleState))
+				if PlayerBattleStateIns.DISCONNECTED == currPlayerBattleState || PlayerBattleStateIns.LOST == currPlayerBattleState {
+					// [WARNING] DON'T try to send any message to an inactive player!
 					continue
 				}
+
 				if 0 == pR.RenderFrameId {
 					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*RoomDownsyncFrame)
 					pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_START, playerId)
@@ -531,14 +525,15 @@ func (pR *Room) StartBattle() {
 					   2. reconnection
 					*/
 					shouldResync1 := (MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED == player.LastSentInputFrameId)
-					shouldResync2 := (0 < (unconfirmedMask & uint64(1<<uint32(player.JoinIndex-1)))) // This condition is critical, if we don't send resync upon this condition, the "reconnected or slowly-clocking player" might never get its input synced
-					// shouldResync2 := (0 < unconfirmedMask) // An easier version of the above, might keep sending "refRenderFrame"s to still connected players when any player is disconnected
+					// shouldResync2 := (0 < (unconfirmedMask & uint64(1<<uint32(player.JoinIndex-1)))) // This condition is critical, if we don't send resync upon this condition, the "reconnected or slowly-clocking player" might never get its input synced
+					shouldResync2 := (0 < unconfirmedMask) // An easier version of the above, might keep sending "refRenderFrame"s to still connected players when any player is disconnected
 					if pR.BackendDynamicsEnabled && (shouldResync1 || shouldResync2) {
 						tmp := pR.RenderFrameBuffer.GetByFrameId(refRenderFrameId)
 						if nil == tmp {
 							panic(fmt.Sprintf("Required refRenderFrameId=%v for roomId=%v, playerId=%v, candidateToSendInputFrameId=%v doesn't exist! InputsBuffer=%v, RenderFrameBuffer=%v", refRenderFrameId, pR.Id, playerId, candidateToSendInputFrameId, pR.InputsBufferString(false), pR.RenderFrameBufferString()))
 						}
 						refRenderFrame := tmp.(*RoomDownsyncFrame)
+						refRenderFrame.BackendUnconfirmedMask = unconfirmedMask
 						pR.sendSafely(refRenderFrame, toSendInputFrames, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId)
 					} else {
 						pR.sendSafely(nil, toSendInputFrames, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId)
@@ -549,7 +544,7 @@ func (pR *Room) StartBattle() {
 
 			if pR.BackendDynamicsEnabled {
 				// Evict no longer required "RenderFrameBuffer"
-				for pR.RenderFrameBuffer.N < pR.RenderFrameBuffer.Cnt || (0 < pR.RenderFrameBuffer.Cnt && pR.RenderFrameBuffer.StFrameId < refRenderFrameId) {
+				for 0 < pR.RenderFrameBuffer.Cnt && pR.RenderFrameBuffer.StFrameId < refRenderFrameId {
 					_ = pR.RenderFrameBuffer.Pop()
 				}
 			}
@@ -572,7 +567,7 @@ func (pR *Room) StartBattle() {
 			if minLastSentInputFrameId < minToKeepInputFrameId {
 				minToKeepInputFrameId = minLastSentInputFrameId
 			}
-			for pR.InputsBuffer.N < pR.InputsBuffer.Cnt || (0 < pR.InputsBuffer.Cnt && pR.InputsBuffer.StFrameId < minToKeepInputFrameId) {
+			for 0 < pR.InputsBuffer.Cnt && pR.InputsBuffer.StFrameId < minToKeepInputFrameId {
 				f := pR.InputsBuffer.Pop().(*InputFrameDownsync)
 				if pR.inputFrameIdDebuggable(f.InputFrameId) {
 					// Popping of an "inputFrame" would be AFTER its being all being confirmed, because it requires the "inputFrame" to be all acked
@@ -798,17 +793,17 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
 	pR.InputDelayFrames = 8
-	pR.NstDelayFrames = pR.InputDelayFrames
+	pR.NstDelayFrames = 4
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for preventing FAST FRAME
-	dilutionFactor := 12
+	dilutionFactor := 24
 	pR.dilutedRollbackEstimatedDtNanos = int64(16666666 * (dilutionFactor) / (dilutionFactor - 1)) // [WARNING] Only used in controlling "battleMainLoop" to be keep a frame rate lower than that of the frontends, such that upon resync(i.e. BackendDynamicsEnabled=true), the frontends would have bigger chances to keep up with or even surpass the backend calculation
 	pR.BattleDurationFrames = 30 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
-	pR.MaxChasingRenderFramesPerUpdate = 5
+	pR.MaxChasingRenderFramesPerUpdate = 8
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	pR.BackendDynamicsForceConfirmationEnabled = (pR.BackendDynamicsEnabled && true)
@@ -874,8 +869,9 @@ func (pR *Room) OnPlayerDisconnected(playerId int32) {
 		}
 	}()
 
-	if _, existent := pR.Players[playerId]; existent {
-		switch pR.Players[playerId].BattleState {
+	if player, existent := pR.Players[playerId]; existent {
+		currPlayerBattleState := atomic.LoadInt32(&(player.BattleState))
+		switch currPlayerBattleState {
 		case PlayerBattleStateIns.DISCONNECTED:
 		case PlayerBattleStateIns.LOST:
 		case PlayerBattleStateIns.EXPELLED_DURING_GAME:
@@ -889,17 +885,18 @@ func (pR *Room) OnPlayerDisconnected(playerId int32) {
 		return
 	}
 
-	switch pR.State {
+	currRoomBattleState := atomic.LoadInt32(&(pR.State))
+	switch currRoomBattleState {
 	case RoomBattleStateIns.WAITING:
 		pR.onPlayerLost(playerId)
 		delete(pR.Players, playerId) // Note that this statement MUST be put AFTER `pR.onPlayerLost(...)` to avoid nil pointer exception.
 		if 0 == pR.EffectivePlayerCount {
-			pR.State = RoomBattleStateIns.IDLE
+			atomic.StoreInt32(&(pR.State), RoomBattleStateIns.IDLE)
 		}
 		pR.updateScore()
 		Logger.Info("Player disconnected while room is at RoomBattleStateIns.WAITING:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("nowRoomBattleState", pR.State), zap.Any("nowRoomEffectivePlayerCount", pR.EffectivePlayerCount))
 	default:
-		pR.Players[playerId].BattleState = PlayerBattleStateIns.DISCONNECTED
+		atomic.StoreInt32(&(pR.Players[playerId].BattleState), PlayerBattleStateIns.DISCONNECTED)
 		pR.clearPlayerNetworkSession(playerId) // Still need clear the network session pointers, because "OnPlayerDisconnected" is only triggered from "signalToCloseConnOfThisPlayer" in "ws/serve.go", when the same player reconnects the network session pointers will be re-assigned
 		Logger.Info("Player disconnected from room:", zap.Any("playerId", playerId), zap.Any("playerBattleState", pR.Players[playerId].BattleState), zap.Any("roomId", pR.Id), zap.Any("nowRoomBattleState", pR.State), zap.Any("nowRoomEffectivePlayerCount", pR.EffectivePlayerCount))
 	}
@@ -912,7 +909,7 @@ func (pR *Room) onPlayerLost(playerId int32) {
 		}
 	}()
 	if player, existent := pR.Players[playerId]; existent {
-		player.BattleState = PlayerBattleStateIns.LOST
+		atomic.StoreInt32(&(player.BattleState), PlayerBattleStateIns.LOST)
 		pR.clearPlayerNetworkSession(playerId)
 		pR.EffectivePlayerCount--
 		indiceInJoinIndexBooleanArr := int(player.JoinIndex - 1)

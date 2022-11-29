@@ -5082,6 +5082,7 @@ $root.protos = (function() {
          * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
+         * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          */
 
         /**
@@ -5134,6 +5135,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.meleeBullets = $util.emptyArray;
 
         /**
+         * RoomDownsyncFrame backendUnconfirmedMask.
+         * @member {number|Long} backendUnconfirmedMask
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.backendUnconfirmedMask = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5169,6 +5178,8 @@ $root.protos = (function() {
             if (message.meleeBullets != null && message.meleeBullets.length)
                 for (var i = 0; i < message.meleeBullets.length; ++i)
                     $root.protos.MeleeBullet.encode(message.meleeBullets[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.backendUnconfirmedMask != null && Object.hasOwnProperty.call(message, "backendUnconfirmedMask"))
+                writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             return writer;
         };
 
@@ -5240,6 +5251,10 @@ $root.protos = (function() {
                         message.meleeBullets.push($root.protos.MeleeBullet.decode(reader, reader.uint32()));
                         break;
                     }
+                case 5: {
+                        message.backendUnconfirmedMask = reader.uint64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5304,6 +5319,9 @@ $root.protos = (function() {
                         return "meleeBullets." + error;
                 }
             }
+            if (message.backendUnconfirmedMask != null && message.hasOwnProperty("backendUnconfirmedMask"))
+                if (!$util.isInteger(message.backendUnconfirmedMask) && !(message.backendUnconfirmedMask && $util.isInteger(message.backendUnconfirmedMask.low) && $util.isInteger(message.backendUnconfirmedMask.high)))
+                    return "backendUnconfirmedMask: integer|Long expected";
             return null;
         };
 
@@ -5350,6 +5368,15 @@ $root.protos = (function() {
                     message.meleeBullets[i] = $root.protos.MeleeBullet.fromObject(object.meleeBullets[i]);
                 }
             }
+            if (object.backendUnconfirmedMask != null)
+                if ($util.Long)
+                    (message.backendUnconfirmedMask = $util.Long.fromValue(object.backendUnconfirmedMask)).unsigned = true;
+                else if (typeof object.backendUnconfirmedMask === "string")
+                    message.backendUnconfirmedMask = parseInt(object.backendUnconfirmedMask, 10);
+                else if (typeof object.backendUnconfirmedMask === "number")
+                    message.backendUnconfirmedMask = object.backendUnconfirmedMask;
+                else if (typeof object.backendUnconfirmedMask === "object")
+                    message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             return message;
         };
 
@@ -5377,6 +5404,11 @@ $root.protos = (function() {
                     object.countdownNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.countdownNanos = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.backendUnconfirmedMask = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.backendUnconfirmedMask = options.longs === String ? "0" : 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -5396,6 +5428,11 @@ $root.protos = (function() {
                 for (var j = 0; j < message.meleeBullets.length; ++j)
                     object.meleeBullets[j] = $root.protos.MeleeBullet.toObject(message.meleeBullets[j], options);
             }
+            if (message.backendUnconfirmedMask != null && message.hasOwnProperty("backendUnconfirmedMask"))
+                if (typeof message.backendUnconfirmedMask === "number")
+                    object.backendUnconfirmedMask = options.longs === String ? String(message.backendUnconfirmedMask) : message.backendUnconfirmedMask;
+                else
+                    object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             return object;
         };
 

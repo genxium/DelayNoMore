@@ -110,7 +110,7 @@ cc.Class({
     while (0 < self.recentRenderCache.cnt && self.recentRenderCache.stFrameId < minToKeepRenderFrameId) {
       self.recentRenderCache.pop();
     }
-    const ret = self.recentRenderCache.setByFrameId(rdf, rdf.id);
+    const [ret, oldStFrameId, oldEdFrameId] = self.recentRenderCache.setByFrameId(rdf, rdf.id);
     return ret;
   },
 
@@ -123,9 +123,12 @@ cc.Class({
     while (0 < self.recentInputCache.cnt && self.recentInputCache.stFrameId < minToKeepInputFrameId) {
       self.recentInputCache.pop();
     }
-    const ret = self.recentInputCache.setByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
-    if (-1 < self.lastAllConfirmedInputFrameId && self.recentInputCache.stFrameId > self.lastAllConfirmedInputFrameId) {
-      console.error("Invalid input cache dumped! lastAllConfirmedRenderFrameId=", self.lastAllConfirmedRenderFrameId, ", lastAllConfirmedInputFrameId=", self.lastAllConfirmedInputFrameId, ", recentRenderCache=", self._stringifyRecentRenderCache(false), ", recentInputCache=", self._stringifyRecentInputCache(false));
+    const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.setByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
+    if (window.RING_BUFF_NON_CONSECUTIVE_SET == ret) {
+      throw `Failed to dump input cache#1! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
+    }
+    if (window.RING_BUFF_FAILED_TO_SET == ret) {
+      throw `Failed to dump input cache#2 (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
     return ret;
   },
@@ -153,7 +156,7 @@ cc.Class({
       null == self.ctrl ||
       null == self.selfPlayerInfo
     ) {
-      return [null, null];
+      throw `noDelayInputFrameId=${inputFrameId} couldn't be generated: recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
 
     const joinIndex = self.selfPlayerInfo.joinIndex;
@@ -163,18 +166,23 @@ cc.Class({
     // If "forceConfirmation" is active on backend, we shouldn't override the already downsynced "inputFrameDownsync"s.  
     const existingInputFrame = self.recentInputCache.getByFrameId(inputFrameId);
     if (null != existingInputFrame && self._allConfirmed(existingInputFrame.confirmedList)) {
+      console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache and is all-confirmed: recentInputCache=${self._stringifyRecentInputCache(false)}`);
       return [previousSelfInput, existingInputFrame.inputList[joinIndex - 1]];
     }
     const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.inputList.slice());
     const currSelfInput = self.ctrl.getEncodedInput();
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
-    const prefabbedInputFrameDownsync = {
+    const prefabbedInputFrameDownsync = window.pb.protos.InputFrameDownsync.create({
       inputFrameId: inputFrameId,
       inputList: prefabbedInputList,
       confirmedList: (1 << (self.selfPlayerInfo.joinIndex - 1))
-    };
+    });
 
     self.dumpToInputCache(prefabbedInputFrameDownsync); // A prefabbed inputFrame, would certainly be adding a new inputFrame to the cache, because server only downsyncs "all-confirmed inputFrames" 
+
+    if (inputFrameId >= self.recentInputCache.edFrameId) {
+      throw `noDelayInputFrameId=${inputFrameId} seems not properly dumped #1: recentInputCache=${self._stringifyRecentInputCache(false)}`;
+    }
 
     return [previousSelfInput, currSelfInput];
   },
@@ -203,7 +211,7 @@ cc.Class({
     for (let i = batchInputFrameIdSt; i <= latestLocalInputFrameId; ++i) {
       const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
       if (null == inputFrameDownsync) {
-        console.error("sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=", i, ": latestLocalInputFrameId=", latestLocalInputFrameId, ", recentInputCache=", self._stringifyRecentInputCache(false));
+        console.error(`sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=i: latestLocalInputFrameId=${latestLocalInputFrameId}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
       } else {
         const inputFrameUpsync = {
           inputFrameId: i,
@@ -225,6 +233,9 @@ cc.Class({
     }).finish();
     window.sendSafely(reqData);
     self.lastUpsyncInputFrameId = latestLocalInputFrameId;
+    if (self.lastUpsyncInputFrameId >= self.recentInputCache.edFrameId) {
+      throw `noDelayInputFrameId=${self.lastUpsyncInputFrameId} == latestLocalInputFrameId=${latestLocalInputFrameId} seems not properly dumped #2: recentInputCache=${self._stringifyRecentInputCache(false)}`;
+    }
   },
 
   onEnable() {
@@ -413,7 +424,9 @@ cc.Class({
     /** Init required prefab ended. */
 
     window.handleBattleColliderInfo = function(parsedBattleColliderInfo) {
+      // TODO: Upon reconnection, the backend might have already been sending down data that'd trigger "onRoomDownsyncFrame & onInputFrameDownsyncBatch", but frontend could reject those data due to "battleState != PlayerBattleState.ACTIVE".
       Object.assign(self, parsedBattleColliderInfo);
+      self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -574,14 +587,18 @@ cc.Class({
   onRoomDownsyncFrame(rdf) {
     // This function is also applicable to "re-joining".
     const self = window.mapIns;
-    if (rdf.id < self.lastAllConfirmedRenderFrameId) {
-      return window.RING_BUFF_FAILED_TO_SET;
+    if (!self.recentRenderCache) {
+      return;
     }
+    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
+      return;
+    }
+    const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id);
+    const shouldForceDumping2 = (rdf.id > self.renderFrameId + self.renderFrameIdLagTolerance);
 
-    const dumpRenderCacheRet = self.dumpToRenderCache(rdf);
+    const dumpRenderCacheRet = (shouldForceDumping1 || shouldForceDumping2) ? self.dumpToRenderCache(rdf) : window.RING_BUFF_CONSECUTIVE_SET;
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
-      console.error("Something is wrong while setting the RingBuffer by frameId!");
-      return dumpRenderCacheRet;
+      throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.id=${rdf.id}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
     if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet) {
       /*
@@ -592,13 +609,7 @@ cc.Class({
       return dumpRenderCacheRet;
     }
 
-    // The logic below applies to ( || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
-      console.log('On battle started! renderFrameId=', rdf.id);
-    } else {
-      console.log('On battle resynced! renderFrameId=', rdf.id);
-    }
-
+    // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
     const players = rdf.players;
     self._initPlayerRichInfoDict(players);
 
@@ -612,11 +623,22 @@ cc.Class({
 
     if (null == self.renderFrameId || self.renderFrameId <= rdf.id) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
+
+      if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
+        console.log('On battle started! renderFrameId=', rdf.id);
+      } else {
+        console.warn(`Got resync@localRenderFrameId=${self.renderFrameId} -> rdf.id=${rdf.id} & rdf.backendUnconfirmedMask=${rdf.backendUnconfirmedMask}, @lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}`);
+      }
+
       self.renderFrameId = rdf.id;
       self.lastRenderFrameIdTriggeredAt = performance.now();
       // In this case it must be true that "rdf.id > chaserRenderFrameId >= lastAllConfirmedRenderFrameId".
       self.lastAllConfirmedRenderFrameId = rdf.id;
       self.chaserRenderFrameId = rdf.id;
+      const candidateLastAllConfirmedInputFrame = self._convertToInputFrameId(rdf.id - 1, self.inputDelayFrames);
+      if (self.lastAllConfirmedInputFrame < candidateLastAllConfirmedInputFrame) {
+        self.lastAllConfirmedInputFrame = candidateLastAllConfirmedInputFrame;
+      }
 
       const canvasNode = self.canvasNode;
       self.ctrl = canvasNode.getComponent("TouchEventsManager");
@@ -651,8 +673,10 @@ cc.Class({
 
   onInputFrameDownsyncBatch(batch) {
     const self = this;
-    if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState
-      && ALL_BATTLE_STATES.IN_SETTLEMENT != self.battleState) {
+    if (!self.recentInputCache) {
+      return;
+    }
+    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
       return;
     }
 
@@ -663,6 +687,7 @@ cc.Class({
       if (inputFrameDownsyncId < self.lastAllConfirmedInputFrameId) {
         continue;
       }
+      self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
       const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
       if (null != localInputFrame
         &&
@@ -672,7 +697,6 @@ cc.Class({
       ) {
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
-      self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
       // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
       self.dumpToInputCache(inputFrameDownsync);
@@ -716,7 +740,7 @@ cc.Class({
   logBattleStats() {
     const self = this;
     let s = [];
-    s.push(`Battle stats: renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}`);
+    s.push(`Battle stats: renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
 
     for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
       const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
@@ -761,7 +785,8 @@ cc.Class({
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const colliderWidth = playerDownsyncInfo.colliderRadius * 2, colliderHeight = playerDownsyncInfo.colliderRadius * 3; 
+    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
+      colliderHeight = playerDownsyncInfo.colliderRadius * 3;
     const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
       pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
 
@@ -783,7 +808,8 @@ cc.Class({
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
       const elapsedMillisSinceLastFrameIdTriggered = performance.now() - self.lastRenderFrameIdTriggeredAt;
-      if (elapsedMillisSinceLastFrameIdTriggered < (self.rollbackEstimatedDtMillis)) {
+      if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
+        // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
         // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
         return;
       }
@@ -822,17 +848,13 @@ cc.Class({
         */
         // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.getByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
+        ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
+        self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
       } catch (err) {
         console.error("Error during Map.update", err);
+        self.onBattleStopped(); // TODO: Popup to ask player to refresh browser
       } finally {
-        // Update countdown
-        self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
-        if (self.countdownNanos <= 0) {
-          self.onBattleStopped(self.playerRichInfoDict);
-          return;
-        }
-
         const countdownSeconds = parseInt(self.countdownNanos / 1000000000);
         if (isNaN(countdownSeconds)) {
           console.warn(`countdownSeconds is NaN for countdownNanos == ${self.countdownNanos}.`);
@@ -840,8 +862,6 @@ cc.Class({
         if (null != self.countdownLabel) {
           self.countdownLabel.string = countdownSeconds;
         }
-        ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
-        self.lastRenderFrameIdTriggeredAt = performance.now();
       }
     }
   },
@@ -967,15 +987,21 @@ cc.Class({
       playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
       playerRichInfo.scriptIns.updateCharacterAnim(immediatePlayerInfo, prevRdfPlayer, false);
     }
+
+    // Update countdown
+    self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
+    if (self.countdownNanos <= 0) {
+      self.onBattleStopped(self.playerRichInfoDict);
+    }
   },
 
   getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
     const self = this;
-    let inputFrameDownsync = self.recentInputCache.getByFrameId(inputFrameId);
-    if (null != inputFrameDownsync && -1 != self.lastAllConfirmedInputFrameId && inputFrameId > self.lastAllConfirmedInputFrameId) {
-      const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId);
+    const inputFrameDownsync = self.recentInputCache.getByFrameId(inputFrameId);
+    const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId);
+    if (null != inputFrameDownsync && null != lastAllConfirmedInputFrame && inputFrameId > self.lastAllConfirmedInputFrameId) {
       for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
-        if (i == self.selfPlayerInfo.joinIndex - 1) continue;
+        if (i == (self.selfPlayerInfo.joinIndex - 1)) continue;
         inputFrameDownsync.inputList[i] = (lastAllConfirmedInputFrame.inputList[i] & 15); // Don't predict attack input!
       }
     }
@@ -1007,11 +1033,7 @@ cc.Class({
       };
     }
 
-    const toRet = {
-      id: currRenderFrame.id + 1,
-      players: nextRenderFramePlayers,
-      meleeBullets: []
-    };
+    const nextRenderFrameMeleeBullets = [];
 
     const bulletPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
     const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
@@ -1104,7 +1126,7 @@ cc.Class({
         collisionSysMap.delete(collisionBulletIndex);
       }
       if (removedBulletsAtCurrFrame.has(collisionBulletIndex)) continue;
-      toRet.meleeBullets.push(meleeBullet);
+      nextRenderFrameMeleeBullets.push(meleeBullet);
     }
 
     // Process player inputs
@@ -1145,7 +1167,7 @@ cc.Class({
             punch.offenderJoinIndex = joinIndex;
             punch.offenderPlayerId = playerId;
             punch.originatedRenderFrameId = currRenderFrame.id;
-            toRet.meleeBullets.push(punch);
+            nextRenderFrameMeleeBullets.push(punch);
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
@@ -1198,7 +1220,11 @@ cc.Class({
 
     }
 
-    return toRet;
+    return window.pb.protos.RoomDownsyncFrame.create({
+      id: currRenderFrame.id + 1,
+      players: nextRenderFramePlayers,
+      meleeBullets: nextRenderFrameMeleeBullets,
+    });
   },
 
   rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
@@ -1206,31 +1232,24 @@ cc.Class({
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd" if not interruptted.
     */
     const self = this;
-    let prevLatestRdf = null;
-    let latestRdf = self.recentRenderCache.getByFrameId(renderFrameIdSt); // typed "RoomDownsyncFrame"
-    if (null == latestRdf) {
-      console.error(`Couldn't find renderFrameId=${renderFrameIdSt}, to rollback, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
-      return [prevLatestRdf, latestRdf];
-    }
+    let i = renderFrameIdSt,
+      prevLatestRdf = null,
+      latestRdf = null;
 
-    if (renderFrameIdSt >= renderFrameIdEd) {
-      return [prevLatestRdf, latestRdf];
-    }
-
-    for (let i = renderFrameIdSt; i < renderFrameIdEd; ++i) {
-      const currRenderFrame = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing", this function can be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
-      if (null == currRenderFrame) {
+    do {
+      latestRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing", this function can be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
+      if (null == latestRdf) {
         console.warn(`Couldn't find renderFrame for i=${i} to rollback, self.renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`);
         return [prevLatestRdf, latestRdf];
       }
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
       const delayedInputFrame = self.getCachedInputFrameDownsyncWithPrediction(j);
       if (null == delayedInputFrame) {
-        console.warn(`Failed to get cached delayedInputFrame for i=${i}, j=${j}, self.renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
-        return [prevLatestRdf, latestRdf];
+        // Shouldn't happen!
+        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
       prevLatestRdf = latestRdf;
-      latestRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap);
+      latestRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, prevLatestRdf, collisionSys, collisionSysMap);
       if (
         self._allConfirmed(delayedInputFrame.confirmedList)
         &&
@@ -1249,7 +1268,8 @@ cc.Class({
         self.chaserRenderFrameId = latestRdf.id;
       }
       self.dumpToRenderCache(latestRdf);
-    }
+      ++i;
+    } while (i < renderFrameIdEd);
 
     return [prevLatestRdf, latestRdf];
   },
