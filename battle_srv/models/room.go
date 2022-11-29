@@ -154,7 +154,7 @@ type Room struct {
 	State                                  int32
 	Index                                  int
 	RenderFrameId                          int32
-	CurDynamicsRenderFrameId               int32 // [WARNING] The dynamics of backend is ALWAYS MOVING FORWARD BY ALL-CONFIRMED INPUTFRAMES (either by upsync or forced), i.e. no rollback
+	CurDynamicsRenderFrameId               int32 // [WARNING] The dynamics of backend is ALWAYS MOVING FORWARD BY ALL-CONFIRMED INPUTFRAMES (either by upsync or forced), i.e. no rollback; Moreover when "true == BackendDynamicsEnabled" we always have "Room.CurDynamicsRenderFrameId >= Room.RenderFrameId" because each "all-confirmed inputFrame" is applied on "all applicable renderFrames" in one-go hence often sees a future "renderFrame" earlier
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
 	Barriers                               map[int32]*Barrier
@@ -166,9 +166,10 @@ type Room struct {
 	LastAllConfirmedInputList              []uint64
 	JoinIndexBooleanArr                    []bool
 
-	BackendDynamicsEnabled       bool
-	LastRenderFrameIdTriggeredAt int64
-	PlayerDefaultSpeed           int32
+	BackendDynamicsEnabled                  bool
+	BackendDynamicsForceConfirmationEnabled bool
+	LastRenderFrameIdTriggeredAt            int64
+	PlayerDefaultSpeed                      int32
 
 	BulletBattleLocalIdCounter      int32
 	dilutedRollbackEstimatedDtNanos int64
@@ -334,6 +335,10 @@ func (pR *Room) ConvertToGeneratingRenderFrameId(inputFrameId int32) int32 {
 	return (inputFrameId << pR.InputScaleFrames)
 }
 
+func (pR *Room) ConvertToJustBeforeNextGeneratingRenderFrameId(inputFrameId int32) int32 {
+	return (inputFrameId << pR.InputScaleFrames) + (1 << pR.InputScaleFrames) - 1
+}
+
 func (pR *Room) ConvertToFirstUsedRenderFrameId(inputFrameId int32, inputDelayFrames int32) int32 {
 	return ((inputFrameId << pR.InputScaleFrames) + inputDelayFrames)
 }
@@ -408,6 +413,7 @@ func (pR *Room) StartBattle() {
 			pR.onBattleStoppedForSettlement()
 		}()
 
+		battleStartedAtNanos := utils.UnixtimeNano()
 		pR.LastRenderFrameIdTriggeredAt = utils.UnixtimeNano()
 
 		Logger.Info("The `battleMainLoop` is started for:", zap.Any("roomId", pR.Id))
@@ -416,7 +422,10 @@ func (pR *Room) StartBattle() {
 
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
 			if elapsedNanosSinceLastFrameIdTriggered < pR.dilutedRollbackEstimatedDtNanos {
-				Logger.Debug(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, elapsedNanosSinceLastFrameIdTriggered))
+				totalElapsedNanos := (stCalculation - battleStartedAtNanos)
+				serverFpsByFar := float64(pR.RenderFrameId) * float64(1000000000) / float64(totalElapsedNanos)
+				Logger.Info(fmt.Sprintf("Avoiding too fast frame@roomId=%v, renderFrameId=%v, totalElapsedNanos=%v, serverFpsByFar=%v: elapsedNanosSinceLastFrameIdTriggered=%v", pR.Id, pR.RenderFrameId, totalElapsedNanos, serverFpsByFar, elapsedNanosSinceLastFrameIdTriggered))
+				time.Sleep(time.Duration(pR.dilutedRollbackEstimatedDtNanos - elapsedNanosSinceLastFrameIdTriggered))
 				continue
 			}
 
@@ -438,7 +447,7 @@ func (pR *Room) StartBattle() {
 
 			pR.markConfirmationIfApplicable()
 			unconfirmedMask := uint64(0)
-			if pR.BackendDynamicsEnabled {
+			if pR.BackendDynamicsForceConfirmationEnabled {
 				// Force setting all-confirmed of buffered inputFrames periodically
 				unconfirmedMask = pR.forceConfirmationIfApplicable()
 			}
@@ -452,10 +461,7 @@ func (pR *Room) StartBattle() {
 
 			   Upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId" -- and this is allowed.
 			*/
-			refRenderFrameId := pR.ConvertToGeneratingRenderFrameId(upperToSendInputFrameId) + (1 << pR.InputScaleFrames) - 1
-			if refRenderFrameId > pR.RenderFrameId {
-				refRenderFrameId = pR.RenderFrameId
-			}
+			refRenderFrameId := pR.ConvertToJustBeforeNextGeneratingRenderFrameId(upperToSendInputFrameId)
 
 			dynamicsDuration := int64(0)
 			if pR.BackendDynamicsEnabled {
@@ -467,11 +473,10 @@ func (pR *Room) StartBattle() {
 					pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 					dynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
 				}
+			}
 
-				// [WARNING] The following inequality are seldom true, but just to avoid that in good network condition the frontend resyncs itself to a "too advanced frontend.renderFrameId", and then starts upsyncing "too advanced inputFrameId".
-				if refRenderFrameId > pR.CurDynamicsRenderFrameId {
-					refRenderFrameId = pR.CurDynamicsRenderFrameId
-				}
+			if refRenderFrameId > pR.RenderFrameId {
+				refRenderFrameId = pR.RenderFrameId
 			}
 
 			for playerId, player := range pR.Players {
@@ -576,7 +581,8 @@ func (pR *Room) StartBattle() {
 			}
 
 			pR.RenderFrameId++
-			elapsedInCalculation := (utils.UnixtimeNano() - stCalculation)
+			pR.LastRenderFrameIdTriggeredAt = utils.UnixtimeNano()
+			elapsedInCalculation := (pR.LastRenderFrameIdTriggeredAt - stCalculation)
 			if elapsedInCalculation > pR.dilutedRollbackEstimatedDtNanos {
 				Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v ns, dynamicsDuration=%v ns, dilutedRollbackEstimatedDtNanos=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, pR.dilutedRollbackEstimatedDtNanos))
 			}
@@ -792,7 +798,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
 	pR.InputDelayFrames = 8
-	pR.NstDelayFrames = 4
+	pR.NstDelayFrames = pR.InputDelayFrames
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
@@ -805,6 +811,7 @@ func (pR *Room) OnDismissed() {
 	pR.MaxChasingRenderFramesPerUpdate = 5
 
 	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	pR.BackendDynamicsForceConfirmationEnabled = (pR.BackendDynamicsEnabled && true)
 	punchSkillId := int32(1)
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
