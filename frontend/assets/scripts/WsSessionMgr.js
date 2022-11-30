@@ -5,7 +5,6 @@ window.UPSYNC_MSG_ACT_PLAYER_CMD = 2;
 window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK = 3;
 
 window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED = -98;
-window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED = -97;
 window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = -1;
 window.DOWNSYNC_MSG_ACT_BATTLE_START = 0;
 window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
@@ -154,10 +153,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         case window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED:
           mapIns.onPlayerAdded(resp.rdf);
           break;
-        case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
-          // Deliberately left blank for now
-          mapIns.hideFindingPlayersGUI(resp.rdf);
-          break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
           mapIns.onBattleReadyToStart(resp.rdf);
           break;
@@ -176,6 +171,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 ${JSON.stringify(resp, null, 2)}`);
             return;
           }
+          mapIns.hideFindingPlayersGUI(resp.rdf);
           const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
           // The following order of execution is important 
           mapIns.onRoomDownsyncFrame(resp.rdf);

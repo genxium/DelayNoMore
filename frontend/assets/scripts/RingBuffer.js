@@ -74,12 +74,12 @@ RingBuffer.prototype.getByFrameId = function(frameId) {
 RingBuffer.prototype.setByFrameId = function(item, frameId) {
   const oldStFrameId = this.stFrameId,
     oldEdFrameId = this.edFrameId;
-  if (frameId < this.stFrameId) {
+  if (frameId < oldStFrameId) {
     return [window.RING_BUFF_FAILED_TO_SET, oldStFrameId, oldEdFrameId];
   }
   // By now "this.stFrameId <= frameId"
 
-  if (this.edFrameId > frameId) {
+  if (oldEdFrameId > frameId) {
     const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
     if (null != arrIdx) {
       this.eles[arrIdx] = item;
@@ -89,15 +89,15 @@ RingBuffer.prototype.setByFrameId = function(item, frameId) {
 
   // By now "this.edFrameId <= frameId"
   let ret = window.RING_BUFF_CONSECUTIVE_SET;
-  if (this.edFrameId < frameId) {
+  if (oldEdFrameId < frameId) {
     this.st = this.ed = 0;
     this.stFrameId = this.edFrameId = frameId;
     this.cnt = 0;
     ret = window.RING_BUFF_NON_CONSECUTIVE_SET;
-  } else {
-    // this.edFrameId == frameId 
-    this.put(item);
   }
+
+  // By now "this.edFrameId == frameId" 
+  this.put(item);
 
   return [ret, oldStFrameId, oldEdFrameId];
 };
