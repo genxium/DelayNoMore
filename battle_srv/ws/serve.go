@@ -365,7 +365,7 @@ func Serve(c *gin.Context) {
 				return nil
 			}
 
-			// Tries to receive from client-side in a non-blocking manner.
+			// TODO: Is there any potential edge-trigger improvement like the epoll approach mentioned above for the following statement? See discussion in https://github.com/gorilla/websocket/issues/122
 			_, bytes, err := conn.ReadMessage()
 			if nil != err {
 				Logger.Error("About to `signalToCloseConnOfThisPlayer`", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Error(err))
