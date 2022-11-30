@@ -320,7 +320,7 @@ cc.Class({
     self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
-    self.recentInputCache = new RingBuffer((self.renderCacheSize >> 2) + 1);
+    self.recentInputCache = new RingBuffer((self.renderCacheSize >> 1) + 1);
 
     self.collisionSys = new collisions.Collisions();
 
@@ -389,7 +389,8 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {};
+    resultPanelScriptIns.onCloseDelegate = () => {
+    };
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -581,7 +582,7 @@ cc.Class({
     this._inputControlEnabled = false;
   },
 
-  onRoomDownsyncFrame(rdf) {
+  onRoomDownsyncFrame(rdf, accompaniedInputFrameDownsyncBatch) {
     // This function is also applicable to "re-joining".
     const self = window.mapIns;
     if (!self.recentRenderCache) {
@@ -624,6 +625,7 @@ cc.Class({
       if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
         console.log('On battle started! renderFrameId=', rdf.id);
       } else {
+        self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
         console.warn(`Got resync@localRenderFrameId=${self.renderFrameId} -> rdf.id=${rdf.id} & rdf.backendUnconfirmedMask=${rdf.backendUnconfirmedMask}, @lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}`);
       }
 

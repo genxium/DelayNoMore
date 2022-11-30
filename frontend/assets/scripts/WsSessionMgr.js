@@ -173,9 +173,7 @@ ${JSON.stringify(resp, null, 2)}`);
           }
           mapIns.hideFindingPlayersGUI(resp.rdf);
           const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
-          // The following order of execution is important 
-          mapIns.onRoomDownsyncFrame(resp.rdf);
-          mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
+          mapIns.onRoomDownsyncFrame(resp.rdf, resp.inputFrameDownsyncBatch);
           break;
         default:
           break;
