@@ -5,7 +5,6 @@ window.UPSYNC_MSG_ACT_PLAYER_CMD = 2;
 window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK = 3;
 
 window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED = -98;
-window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED = -97;
 window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = -1;
 window.DOWNSYNC_MSG_ACT_BATTLE_START = 0;
 window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
@@ -135,7 +134,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
 
   clientSession.onopen = function(evt) {
-    console.log("The WS clientSession is opened. clientSession.id=", clientSession.id);
+    console.log("The WS clientSession is opened.");
     window.clientSession = clientSession;
     if (null == onopenCb) return;
     onopenCb();
@@ -147,16 +146,13 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
     try {
       const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
+      // console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
-          window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
+          window.handleHbRequirements(resp);
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED:
           mapIns.onPlayerAdded(resp.rdf);
-          break;
-        case window.DOWNSYNC_MSG_ACT_PLAYER_READDED_AND_ACKED:
-          // Deliberately left blank for now
-          mapIns.hideFindingPlayersGUI(resp.rdf);
           break;
         case window.DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START:
           mapIns.onBattleReadyToStart(resp.rdf);
@@ -172,16 +168,10 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
           if (null == resp.inputFrameDownsyncBatch || 0 >= resp.inputFrameDownsyncBatch.length) {
-            console.error(`Got empty inputFrameDownsyncBatch upon resync@localRenderFrameId=${mapIns.renderFrameId}, @lastAllConfirmedRenderFrameId=${mapIns.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${mapIns.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${mapIns.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}, the incoming resp=
-${JSON.stringify(resp, null, 2)}`);
+            console.error(`Got empty inputFrameDownsyncBatch upon resync@localRenderFrameId=${mapIns.renderFrameId}, @lastAllConfirmedRenderFrameId=${mapIns.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${mapIns.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${mapIns.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}, the incoming resp=${JSON.stringify(resp, null, 2)}`);
             return;
           }
-          const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
-          const renderFrameIdConsecutive = (resp.rdf.id <= mapIns.renderFrameId + mapIns.renderFrameIdLagTolerance);
-          console.warn(`Got resync@localRenderFrameId=${mapIns.renderFrameId}, @lastAllConfirmedRenderFrameId=${mapIns.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${mapIns.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${mapIns.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}, inputFrameIdConsecutive=${inputFrameIdConsecutive}, renderFrameIdConsecutive=${renderFrameIdConsecutive}`);
-          // The following order of execution is important 
-          mapIns.onRoomDownsyncFrame(resp.rdf);
-          mapIns.onInputFrameDownsyncBatch(resp.inputFrameDownsyncBatch);
+          mapIns.onRoomDownsyncFrame(resp.rdf, resp.inputFrameDownsyncBatch);
           break;
         default:
           break;

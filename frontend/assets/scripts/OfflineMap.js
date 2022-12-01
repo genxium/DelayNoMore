@@ -33,6 +33,7 @@ cc.Class({
     self.inputScaleFrames = 2;
     self.inputFrameUpsyncDelayTolerance = 2;
 
+    self.renderCacheSize = 1024;
     self.rollbackEstimatedDt = 0.016667;
     self.rollbackEstimatedDtMillis = 16.667;
     self.rollbackEstimatedDtNanos = 16666666;

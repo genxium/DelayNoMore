@@ -82,21 +82,21 @@ cc.Class({
     // It turns out that "prevRdfPlayer.characterState" is not useful in this function :)
     if (newAnimName == playingAnimName && window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No need to interrupt
-      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${playingAnimName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
+      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${playingAnimName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, to: ${JSON.stringify(rdfPlayer)}`);
       return;
     }
 
     if (this.animComp instanceof dragonBones.ArmatureDisplay) {
-      this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl);
+      this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName);
     } else {
-      this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName);
+      this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName);
     }
   },
 
-  _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl) {
-    if (ATK_CHARACTER_STATE.Idle1[0] == newCharacterState || ATK_CHARACTER_STATE.Walking[0] == newCharacterState) {
+  _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName) {
+    if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
-      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, playing new ${newAnimName} from the beginning: while the playing anim is ${playAnimation}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
+      //console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, 0, -1);
     } else {
       const animationData = underlyingAnimationCtrl._animations[newAnimName];
@@ -109,10 +109,10 @@ cc.Class({
     }
   },
 
-  _interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName) {
+  _interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
-      // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, playing new ${newAnimName} from the beginning: while the playing anim is ${playAnimation}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, , to: ${JSON.stringify(rdfPlayer)}`);
+      //console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       this.animComp.play(newAnimName, 0);
       return;
     }

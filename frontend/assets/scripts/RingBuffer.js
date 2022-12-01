@@ -13,6 +13,10 @@ var RingBuffer = function(capacity) {
 };
 
 RingBuffer.prototype.put = function(item) {
+  while (this.cnt >= this.n - 1) {
+    // Make room for the new element
+    this.pop();
+  }
   this.eles[this.ed] = item
   this.edFrameId++;
   this.cnt++;
@@ -61,40 +65,41 @@ RingBuffer.prototype.getArrIdxByOffset = function(offsetFromSt) {
 };
 
 RingBuffer.prototype.getByFrameId = function(frameId) {
+  if (frameId >= this.edFrameId) return null;
   const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
   return (null == arrIdx ? null : this.eles[arrIdx]);
 };
 
 // [WARNING] During a battle, frontend could receive non-consecutive frames (either renderFrame or inputFrame) due to resync, the buffer should handle these frames properly. 
 RingBuffer.prototype.setByFrameId = function(item, frameId) {
-  if (frameId < this.stFrameId) {
-    console.error("Invalid putByFrameId#1: stFrameId=", this.stFrameId, ", edFrameId=", this.edFrameId, ", incoming item=", item);
-    return window.RING_BUFF_FAILED_TO_SET;
+  const oldStFrameId = this.stFrameId,
+    oldEdFrameId = this.edFrameId;
+  if (frameId < oldStFrameId) {
+    return [window.RING_BUFF_FAILED_TO_SET, oldStFrameId, oldEdFrameId];
   }
-  const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
-  if (null != arrIdx) {
-    this.eles[arrIdx] = item; 
-    return window.RING_BUFF_CONSECUTIVE_SET;
+  // By now "this.stFrameId <= frameId"
+
+  if (oldEdFrameId > frameId) {
+    const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
+    if (null != arrIdx) {
+      this.eles[arrIdx] = item;
+      return [window.RING_BUFF_CONSECUTIVE_SET, oldStFrameId, oldEdFrameId];
+    }
   }
 
-  // When "null == arrIdx", should it still be deemed consecutive if "frameId == edFrameId" prior to the reset?
+  // By now "this.edFrameId <= frameId"
   let ret = window.RING_BUFF_CONSECUTIVE_SET;
-  if (this.edFrameId < frameId) {
+  if (oldEdFrameId < frameId) {
     this.st = this.ed = 0;
     this.stFrameId = this.edFrameId = frameId;
     this.cnt = 0;
     ret = window.RING_BUFF_NON_CONSECUTIVE_SET;
   }
 
-  this.eles[this.ed] = item
-  this.edFrameId++;
-  this.cnt++;
-  this.ed++;
-  if (this.ed >= this.n) {
-    this.ed -= this.n; // Deliberately not using "%" operator for performance concern
-  }
+  // By now "this.edFrameId == frameId" 
+  this.put(item);
 
-  return ret;
+  return [ret, oldStFrameId, oldEdFrameId];
 };
 
 module.exports = RingBuffer;
