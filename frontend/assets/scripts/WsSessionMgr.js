@@ -134,7 +134,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
 
   clientSession.onopen = function(evt) {
-    console.log("The WS clientSession is opened. clientSession.id=", clientSession.id);
+    console.log("The WS clientSession is opened.");
     window.clientSession = clientSession;
     if (null == onopenCb) return;
     onopenCb();
@@ -171,7 +171,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 ${JSON.stringify(resp, null, 2)}`);
             return;
           }
-          mapIns.hideFindingPlayersGUI(resp.rdf);
           const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
           mapIns.onRoomDownsyncFrame(resp.rdf, resp.inputFrameDownsyncBatch);
           break;
