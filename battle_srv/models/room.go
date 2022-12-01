@@ -434,6 +434,8 @@ func (pR *Room) StartBattle() {
 					switch thatPlayerBattleState {
 					case PlayerBattleStateIns.DISCONNECTED:
 					case PlayerBattleStateIns.LOST:
+					case PlayerBattleStateIns.EXPELLED_DURING_GAME:
+					case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
 						continue
 					}
 					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*RoomDownsyncFrame)
@@ -761,10 +763,16 @@ func (pR *Room) OnDismissed() {
 }
 
 func (pR *Room) expelPlayerDuringGame(playerId int32) {
-	defer pR.onPlayerExpelledDuringGame(playerId)
+	if signalToCloseConnOfThisPlayer, existent := pR.PlayerSignalToCloseDict[playerId]; existent {
+		signalToCloseConnOfThisPlayer(Constants.RetCode.UnknownError, "") // TODO: Specify an error code
+	}
+	pR.onPlayerExpelledDuringGame(playerId)
 }
 
 func (pR *Room) expelPlayerForDismissal(playerId int32) {
+	if signalToCloseConnOfThisPlayer, existent := pR.PlayerSignalToCloseDict[playerId]; existent {
+		signalToCloseConnOfThisPlayer(Constants.RetCode.UnknownError, "") // TODO: Specify an error code
+	}
 	pR.onPlayerExpelledForDismissal(playerId)
 }
 
@@ -1441,6 +1449,15 @@ func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
 
 func (pR *Room) downsyncToAllPlayers(upperToSendInputFrameId int32, unconfirmedMask uint64, prohibitsInputsBufferLock bool) {
 	for playerId, player := range pR.Players {
+		thatPlayerBattleState := atomic.LoadInt32(&(player.BattleState))
+		switch thatPlayerBattleState {
+		case PlayerBattleStateIns.DISCONNECTED:
+		case PlayerBattleStateIns.LOST:
+		case PlayerBattleStateIns.EXPELLED_DURING_GAME:
+		case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+		case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK: // This is the reason why battleState filter is put at "downsyncToAllPlayers" instead of "downsyncToSinglePlayer"
+			continue
+		}
 		pR.downsyncToSinglePlayer(playerId, player, pR.LastAllConfirmedInputFrameId, unconfirmedMask, prohibitsInputsBufferLock)
 	}
 }
@@ -1501,12 +1518,12 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, upperToSe
 			panic(fmt.Sprintf("Required refRenderFrameId=%v for roomId=%v, renderFrameId=%v, playerId=%v, playerLastSentInputFrameId=%v, j=%v doesn't exist! InputsBuffer=%v, RenderFrameBuffer=%v", refRenderFrameId, pR.Id, pR.RenderFrameId, playerId, player.LastSentInputFrameId, j, pR.InputsBufferString(false), pR.RenderFrameBufferString()))
 		}
 
-		Logger.Warn(fmt.Sprintf("Sending refRenderFrameId=%v for roomId=%v, , playerId=%v, playerJoinIndex=%v, renderFrameId=%v, curDynamicsRenderFrameId=%v, playerLastSentInputFrameId=%v, lowerToSentInputFrameId=%v, upperToSendInputFrameId=%v, j=%v: InputsBuffer=%v", refRenderFrameId, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, lowerToSentInputFrameId, upperToSendInputFrameId, j, pR.InputsBufferString(false)))
 		refRenderFrame := tmp.(*RoomDownsyncFrame)
 		for playerId, player := range pR.Players {
 			refRenderFrame.Players[playerId].ColliderRadius = player.ColliderRadius // hardcoded for now
 		}
 		refRenderFrame.BackendUnconfirmedMask = unconfirmedMask
+		Logger.Warn(fmt.Sprintf("Sending refRenderFrameId=%v for roomId=%v, , playerId=%v, playerJoinIndex=%v, renderFrameId=%v, curDynamicsRenderFrameId=%v, playerLastSentInputFrameId=%v, lowerToSentInputFrameId=%v, upperToSendInputFrameId=%v, j=%v: InputsBuffer=%v", refRenderFrameId, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, lowerToSentInputFrameId, upperToSendInputFrameId, j, pR.InputsBufferString(false)))
 		pR.sendSafely(refRenderFrame, toSendInputFrameDownsyncs, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId)
 	} else {
 		pR.sendSafely(nil, toSendInputFrameDownsyncs, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId)

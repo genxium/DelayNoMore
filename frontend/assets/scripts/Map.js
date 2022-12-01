@@ -485,7 +485,7 @@ cc.Class({
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
           self.collisionSysMap.set(collisionBarrierIndex, newBarrierCollider);
-          console.log(`Created new barrier collider: ${newBarrierCollider}`);
+        // console.log(`Created new barrier collider: ${collisionBarrierIndex}`);
         }
 
         self.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
@@ -926,9 +926,6 @@ cc.Class({
     const self = this;
     if (null == self.findingPlayerNode.parent) return;
     self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
-    if (null != rdf) {
-      self._initPlayerRichInfoDict(rdf.players);
-    }
   },
 
   onBattleReadyToStart(rdf) {

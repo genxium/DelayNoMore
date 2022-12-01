@@ -146,9 +146,10 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
     try {
       const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
+      // console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
-          window.handleHbRequirements(resp); // 获取boundRoomId并存储到localStorage
+          window.handleHbRequirements(resp);
           break;
         case window.DOWNSYNC_MSG_ACT_PLAYER_ADDED_AND_ACKED:
           mapIns.onPlayerAdded(resp.rdf);
@@ -167,11 +168,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           break;
         case window.DOWNSYNC_MSG_ACT_FORCED_RESYNC:
           if (null == resp.inputFrameDownsyncBatch || 0 >= resp.inputFrameDownsyncBatch.length) {
-            console.error(`Got empty inputFrameDownsyncBatch upon resync@localRenderFrameId=${mapIns.renderFrameId}, @lastAllConfirmedRenderFrameId=${mapIns.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${mapIns.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${mapIns.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}, the incoming resp=
-${JSON.stringify(resp, null, 2)}`);
+            console.error(`Got empty inputFrameDownsyncBatch upon resync@localRenderFrameId=${mapIns.renderFrameId}, @lastAllConfirmedRenderFrameId=${mapIns.lastAllConfirmedRenderFrameId}, @lastAllConfirmedInputFrameId=${mapIns.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${mapIns.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}, the incoming resp=${JSON.stringify(resp, null, 2)}`);
             return;
           }
-          const inputFrameIdConsecutive = (resp.inputFrameDownsyncBatch[0].inputFrameId == mapIns.lastAllConfirmedInputFrameId + 1);
           mapIns.onRoomDownsyncFrame(resp.rdf, resp.inputFrameDownsyncBatch);
           break;
         default:
