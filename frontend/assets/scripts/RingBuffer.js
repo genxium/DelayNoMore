@@ -13,7 +13,7 @@ var RingBuffer = function(capacity) {
 };
 
 RingBuffer.prototype.put = function(item) {
-  while (this.cnt >= this.n - 1) {
+  while (0 < this.cnt && this.cnt >= this.n) {
     // Make room for the new element
     this.pop();
   }
@@ -65,7 +65,7 @@ RingBuffer.prototype.getArrIdxByOffset = function(offsetFromSt) {
 };
 
 RingBuffer.prototype.getByFrameId = function(frameId) {
-  if (frameId >= this.edFrameId) return null;
+  if (frameId >= this.edFrameId || frameId < this.stFrameId) return null;
   const arrIdx = this.getArrIdxByOffset(frameId - this.stFrameId);
   return (null == arrIdx ? null : this.eles[arrIdx]);
 };

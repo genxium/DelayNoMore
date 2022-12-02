@@ -26,7 +26,7 @@ func NewRingBuffer(n int32) *RingBuffer {
 }
 
 func (rb *RingBuffer) Put(pItem interface{}) {
-	for rb.Cnt >= rb.N-1 {
+	for 0 < rb.Cnt && rb.Cnt >= rb.N {
 		// Make room for the new element
 		rb.Pop()
 	}
@@ -78,7 +78,7 @@ func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
 }
 
 func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
-	if frameId >= rb.EdFrameId {
+	if frameId >= rb.EdFrameId || frameId < rb.StFrameId {
 		return nil
 	}
 	return rb.GetByOffset(frameId - rb.StFrameId)
