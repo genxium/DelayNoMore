@@ -1,10 +1,5 @@
 package models
 
-import (
-	. "battle_srv/protos"
-	"sync"
-)
-
 type RingBuffer struct {
 	Ed        int32 // write index, open index
 	St        int32 // read index, closed index
@@ -82,43 +77,4 @@ func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
 		return nil
 	}
 	return rb.GetByOffset(frameId - rb.StFrameId)
-}
-
-func (rb *RingBuffer) cloneInputFrameDownsyncsByFrameIdRange(stFrameId, edFrameId int32, mux *sync.Mutex) (int32, []*InputFrameDownsync) {
-	dst := make([]*InputFrameDownsync, 0, rb.Cnt)
-	if nil != mux {
-		mux.Lock()
-
-		defer func() {
-			mux.Unlock()
-		}()
-	}
-
-	prevFrameFound := true
-	j := stFrameId
-	for j < edFrameId {
-		tmp := rb.GetByFrameId(j)
-		if nil == tmp {
-			if false == prevFrameFound {
-				// The "id"s are always consecutive
-				break
-			} else {
-				prevFrameFound = false
-				continue
-			}
-		}
-		foo := tmp.(*InputFrameDownsync)
-		bar := &InputFrameDownsync{
-			InputFrameId:  foo.InputFrameId,
-			InputList:     make([]uint64, len(foo.InputList)),
-			ConfirmedList: foo.ConfirmedList,
-		}
-		for i, input := range foo.InputList {
-			bar.InputList[i] = input
-		}
-		dst = append(dst, bar)
-		j++
-	}
-
-	return j, dst
 }
