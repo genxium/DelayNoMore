@@ -1605,20 +1605,21 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 func (pR *Room) createInputsBufferSnapshot(stFrameId, edFrameId int32) []*InputFrameDownsync {
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
 	snapshot := make([]*InputFrameDownsync, 0, edFrameId-stFrameId)
-	prevFrameFound := true
+	prevFrameFound := false
 	j := stFrameId
 	for j < edFrameId {
 		tmp := pR.InputsBuffer.GetByFrameId(j)
 		if nil == tmp {
 			if false == prevFrameFound {
-				// The "id"s are always consecutive
-				break
+				j++
+				continue // allowed to keep not finding the requested inputFrames at the beginning
 			} else {
-				prevFrameFound = false
-				continue
+				break // The "id"s are always consecutive
 			}
 		}
+		prevFrameFound = true
 		foo := tmp.(*InputFrameDownsync)
+
 		bar := &InputFrameDownsync{
 			InputFrameId:  foo.InputFrameId,
 			InputList:     make([]uint64, len(foo.InputList)),
