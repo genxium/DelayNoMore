@@ -1102,18 +1102,22 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 		}
 	}
 
+	refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
 	var inputsBufferSnapshot []*InputFrameDownsync = nil
 	if 0 < newAllConfirmedCount {
-		snapshotStFrameId := pR.LastAllConfirmedInputFrameId - newAllConfirmedCount
-		if snapshotStFrameId < 0 {
-			// This applies to the first all-confirmed inputFrame whose inputFrameId is 0
-			snapshotStFrameId = 0
-		}
+		/*
+		   [WARNING]
+
+		   If "pR.InputsBufferLock" was previously held by "battleMainLoop -> applyInputFrameDownsyncDynamics", then this value would be just (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount).
+
+		   However if "pR.InputsBufferLock" was previously held by another "OnBattleCmdReceived -> markConfirmationIfApplicable", this value might be smaller than (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount)!
+		*/
+		snapshotStFrameId := pR.ConvertToInputFrameId(refRenderFrameIdIfNeeded, pR.InputDelayFrames)
+		// Duplicate downsynced inputFrameIds will be filtered out by frontend.
 		inputsBufferSnapshot = pR.createInputsBufferSnapshot(snapshotStFrameId, pR.LastAllConfirmedInputFrameId+1)
 	}
 
 	Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v returning newAllConfirmedCount=%d: InputsBuffer=%v", pR.Id, newAllConfirmedCount, pR.InputsBufferString(false)))
-	refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
 	return newAllConfirmedCount, refRenderFrameIdIfNeeded, inputsBufferSnapshot
 }
 
