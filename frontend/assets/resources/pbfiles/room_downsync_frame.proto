@@ -68,6 +68,12 @@ message WsResp {
   BattleColliderInfo bciFrame = 6; 
 }
 
+message InputsBufferSnapshot {
+  int32 refRenderFrameId = 1;    
+  uint64 unconfirmedMask = 2;
+  repeated InputFrameDownsync toSendInputFrameDownsyncs = 3;
+}
+
 message MeleeBullet { 
   // Jargon reference https://www.thegamer.com/fighting-games-frame-data-explained/
   // ALL lengths are in world coordinate
