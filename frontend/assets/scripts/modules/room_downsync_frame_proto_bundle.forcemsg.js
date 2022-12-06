@@ -3553,6 +3553,292 @@ $root.protos = (function() {
         return WsResp;
     })();
 
+    protos.InputsBufferSnapshot = (function() {
+
+        /**
+         * Properties of an InputsBufferSnapshot.
+         * @memberof protos
+         * @interface IInputsBufferSnapshot
+         * @property {number|null} [refRenderFrameId] InputsBufferSnapshot refRenderFrameId
+         * @property {number|Long|null} [unconfirmedMask] InputsBufferSnapshot unconfirmedMask
+         * @property {Array.<protos.InputFrameDownsync>|null} [toSendInputFrameDownsyncs] InputsBufferSnapshot toSendInputFrameDownsyncs
+         */
+
+        /**
+         * Constructs a new InputsBufferSnapshot.
+         * @memberof protos
+         * @classdesc Represents an InputsBufferSnapshot.
+         * @implements IInputsBufferSnapshot
+         * @constructor
+         * @param {protos.IInputsBufferSnapshot=} [properties] Properties to set
+         */
+        function InputsBufferSnapshot(properties) {
+            this.toSendInputFrameDownsyncs = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * InputsBufferSnapshot refRenderFrameId.
+         * @member {number} refRenderFrameId
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         */
+        InputsBufferSnapshot.prototype.refRenderFrameId = 0;
+
+        /**
+         * InputsBufferSnapshot unconfirmedMask.
+         * @member {number|Long} unconfirmedMask
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         */
+        InputsBufferSnapshot.prototype.unconfirmedMask = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * InputsBufferSnapshot toSendInputFrameDownsyncs.
+         * @member {Array.<protos.InputFrameDownsync>} toSendInputFrameDownsyncs
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         */
+        InputsBufferSnapshot.prototype.toSendInputFrameDownsyncs = $util.emptyArray;
+
+        /**
+         * Creates a new InputsBufferSnapshot instance using the specified properties.
+         * @function create
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {protos.IInputsBufferSnapshot=} [properties] Properties to set
+         * @returns {protos.InputsBufferSnapshot} InputsBufferSnapshot instance
+         */
+        InputsBufferSnapshot.create = function create(properties) {
+            return new InputsBufferSnapshot(properties);
+        };
+
+        /**
+         * Encodes the specified InputsBufferSnapshot message. Does not implicitly {@link protos.InputsBufferSnapshot.verify|verify} messages.
+         * @function encode
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {protos.InputsBufferSnapshot} message InputsBufferSnapshot message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        InputsBufferSnapshot.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.refRenderFrameId != null && Object.hasOwnProperty.call(message, "refRenderFrameId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.refRenderFrameId);
+            if (message.unconfirmedMask != null && Object.hasOwnProperty.call(message, "unconfirmedMask"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.unconfirmedMask);
+            if (message.toSendInputFrameDownsyncs != null && message.toSendInputFrameDownsyncs.length)
+                for (var i = 0; i < message.toSendInputFrameDownsyncs.length; ++i)
+                    $root.protos.InputFrameDownsync.encode(message.toSendInputFrameDownsyncs[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified InputsBufferSnapshot message, length delimited. Does not implicitly {@link protos.InputsBufferSnapshot.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {protos.InputsBufferSnapshot} message InputsBufferSnapshot message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        InputsBufferSnapshot.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an InputsBufferSnapshot message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.InputsBufferSnapshot} InputsBufferSnapshot
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        InputsBufferSnapshot.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.InputsBufferSnapshot();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.refRenderFrameId = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.unconfirmedMask = reader.uint64();
+                        break;
+                    }
+                case 3: {
+                        if (!(message.toSendInputFrameDownsyncs && message.toSendInputFrameDownsyncs.length))
+                            message.toSendInputFrameDownsyncs = [];
+                        message.toSendInputFrameDownsyncs.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an InputsBufferSnapshot message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.InputsBufferSnapshot} InputsBufferSnapshot
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        InputsBufferSnapshot.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an InputsBufferSnapshot message.
+         * @function verify
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        InputsBufferSnapshot.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.refRenderFrameId != null && message.hasOwnProperty("refRenderFrameId"))
+                if (!$util.isInteger(message.refRenderFrameId))
+                    return "refRenderFrameId: integer expected";
+            if (message.unconfirmedMask != null && message.hasOwnProperty("unconfirmedMask"))
+                if (!$util.isInteger(message.unconfirmedMask) && !(message.unconfirmedMask && $util.isInteger(message.unconfirmedMask.low) && $util.isInteger(message.unconfirmedMask.high)))
+                    return "unconfirmedMask: integer|Long expected";
+            if (message.toSendInputFrameDownsyncs != null && message.hasOwnProperty("toSendInputFrameDownsyncs")) {
+                if (!Array.isArray(message.toSendInputFrameDownsyncs))
+                    return "toSendInputFrameDownsyncs: array expected";
+                for (var i = 0; i < message.toSendInputFrameDownsyncs.length; ++i) {
+                    var error = $root.protos.InputFrameDownsync.verify(message.toSendInputFrameDownsyncs[i]);
+                    if (error)
+                        return "toSendInputFrameDownsyncs." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates an InputsBufferSnapshot message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.InputsBufferSnapshot} InputsBufferSnapshot
+         */
+        InputsBufferSnapshot.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.InputsBufferSnapshot)
+                return object;
+            var message = new $root.protos.InputsBufferSnapshot();
+            if (object.refRenderFrameId != null)
+                message.refRenderFrameId = object.refRenderFrameId | 0;
+            if (object.unconfirmedMask != null)
+                if ($util.Long)
+                    (message.unconfirmedMask = $util.Long.fromValue(object.unconfirmedMask)).unsigned = true;
+                else if (typeof object.unconfirmedMask === "string")
+                    message.unconfirmedMask = parseInt(object.unconfirmedMask, 10);
+                else if (typeof object.unconfirmedMask === "number")
+                    message.unconfirmedMask = object.unconfirmedMask;
+                else if (typeof object.unconfirmedMask === "object")
+                    message.unconfirmedMask = new $util.LongBits(object.unconfirmedMask.low >>> 0, object.unconfirmedMask.high >>> 0).toNumber(true);
+            if (object.toSendInputFrameDownsyncs) {
+                if (!Array.isArray(object.toSendInputFrameDownsyncs))
+                    throw TypeError(".protos.InputsBufferSnapshot.toSendInputFrameDownsyncs: array expected");
+                message.toSendInputFrameDownsyncs = [];
+                for (var i = 0; i < object.toSendInputFrameDownsyncs.length; ++i) {
+                    if (typeof object.toSendInputFrameDownsyncs[i] !== "object")
+                        throw TypeError(".protos.InputsBufferSnapshot.toSendInputFrameDownsyncs: object expected");
+                    message.toSendInputFrameDownsyncs[i] = $root.protos.InputFrameDownsync.fromObject(object.toSendInputFrameDownsyncs[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an InputsBufferSnapshot message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {protos.InputsBufferSnapshot} message InputsBufferSnapshot
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        InputsBufferSnapshot.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.toSendInputFrameDownsyncs = [];
+            if (options.defaults) {
+                object.refRenderFrameId = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.unconfirmedMask = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.unconfirmedMask = options.longs === String ? "0" : 0;
+            }
+            if (message.refRenderFrameId != null && message.hasOwnProperty("refRenderFrameId"))
+                object.refRenderFrameId = message.refRenderFrameId;
+            if (message.unconfirmedMask != null && message.hasOwnProperty("unconfirmedMask"))
+                if (typeof message.unconfirmedMask === "number")
+                    object.unconfirmedMask = options.longs === String ? String(message.unconfirmedMask) : message.unconfirmedMask;
+                else
+                    object.unconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.unconfirmedMask) : options.longs === Number ? new $util.LongBits(message.unconfirmedMask.low >>> 0, message.unconfirmedMask.high >>> 0).toNumber(true) : message.unconfirmedMask;
+            if (message.toSendInputFrameDownsyncs && message.toSendInputFrameDownsyncs.length) {
+                object.toSendInputFrameDownsyncs = [];
+                for (var j = 0; j < message.toSendInputFrameDownsyncs.length; ++j)
+                    object.toSendInputFrameDownsyncs[j] = $root.protos.InputFrameDownsync.toObject(message.toSendInputFrameDownsyncs[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this InputsBufferSnapshot to JSON.
+         * @function toJSON
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        InputsBufferSnapshot.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for InputsBufferSnapshot
+         * @function getTypeUrl
+         * @memberof protos.InputsBufferSnapshot
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        InputsBufferSnapshot.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.InputsBufferSnapshot";
+        };
+
+        return InputsBufferSnapshot;
+    })();
+
     protos.MeleeBullet = (function() {
 
         /**
