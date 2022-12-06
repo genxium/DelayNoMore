@@ -1580,7 +1580,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 
 func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot) {
 	/*
-			   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked for preserving the order of generation of "inputsBufferSnapshot" -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
+			   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is LOCKED for preserving the order of generation of "inputsBufferSnapshot" -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
 
 		       Actually if each player session were both intrinsically thread-safe & non-blocking for writing (like Java NIO), I could've just called "playerSession.WriteMessage" while holding "pR.InputsBufferLock" -- but the ws session provided by Gorilla library is neither thread-safe nor non-blocking for writing, which is fine because it creates a chance for the users to solve an interesting problem :)
 	*/
@@ -1588,6 +1588,11 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 	   Moreover, we're downsyncing a same "inputsBufferSnapshot" for all players in the same battle and this is by design, i.e. not respecting "player.LastSentInputFrameId" because "new all-confirmed inputFrameDownsyncs" are the same for all players and ws is TCP-based (no loss of consecutive packets except for reconnection -- which is already handled by READDED_BATTLE_COLLIDER_ACKED)
 	*/
 	for playerId, playerDownsyncChan := range pR.PlayerDownsyncChanDict {
+		/*
+		   [WARNING] While the order of generation of "inputsBufferSnapshot" is preserved for sending, the underlying network I/O blocking action is dispatched to "downsyncLoop of each player" such that "markConfirmationIfApplicable & forceConfirmationIfApplicable" can re-hold "pR.InputsBufferLock" asap and proceed with more inputFrameUpsyncs.
+
+		   The use of "downsyncLoop of each player" also waives the need of guarding each "pR.PlayerDownsyncSessionDict[playerId]" from multithread-access (e.g. by a "pR.PlayerDownsyncSessionMutexDict[playerId]"), i.e. Gorilla v1.2.0 "conn.WriteMessage" isn't thread-safe https://github.com/gorilla/websocket/blob/v1.2.0/conn.go#L585.
+		*/
 		playerDownsyncChan <- (*inputsBufferSnapshot)
 		Logger.Debug(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
 	}
@@ -1595,8 +1600,9 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 
 func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRenderFrameId int32, unconfirmedMask uint64, toSendInputFrameDownsyncsSnapshot []*InputFrameDownsync) {
 	/*
-	   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is unlocked -- otherwise the blocking "sendSafely" might cause significant lag!
-	   We hereby assume that Golang runtime allocates & frees small amount of RAM quickly enough compared to either network I/O worst cases or the high frequency "per inputFrameDownsync*player" locking (though "OnBattleCmdReceived" locks at the same frequency but it's inevitable).
+	   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is unlocked -- otherwise the network I/O blocking of "sendSafely" might cause significant lag for "markConfirmationIfApplicable & forceConfirmationIfApplicable"!
+
+	   We hereby assume that Golang runtime allocates & frees small amount of RAM quickly enough compared to either network I/O blocking in worst cases or the high frequency "per inputFrameDownsync*player" locking (though "OnBattleCmdReceived" locks at the same frequency but it's inevitable).
 	*/
 
 	playerJoinIndex := player.JoinIndex - 1
