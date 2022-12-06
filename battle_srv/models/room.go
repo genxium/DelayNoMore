@@ -1204,7 +1204,6 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 
 	if 0 < unconfirmedMask {
 		// This condition should be rarely met!
-		nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
 		/*
 		   Upon resynced on frontend, "refRenderFrameId" is now set to as advanced as possible, and it's the frontend's responsibility now to pave way for the "gap inputFrames"
 
@@ -1212,7 +1211,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 
 		   Upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId" -- and this is allowed.
 		*/
-		refRenderFrameIdIfNeeded := nextDynamicsRenderFrameId - 1
+		refRenderFrameIdIfNeeded := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
 		if 0 > refRenderFrameIdIfNeeded {
 			// Without a "refRenderFrame", there's no point to force confirmation, i.e. nothing to downsync to the "ACTIVE but slowly ticking frontend(s)"
 			return nil
@@ -1566,7 +1565,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 	if 0 <= pR.LastAllConfirmedInputFrameId {
 		dynamicsStartedAt := utils.UnixtimeNano()
 		// Apply "all-confirmed inputFrames" to move forward "pR.CurDynamicsRenderFrameId"
-		nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
+		nextDynamicsRenderFrameId := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames) + 1
 		Logger.Debug(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, LastAllConfirmedInputFrameId=%v, InputDelayFrames=%v, nextDynamicsRenderFrameId=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames, nextDynamicsRenderFrameId))
 		pR.applyInputFrameDownsyncDynamics(pR.CurDynamicsRenderFrameId, nextDynamicsRenderFrameId, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 		*pDynamicsDuration = utils.UnixtimeNano() - dynamicsStartedAt
