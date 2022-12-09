@@ -20,6 +20,11 @@ window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Id
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Walking[0]);
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1[0]);
 
+window.ATK_CHARACTER_STATE_IN_AIR_SET = new Set();
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtk1[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtked1[0]);
+
 /*
 Kindly note that the use of dragonBones anim is an informed choice for the feasibility of "gotoAndPlayByFrame", which is a required feature by "Map.rollbackAndChase". You might find that "cc.Animation" -- the traditional frame anim -- can also suffice this requirement, yet if we want to develop 3D frontend in the future, working with skeletal anim will make a smoother transition.
 
@@ -101,7 +106,7 @@ cc.Class({
   _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
-      //console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
+      console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, 0, -1);
     } else {
       const animationData = underlyingAnimationCtrl._animations[newAnimName];
@@ -117,7 +122,7 @@ cc.Class({
   _interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
-      //console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
+      //console.warn(`#FrameAnim JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       this.animComp.play(newAnimName, 0);
       return;
     }

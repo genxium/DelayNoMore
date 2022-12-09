@@ -34,6 +34,7 @@ message InputFrameDecoded {
   int32 dx = 1;
   int32 dy = 2;
   int32 btnALevel = 3;
+  int32 btnBLevel = 4;
 }
 
 message InputFrameUpsync {

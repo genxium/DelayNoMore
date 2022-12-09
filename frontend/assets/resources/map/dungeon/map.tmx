@@ -218,11 +218,11 @@
    </properties>
    <polyline points="0,0 -80,-0.666667 -80,30 0,31.3333"/>
   </object>
-  <object id="48" x="1116" y="1536.67">
+  <object id="48" x="1029.56" y="1536.67">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -4.66667,12.6667 213.333,14.6667 212.667,-2"/>
+   <polyline points="77,-0.333333 9.10906,14.6667 299.775,14.6667 298.84,-2"/>
   </object>
  </objectgroup>
 </map>

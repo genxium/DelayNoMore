@@ -1209,6 +1209,7 @@ $root.protos = (function() {
          * @property {number|null} [hp] PlayerDownsync hp
          * @property {number|null} [maxHp] PlayerDownsync maxHp
          * @property {number|null} [characterState] PlayerDownsync characterState
+         * @property {boolean|null} [inAir] PlayerDownsync inAir
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1374,6 +1375,14 @@ $root.protos = (function() {
         PlayerDownsync.prototype.characterState = 0;
 
         /**
+         * PlayerDownsync inAir.
+         * @member {boolean} inAir
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.inAir = false;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1457,12 +1466,14 @@ $root.protos = (function() {
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxHp);
             if (message.characterState != null && Object.hasOwnProperty.call(message, "characterState"))
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.characterState);
+            if (message.inAir != null && Object.hasOwnProperty.call(message, "inAir"))
+                writer.uint32(/* id 19, wireType 0 =*/152).bool(message.inAir);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                writer.uint32(/* id 19, wireType 2 =*/154).string(message.name);
+                writer.uint32(/* id 20, wireType 2 =*/162).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
-                writer.uint32(/* id 20, wireType 2 =*/162).string(message.displayName);
+                writer.uint32(/* id 21, wireType 2 =*/170).string(message.displayName);
             if (message.avatar != null && Object.hasOwnProperty.call(message, "avatar"))
-                writer.uint32(/* id 21, wireType 2 =*/170).string(message.avatar);
+                writer.uint32(/* id 22, wireType 2 =*/178).string(message.avatar);
             return writer;
         };
 
@@ -1570,14 +1581,18 @@ $root.protos = (function() {
                         break;
                     }
                 case 19: {
-                        message.name = reader.string();
+                        message.inAir = reader.bool();
                         break;
                     }
                 case 20: {
-                        message.displayName = reader.string();
+                        message.name = reader.string();
                         break;
                     }
                 case 21: {
+                        message.displayName = reader.string();
+                        break;
+                    }
+                case 22: {
                         message.avatar = reader.string();
                         break;
                     }
@@ -1670,6 +1685,9 @@ $root.protos = (function() {
             if (message.characterState != null && message.hasOwnProperty("characterState"))
                 if (!$util.isInteger(message.characterState))
                     return "characterState: integer expected";
+            if (message.inAir != null && message.hasOwnProperty("inAir"))
+                if (typeof message.inAir !== "boolean")
+                    return "inAir: boolean expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1730,6 +1748,8 @@ $root.protos = (function() {
                 message.maxHp = object.maxHp | 0;
             if (object.characterState != null)
                 message.characterState = object.characterState | 0;
+            if (object.inAir != null)
+                message.inAir = Boolean(object.inAir);
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1771,6 +1791,7 @@ $root.protos = (function() {
                 object.hp = 0;
                 object.maxHp = 0;
                 object.characterState = 0;
+                object.inAir = false;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1811,6 +1832,8 @@ $root.protos = (function() {
                 object.maxHp = message.maxHp;
             if (message.characterState != null && message.hasOwnProperty("characterState"))
                 object.characterState = message.characterState;
+            if (message.inAir != null && message.hasOwnProperty("inAir"))
+                object.inAir = message.inAir;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))
@@ -1858,6 +1881,7 @@ $root.protos = (function() {
          * @property {number|null} [dx] InputFrameDecoded dx
          * @property {number|null} [dy] InputFrameDecoded dy
          * @property {number|null} [btnALevel] InputFrameDecoded btnALevel
+         * @property {number|null} [btnBLevel] InputFrameDecoded btnBLevel
          */
 
         /**
@@ -1900,6 +1924,14 @@ $root.protos = (function() {
         InputFrameDecoded.prototype.btnALevel = 0;
 
         /**
+         * InputFrameDecoded btnBLevel.
+         * @member {number} btnBLevel
+         * @memberof protos.InputFrameDecoded
+         * @instance
+         */
+        InputFrameDecoded.prototype.btnBLevel = 0;
+
+        /**
          * Creates a new InputFrameDecoded instance using the specified properties.
          * @function create
          * @memberof protos.InputFrameDecoded
@@ -1929,6 +1961,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 2, wireType 0 =*/16).int32(message.dy);
             if (message.btnALevel != null && Object.hasOwnProperty.call(message, "btnALevel"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.btnALevel);
+            if (message.btnBLevel != null && Object.hasOwnProperty.call(message, "btnBLevel"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.btnBLevel);
             return writer;
         };
 
@@ -1975,6 +2009,10 @@ $root.protos = (function() {
                         message.btnALevel = reader.int32();
                         break;
                     }
+                case 4: {
+                        message.btnBLevel = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2019,6 +2057,9 @@ $root.protos = (function() {
             if (message.btnALevel != null && message.hasOwnProperty("btnALevel"))
                 if (!$util.isInteger(message.btnALevel))
                     return "btnALevel: integer expected";
+            if (message.btnBLevel != null && message.hasOwnProperty("btnBLevel"))
+                if (!$util.isInteger(message.btnBLevel))
+                    return "btnBLevel: integer expected";
             return null;
         };
 
@@ -2040,6 +2081,8 @@ $root.protos = (function() {
                 message.dy = object.dy | 0;
             if (object.btnALevel != null)
                 message.btnALevel = object.btnALevel | 0;
+            if (object.btnBLevel != null)
+                message.btnBLevel = object.btnBLevel | 0;
             return message;
         };
 
@@ -2060,6 +2103,7 @@ $root.protos = (function() {
                 object.dx = 0;
                 object.dy = 0;
                 object.btnALevel = 0;
+                object.btnBLevel = 0;
             }
             if (message.dx != null && message.hasOwnProperty("dx"))
                 object.dx = message.dx;
@@ -2067,6 +2111,8 @@ $root.protos = (function() {
                 object.dy = message.dy;
             if (message.btnALevel != null && message.hasOwnProperty("btnALevel"))
                 object.btnALevel = message.btnALevel;
+            if (message.btnBLevel != null && message.hasOwnProperty("btnBLevel"))
+                object.btnBLevel = message.btnBLevel;
             return object;
         };
 
