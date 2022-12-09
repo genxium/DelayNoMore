@@ -5,6 +5,9 @@ window.ATK_CHARACTER_STATE = {
   Walking: [1, "Walking"],
   Atk1: [2, "Atk1"],
   Atked1: [3, "Atked1"],
+  InAirIdle1: [4, "Idle1"],
+  InAirAtk1: [5, "Atk1"],
+  InAirAtked1: [6, "Atked1"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];
@@ -15,6 +18,7 @@ for (let k in window.ATK_CHARACTER_STATE) {
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET = new Set();
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Idle1[0]);
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Walking[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1[0]);
 
 /*
 Kindly note that the use of dragonBones anim is an informed choice for the feasibility of "gotoAndPlayByFrame", which is a required feature by "Map.rollbackAndChase". You might find that "cc.Animation" -- the traditional frame anim -- can also suffice this requirement, yet if we want to develop 3D frontend in the future, working with skeletal anim will make a smoother transition.
@@ -37,6 +41,7 @@ cc.Class({
     this.hp = 100;
     this.maxHp = 100;
     this.framesToRecover = 0;
+    this.inAir = true;
   },
 
   setSpecies(speciesName) {

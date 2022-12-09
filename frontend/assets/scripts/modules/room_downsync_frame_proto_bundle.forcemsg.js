@@ -1196,6 +1196,8 @@ $root.protos = (function() {
          * @property {number|null} [virtualGridY] PlayerDownsync virtualGridY
          * @property {number|null} [dirX] PlayerDownsync dirX
          * @property {number|null} [dirY] PlayerDownsync dirY
+         * @property {number|null} [velX] PlayerDownsync velX
+         * @property {number|null} [velY] PlayerDownsync velY
          * @property {number|null} [speed] PlayerDownsync speed
          * @property {number|null} [battleState] PlayerDownsync battleState
          * @property {number|null} [joinIndex] PlayerDownsync joinIndex
@@ -1266,6 +1268,22 @@ $root.protos = (function() {
          * @instance
          */
         PlayerDownsync.prototype.dirY = 0;
+
+        /**
+         * PlayerDownsync velX.
+         * @member {number} velX
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.velX = 0;
+
+        /**
+         * PlayerDownsync velY.
+         * @member {number} velY
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.velY = 0;
 
         /**
          * PlayerDownsync speed.
@@ -1413,34 +1431,38 @@ $root.protos = (function() {
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.dirX);
             if (message.dirY != null && Object.hasOwnProperty.call(message, "dirY"))
                 writer.uint32(/* id 5, wireType 0 =*/40).int32(message.dirY);
+            if (message.velX != null && Object.hasOwnProperty.call(message, "velX"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.velX);
+            if (message.velY != null && Object.hasOwnProperty.call(message, "velY"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.velY);
             if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.speed);
+                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.speed);
             if (message.battleState != null && Object.hasOwnProperty.call(message, "battleState"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.battleState);
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.battleState);
             if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.joinIndex);
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.joinIndex);
             if (message.colliderRadius != null && Object.hasOwnProperty.call(message, "colliderRadius"))
-                writer.uint32(/* id 9, wireType 1 =*/73).double(message.colliderRadius);
+                writer.uint32(/* id 11, wireType 1 =*/89).double(message.colliderRadius);
             if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
-                writer.uint32(/* id 10, wireType 0 =*/80).bool(message.removed);
+                writer.uint32(/* id 12, wireType 0 =*/96).bool(message.removed);
             if (message.score != null && Object.hasOwnProperty.call(message, "score"))
-                writer.uint32(/* id 11, wireType 0 =*/88).int32(message.score);
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.score);
             if (message.lastMoveGmtMillis != null && Object.hasOwnProperty.call(message, "lastMoveGmtMillis"))
-                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.lastMoveGmtMillis);
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.lastMoveGmtMillis);
             if (message.framesToRecover != null && Object.hasOwnProperty.call(message, "framesToRecover"))
-                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.framesToRecover);
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.framesToRecover);
             if (message.hp != null && Object.hasOwnProperty.call(message, "hp"))
-                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.hp);
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.hp);
             if (message.maxHp != null && Object.hasOwnProperty.call(message, "maxHp"))
-                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.maxHp);
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.maxHp);
             if (message.characterState != null && Object.hasOwnProperty.call(message, "characterState"))
-                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.characterState);
+                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.characterState);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                writer.uint32(/* id 17, wireType 2 =*/138).string(message.name);
+                writer.uint32(/* id 19, wireType 2 =*/154).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
-                writer.uint32(/* id 18, wireType 2 =*/146).string(message.displayName);
+                writer.uint32(/* id 20, wireType 2 =*/162).string(message.displayName);
             if (message.avatar != null && Object.hasOwnProperty.call(message, "avatar"))
-                writer.uint32(/* id 19, wireType 2 =*/154).string(message.avatar);
+                writer.uint32(/* id 21, wireType 2 =*/170).string(message.avatar);
             return writer;
         };
 
@@ -1496,58 +1518,66 @@ $root.protos = (function() {
                         break;
                     }
                 case 6: {
-                        message.speed = reader.int32();
+                        message.velX = reader.int32();
                         break;
                     }
                 case 7: {
-                        message.battleState = reader.int32();
+                        message.velY = reader.int32();
                         break;
                     }
                 case 8: {
-                        message.joinIndex = reader.int32();
+                        message.speed = reader.int32();
                         break;
                     }
                 case 9: {
-                        message.colliderRadius = reader.double();
+                        message.battleState = reader.int32();
                         break;
                     }
                 case 10: {
-                        message.removed = reader.bool();
+                        message.joinIndex = reader.int32();
                         break;
                     }
                 case 11: {
-                        message.score = reader.int32();
+                        message.colliderRadius = reader.double();
                         break;
                     }
                 case 12: {
-                        message.lastMoveGmtMillis = reader.int32();
+                        message.removed = reader.bool();
                         break;
                     }
                 case 13: {
-                        message.framesToRecover = reader.int32();
+                        message.score = reader.int32();
                         break;
                     }
                 case 14: {
-                        message.hp = reader.int32();
+                        message.lastMoveGmtMillis = reader.int32();
                         break;
                     }
                 case 15: {
-                        message.maxHp = reader.int32();
+                        message.framesToRecover = reader.int32();
                         break;
                     }
                 case 16: {
-                        message.characterState = reader.int32();
+                        message.hp = reader.int32();
                         break;
                     }
                 case 17: {
-                        message.name = reader.string();
+                        message.maxHp = reader.int32();
                         break;
                     }
                 case 18: {
-                        message.displayName = reader.string();
+                        message.characterState = reader.int32();
                         break;
                     }
                 case 19: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 20: {
+                        message.displayName = reader.string();
+                        break;
+                    }
+                case 21: {
                         message.avatar = reader.string();
                         break;
                     }
@@ -1601,6 +1631,12 @@ $root.protos = (function() {
             if (message.dirY != null && message.hasOwnProperty("dirY"))
                 if (!$util.isInteger(message.dirY))
                     return "dirY: integer expected";
+            if (message.velX != null && message.hasOwnProperty("velX"))
+                if (!$util.isInteger(message.velX))
+                    return "velX: integer expected";
+            if (message.velY != null && message.hasOwnProperty("velY"))
+                if (!$util.isInteger(message.velY))
+                    return "velY: integer expected";
             if (message.speed != null && message.hasOwnProperty("speed"))
                 if (!$util.isInteger(message.speed))
                     return "speed: integer expected";
@@ -1668,6 +1704,10 @@ $root.protos = (function() {
                 message.dirX = object.dirX | 0;
             if (object.dirY != null)
                 message.dirY = object.dirY | 0;
+            if (object.velX != null)
+                message.velX = object.velX | 0;
+            if (object.velY != null)
+                message.velY = object.velY | 0;
             if (object.speed != null)
                 message.speed = object.speed | 0;
             if (object.battleState != null)
@@ -1718,6 +1758,8 @@ $root.protos = (function() {
                 object.virtualGridY = 0;
                 object.dirX = 0;
                 object.dirY = 0;
+                object.velX = 0;
+                object.velY = 0;
                 object.speed = 0;
                 object.battleState = 0;
                 object.joinIndex = 0;
@@ -1743,6 +1785,10 @@ $root.protos = (function() {
                 object.dirX = message.dirX;
             if (message.dirY != null && message.hasOwnProperty("dirY"))
                 object.dirY = message.dirY;
+            if (message.velX != null && message.hasOwnProperty("velX"))
+                object.velX = message.velX;
+            if (message.velY != null && message.hasOwnProperty("velY"))
+                object.velY = message.velY;
             if (message.speed != null && message.hasOwnProperty("speed"))
                 object.speed = message.speed;
             if (message.battleState != null && message.hasOwnProperty("battleState"))

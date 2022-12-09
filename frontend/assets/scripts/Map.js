@@ -274,6 +274,8 @@ cc.Class({
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
 
+    [self.gravityX, self.gravityY] = self.worldToVirtualGridPos(0/self.serverFps, -9.8/self.serverFps);
+
     // Clearing previous info of all players. [BEGINS]
     self.collisionPlayerIndexPrefix = (1 << 17); // For tracking the movements of players 
     if (null != self.playerRichInfoDict) {
