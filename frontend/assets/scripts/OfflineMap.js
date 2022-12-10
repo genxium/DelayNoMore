@@ -6,8 +6,8 @@ const OnlineMap = require('./Map');
 [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
 
 Moreover, this "snapIntoPlatformOverlap" should be small enough such that the jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
-*/   
-const snapIntoPlatformOverlap = 0.1; 
+*/
+const snapIntoPlatformOverlap = 0.1;
 
 cc.Class({
   extends: OnlineMap,
@@ -186,6 +186,40 @@ cc.Class({
 
   },
 
+  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
+    const self = this;
+    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
+    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    if (1 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierWaterGhost");
+    } else if (2 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierFireGhost");
+    }
+
+    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    newPlayerNode.setPosition(wx, wy);
+    playerScriptIns.mapNode = self.node;
+    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
+      colliderHeight = playerDownsyncInfo.colliderRadius * 2.5;
+    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
+      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
+
+    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
+    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+    newPlayerCollider.data = playerDownsyncInfo;
+    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
+
+    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.colliderRadius}`);
+
+    safelyAddChild(self.node, newPlayerNode);
+    setLocalZOrder(newPlayerNode, 5);
+
+    newPlayerNode.active = true;
+    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
+
+    return [newPlayerNode, playerScriptIns];
+  },
+
   update(dt) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
@@ -328,11 +362,11 @@ cc.Class({
           }
           bulletPushbacks[joinIndex - 1][0] += xfac * bulletCollider.data.pushback; // Only for straight punch, there's no y-pushback
           bulletPushbacks[joinIndex - 1][1] += 0;
+          const thatAckedPlayerInCurFrame = currRenderFrame.players[potential.data.id];
           const thatAckedPlayerInNextFrame = nextRenderFramePlayers[potential.data.id];
-          if (!window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatAckedPlayerInNextFrame.characterState)) {
-            thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
-          } else {
-            thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.InAirAtked1[0];
+          thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
+          if (thatAckedPlayerInCurFrame.inAir) {
+            thatAckedPlayerInNextFrame.characterState = window.toInAirConjugate(thatAckedPlayerInNextFrame.characterState);
           }
           const oldFramesToRecover = thatAckedPlayerInNextFrame.framesToRecover;
           thatAckedPlayerInNextFrame.framesToRecover = (oldFramesToRecover > bulletCollider.data.hitStunFrames ? oldFramesToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
@@ -416,6 +450,7 @@ cc.Class({
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
+            thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 (including inAir)
           }
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
@@ -425,12 +460,15 @@ cc.Class({
             // Update directions and thus would eventually update moving animation accordingly
             thatPlayerInNextFrame.dirX = decodedInput.dx;
             thatPlayerInNextFrame.dirY = decodedInput.dy;
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
             thatPlayerInNextFrame.velX = decodedInput.dx * currPlayerDownsync.speed;
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
           } else {
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
             thatPlayerInNextFrame.velX = 0;
           }
+        }
+        if (currPlayerDownsync.inAir) {
+          thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
         }
       }
     }
@@ -472,16 +510,16 @@ cc.Class({
         effPushbacks[joinIndex - 1][0] += pushbackX;
         effPushbacks[joinIndex - 1][1] += pushbackY;
       }
-      if (false == jumpTriggered[joinIndex-1] && null != snappedIntoPlatformEx && null != snappedIntoPlatformEy) {
+      if (false == jumpTriggered[joinIndex - 1] && null != snappedIntoPlatformEx && null != snappedIntoPlatformEy) {
         thatPlayerInNextFrame.inAir = false;
         if (fallStopping) {
-            thatPlayerInNextFrame.velY = 0; // shuts off the velocity component introduced by gravity, otherwise the character will slip down along a slope
+          thatPlayerInNextFrame.velY = 0;
+          thatPlayerInNextFrame.velX = 0;
+          thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
+          thatPlayerInNextFrame.framesToRecover = 0;
         }
         const dotProd = thatPlayerInNextFrame.velX * snappedIntoPlatformEx + thatPlayerInNextFrame.velY * snappedIntoPlatformEy;
         [thatPlayerInNextFrame.velX, thatPlayerInNextFrame.velY] = [dotProd * snappedIntoPlatformEx, dotProd * snappedIntoPlatformEy];
-      }
-      if (currPlayerDownsync.inAir != thatPlayerInNextFrame.inAir) {
-        thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
       }
     }
 
