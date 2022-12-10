@@ -2,6 +2,12 @@ const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
 const OnlineMap = require('./Map');
+/* 
+[WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
+
+Moreover, this "snapIntoPlatformOverlap" should be small enough such that the jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
+*/   
+const snapIntoPlatformOverlap = 0.1; 
 
 cc.Class({
   extends: OnlineMap,
@@ -238,13 +244,16 @@ cc.Class({
 
     const nextRenderFrameMeleeBullets = [];
 
-    const movements = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
-    const bulletPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
-    const effPushbacks = new Array(self.playerRichInfoArr.length); // Guaranteed determinism regardless of traversal order
+    // Guaranteed determinism regardless of traversal order
+    const jumpTriggered = new Array(self.playerRichInfoArr.length);
+    const movements = new Array(self.playerRichInfoArr.length);
+    const bulletPushbacks = new Array(self.playerRichInfoArr.length);
+    const effPushbacks = new Array(self.playerRichInfoArr.length);
 
     // Reset playerCollider position from the "virtual grid position"
     for (let j in self.playerRichInfoArr) {
       const joinIndex = parseInt(j) + 1;
+      jumpTriggered[joinIndex - 1] = false;
       movements[joinIndex - 1] = [0.0, 0.0];
       bulletPushbacks[joinIndex - 1] = [0.0, 0.0];
       effPushbacks[joinIndex - 1] = [0.0, 0.0];
@@ -259,7 +268,7 @@ cc.Class({
       const newVy = currPlayerDownsync.virtualGridY;
       [playerCollider.x, playerCollider.y] = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
 
-      // Process gravity before anyother interaction
+      // Process gravity before anyother interaction, by now "currPlayerDownsync.velX & velY" are properly snapped to be parallel to the edge of its standing platform if necessary
       [movements[joinIndex - 1][0], movements[joinIndex - 1][1]] = self.virtualGridToWorldPos(currPlayerDownsync.velX, currPlayerDownsync.velY);
       playerCollider.x += movements[joinIndex - 1][0];
       playerCollider.y += movements[joinIndex - 1][1];
@@ -375,6 +384,22 @@ cc.Class({
         const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
         const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
         const prevBtnBLevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnBLevel);
+        /*
+        [WARNING] Player input alone WOULD NOT take "characterState" into any "ATK_CHARACTER_STATE_IN_AIR_SET", only after the calculation of "effPushbacks" do we know exactly whether or not a player is "inAir", the finalize the transition of "thatPlayerInNextFrame.characterState". 
+        */
+        if (1 == decodedInput.btnBLevel && 0 == prevBtnBLevel) {
+          const characStateAlreadyInAir = window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState);
+          const characStateIsInterruptWaivable = window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(thatPlayerInNextFrame.characterState);
+          if (
+            !characStateAlreadyInAir
+            &&
+            characStateIsInterruptWaivable
+          ) {
+            thatPlayerInNextFrame.velY = currPlayerDownsync.speed * 4.5;
+            jumpTriggered[joinIndex - 1] = true;
+            console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, nextVelY=${thatPlayerInNextFrame.velY}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
+          }
+        }
 
         if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
@@ -390,61 +415,21 @@ cc.Class({
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
-            if (!window.ATK_CHARACTER_STATE_IN_AIR_SET.has(currPlayerDownsync.characterState)) {
-              thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
-            } else {
-              thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.InAirAtk1[0];
-            }
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
           }
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
         } else {
-          // No bullet trigger, process movement inputs
-          if (1 == decodedInput.btnBLevel && 0 == prevBtnBLevel) {
-            const characStateAlreadyInAir = window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState);
-            const characStateIsInterruptWaivable = window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(thatPlayerInNextFrame.characterState);
-            console.log(`playerId=${playerId} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
-            if (
-              !characStateAlreadyInAir
-              &&
-              characStateIsInterruptWaivable
-            ) {
-              thatPlayerInNextFrame.velY = currPlayerDownsync.speed * 4;
-              thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.InAirIdle1[0];
-              if (window.ATK_CHARACTER_STATE.Walking[0] == currPlayerDownsync.characterState) {
-                console.warn(`curRenderFrameId=${currRenderFrame.id}, playerId=${playerId}, joinIndex=${joinIndex} characterState set to AirIdle1 by jumping`);
-              }
-            }
+          // No bullet trigger, process joystick movement inputs (except for jumping).
+          if (0 != decodedInput.dx || 0 != decodedInput.dy) {
+            // Update directions and thus would eventually update moving animation accordingly
+            thatPlayerInNextFrame.dirX = decodedInput.dx;
+            thatPlayerInNextFrame.dirY = decodedInput.dy;
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
+            thatPlayerInNextFrame.velX = decodedInput.dx * currPlayerDownsync.speed;
           } else {
-            if (0 != decodedInput.dx || 0 != decodedInput.dy) {
-              // Update directions and thus would eventually update moving animation accordingly
-              thatPlayerInNextFrame.dirX = decodedInput.dx;
-              thatPlayerInNextFrame.dirY = decodedInput.dy;
-              if (!window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState)) {
-                thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
-                thatPlayerInNextFrame.velX = currPlayerDownsync.speed * decodedInput.dx;
-                if (window.ATK_CHARACTER_STATE.Idle1[0] == currPlayerDownsync.characterState || window.ATK_CHARACTER_STATE.InAirIdle1[0] == currPlayerDownsync.characterState) {
-                  console.warn(`curRenderFrameId=${currRenderFrame.id}, playerId=${playerId}, joinIndex=${joinIndex} characterState set to Walking by dir input`);
-                }
-              } else {
-                // There's no characterState of "InAirWalking" :)
-                thatPlayerInNextFrame.velX = currPlayerDownsync.speed * decodedInput.dx;
-              }
-            } else {
-              if (!window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState)) {
-                thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-                thatPlayerInNextFrame.velX = 0;
-                if (window.ATK_CHARACTER_STATE.Walking[0] == currPlayerDownsync.characterState) {
-                  console.warn(`curRenderFrameId=${currRenderFrame.id}, playerId=${playerId}, joinIndex=${joinIndex} characterState set to Idle1 by no dir input`);
-                }
-              } else {
-                thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.InAirIdle1[0];
-                if (window.ATK_CHARACTER_STATE.Walking[0] == currPlayerDownsync.characterState) {
-                  console.warn(`curRenderFrameId=${currRenderFrame.id}, playerId=${playerId}, joinIndex=${joinIndex} characterState set to AirIdle1 by no dir input but already in air`);
-                }
-              // let inertia carry "velX" when in air
-              }
-            }
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
+            thatPlayerInNextFrame.velX = 0;
           }
         }
       }
@@ -462,7 +447,7 @@ cc.Class({
       const currPlayerDownsync = currRenderFrame.players[playerId];
       const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
       let fallStopping = false;
-      let remainsNotInAir = false;
+      let [snappedIntoPlatformEx, snappedIntoPlatformEy] = [null, null];
       for (const potential of potentials) {
         // Test if the player collides with the wall
         if (!playerCollider.collides(potential, result2)) continue;
@@ -470,33 +455,33 @@ cc.Class({
         let [pushbackX, pushbackY] = [result2.overlap * result2.overlap_x, result2.overlap * result2.overlap_y];
         if (null == potential.data) {
           // "null == potential.data" implies a barrier
+          const remainsNotInAir = (!currPlayerDownsync.inAir);
           const localFallStopping = (currPlayerDownsync.inAir && 0 > pushbackY); // prevents false fall-stopping on the lateral sides  
-          const localRemainsNotInAir = (!currPlayerDownsync.inAir);
-          // [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."  
-          if (localFallStopping) {
-            pushbackY = 0.95 * pushbackY;
-            fallStopping = true;
-          }
-          if (localRemainsNotInAir) {
-            pushbackY = 0;
-            remainsNotInAir = true;
+          if (remainsNotInAir || localFallStopping) {
+            fallStopping |= localFallStopping;
+            [pushbackX, pushbackY] = [(result2.overlap - snapIntoPlatformOverlap) * result2.overlap_x, (result2.overlap - snapIntoPlatformOverlap) * result2.overlap_y]
+            // [overlay_x, overlap_y] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
+            snappedIntoPlatformEx = -result2.overlap_y;
+            snappedIntoPlatformEy = result2.overlap_x;
+            if (snappedIntoPlatformEx * currPlayerDownsync.dirX + snappedIntoPlatformEy * currPlayerDownsync.dirY) {
+              [snappedIntoPlatformEx, snappedIntoPlatformEy] = [-snappedIntoPlatformEx, -snappedIntoPlatformEy];
+            }
           }
         }
         // What if we're on the edge of 2 barriers? Would adding up make an unexpected bounce?
         effPushbacks[joinIndex - 1][0] += pushbackX;
         effPushbacks[joinIndex - 1][1] += pushbackY;
       }
-      if (fallStopping) {
-        thatPlayerInNextFrame.velX = 0;
-        thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-        thatPlayerInNextFrame.velY = 0;
+      if (false == jumpTriggered[joinIndex-1] && null != snappedIntoPlatformEx && null != snappedIntoPlatformEy) {
         thatPlayerInNextFrame.inAir = false;
-        if (window.ATK_CHARACTER_STATE.Walking[0] == currPlayerDownsync.characterState) {
-          console.warn(`curRenderFrameId=${currRenderFrame.id}, playerId=${playerId}, joinIndex=${joinIndex} characterState set to Idle1 by fallStopping`);
+        if (fallStopping) {
+            thatPlayerInNextFrame.velY = 0; // shuts off the velocity component introduced by gravity, otherwise the character will slip down along a slope
         }
+        const dotProd = thatPlayerInNextFrame.velX * snappedIntoPlatformEx + thatPlayerInNextFrame.velY * snappedIntoPlatformEy;
+        [thatPlayerInNextFrame.velX, thatPlayerInNextFrame.velY] = [dotProd * snappedIntoPlatformEx, dotProd * snappedIntoPlatformEy];
       }
-      if (remainsNotInAir) {
-        thatPlayerInNextFrame.inAir = false;
+      if (currPlayerDownsync.inAir != thatPlayerInNextFrame.inAir) {
+        thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
       }
     }
 

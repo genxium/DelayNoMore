@@ -10,6 +10,28 @@ window.ATK_CHARACTER_STATE = {
   InAirAtked1: [6, "Atked1"],
 };
 
+window.toInAirConjugate = function(foo) {
+    switch (foo) {
+    case window.ATK_CHARACTER_STATE.Idle1[0]:
+    case window.ATK_CHARACTER_STATE.Walking[0]:
+        return window.ATK_CHARACTER_STATE.InAirIdle1[0]; 
+    case window.ATK_CHARACTER_STATE.Atk1[0]:
+        return window.ATK_CHARACTER_STATE.InAirAtk1[0]; 
+    case window.ATK_CHARACTER_STATE.Atked1[0]:
+        return window.ATK_CHARACTER_STATE.InAirAtked1[0]; 
+
+    case window.ATK_CHARACTER_STATE.InAirIdle1[0]:
+        return window.ATK_CHARACTER_STATE.Idle1[0]; 
+    case window.ATK_CHARACTER_STATE.InAirAtk1[0]:
+        return window.ATK_CHARACTER_STATE.Atk1[0]; 
+    case window.ATK_CHARACTER_STATE.InAirAtked1[0]:
+        return window.ATK_CHARACTER_STATE.Atked1[0]; 
+    default:
+        console.warn(`Invalid characterState ${foo} received, no in air conjugate is available!`);
+        return null;
+    }
+}
+
 window.ATK_CHARACTER_STATE_ARR = [];
 for (let k in window.ATK_CHARACTER_STATE) {
   window.ATK_CHARACTER_STATE_ARR.push(window.ATK_CHARACTER_STATE[k]);

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="49">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="53">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
  <layer id="2" name="Ground" width="128" height="128">
   <data encoding="base64" compression="zlib">
-   eJzt2qFu21AUgOEo1UhBtYJOKh/bmxRMRYNFfZPxwcGi7j3nSInkXTmx47k+1/d84EOJIuf+PtZ14pvdbncDAAAAAAAAAAAAAAAAAAAz3B5FHwfree059X9NKLpDZP/90an/S+fpjH2D9P+3/zn6t6ff/2mk/20FrfT/uP5D9G/b4bs/HA2tTXlNiG6l/7r9M9Bf/+gOkf0/zRDdTH/99ddf/5j+NdBff/31119//bfV/9fE990f6d9W//fO25nXDv8//+l81z+8/9w1Pf2m+PM/6a+//vofjuWxoH/7/R+L/uZff/3j+38esWT/Pv1j+491H+r/u/PjSqf+9n/19J/a/nln/78VU/tPbb/Xf1PG+g81/ta5O9O+7F96vpL+cf2H2t/1lN0/ov+Xzlf9q+l/6brf7780/evtP2ePeC391+8/5Rwo13LJvmOW7L+voEWN/Zda40vmtNe/nf7R9M99Duivv/76R7eI6h+9/tGy3/9Fr380/XPTPzf9c9M/N/1z0z83/XPTPzf9c9M/N/1z0z83/XPTPzf9c9N/vvtCdEv9t9e//IxL9G+vfzT9l5vV6Jb6rzv/LdB/XbVdOzz/Pb1V9Kzqv/35r43+80Xdsy3dP7rDVvu3QP/tzaz+5l//bfSvfU+g//r959B/vf5b3s/rX9f8107/3PTPLXt/4jsAAAAAAAAAAAAAAAAA6/sLjbyILg==
+   eJzt2zFv2kAYgGFElCVD1AytlL1b/0mGKlPHTvkn3Tt27NT+zxoJJHqysXGMv/N9z/BMRsjc6zsOMHe73e4OAAAAAAAAAAAAAAAAAABmeDiKPg/W83bm1P8toegOkf33R6f+3zsvA/YN0v///kP0b895/5eR/g8VtNL/dv376N+2w2v/eNQ3NuWaEN1K/3X7Z6C//tEdIvvfzxDdTH/99ddf/5j+NdBff/31119//bfV/+fExz0d6d9W/z+d3wPHDr8//+181T+8/9wxPX2n+OOd9Ndff/0P5/Jc0L/9/s9Ff/Nff/3j+38YsWT/c/rH9h/r3tf/V+fblU797f/q6T+1/evO/n8rpvaf2n6v/6aM9e9r/KXzONC+7F96vZL+cf372j+eKbvfov+nzmf9q+l/ad0/7780/evtP2ePeC391+8/5Roox3LJvmOW7L+voEWN/Zca40vmtNe/nf7R9M99Deivv/76R7eI6h89/tGyf/6LHv9o+uemf27656Z/bvrnpn9u+uemf27656Z/bvrnpn9u+uemf27656b/fE+F6Jb6b7t/+XylW9yjpn89/c3/uvuPzc/olvqvO/9boP+6als73P89ruX/BOifm/7jc3/o2Nh+cAt7Qu//l9u3tt7rf938b132/hn/86n/evO/9j2B/uv3n0P/9fpveT+vf13zv3b656Z/btn7E98BAAAAAAAAAAAAAAAAWN8/Hh2Hvw==
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
@@ -170,23 +170,23 @@
    </properties>
    <polyline points="0,0 -65,0 -64,58 -2,61"/>
   </object>
-  <object id="40" x="735" y="1486">
+  <object id="40" x="735" y="1503">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -63,1 -62,14 0,16 1,16 0,14"/>
+   <polyline points="0.333333,0.666667 -79,0.333333 -79.6667,18.6667 1.66667,16.3333"/>
   </object>
   <object id="41" x="832" y="1375.33">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -0.666667,15.3333 128.667,15.3333 130,0"/>
+   <polyline points="0,0 -0.666667,15.3333 128.667,15.3333 129.333,0"/>
   </object>
-  <object id="42" x="832.667" y="1424">
+  <object id="42" x="865.667" y="1424">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -66,0 -65.3333,15.3333 2,16"/>
+   <polyline points="-2.33333,-0.333333 -66,0 -65.3333,15.3333 -1.33333,16.3333"/>
   </object>
   <object id="43" x="850" y="1552.67">
    <properties>
@@ -198,19 +198,19 @@
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -148.667,0.666667 -148.667,15.3333 0,16.6667"/>
+   <polyline points="0,0 -146.334,0.666667 -146,16.6666 0,16.6667"/>
   </object>
-  <object id="45" x="1345.33" y="1343.33">
+  <object id="45" x="1442" y="1343.33">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -178,0 -178,14 -0.666667,15.3333"/>
+   <polyline points="0,0 -226.667,0 -226.667,14 -0.848939,15.3333"/>
   </object>
   <object id="46" x="1200" y="1406.67">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 -96.6667,0 -96.6667,15.3333 0,16.6667"/>
+   <polyline points="0,0 -97.3334,0 -97,17.3333 0,16.6667"/>
   </object>
   <object id="47" x="1120" y="1520.67">
    <properties>
@@ -222,7 +222,19 @@
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="77,-0.333333 9.10906,14.6667 299.775,14.6667 298.84,-2"/>
+   <polyline points="90.3333,-4.66667 9.10906,14.6667 299.775,14.6667 300.173,1.33333"/>
+  </object>
+  <object id="51" x="783.333" y="1455">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 -0.333333,31.6667 15.3333,32 15.3333,0"/>
+  </object>
+  <object id="52" x="768.333" y="1471.67">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+   <polyline points="0,0 0,15.3333 31,15.3333 31.6667,-0.333333"/>
   </object>
  </objectgroup>
 </map>
