@@ -2,12 +2,6 @@ const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
 const OnlineMap = require('./Map');
-/* 
-[WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
-
-Moreover, this "snapIntoPlatformOverlap" should be small enough such that the jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
-*/
-const snapIntoPlatformOverlap = 0.1;
 
 cc.Class({
   extends: OnlineMap,
@@ -19,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     cc.director.getCollisionManager().enabled = false;
 
@@ -75,6 +69,16 @@ cc.Class({
       }
     };
 
+    /* 
+    [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
+
+    Moreover, "snapIntoPlatformOverlap" should be small enough such that the jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
+    */
+    self.snapIntoPlatformOverlap = 0.1;
+    self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
+    self.jumpingInitVelY = 5 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
+    [self.gravityX, self.gravityY] = [0, -Math.ceil(4*self.jumpingInitVelY/self.serverFps)]; // unit: (virtual grid length/renderFrame^2)
+
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
     const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", "dungeon");
@@ -115,7 +119,7 @@ cc.Class({
           return [p.x, p.y];
         }));
 
-        if (self.showCriticalCoordinateLabels) {
+        if (false && self.showCriticalCoordinateLabels) {
           for (let i = 0; i < boundaryObj.length; ++i) {
             const barrierVertLabelNode = new cc.Node();
             switch (i % 4) {
@@ -407,7 +411,7 @@ cc.Class({
             &&
             characStateIsInterruptWaivable
           ) {
-            thatPlayerInNextFrame.velY = currPlayerDownsync.speed * 4.5;
+            thatPlayerInNextFrame.velY = self.jumpingInitVelY;
             jumpTriggered[joinIndex - 1] = true;
             console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, nextVelY=${thatPlayerInNextFrame.velY}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
           }
@@ -471,11 +475,13 @@ cc.Class({
         let [pushbackX, pushbackY] = [result2.overlap * result2.overlap_x, result2.overlap * result2.overlap_y];
         if (null == potential.data) {
           // "null == potential.data" implies a barrier
-          const remainsNotInAir = (!currPlayerDownsync.inAir);
-          const localFallStopping = (currPlayerDownsync.inAir && 0 > pushbackY); // prevents false fall-stopping on the lateral sides  
+          const normAlignmentWithGravity = (result2.overlap_x * 0 + result2.overlap_y * (-1.0));
+          const flatEnough = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
+          const remainsNotInAir = (!currPlayerDownsync.inAir && flatEnough);
+          const localFallStopping = (currPlayerDownsync.inAir && flatEnough);
           if (remainsNotInAir || localFallStopping) {
             fallStopping |= localFallStopping;
-            [pushbackX, pushbackY] = [(result2.overlap - snapIntoPlatformOverlap) * result2.overlap_x, (result2.overlap - snapIntoPlatformOverlap) * result2.overlap_y]
+            [pushbackX, pushbackY] = [(result2.overlap - self.snapIntoPlatformOverlap) * result2.overlap_x, (result2.overlap - self.snapIntoPlatformOverlap) * result2.overlap_y]
             // [overlay_x, overlap_y] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
             snappedIntoPlatformEx = -result2.overlap_y;
             snappedIntoPlatformEy = result2.overlap_x;

@@ -123,21 +123,33 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
       if (0 < gid) {
         continue;
       }
-      const polylinePoints = object.polylinePoints;
-      if (null == polylinePoints) {
-        continue
-      }
       const boundaryType = object.boundary_type;
-      let toPushBarriers = [];
-      toPushBarriers.boundaryType = boundaryType;
+      let toPushBarrier = [];
+      toPushBarrier.boundaryType = boundaryType;
       switch (boundaryType) {
         case "barrier":
+          let polylinePoints = object.polylinePoints;
+          if (null == polylinePoints) {
+            polylinePoints = [{
+              x: 0,
+              y: 0
+            }, {
+              x: object.width,
+              y: 0
+            }, {
+              x: object.width,
+              y: -object.height
+            }, {
+              x: 0,
+              y: -object.height
+            }];
+          }
           for (let k = 0; k < polylinePoints.length; ++k) {
             /* Since CocosCreatorv2.1.3, the Y-coord of object polylines is inverted compared to that of the tmx file. */
-            toPushBarriers.push(this.continuousObjLayerVecToContinuousMapNodeVec(withTiledMapNode, cc.v2(polylinePoints[k].x, -polylinePoints[k].y)));
+            toPushBarrier.push(this.continuousObjLayerVecToContinuousMapNodeVec(withTiledMapNode, cc.v2(polylinePoints[k].x, -polylinePoints[k].y)));
           }
-          toPushBarriers.anchor = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset); // DON'T use "(object.x, object.y)" which are wrong/meaningless! 
-          toRet.barriers.push(toPushBarriers);
+          toPushBarrier.anchor = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset); // DON'T use "(object.x, object.y)" which are wrong/meaningless! 
+          toRet.barriers.push(toPushBarrier);
           break;
         default:
           break;
