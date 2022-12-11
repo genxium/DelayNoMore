@@ -19,6 +19,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
+    self.showCriticalCoordinateLabels = true;
 
     cc.director.getCollisionManager().enabled = false;
 
@@ -86,6 +87,17 @@ cc.Class({
       tiledMapIns.tmxAsset = null;
       mapNode.removeAllChildren();
       self._resetCurrentMatch();
+
+      if (self.showCriticalCoordinateLabels) {
+        const drawer = new cc.Node();
+        drawer.setPosition(cc.v2(0, 0))
+        safelyAddChild(self.node, drawer);
+        setLocalZOrder(drawer, 999);
+        const g = drawer.addComponent(cc.Graphics);
+        g.lineWidth = 2;
+        self.g = g;
+      }
+
 
       tiledMapIns.tmxAsset = tmxAsset;
       const newMapSize = tiledMapIns.getMapSize();
@@ -184,40 +196,6 @@ cc.Class({
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
     });
 
-  },
-
-  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
-    const self = this;
-    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
-    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
-    if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierWaterGhost");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierFireGhost");
-    }
-
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    newPlayerNode.setPosition(wx, wy);
-    playerScriptIns.mapNode = self.node;
-    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
-      colliderHeight = playerDownsyncInfo.colliderRadius * 2.5;
-    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
-      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
-
-    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    newPlayerCollider.data = playerDownsyncInfo;
-    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.colliderRadius}`);
-
-    safelyAddChild(self.node, newPlayerNode);
-    setLocalZOrder(newPlayerNode, 5);
-
-    newPlayerNode.active = true;
-    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
-
-    return [newPlayerNode, playerScriptIns];
   },
 
   update(dt) {
@@ -333,7 +311,7 @@ cc.Class({
         }
         const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
         const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
-        const bulletWy = offenderWy;
+        const bulletWy = offenderWy + 0.5 * meleeBullet.hitboxSize.y;
         const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
           pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
         const newBulletCollider = collisionSys.createPolygon(bulletCx, bulletCy, pts);
@@ -538,5 +516,107 @@ cc.Class({
       players: nextRenderFramePlayers,
       meleeBullets: nextRenderFrameMeleeBullets,
     });
+  },
+
+  applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
+    const self = this;
+    OnlineMap.prototype.applyRoomDownsyncFrameDynamics.call(self, rdf, prevRdf);
+    if (self.showCriticalCoordinateLabels) {
+      let g = self.g;
+      g.clear();
+
+      for (let k in self.collisionSys._bvh._bodies) {
+        const body = self.collisionSys._bvh._bodies[k];
+        if (!body._polygon) continue;
+        if (null != body.data && null != body.data.joinIndex) {
+          // character
+          if (1 == body.data.joinIndex) {
+            g.strokeColor = cc.Color.BLUE;
+          } else {
+            g.strokeColor = cc.Color.RED;
+          }
+        } else {
+          // barrier
+          g.strokeColor = cc.Color.WHITE;
+        }
+        g.moveTo(body.x, body.y);
+        const cnt = body._coords.length;
+        for (let j = 0; j < cnt; j += 2) {
+          const x = body._coords[j],
+            y = body._coords[j + 1];
+          g.lineTo(x, y);
+        }
+        g.lineTo(body.x, body.y);
+        g.stroke();
+      }
+      // For convenience of recovery upon reconnection, active bullets are always created & immediately removed from "collisionSys" within "applyInputFrameDownsyncDynamicsOnSingleRenderFrame"
+
+      for (let k in rdf.meleeBullets) {
+        const meleeBullet = rdf.meleeBullets[k];
+        if (
+          meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames <= rdf.id
+          &&
+          meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > rdf.id
+        ) {
+          const offender = rdf.players[meleeBullet.offenderPlayerId];
+          if (1 == offender.joinIndex) {
+            g.strokeColor = cc.Color.BLUE;
+          } else {
+            g.strokeColor = cc.Color.RED;
+          }
+
+          let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
+          if (0 > offender.dirX) {
+            xfac = -1;
+          }
+          const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
+          const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
+          const bulletWy = offenderWy + 0.5 * meleeBullet.hitboxSize.y;
+          const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
+            pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+
+          g.moveTo(bulletCx, bulletCy);
+          for (let j = 0; j < pts.length; j += 1) {
+            g.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
+          }
+          g.lineTo(bulletCx, bulletCy);
+          g.stroke();
+        }
+      }
+    }
+  },
+
+  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
+    const self = this;
+    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
+    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    if (1 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierWaterGhost");
+    } else if (2 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierFireGhost");
+    }
+
+    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    newPlayerNode.setPosition(wx, wy);
+    playerScriptIns.mapNode = self.node;
+    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
+      colliderHeight = playerDownsyncInfo.colliderRadius * 4;
+    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
+      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
+
+    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
+    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+    newPlayerCollider.data = playerDownsyncInfo;
+    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
+
+    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.colliderRadius}`);
+
+    safelyAddChild(self.node, newPlayerNode);
+    setLocalZOrder(newPlayerNode, 5);
+
+    newPlayerNode.active = true;
+    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
+
+    return [newPlayerNode, playerScriptIns];
   },
 });

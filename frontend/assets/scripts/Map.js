@@ -273,8 +273,7 @@ cc.Class({
     const self = this;
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
-
-    [self.gravityX, self.gravityY] = self.worldToVirtualGridPos(0/self.serverFps, -9.8/self.serverFps);
+    [self.gravityX, self.gravityY] = self.worldToVirtualGridPos(0 / self.serverFps, -9.8 / self.serverFps);
 
     // Clearing previous info of all players. [BEGINS]
     self.collisionPlayerIndexPrefix = (1 << 17); // For tracking the movements of players 
@@ -775,6 +774,7 @@ cc.Class({
     const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
       pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
 
+    // [WARNING] The animNode "anchor & offset" are tuned to fit in this collider by "ControlledCharacter prefab & AttackingCharacter.js"! 
     const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     newPlayerCollider.data = playerDownsyncInfo;
@@ -1059,7 +1059,7 @@ cc.Class({
         }
         const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
         const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
-        const bulletWy = offenderWy;
+        const bulletWy = offenderWy + 0.5 * meleeBullet.hitboxSize.y;
         const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
           pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
         const newBulletCollider = collisionSys.createPolygon(bulletCx, bulletCy, pts);

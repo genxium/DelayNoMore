@@ -81,8 +81,8 @@ cc.Class({
     this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
     if (!this.animComp) {
       this.animComp = this.effAnimNode.getComponent(cc.Animation);
-      this.effAnimNode.anchorY = 0.0; // Otherwise the frame anim will show with an incorrect y-offset even if the collider boundaries are all correct!
-    }
+    this.effAnimNode.anchorY = 0.0; // Otherwise the anim will show with an incorrect y-offset even if the collider boundaries are all correct!
+    } 
     this.effAnimNode.active = true;
   },
 
