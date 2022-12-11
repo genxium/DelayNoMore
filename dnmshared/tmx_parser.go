@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"math"
@@ -43,13 +44,13 @@ type TmxOrTsxPolyline struct {
 
 type TmxOrTsxObject struct {
 	Id         int                 `xml:"id,attr"`
-	Gid        *int                `xml:"gid,attr"`
+	Gid        int                 `xml:"gid,attr"`
 	X          float64             `xml:"x,attr"`
 	Y          float64             `xml:"y,attr"`
 	Properties *TmxOrTsxProperties `xml:"properties"`
 	Polyline   *TmxOrTsxPolyline   `xml:"polyline"`
-	Width      *float64            `xml:"width,attr"`
-	Height     *float64            `xml:"height,attr"`
+	Width      float64             `xml:"width,attr"`
+	Height     float64             `xml:"height,attr"`
 }
 
 type TmxOrTsxObjectGroup struct {
@@ -376,11 +377,35 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 			}
 
 			for _, singleObjInTmxFile := range objGroup.Objects {
-				if nil == singleObjInTmxFile.Polyline {
-					continue
-				}
 				if nil == singleObjInTmxFile.Properties.Property || "boundary_type" != singleObjInTmxFile.Properties.Property[0].Name || "barrier" != singleObjInTmxFile.Properties.Property[0].Value {
 					continue
+				}
+
+				if nil == singleObjInTmxFile.Polyline {
+					pts := make([]*Vec2D, 4)
+					s := make([]string, 0)
+					pts[0] = &Vec2D{
+						X: float64(0),
+						Y: float64(0),
+					}
+					pts[1] = &Vec2D{
+						X: float64(0),
+						Y: singleObjInTmxFile.Height,
+					}
+					pts[2] = &Vec2D{
+						X: singleObjInTmxFile.Width,
+						Y: singleObjInTmxFile.Height,
+					}
+					pts[3] = &Vec2D{
+						X: singleObjInTmxFile.Width,
+						Y: float64(0),
+					}
+					for _, pt := range pts {
+						s = append(s, fmt.Sprintf("%v,%v", pt.X, pt.Y))
+					}
+					singleObjInTmxFile.Polyline = &TmxOrTsxPolyline{
+						Points: strings.Join(s, " "),
+					}
 				}
 
 				thePolygon2DInWorld, err := tmxPolylineToPolygon2D(pTmxMapIns, singleObjInTmxFile, singleObjInTmxFile.Polyline)

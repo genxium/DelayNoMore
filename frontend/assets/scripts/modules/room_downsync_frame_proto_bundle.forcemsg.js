@@ -4545,6 +4545,11 @@ $root.protos = (function() {
          * @property {number|null} [spAtkLookupFrames] BattleColliderInfo spAtkLookupFrames
          * @property {number|null} [renderCacheSize] BattleColliderInfo renderCacheSize
          * @property {Object.<string,protos.MeleeBullet>|null} [meleeSkillConfig] BattleColliderInfo meleeSkillConfig
+         * @property {number|null} [snapIntoPlatformOverlap] BattleColliderInfo snapIntoPlatformOverlap
+         * @property {number|null} [snapIntoPlatformThreshold] BattleColliderInfo snapIntoPlatformThreshold
+         * @property {number|null} [jumpingInitVelY] BattleColliderInfo jumpingInitVelY
+         * @property {number|null} [gravityX] BattleColliderInfo gravityX
+         * @property {number|null} [gravityY] BattleColliderInfo gravityY
          */
 
         /**
@@ -4774,6 +4779,46 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.meleeSkillConfig = $util.emptyObject;
 
         /**
+         * BattleColliderInfo snapIntoPlatformOverlap.
+         * @member {number} snapIntoPlatformOverlap
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.snapIntoPlatformOverlap = 0;
+
+        /**
+         * BattleColliderInfo snapIntoPlatformThreshold.
+         * @member {number} snapIntoPlatformThreshold
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.snapIntoPlatformThreshold = 0;
+
+        /**
+         * BattleColliderInfo jumpingInitVelY.
+         * @member {number} jumpingInitVelY
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.jumpingInitVelY = 0;
+
+        /**
+         * BattleColliderInfo gravityX.
+         * @member {number} gravityX
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.gravityX = 0;
+
+        /**
+         * BattleColliderInfo gravityY.
+         * @member {number} gravityY
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.gravityY = 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof protos.BattleColliderInfo
@@ -4858,6 +4903,16 @@ $root.protos = (function() {
                     writer.uint32(/* id 27, wireType 2 =*/218).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
                     $root.protos.MeleeBullet.encode(message.meleeSkillConfig[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
                 }
+            if (message.snapIntoPlatformOverlap != null && Object.hasOwnProperty.call(message, "snapIntoPlatformOverlap"))
+                writer.uint32(/* id 28, wireType 1 =*/225).double(message.snapIntoPlatformOverlap);
+            if (message.snapIntoPlatformThreshold != null && Object.hasOwnProperty.call(message, "snapIntoPlatformThreshold"))
+                writer.uint32(/* id 29, wireType 1 =*/233).double(message.snapIntoPlatformThreshold);
+            if (message.jumpingInitVelY != null && Object.hasOwnProperty.call(message, "jumpingInitVelY"))
+                writer.uint32(/* id 30, wireType 0 =*/240).int32(message.jumpingInitVelY);
+            if (message.gravityX != null && Object.hasOwnProperty.call(message, "gravityX"))
+                writer.uint32(/* id 31, wireType 0 =*/248).int32(message.gravityX);
+            if (message.gravityY != null && Object.hasOwnProperty.call(message, "gravityY"))
+                writer.uint32(/* id 32, wireType 0 =*/256).int32(message.gravityY);
             return writer;
         };
 
@@ -5053,6 +5108,26 @@ $root.protos = (function() {
                         message.meleeSkillConfig[key] = value;
                         break;
                     }
+                case 28: {
+                        message.snapIntoPlatformOverlap = reader.double();
+                        break;
+                    }
+                case 29: {
+                        message.snapIntoPlatformThreshold = reader.double();
+                        break;
+                    }
+                case 30: {
+                        message.jumpingInitVelY = reader.int32();
+                        break;
+                    }
+                case 31: {
+                        message.gravityX = reader.int32();
+                        break;
+                    }
+                case 32: {
+                        message.gravityY = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5191,6 +5266,21 @@ $root.protos = (function() {
                     }
                 }
             }
+            if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
+                if (typeof message.snapIntoPlatformOverlap !== "number")
+                    return "snapIntoPlatformOverlap: number expected";
+            if (message.snapIntoPlatformThreshold != null && message.hasOwnProperty("snapIntoPlatformThreshold"))
+                if (typeof message.snapIntoPlatformThreshold !== "number")
+                    return "snapIntoPlatformThreshold: number expected";
+            if (message.jumpingInitVelY != null && message.hasOwnProperty("jumpingInitVelY"))
+                if (!$util.isInteger(message.jumpingInitVelY))
+                    return "jumpingInitVelY: integer expected";
+            if (message.gravityX != null && message.hasOwnProperty("gravityX"))
+                if (!$util.isInteger(message.gravityX))
+                    return "gravityX: integer expected";
+            if (message.gravityY != null && message.hasOwnProperty("gravityY"))
+                if (!$util.isInteger(message.gravityY))
+                    return "gravityY: integer expected";
             return null;
         };
 
@@ -5296,6 +5386,16 @@ $root.protos = (function() {
                     message.meleeSkillConfig[keys[i]] = $root.protos.MeleeBullet.fromObject(object.meleeSkillConfig[keys[i]]);
                 }
             }
+            if (object.snapIntoPlatformOverlap != null)
+                message.snapIntoPlatformOverlap = Number(object.snapIntoPlatformOverlap);
+            if (object.snapIntoPlatformThreshold != null)
+                message.snapIntoPlatformThreshold = Number(object.snapIntoPlatformThreshold);
+            if (object.jumpingInitVelY != null)
+                message.jumpingInitVelY = object.jumpingInitVelY | 0;
+            if (object.gravityX != null)
+                message.gravityX = object.gravityX | 0;
+            if (object.gravityY != null)
+                message.gravityY = object.gravityY | 0;
             return message;
         };
 
@@ -5349,6 +5449,11 @@ $root.protos = (function() {
                 object.virtualGridToWorldRatio = 0;
                 object.spAtkLookupFrames = 0;
                 object.renderCacheSize = 0;
+                object.snapIntoPlatformOverlap = 0;
+                object.snapIntoPlatformThreshold = 0;
+                object.jumpingInitVelY = 0;
+                object.gravityX = 0;
+                object.gravityY = 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -5418,6 +5523,16 @@ $root.protos = (function() {
                 for (var j = 0; j < keys2.length; ++j)
                     object.meleeSkillConfig[keys2[j]] = $root.protos.MeleeBullet.toObject(message.meleeSkillConfig[keys2[j]], options);
             }
+            if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
+                object.snapIntoPlatformOverlap = options.json && !isFinite(message.snapIntoPlatformOverlap) ? String(message.snapIntoPlatformOverlap) : message.snapIntoPlatformOverlap;
+            if (message.snapIntoPlatformThreshold != null && message.hasOwnProperty("snapIntoPlatformThreshold"))
+                object.snapIntoPlatformThreshold = options.json && !isFinite(message.snapIntoPlatformThreshold) ? String(message.snapIntoPlatformThreshold) : message.snapIntoPlatformThreshold;
+            if (message.jumpingInitVelY != null && message.hasOwnProperty("jumpingInitVelY"))
+                object.jumpingInitVelY = message.jumpingInitVelY;
+            if (message.gravityX != null && message.hasOwnProperty("gravityX"))
+                object.gravityX = message.gravityX;
+            if (message.gravityY != null && message.hasOwnProperty("gravityY"))
+                object.gravityY = message.gravityY;
             return object;
         };
 

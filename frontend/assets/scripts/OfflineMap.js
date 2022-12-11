@@ -591,38 +591,4 @@ cc.Class({
       }
     }
   },
-
-  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
-    const self = this;
-    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
-    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
-    if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierWaterGhost");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierFireGhost");
-    }
-
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    newPlayerNode.setPosition(wx, wy);
-    playerScriptIns.mapNode = self.node;
-    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
-      colliderHeight = playerDownsyncInfo.colliderRadius * 4;
-    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
-      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
-
-    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    newPlayerCollider.data = playerDownsyncInfo;
-    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.colliderRadius}`);
-
-    safelyAddChild(self.node, newPlayerNode);
-    setLocalZOrder(newPlayerNode, 5);
-
-    newPlayerNode.active = true;
-    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
-
-    return [newPlayerNode, playerScriptIns];
-  },
 });

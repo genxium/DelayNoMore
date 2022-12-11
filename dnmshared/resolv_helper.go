@@ -20,7 +20,7 @@ func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
 
 func GenerateRectCollider(origX, origY, w, h, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
 	cx, cy := WorldToPolygonColliderAnchorPos(origX, origY, w*0.5, h*0.5, spaceOffsetX, spaceOffsetY)
-    return GenerateRectColliderInCollisionSpace(cx, cy, w, h, tag) 
+	return GenerateRectColliderInCollisionSpace(cx, cy, w, h, tag)
 }
 
 func GenerateRectColliderInCollisionSpace(cx, cy, w, h float64, tag string) *resolv.Object {

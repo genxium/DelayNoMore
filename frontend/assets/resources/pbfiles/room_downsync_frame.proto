@@ -137,6 +137,12 @@ message BattleColliderInfo {
   int32 renderCacheSize = 26;
 
   map<int32, MeleeBullet> meleeSkillConfig = 27; // skillId -> skill
+
+  double snapIntoPlatformOverlap = 28; 
+  double snapIntoPlatformThreshold = 29; 
+  int32 jumpingInitVelY = 30;
+  int32 gravityX = 31;
+  int32 gravityY = 32;
 }
 
 message RoomDownsyncFrame {

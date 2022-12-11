@@ -2,9 +2,9 @@
 
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
 
-_(the following gif is sped up to ~1.33x for file size reduction, kindly note that around ~8s countdown, the attack animation is resumed from a partial progress)_
+_(the following [v0.8.8](https://github.com/genxium/DelayNoMore/releases/tag/v0.8.8) gif is sped up to ~1.33x for file size reduction, kindly note that around ~8s countdown, the attack animation is resumed from a partial progress)_
 
-![gif_demo](./charts/smooth_melee_attack_spedup.gif)
+![gif_demo](./charts/smooth_melee_attack_spedup_v088.gif)
 
 Please also checkout [this demo video](https://pan.baidu.com/s/172AmIKxbFgGXZzWVqxNUPA?pwd=e2tp) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 

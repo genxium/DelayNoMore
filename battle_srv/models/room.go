@@ -1520,7 +1520,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*3
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
 		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
 		playerCollider.Data = player
 		pR.Space.Add(playerCollider)
@@ -1579,12 +1579,22 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 
 func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot) {
 	/*
-			   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is LOCKED for preserving the order of generation of "inputsBufferSnapshot" -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
+		       [WARNING] This function MUST BE called while "pR.InputsBufferLock" is LOCKED to **preserve the order of generation of "inputsBufferSnapshot" for sending** -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
 
 		       Actually if each player session were both intrinsically thread-safe & non-blocking for writing (like Java NIO), I could've just called "playerSession.WriteMessage" while holding "pR.InputsBufferLock" -- but the ws session provided by Gorilla library is neither thread-safe nor non-blocking for writing, which is fine because it creates a chance for the users to solve an interesting problem :)
-	*/
-	/*
-	   Moreover, we're downsyncing a same "inputsBufferSnapshot" for all players in the same battle and this is by design, i.e. not respecting "player.LastSentInputFrameId" because "new all-confirmed inputFrameDownsyncs" are the same for all players and ws is TCP-based (no loss of consecutive packets except for reconnection -- which is already handled by READDED_BATTLE_COLLIDER_ACKED)
+
+			   Moreover, we're downsyncing a same "inputsBufferSnapshot" for all players in the same battle and this is by design, i.e. not respecting "player.LastSentInputFrameId" because "new all-confirmed inputFrameDownsyncs" are the same for all players and ws is TCP-based (no loss of consecutive packets except for reconnection -- which is already handled by READDED_BATTLE_COLLIDER_ACKED)
+
+		       Lastly noting just for fun, if in "OnBattleCmdReceived" we need downsync to a single specific player (keeping **the order of generation of "inputsBufferSnapshot" preserved for sending** of course), in theory it's better to do it by the following order.
+		       1. lock "InputsBuffer";
+		       2. generate downsync msg;
+		       3. lock "pR.PlayerDownsyncChanDict[playerId]";
+		       4. put downsync msg to "pR.PlayerDownsyncChanDict[playerId]";
+		       5. unlock "InputsBuffer";
+		       6. now other threads are allowed to lock "inputsBuffer", and we can do "other things" on "pR.PlayerDownsyncChanDict[playerId]";
+		       7. unlock "pR.PlayerDownsyncChanDict[playerId]".
+
+		       The difference from our current approach is that the "pR.PlayerDownsyncChanDict[playerId]" in use is a Golang channel, i.e. when executing #4 it automatically executes #3 (before) & #7 (after) as well, thus we couldn't do #5 & #6 in between.
 	*/
 	for playerId, playerDownsyncChan := range pR.PlayerDownsyncChanDict {
 		/*

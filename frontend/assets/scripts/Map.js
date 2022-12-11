@@ -769,7 +769,7 @@ cc.Class({
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
     const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
-      colliderHeight = playerDownsyncInfo.colliderRadius * 3;
+      colliderHeight = playerDownsyncInfo.colliderRadius * 4;
     const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
       pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
 
