@@ -754,7 +754,7 @@ func (pR *Room) OnDismissed() {
 	pR.InputFrameUpsyncDelayTolerance = 2
 	pR.MaxChasingRenderFramesPerUpdate = 8
 
-	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	pR.BackendDynamicsEnabled = false // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	punchSkillId := int32(1)
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
@@ -781,6 +781,12 @@ func (pR *Room) OnDismissed() {
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
+
+	pR.SnapIntoPlatformOverlap = float64(0.1)
+	pR.SnapIntoPlatformThreshold = float64(0.5)
+	pR.JumpingInitVelY = int32(float64(6) * pR.WorldToVirtualGridRatio)
+	pR.GravityX = 0
+	pR.GravityY = -(4*pR.JumpingInitVelY + (pR.ServerFps - 1)) / pR.ServerFps // i.e. -Math.ceil(4*jumpingInitVelY / serverFps)
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1502,10 +1508,12 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 func (pR *Room) decodeInput(encodedInput uint64) *InputFrameDecoded {
 	encodedDirection := (encodedInput & uint64(15))
 	btnALevel := int32((encodedInput >> 4) & 1)
+	btnBLevel := int32((encodedInput >> 5) & 1)
 	return &InputFrameDecoded{
 		Dx:        DIRECTION_DECODER[encodedDirection][0],
 		Dy:        DIRECTION_DECODER[encodedDirection][1],
 		BtnALevel: btnALevel,
+		BtnBLevel: btnBLevel,
 	}
 }
 

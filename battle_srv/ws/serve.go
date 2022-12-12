@@ -265,9 +265,14 @@ func Serve(c *gin.Context) {
 			WorldToVirtualGridRatio: pRoom.WorldToVirtualGridRatio,
 			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
 
-			SpAtkLookupFrames: pRoom.SpAtkLookupFrames,
-			RenderCacheSize:   pRoom.RenderCacheSize,
-			MeleeSkillConfig:  pRoom.MeleeSkillConfig,
+			SpAtkLookupFrames:         pRoom.SpAtkLookupFrames,
+			RenderCacheSize:           pRoom.RenderCacheSize,
+			MeleeSkillConfig:          pRoom.MeleeSkillConfig,
+			SnapIntoPlatformOverlap:   pRoom.SnapIntoPlatformOverlap,
+			SnapIntoPlatformThreshold: pRoom.SnapIntoPlatformThreshold,
+			JumpingInitVelY:           pRoom.JumpingInitVelY,
+			GravityX:                  pRoom.GravityX,
+			GravityY:                  pRoom.GravityY,
 		}
 
 		resp := &pb.WsResp{
