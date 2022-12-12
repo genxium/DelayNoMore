@@ -76,8 +76,8 @@ cc.Class({
     */
     self.snapIntoPlatformOverlap = 0.1;
     self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
-    self.jumpingInitVelY = 5 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -Math.ceil(4*self.jumpingInitVelY/self.serverFps)]; // unit: (virtual grid length/renderFrame^2)
+    self.jumpingInitVelY = 6 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
+    [self.gravityX, self.gravityY] = [0, -Math.ceil(4 * self.jumpingInitVelY / self.serverFps)]; // unit: (virtual grid length/renderFrame^2)
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -162,8 +162,8 @@ cc.Class({
           10: window.pb.protos.PlayerDownsync.create({
             id: 10,
             joinIndex: 1,
-            virtualGridX: -50 * self.worldToVirtualGridRatio,
-            virtualGridY: -400 * self.worldToVirtualGridRatio,
+            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0],
+            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1],
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
@@ -177,8 +177,8 @@ cc.Class({
           11: window.pb.protos.PlayerDownsync.create({
             id: 11,
             joinIndex: 2,
-            virtualGridX: 100 * self.worldToVirtualGridRatio,
-            virtualGridY: -350 * self.worldToVirtualGridRatio,
+            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0],
+            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1],
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
@@ -432,7 +432,9 @@ cc.Class({
             // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
             thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
-            thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 (including inAir)
+            if (false == currPlayerDownsync.inAir) {
+              thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
+            }
           }
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);

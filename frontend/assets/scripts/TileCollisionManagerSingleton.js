@@ -108,6 +108,7 @@ TileCollisionManager.prototype.continuousMapNodePosToContinuousObjLayerOffset = 
 window.battleEntityTypeNameToGlobalGid = {};
 TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNode) {
   let toRet = {
+    playerStartingPositions: [],
     barriers: [],
   };
   const tiledMapIns = withTiledMapNode.getComponent(cc.TiledMap); // This is a magic name.
@@ -115,6 +116,18 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
   const allObjectGroups = tiledMapIns.getObjectGroups();
   for (let i = 0; i < allObjectGroups.length; ++i) {
     var objectGroup = allObjectGroups[i];
+    if ("PlayerStartingPos" == objectGroup.getGroupName()) {
+      var allObjects = objectGroup.getObjects();
+      for (let j = 0; j < allObjects.length; ++j) {
+        const cccMaskedX = allObjects[j].x,
+          cccMaskedY = allObjects[j].y;
+        const origX = cccMaskedX,
+          origY = withTiledMapNode.getContentSize().height - cccMaskedY; // FIXME: I don't know why CocosCreator did this, it's stupid and MIGHT NOT WORK IN ISOMETRIC orientation!   
+        let wpos = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, cc.v2(origX, origY));
+        toRet.playerStartingPositions.push(wpos);
+      }
+      continue;
+    }
     if ("barrier_and_shelter" != objectGroup.getProperty("type")) continue;
     var allObjects = objectGroup.getObjects();
     for (let j = 0; j < allObjects.length; ++j) {
