@@ -13,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
 
     cc.director.getCollisionManager().enabled = false;
 
@@ -73,7 +73,7 @@ cc.Class({
     /* 
     [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
 
-    Moreover, "snapIntoPlatformOverlap" should be small enough such that the jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
+    Moreover, "snapIntoPlatformOverlap" should be small enough such that the walking "velX" or jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
     */
     self.snapIntoPlatformOverlap = 0.1;
     self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
@@ -119,6 +119,9 @@ cc.Class({
         const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
           return [p.x, p.y];
         }));
+        newBarrier.data = {
+          hardPushback: true
+        };
 
         if (false && self.showCriticalCoordinateLabels) {
           for (let i = 0; i < boundaryObj.length; ++i) {
@@ -225,7 +228,7 @@ cc.Class({
 
         const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
-        self.showDebugBoundaries();
+        self.showDebugBoundaries(rdf);
         ++self.renderFrameId;
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();

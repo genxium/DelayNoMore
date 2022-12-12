@@ -277,7 +277,7 @@
       "__uuid__": "472df5d3-35e7-4184-9e6c-7f41bee65ee3"
     },
     "_texture": null,
-    "_stopped": false,
+    "_stopped": true,
     "playOnLoad": true,
     "autoRemoveOnFinish": false,
     "totalParticles": 200,
@@ -408,7 +408,7 @@
       "ctor": "Float64Array",
       "array": [
         3,
-        40,
+        60,
         0,
         0,
         0,

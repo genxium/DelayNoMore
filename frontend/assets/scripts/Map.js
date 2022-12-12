@@ -451,6 +451,9 @@ cc.Class({
           const newBarrierCollider = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
             return [p.x, p.y];
           }));
+          newBarrierCollider.data = {
+            hardPushback: true
+          };
 
           if (self.showCriticalCoordinateLabels) {
             for (let i = 0; i < boundaryObj.length; ++i) {
@@ -835,7 +838,7 @@ cc.Class({
         */
         // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.getByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
-        self.showDebugBoundaries();
+        self.showDebugBoundaries(rdf);
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
@@ -980,7 +983,7 @@ cc.Class({
     }
   },
 
-  showDebugBoundaries() {
+  showDebugBoundaries(rdf) {
     const self = this;
     if (self.showCriticalCoordinateLabels) {
       let g = self.g;
@@ -1089,42 +1092,102 @@ cc.Class({
     }
 
     const nextRenderFrameMeleeBullets = [];
-
-    // Guaranteed determinism regardless of traversal order
-    const jumpTriggered = new Array(self.playerRichInfoArr.length);
-    const movements = new Array(self.playerRichInfoArr.length);
-    const bulletPushbacks = new Array(self.playerRichInfoArr.length);
     const effPushbacks = new Array(self.playerRichInfoArr.length);
+    const hardPushbackNorms = new Array(self.playerRichInfoArr.length);
 
-    // Reset playerCollider position from the "virtual grid position"
+    // 1. Process player inputs
+    /*
+    [WARNING] Player input alone WOULD NOT take "characterState" into any "ATK_CHARACTER_STATE_IN_AIR_SET", only after the calculation of "effPushbacks" do we know exactly whether or not a player is "inAir", the finalize the transition of "thatPlayerInNextFrame.characterState". 
+    */
+    if (null != delayedInputFrame) {
+      const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(currRenderFrame.id - 1, self.inputDelayFrames));
+      const inputList = delayedInputFrame.inputList;
+      for (let j in self.playerRichInfoArr) {
+        const joinIndex = parseInt(j) + 1;
+        const playerRichInfo = self.playerRichInfoArr[j];
+        const playerId = playerRichInfo.id;
+        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+        const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
+        if (0 < thatPlayerInNextFrame.framesToRecover) {
+          // No need to process inputs for this player, but there might be bullet pushbacks on this player  
+          continue;
+        }
+
+        const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
+        const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
+        const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
+        const prevBtnBLevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnBLevel);
+        if (1 == decodedInput.btnBLevel && 0 == prevBtnBLevel) {
+          const characStateAlreadyInAir = window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState);
+          const characStateIsInterruptWaivable = window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(thatPlayerInNextFrame.characterState);
+          if (
+            !characStateAlreadyInAir
+            &&
+            characStateIsInterruptWaivable
+          ) {
+            thatPlayerInNextFrame.velY = self.jumpingInitVelY;
+            console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, nextVelY=${thatPlayerInNextFrame.velY}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
+          }
+        }
+
+        if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
+          // console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+          if (self.bulletTriggerEnabled) {
+            const punchSkillId = 1;
+            const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
+            thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
+            punch.battleLocalId = self.bulletBattleLocalIdCounter++;
+            punch.offenderJoinIndex = joinIndex;
+            punch.offenderPlayerId = playerId;
+            punch.originatedRenderFrameId = currRenderFrame.id;
+            nextRenderFrameMeleeBullets.push(punch);
+            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
+            console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
+            if (false == currPlayerDownsync.inAir) {
+              thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
+            }
+          }
+        } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
+          // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+        } else {
+          // No bullet trigger, process joystick movement inputs.
+          if (0 != decodedInput.dx || 0 != decodedInput.dy) {
+            // Update directions and thus would eventually update moving animation accordingly
+            thatPlayerInNextFrame.dirX = decodedInput.dx;
+            thatPlayerInNextFrame.dirY = decodedInput.dy;
+            thatPlayerInNextFrame.velX = decodedInput.dx * currPlayerDownsync.speed;
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
+          } else {
+            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
+            thatPlayerInNextFrame.velX = 0;
+          }
+        }
+      }
+    }
+
+    // 2. Process player movement
     for (let j in self.playerRichInfoArr) {
       const joinIndex = parseInt(j) + 1;
-      jumpTriggered[joinIndex - 1] = false;
-      movements[joinIndex - 1] = [0.0, 0.0];
-      bulletPushbacks[joinIndex - 1] = [0.0, 0.0];
       effPushbacks[joinIndex - 1] = [0.0, 0.0];
       const playerRichInfo = self.playerRichInfoArr[j];
       const playerId = playerRichInfo.id;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
+      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
 
-      const newVx = currPlayerDownsync.virtualGridX;
-      const newVy = currPlayerDownsync.virtualGridY;
+      // Reset playerCollider position from the "virtual grid position"
+      const [newVx, newVy] = [currPlayerDownsync.virtualGridX + currPlayerDownsync.velX, currPlayerDownsync.virtualGridY + currPlayerDownsync.velY];
       [playerCollider.x, playerCollider.y] = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
 
-      // Process gravity before anyother interaction, by now "currPlayerDownsync.velX & velY" are properly snapped to be parallel to the edge of its standing platform if necessary
-      [movements[joinIndex - 1][0], movements[joinIndex - 1][1]] = self.virtualGridToWorldPos(currPlayerDownsync.velX, currPlayerDownsync.velY);
-      playerCollider.x += movements[joinIndex - 1][0];
-      playerCollider.y += movements[joinIndex - 1][1];
       if (currPlayerDownsync.inAir) {
         thatPlayerInNextFrame.velX += self.gravityX;
         thatPlayerInNextFrame.velY += self.gravityY;
       }
     }
 
-    // Check bullet-anything collisions first, because the pushbacks caused by bullets might later be reverted by player-barrier collision 
+    // 3. Add bullet colliders into collision system
     const bulletColliders = new Map(); // Will all be removed at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` due to the need for being rollback-compatible
     const removedBulletsAtCurrFrame = new Set();
     for (let k in currRenderFrame.meleeBullets) {
@@ -1156,32 +1219,91 @@ cc.Class({
       }
     }
 
+    // 4. Invoke collision system stepping
     collisionSys.update();
-    const result1 = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
+    const result = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
 
+    // 5. Calc pushbacks for each player (after its movement) w/o bullets
+    for (let j in self.playerRichInfoArr) {
+      const joinIndex = parseInt(j) + 1;
+      const playerRichInfo = self.playerRichInfoArr[j];
+      const playerId = playerRichInfo.id;
+      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+      const potentials = playerCollider.potentials();
+      hardPushbackNorms[joinIndex - 1] = self.calcHardPushbacksNorms(playerCollider, potentials, result, self.snapIntoPlatformThreshold, self.snapIntoPlatformOverlap, joinIndex, effPushbacks);
+
+      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
+      let fallStopping = false;
+      for (const potential of potentials) {
+        // ignore bullets for this step
+        if (null != potential.data && null != potential.data.offenderJoinIndex) continue;
+        // Test if the player collides with the wall/another player
+        if (!playerCollider.collides(potential, result)) continue;
+
+        const normAlignmentWithGravity = (result.overlap_x * 0 + result.overlap_y * (-1.0));
+        const landedOnGravityPushback = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
+        // Push the player out of the wall/another player
+        let [pushbackX, pushbackY] = [result.overlap * result.overlap_x, result.overlap * result.overlap_y];
+        if (landedOnGravityPushback) {
+            // kindly note that one player might land on top of another player, and snapping is also required in such case
+            [pushbackX, pushbackY] = [(result.overlap - self.snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap) * result.overlap_y];
+        } 
+        for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
+          // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
+          const projectedMagnitude = pushbackX * hardPushbackNorm[0] + pushbackY * hardPushbackNorm[1];
+          pushbackX -= projectedMagnitude * hardPushbackNorm[0];
+          pushbackY -= projectedMagnitude * hardPushbackNorm[1];
+        }
+        thatPlayerInNextFrame.inAir &= !landedOnGravityPushback;
+        fallStopping |= (currPlayerDownsync.inAir && landedOnGravityPushback);
+
+        effPushbacks[joinIndex - 1][0] += pushbackX;
+        effPushbacks[joinIndex - 1][1] += pushbackY;
+      }
+
+      if (fallStopping) {
+        thatPlayerInNextFrame.velX = 0;
+        thatPlayerInNextFrame.velY = 0;
+        thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
+        thatPlayerInNextFrame.framesToRecover = 0;
+      }
+      if (currPlayerDownsync.inAir) {
+        thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
+      }
+    }
+
+    // 6. Check bullet-anything collisions
     bulletColliders.forEach((bulletCollider, collisionBulletIndex) => {
       const potentials = bulletCollider.potentials();
       const offender = currRenderFrame.players[bulletCollider.data.offenderPlayerId];
       let shouldRemove = false;
       for (const potential of potentials) {
         if (null != potential.data && potential.data.joinIndex == bulletCollider.data.offenderJoinIndex) continue;
-        if (!bulletCollider.collides(potential, result1)) continue;
-        if (null != potential.data && null !== potential.data.joinIndex) {
+        if (!bulletCollider.collides(potential, result)) continue;
+        if (null != potential.data && null != potential.data.joinIndex) {
           const joinIndex = potential.data.joinIndex;
           let xfac = 1;
           if (0 > offender.dirX) {
             xfac = -1;
           }
-          bulletPushbacks[joinIndex - 1][0] += xfac * bulletCollider.data.pushback; // Only for straight punch, there's no y-pushback
-          bulletPushbacks[joinIndex - 1][1] += 0;
-          const thatAckedPlayerInCurFrame = currRenderFrame.players[potential.data.id];
-          const thatAckedPlayerInNextFrame = nextRenderFramePlayers[potential.data.id];
-          thatAckedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
-          if (thatAckedPlayerInCurFrame.inAir) {
-            thatAckedPlayerInNextFrame.characterState = window.toInAirConjugate(thatAckedPlayerInNextFrame.characterState);
+          let [pushbackX, pushbackY] = [-xfac * bulletCollider.data.pushback, 0]; // Only for straight punch, there's no y-pushback 
+          for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
+            // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
+            const projectedMagnitude = pushbackX * hardPushbackNorm[0] + pushbackY * hardPushbackNorm[1];
+            pushbackX -= projectedMagnitude * hardPushbackNorm[0];
+            pushbackY -= projectedMagnitude * hardPushbackNorm[1];
+          // TODO: What if a bullet knocks down the attacked player into ground?
           }
-          const oldFramesToRecover = thatAckedPlayerInNextFrame.framesToRecover;
-          thatAckedPlayerInNextFrame.framesToRecover = (oldFramesToRecover > bulletCollider.data.hitStunFrames ? oldFramesToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
+          effPushbacks[joinIndex - 1][0] += pushbackX;
+          effPushbacks[joinIndex - 1][1] += pushbackY;
+          const [atkedPlayerInCurFrame, atkedPlayerInNextFrame] = [currRenderFrame.players[potential.data.id], nextRenderFramePlayers[potential.data.id]];
+          atkedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
+          if (atkedPlayerInCurFrame.inAir) {
+            atkedPlayerInNextFrame.characterState = window.toInAirConjugate(atkedPlayerInNextFrame.characterState);
+          }
+          const oldFramesToRecover = atkedPlayerInNextFrame.framesToRecover;
+          atkedPlayerInNextFrame.framesToRecover = (oldFramesToRecover > bulletCollider.data.hitStunFrames ? oldFramesToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
         }
         shouldRemove = true;
       }
@@ -1203,143 +1325,7 @@ cc.Class({
       nextRenderFrameMeleeBullets.push(meleeBullet);
     }
 
-    // Process player inputs
-    if (null != delayedInputFrame) {
-      const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(currRenderFrame.id - 1, self.inputDelayFrames));
-      const inputList = delayedInputFrame.inputList;
-      for (let j in self.playerRichInfoArr) {
-        const joinIndex = parseInt(j) + 1;
-        effPushbacks[joinIndex - 1] = [0.0, 0.0];
-        const playerRichInfo = self.playerRichInfoArr[j];
-        const playerId = playerRichInfo.id;
-        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-        const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-        const currPlayerDownsync = currRenderFrame.players[playerId];
-        const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-        if (0 < thatPlayerInNextFrame.framesToRecover) {
-          // No need to process inputs for this player, but there might be bullet pushbacks on this player  
-          playerCollider.x += bulletPushbacks[joinIndex - 1][0];
-          playerCollider.y += bulletPushbacks[joinIndex - 1][1];
-          if (0 != bulletPushbacks[joinIndex - 1][0] || 0 != bulletPushbacks[joinIndex - 1][1]) {
-            console.log(`playerId=${playerId}, joinIndex=${joinIndex} is pushbacked back by ${bulletPushbacks[joinIndex - 1]} by bullet impacts, now its framesToRecover is ${thatPlayerInNextFrame.framesToRecover}`);
-          }
-          continue;
-        }
-
-        const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
-        const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
-        const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
-        const prevBtnBLevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnBLevel);
-        /*
-        [WARNING] Player input alone WOULD NOT take "characterState" into any "ATK_CHARACTER_STATE_IN_AIR_SET", only after the calculation of "effPushbacks" do we know exactly whether or not a player is "inAir", the finalize the transition of "thatPlayerInNextFrame.characterState". 
-        */
-        if (1 == decodedInput.btnBLevel && 0 == prevBtnBLevel) {
-          const characStateAlreadyInAir = window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState);
-          const characStateIsInterruptWaivable = window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(thatPlayerInNextFrame.characterState);
-          if (
-            !characStateAlreadyInAir
-            &&
-            characStateIsInterruptWaivable
-          ) {
-            thatPlayerInNextFrame.velY = self.jumpingInitVelY;
-            jumpTriggered[joinIndex - 1] = true;
-            console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, nextVelY=${thatPlayerInNextFrame.velY}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
-          }
-        }
-
-        if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
-          // console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-          if (self.bulletTriggerEnabled) {
-            const punchSkillId = 1;
-            const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
-            thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
-            punch.battleLocalId = self.bulletBattleLocalIdCounter++;
-            punch.offenderJoinIndex = joinIndex;
-            punch.offenderPlayerId = playerId;
-            punch.originatedRenderFrameId = currRenderFrame.id;
-            nextRenderFrameMeleeBullets.push(punch);
-            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
-            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
-            if (false == currPlayerDownsync.inAir) {
-              thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
-            }
-          }
-        } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
-          // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-        } else {
-          // No bullet trigger, process joystick movement inputs (except for jumping).
-          if (0 != decodedInput.dx || 0 != decodedInput.dy) {
-            // Update directions and thus would eventually update moving animation accordingly
-            thatPlayerInNextFrame.dirX = decodedInput.dx;
-            thatPlayerInNextFrame.dirY = decodedInput.dy;
-            thatPlayerInNextFrame.velX = decodedInput.dx * currPlayerDownsync.speed;
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
-          } else {
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-            thatPlayerInNextFrame.velX = 0;
-          }
-        }
-        if (currPlayerDownsync.inAir) {
-          thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
-        }
-      }
-    }
-
-    collisionSys.update(); // by now all "bulletCollider"s are removed
-    const result2 = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
-
-    for (let j in self.playerRichInfoArr) {
-      const joinIndex = parseInt(j) + 1;
-      const playerId = self.playerRichInfoArr[j].id;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const potentials = playerCollider.potentials();
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-      let fallStopping = false;
-      let [snappedIntoPlatformEx, snappedIntoPlatformEy] = [null, null];
-      for (const potential of potentials) {
-        // Test if the player collides with the wall
-        if (!playerCollider.collides(potential, result2)) continue;
-        // Push the player out of the wall
-        let [pushbackX, pushbackY] = [result2.overlap * result2.overlap_x, result2.overlap * result2.overlap_y];
-        if (null == potential.data) {
-          // "null == potential.data" implies a barrier
-          const normAlignmentWithGravity = (result2.overlap_x * 0 + result2.overlap_y * (-1.0));
-          const flatEnough = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
-          const remainsNotInAir = (!currPlayerDownsync.inAir && flatEnough);
-          const localFallStopping = (currPlayerDownsync.inAir && flatEnough);
-          if (remainsNotInAir || localFallStopping) {
-            fallStopping |= localFallStopping;
-            [pushbackX, pushbackY] = [(result2.overlap - self.snapIntoPlatformOverlap) * result2.overlap_x, (result2.overlap - self.snapIntoPlatformOverlap) * result2.overlap_y]
-            // [overlay_x, overlap_y] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
-            snappedIntoPlatformEx = -result2.overlap_y;
-            snappedIntoPlatformEy = result2.overlap_x;
-            if (snappedIntoPlatformEx * currPlayerDownsync.dirX + snappedIntoPlatformEy * currPlayerDownsync.dirY) {
-              [snappedIntoPlatformEx, snappedIntoPlatformEy] = [-snappedIntoPlatformEx, -snappedIntoPlatformEy];
-            }
-          }
-        }
-        // What if we're on the edge of 2 barriers? Would adding up make an unexpected bounce?
-        effPushbacks[joinIndex - 1][0] += pushbackX;
-        effPushbacks[joinIndex - 1][1] += pushbackY;
-      }
-      if (false == jumpTriggered[joinIndex - 1] && null != snappedIntoPlatformEx && null != snappedIntoPlatformEy) {
-        thatPlayerInNextFrame.inAir = false;
-        if (fallStopping) {
-          thatPlayerInNextFrame.velY = 0;
-          thatPlayerInNextFrame.velX = 0;
-          thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-          thatPlayerInNextFrame.framesToRecover = 0;
-        }
-        const dotProd = thatPlayerInNextFrame.velX * snappedIntoPlatformEx + thatPlayerInNextFrame.velY * snappedIntoPlatformEy;
-        [thatPlayerInNextFrame.velX, thatPlayerInNextFrame.velY] = [dotProd * snappedIntoPlatformEx, dotProd * snappedIntoPlatformEy];
-      }
-    }
-
-    // Get players out of stuck barriers if there's any
+    // 7. Get players out of stuck barriers if there's any
     for (let j in self.playerRichInfoArr) {
       const joinIndex = parseInt(j) + 1;
       const playerId = self.playerRichInfoArr[j].id;
@@ -1490,5 +1476,23 @@ cc.Class({
     const self = this;
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     return self.worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH)
+  },
+
+  calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformThreshold, snapIntoPlatformOverlap, joinIndex, effPushbacks) {
+    let hardPushbackNorms = [];
+    let fallStopping = false;
+    for (const potential of potentials) {
+      if (null == potential.data || !(true == potential.data.hardPushback)) continue;
+      if (!collider.collides(potential, result)) continue;
+      // allow snapping into all colliders with {hardPushback: true}
+      const [pushbackX, pushbackY] = [(result.overlap - snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - snapIntoPlatformOverlap) * result.overlap_y];
+
+      // [overlay_x, overlap_y] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
+      hardPushbackNorms.push([result.overlap_x, result.overlap_y]);
+      effPushbacks[joinIndex - 1][0] += pushbackX;
+      effPushbacks[joinIndex - 1][1] += pushbackY;
+    }
+
+    return hardPushbackNorms;
   },
 });

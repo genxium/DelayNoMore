@@ -60,6 +60,43 @@ func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceO
 	return collider
 }
 
+func CalcPushbacksWithGravitySnapping(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon, currentInAir bool, snapIntoPlatformOverlap, snapIntoPlatformThreshold float64) (bool, float64, float64, *SatResult, float64, float64, bool) {
+	origX, origY := playerShape.Position()
+    snappedIntoPlatformEx, snappedIntoPlatformEy := float64(0), float64(0)
+    localFallStopping := false
+	defer func() {
+		playerShape.SetPosition(origX, origY)
+	}()
+	playerShape.SetPosition(origX+oldDx, origY+oldDy)
+	overlapResult := &SatResult{
+		Overlap:       0,
+		OverlapX:      0,
+		OverlapY:      0,
+		AContainedInB: true,
+		BContainedInA: true,
+		Axis:          vector.Vector{0, 0},
+	}
+	if overlapped := IsPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
+		pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY
+        normAlignmentWithGravity := (overlapResult.OverlapX * 0 + overlapResult.OverlapX * (-1.0))
+        flatEnough := (snapIntoPlatformThreshold < normAlignmentWithGravity) // prevents false snapping on the lateral sides
+        remainsNotInAir := (!currentInAir && flatEnough)
+        localFallStopping = (currentInAir && flatEnough)
+        if remainsNotInAir || localFallStopping {
+          // [OverlayX, OverlapY] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
+          snappedIntoPlatformEx, snappedIntoPlatformEy = -overlapResult.OverlapY, overlapResult.OverlapX
+          pushbackX, pushbackY = (overlapResult.Overlap - snapIntoPlatformOverlap) * overlapResult.OverlapX, (overlapResult.Overlap - snapIntoPlatformOverlap) * overlapResult.OverlapY 
+          if (snappedIntoPlatformEx * currPlayerDownsync.dirX + snappedIntoPlatformEy * currPlayerDownsync.dirY < 0) {
+            // snapped dir should have a positive projection from player facing dir  
+            snappedIntoPlatformEx, snappedIntoPlatformEy = -snappedIntoPlatformEx, -snappedIntoPlatformEy
+          }
+        }
+        return true, pushbackX, pushbackY, overlapResult, snappedIntoPlatformEx, snappedIntoPlatformEy, localFallStopping
+	} else {
+		return false, 0, 0, overlapResult, 0, 0, false 
+	}
+}
+
 func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64, *SatResult) {
 	origX, origY := playerShape.Position()
 	defer func() {
