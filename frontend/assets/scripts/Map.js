@@ -1079,7 +1079,7 @@ cc.Class({
         velX: currPlayerDownsync.velX,
         velY: currPlayerDownsync.velY,
         characterState: currPlayerDownsync.characterState,
-        inAir: true, // will be updated if collided with a barrier with "0 > pushbackY"
+        inAir: true,
         speed: currPlayerDownsync.speed,
         battleState: currPlayerDownsync.battleState,
         score: currPlayerDownsync.score,
@@ -1106,7 +1106,6 @@ cc.Class({
         const joinIndex = parseInt(j) + 1;
         const playerRichInfo = self.playerRichInfoArr[j];
         const playerId = playerRichInfo.id;
-        const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
         const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
         if (0 < thatPlayerInNextFrame.framesToRecover) {
           // No need to process inputs for this player, but there might be bullet pushbacks on this player  
@@ -1131,23 +1130,19 @@ cc.Class({
         }
 
         if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
-          // console.log(`playerId=${playerId} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-          if (self.bulletTriggerEnabled) {
-            const punchSkillId = 1;
-            const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
-            thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
-            punch.battleLocalId = self.bulletBattleLocalIdCounter++;
-            punch.offenderJoinIndex = joinIndex;
-            punch.offenderPlayerId = playerId;
-            punch.originatedRenderFrameId = currRenderFrame.id;
-            nextRenderFrameMeleeBullets.push(punch);
-            // console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}: ${self._stringifyRecentInputCache(true)}`);
-            console.log(`A rising-edge of meleeBullet is created at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+          const punchSkillId = 1;
+          const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
+          thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
+          punch.battleLocalId = self.bulletBattleLocalIdCounter++;
+          punch.offenderJoinIndex = joinIndex;
+          punch.offenderPlayerId = playerId;
+          punch.originatedRenderFrameId = currRenderFrame.id;
+          nextRenderFrameMeleeBullets.push(punch);
+          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
 
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
-            if (false == currPlayerDownsync.inAir) {
-              thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
-            }
+          thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
+          if (false == currPlayerDownsync.inAir) {
+            thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
           }
         } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
           // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
@@ -1215,7 +1210,6 @@ cc.Class({
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
         bulletColliders.set(collisionBulletIndex, newBulletCollider);
-      // console.log(`A meleeBullet is added to collisionSys at currRenderFrame.id=${currRenderFrame.id} as start-up frames ended and active frame is not yet ended: ${JSON.stringify(meleeBullet)}`);
       }
     }
 
@@ -1231,35 +1225,48 @@ cc.Class({
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       const potentials = playerCollider.potentials();
-      hardPushbackNorms[joinIndex - 1] = self.calcHardPushbacksNorms(playerCollider, potentials, result, self.snapIntoPlatformThreshold, self.snapIntoPlatformOverlap, joinIndex, effPushbacks);
+      hardPushbackNorms[joinIndex - 1] = self.calcHardPushbacksNorms(playerCollider, potentials, result, self.snapIntoPlatformOverlap, effPushbacks[joinIndex - 1]);
 
       const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
       let fallStopping = false;
+      let possiblyFallStoppedOnAnotherPlayer = false;
       for (const potential of potentials) {
+        let [isBarrier, isAnotherPlayer, isBullet] = [true == potential.data.hardPushback, null != potential.data.joinIndex, null != potential.data.offenderJoinIndex];
         // ignore bullets for this step
-        if (null != potential.data && null != potential.data.offenderJoinIndex) continue;
+        if (isBullet) continue;
         // Test if the player collides with the wall/another player
         if (!playerCollider.collides(potential, result)) continue;
 
         const normAlignmentWithGravity = (result.overlap_x * 0 + result.overlap_y * (-1.0));
         const landedOnGravityPushback = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
-        // Push the player out of the wall/another player
-        let [pushbackX, pushbackY] = [result.overlap * result.overlap_x, result.overlap * result.overlap_y];
+        let pushback = [result.overlap * result.overlap_x, result.overlap * result.overlap_y];
         if (landedOnGravityPushback) {
-            // kindly note that one player might land on top of another player, and snapping is also required in such case
-            [pushbackX, pushbackY] = [(result.overlap - self.snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap) * result.overlap_y];
-        } 
+          // kindly note that one player might land on top of another player, and snapping is also required in such case
+          pushback = [(result.overlap - self.snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap) * result.overlap_y];
+          thatPlayerInNextFrame.inAir = false;
+        }
         for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
           // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
-          const projectedMagnitude = pushbackX * hardPushbackNorm[0] + pushbackY * hardPushbackNorm[1];
-          pushbackX -= projectedMagnitude * hardPushbackNorm[0];
-          pushbackY -= projectedMagnitude * hardPushbackNorm[1];
+          const projectedMagnitude = pushback[0] * hardPushbackNorm[0] + pushback[1] * hardPushbackNorm[1];
+          if (isBarrier
+            ||
+            (isAnotherPlayer && 0 > projectedMagnitude)
+          ) {
+            // [WARNING] Pushing by another player is different from pushing by barrier!
+            // Otherwise the player couldn't be pushed by another player to opposite dir of a side wall 
+            pushback[0] -= projectedMagnitude * hardPushbackNorm[0];
+            pushback[1] -= projectedMagnitude * hardPushbackNorm[1];
+          }
         }
-        thatPlayerInNextFrame.inAir &= !landedOnGravityPushback;
-        fallStopping |= (currPlayerDownsync.inAir && landedOnGravityPushback);
+        if (currPlayerDownsync.inAir && landedOnGravityPushback) {
+          fallStopping = true;
+          if (isAnotherPlayer) {
+            possiblyFallStoppedOnAnotherPlayer = true;
+          }
+        }
 
-        effPushbacks[joinIndex - 1][0] += pushbackX;
-        effPushbacks[joinIndex - 1][1] += pushbackY;
+        effPushbacks[joinIndex - 1][0] += pushback[0];
+        effPushbacks[joinIndex - 1][1] += pushback[1];
       }
 
       if (fallStopping) {
@@ -1267,6 +1274,9 @@ cc.Class({
         thatPlayerInNextFrame.velY = 0;
         thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
         thatPlayerInNextFrame.framesToRecover = 0;
+        if (possiblyFallStoppedOnAnotherPlayer) {
+          console.log(`playerId=${playerId}, joinIndex=${joinIndex} possiblyFallStoppedOnAnotherPlayer with effPushback=${effPushbacks[joinIndex - 1]} at renderFrame.id=${currRenderFrame.id}`);
+        }
       }
       if (currPlayerDownsync.inAir) {
         thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
@@ -1282,21 +1292,27 @@ cc.Class({
         if (null != potential.data && potential.data.joinIndex == bulletCollider.data.offenderJoinIndex) continue;
         if (!bulletCollider.collides(potential, result)) continue;
         if (null != potential.data && null != potential.data.joinIndex) {
+          const playerId = potential.data.id;
           const joinIndex = potential.data.joinIndex;
           let xfac = 1;
           if (0 > offender.dirX) {
             xfac = -1;
           }
-          let [pushbackX, pushbackY] = [-xfac * bulletCollider.data.pushback, 0]; // Only for straight punch, there's no y-pushback 
+          // Only for straight punch, there's no y-pushback 
+          let bulletPushback = [-xfac * bulletCollider.data.pushback, 0];
+          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} is supposed to be pushed back by meleeBullet for bulletPushback=${JSON.stringify(bulletPushback)} at renderFrame.id=${currRenderFrame.id}`);
           for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
-            // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
-            const projectedMagnitude = pushbackX * hardPushbackNorm[0] + pushbackY * hardPushbackNorm[1];
-            pushbackX -= projectedMagnitude * hardPushbackNorm[0];
-            pushbackY -= projectedMagnitude * hardPushbackNorm[1];
-          // TODO: What if a bullet knocks down the attacked player into ground?
+            const projectedMagnitude = bulletPushback[0] * hardPushbackNorm[0] + bulletPushback[1] * hardPushbackNorm[1];
+            if (0 > projectedMagnitude) {
+              // Otherwise when smashing into a wall the atked player would be pushed into the wall first and only got back in the next renderFrame, not what I want here
+              bulletPushback[0] -= (projectedMagnitude * hardPushbackNorm[0]);
+              bulletPushback[1] -= (projectedMagnitude * hardPushbackNorm[1]);
+              //   console.log(`playerId=${playerId}, joinIndex=${joinIndex} reducing bulletPushback=${JSON.stringify(bulletPushback)} by ${JSON.stringify([projectedMagnitude * hardPushbackNorm[0], projectedMagnitude * hardPushbackNorm[1]])} where hardPushbackNorm=${JSON.stringify(hardPushbackNorm)}, projectedMagnitude=${projectedMagnitude} at renderFrame.id=${currRenderFrame.id}`);
+            }
           }
-          effPushbacks[joinIndex - 1][0] += pushbackX;
-          effPushbacks[joinIndex - 1][1] += pushbackY;
+          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} is actually pushed back by meleeBullet for bulletPushback=${JSON.stringify(bulletPushback)} at renderFrame.id=${currRenderFrame.id}`);
+          effPushbacks[joinIndex - 1][0] += bulletPushback[0];
+          effPushbacks[joinIndex - 1][1] += bulletPushback[1];
           const [atkedPlayerInCurFrame, atkedPlayerInNextFrame] = [currRenderFrame.players[potential.data.id], nextRenderFramePlayers[potential.data.id]];
           atkedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
           if (atkedPlayerInCurFrame.inAir) {
@@ -1331,6 +1347,7 @@ cc.Class({
       const playerId = self.playerRichInfoArr[j].id;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
+      // Update "virtual grid position"
       const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
       [thatPlayerInNextFrame.virtualGridX, thatPlayerInNextFrame.virtualGridY] = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
     }
@@ -1478,21 +1495,20 @@ cc.Class({
     return self.worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH)
   },
 
-  calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformThreshold, snapIntoPlatformOverlap, joinIndex, effPushbacks) {
-    let hardPushbackNorms = [];
-    let fallStopping = false;
+  calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformOverlap, effPushback) {
+    let ret = [];
     for (const potential of potentials) {
       if (null == potential.data || !(true == potential.data.hardPushback)) continue;
       if (!collider.collides(potential, result)) continue;
-      // allow snapping into all colliders with {hardPushback: true}
+      // ALWAY snap into hardPushbacks!
+      // [overlay_x, overlap_y] is the unit vector that points into the platform
       const [pushbackX, pushbackY] = [(result.overlap - snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - snapIntoPlatformOverlap) * result.overlap_y];
 
-      // [overlay_x, overlap_y] is the unit vector that points into the platform; FIXME: Should only assign to [snappedIntoPlatformEx, snappedIntoPlatformEy] at most once!
-      hardPushbackNorms.push([result.overlap_x, result.overlap_y]);
-      effPushbacks[joinIndex - 1][0] += pushbackX;
-      effPushbacks[joinIndex - 1][1] += pushbackY;
+      ret.push([result.overlap_x, result.overlap_y]);
+      effPushback[0] += pushbackX;
+      effPushback[1] += pushbackY;
     }
 
-    return hardPushbackNorms;
+    return ret;
   },
 });

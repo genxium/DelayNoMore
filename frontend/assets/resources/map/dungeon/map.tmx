@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="79">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="83">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
@@ -21,12 +21,6 @@
    <property name="type" value="barrier_and_shelter"/>
   </properties>
   <object id="8" x="648.242" y="480.606">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-   <polyline points="0,0 0,18.6667 1041.33,21.3333 1041.33,-1.33333"/>
-  </object>
-  <object id="9" x="650.667" y="1604.67">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -274,27 +268,22 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="75" x="1264.25" y="1599" width="47.75" height="17.25">
+  <object id="79" x="624.25" y="1616" width="1094.75" height="17.25">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="76" x="1264.63" y="1583.63" width="15.5" height="15.25">
+  <object id="80" x="1296.5" y="1600.25">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
+   <polyline points="0,0 -32.5,0 -32.25,-16.5 -16.5,-16.5"/>
   </object>
-  <object id="77" x="1280.5" y="1583.75">
+  <object id="82" x="1328.5" y="1616">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
-   <polyline points="0,0 0,15.25 15.75,15.25"/>
-  </object>
-  <object id="78" x="1312" y="1599.25">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-   <polyline points="0,0 0,17 15.75,17"/>
+   <polyline points="0,0 -64.5,0 -64.0038,-15.75 -16.4734,-15.75"/>
   </object>
  </objectgroup>
 </map>

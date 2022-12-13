@@ -128,7 +128,7 @@ cc.Class({
   _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
-      console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
+      // console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, 0, -1);
     } else {
       const animationData = underlyingAnimationCtrl._animations[newAnimName];

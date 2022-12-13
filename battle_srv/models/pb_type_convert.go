@@ -17,12 +17,16 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]
 			VirtualGridY:   last.VirtualGridY,
 			DirX:           last.DirX,
 			DirY:           last.DirY,
-			ColliderRadius: last.ColliderRadius,
+			VelX:           last.VelX,
+			VelY:           last.VelY,
 			Speed:          last.Speed,
 			BattleState:    last.BattleState,
+			CharacterState: last.CharacterState,
+			InAir:          last.InAir,
+			JoinIndex:      last.JoinIndex,
+			ColliderRadius: last.ColliderRadius,
 			Score:          last.Score,
 			Removed:        last.Removed,
-			JoinIndex:      last.JoinIndex,
 		}
 		if withMetaInfo {
 			toRet[k].Name = last.Name
