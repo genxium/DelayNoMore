@@ -12,7 +12,7 @@ import (
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
 	var s []string = make([]string, len(body.Points))
 	for i, p := range body.Points {
-		s[i] = fmt.Sprintf("[%.2f, %.2f]", p[0]+body.X, p[1]+body.Y)
+		s[i] = fmt.Sprintf("[%.3f, %.3f]", p[0]+body.X, p[1]+body.Y)
 	}
 
 	return fmt.Sprintf("{\n%s\n}", strings.Join(s, ",\n"))
@@ -66,6 +66,7 @@ func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.Conve
 		playerShape.SetPosition(origX, origY)
 	}()
 	playerShape.SetPosition(origX+oldDx, origY+oldDy)
+
 	overlapResult := &SatResult{
 		Overlap:       0,
 		OverlapX:      0,
@@ -74,7 +75,7 @@ func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.Conve
 		BContainedInA: true,
 		Axis:          vector.Vector{0, 0},
 	}
-	if overlapped := IsPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
+	if overlapped := isPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
 		pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY
 		return true, pushbackX, pushbackY, overlapResult
 	} else {
@@ -91,16 +92,17 @@ type SatResult struct {
 	Axis          vector.Vector
 }
 
-func IsPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool {
+func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool {
 	aCnt, bCnt := len(a.Points), len(b.Points)
 	// Single point case
 	if 1 == aCnt && 1 == bCnt {
 		if nil != result {
 			result.Overlap = 0
 		}
-		return a.Points[0].X() == b.Points[0].X() && a.Points[0].Y() == b.Points[0].Y()
+		return a.Points[0][0] == b.Points[0][0] && a.Points[0][1] == b.Points[0][1]
 	}
 
+	//Logger.Info(fmt.Sprintf("Checking collision between a=%v, b=%v", ConvexPolygonStr(a), ConvexPolygonStr(b)))
 	if 1 < aCnt {
 		for _, axis := range a.SATAxes() {
 			if isPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
@@ -116,6 +118,7 @@ func IsPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 			}
 		}
 	}
+	//Logger.Info(fmt.Sprintf("a=%v and b=%v are overlapped", ConvexPolygonStr(a), ConvexPolygonStr(b)))
 
 	return true
 }
@@ -137,9 +140,10 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 		e = (-2.98, 1.49).Unit()
 	*/
 
+	//Logger.Info(fmt.Sprintf("Checking separation between a=%v, b=%v along axis e={%.3f, %.3f}#1", ConvexPolygonStr(a), ConvexPolygonStr(b), e[0], e[1]))
 	var aStart, aEnd, bStart, bEnd float64 = math.MaxFloat64, -math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64
 	for _, p := range a.Points {
-		dot := (p.X()+a.X)*e.X() + (p.Y()+a.Y)*e.Y()
+		dot := (p[0]+a.X)*e[0] + (p[1]+a.Y)*e[1]
 
 		if aStart > dot {
 			aStart = dot
@@ -151,7 +155,7 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 	}
 
 	for _, p := range b.Points {
-		dot := (p.X()+b.X)*e.X() + (p.Y()+b.Y)*e.Y()
+		dot := (p[0]+b.X)*e[0] + (p[1]+b.Y)*e[1]
 
 		if bStart > dot {
 			bStart = dot
@@ -168,7 +172,6 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 	}
 
 	if nil != result {
-		result.Axis = e
 		overlap := float64(0)
 
 		if aStart < bStart {
@@ -209,16 +212,19 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, re
 			absoluteOverlap = -overlap
 		}
 
-		if 0 == currentOverlap || currentOverlap > absoluteOverlap {
+		if (0 == result.Axis[0] && 0 == result.Axis[1]) || currentOverlap > absoluteOverlap {
 			var sign float64 = 1
 			if overlap < 0 {
 				sign = -1
 			}
 
 			result.Overlap = absoluteOverlap
-			result.OverlapX = e.X() * sign
-			result.OverlapY = e.Y() * sign
+			result.OverlapX = e[0] * sign
+			result.OverlapY = e[1] * sign
 		}
+
+		result.Axis = e
+		//Logger.Info(fmt.Sprintf("Checking separation between a=%v, b=%v along axis e={%.3f, %.3f}#2: aStart=%.3f, aEnd=%.3f, bStart=%.3f, bEnd=%.3f, overlap=%.3f, currentOverlap=%.3f, absoluteOverlap=%.3f, result=%v", ConvexPolygonStr(a), ConvexPolygonStr(b), e[0], e[1], aStart, aEnd, bStart, bEnd, overlap, currentOverlap, absoluteOverlap, result))
 	}
 
 	// the specified unit vector "e" doesn't separate "a" and "b", overlap result is generated

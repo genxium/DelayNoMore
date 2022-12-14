@@ -331,7 +331,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
 
     console.warn("+++++++ Map onLoad()");
     window.handleClientSessionError = function() {
@@ -427,6 +427,16 @@ cc.Class({
         mapNode.removeAllChildren();
         self._resetCurrentMatch();
 
+        if (self.showCriticalCoordinateLabels) {
+          const drawer = new cc.Node();
+          drawer.setPosition(cc.v2(0, 0))
+          safelyAddChild(self.node, drawer);
+          setLocalZOrder(drawer, 999);
+          const g = drawer.addComponent(cc.Graphics);
+          g.lineWidth = 2;
+          self.g = g;
+        }
+
         tiledMapIns.tmxAsset = tmxAsset;
         const newMapSize = tiledMapIns.getMapSize();
         const newTileSize = tiledMapIns.getTileSize();
@@ -443,12 +453,14 @@ cc.Class({
         }
 
         let barrierIdCounter = 0;
-        const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
-        for (let boundaryObj of boundaryObjs.barriers) {
-          const x0 = boundaryObj.anchor.x,
-            y0 = boundaryObj.anchor.y;
-
-          const newBarrierCollider = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
+        const refBoundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node).barriers;
+        const boundaryObjs = parsedBattleColliderInfo.strToPolygon2DListMap;
+        for (let k = 0; k < boundaryObjs["Barrier"].eles.length; k++) {
+          let boundaryObj = boundaryObjs["Barrier"].eles[k]; 
+          const refBoundaryObj = refBoundaryObjs[k]; 
+          // boundaryObj = refBoundaryObj; 
+          const [x0, y0] = [boundaryObj.anchor.x, boundaryObj.anchor.y];
+          const newBarrierCollider = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj.points, p => {
             return [p.x, p.y];
           }));
           newBarrierCollider.data = {
@@ -967,13 +979,13 @@ cc.Class({
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
     for (let [playerId, playerRichInfo] of self.playerRichInfoDict.entries()) {
-      const immediatePlayerInfo = rdf.players[playerId];
+      const currPlayerDownsync = rdf.players[playerId];
       const prevRdfPlayer = (null == prevRdf ? null : prevRdf.players[playerId]);
-      const [wx, wy] = self.virtualGridToWorldPos(immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY);
+      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.virtualGridX, currPlayerDownsync.virtualGridY);
       //const justJiggling = (self.jigglingEps1D >= Math.abs(wx - playerRichInfo.node.x) && self.jigglingEps1D >= Math.abs(wy - playerRichInfo.node.y));
       playerRichInfo.node.setPosition(wx, wy);
-      playerRichInfo.scriptIns.updateSpeed(immediatePlayerInfo.speed);
-      playerRichInfo.scriptIns.updateCharacterAnim(immediatePlayerInfo, prevRdfPlayer, false);
+      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.speed);
+      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
     }
 
     // Update countdown
@@ -1125,7 +1137,9 @@ cc.Class({
             characStateIsInterruptWaivable
           ) {
             thatPlayerInNextFrame.velY = self.jumpingInitVelY;
-            console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnB at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}, nextVelY=${thatPlayerInNextFrame.velY}, characStateAlreadyInAir=${characStateAlreadyInAir}, characStateIsInterruptWaivable=${characStateIsInterruptWaivable}`);
+            if (1 == joinIndex) {
+              console.log(`playerId=${playerId}, joinIndex=${joinIndex} jumped at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
+            }
           }
         }
 
@@ -1258,15 +1272,26 @@ cc.Class({
             pushback[1] -= projectedMagnitude * hardPushbackNorm[1];
           }
         }
+
+        effPushbacks[joinIndex - 1][0] += pushback[0];
+        effPushbacks[joinIndex - 1][1] += pushback[1];
         if (currPlayerDownsync.inAir && landedOnGravityPushback) {
           fallStopping = true;
           if (isAnotherPlayer) {
             possiblyFallStoppedOnAnotherPlayer = true;
           }
+          if (1 == thatPlayerInNextFrame.joinIndex) {
+            console.log(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} fallStopping#1 at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, possiblyFallStoppedOnAnotherPlayer=${possiblyFallStoppedOnAnotherPlayer}`);
+          }
         }
 
-        effPushbacks[joinIndex - 1][0] += pushback[0];
-        effPushbacks[joinIndex - 1][1] += pushback[1];
+        if (1 == joinIndex && currPlayerDownsync.inAir && isBarrier && !landedOnGravityPushback) {
+          console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir & pushed back by barrier & not landed at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, barrierPos={${potential.x.toFixed(3)}, ${potential.y.toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
+        }
+
+        if (1 == joinIndex && currPlayerDownsync.inAir && isAnotherPlayer) {
+          console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir and pushed back by another player at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, landedOnGravityPushback=${landedOnGravityPushback}, fallStopping=${fallStopping}, playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, anotherPlayerColliderPos={${potential.x.toFixed(3)}, ${potential.y.toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
+        }
       }
 
       if (fallStopping) {
@@ -1274,9 +1299,6 @@ cc.Class({
         thatPlayerInNextFrame.velY = 0;
         thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
         thatPlayerInNextFrame.framesToRecover = 0;
-        if (possiblyFallStoppedOnAnotherPlayer) {
-          console.log(`playerId=${playerId}, joinIndex=${joinIndex} possiblyFallStoppedOnAnotherPlayer with effPushback=${effPushbacks[joinIndex - 1]} at renderFrame.id=${currRenderFrame.id}`);
-        }
       }
       if (currPlayerDownsync.inAir) {
         thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
@@ -1307,7 +1329,7 @@ cc.Class({
               // Otherwise when smashing into a wall the atked player would be pushed into the wall first and only got back in the next renderFrame, not what I want here
               bulletPushback[0] -= (projectedMagnitude * hardPushbackNorm[0]);
               bulletPushback[1] -= (projectedMagnitude * hardPushbackNorm[1]);
-              //   console.log(`playerId=${playerId}, joinIndex=${joinIndex} reducing bulletPushback=${JSON.stringify(bulletPushback)} by ${JSON.stringify([projectedMagnitude * hardPushbackNorm[0], projectedMagnitude * hardPushbackNorm[1]])} where hardPushbackNorm=${JSON.stringify(hardPushbackNorm)}, projectedMagnitude=${projectedMagnitude} at renderFrame.id=${currRenderFrame.id}`);
+            //   console.log(`playerId=${playerId}, joinIndex=${joinIndex} reducing bulletPushback=${JSON.stringify(bulletPushback)} by ${JSON.stringify([projectedMagnitude * hardPushbackNorm[0], projectedMagnitude * hardPushbackNorm[1]])} where hardPushbackNorm=${JSON.stringify(hardPushbackNorm)}, projectedMagnitude=${projectedMagnitude} at renderFrame.id=${currRenderFrame.id}`);
             }
           }
           // console.log(`playerId=${playerId}, joinIndex=${joinIndex} is actually pushed back by meleeBullet for bulletPushback=${JSON.stringify(bulletPushback)} at renderFrame.id=${currRenderFrame.id}`);
@@ -1348,8 +1370,20 @@ cc.Class({
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       // Update "virtual grid position"
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
+      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
       [thatPlayerInNextFrame.virtualGridX, thatPlayerInNextFrame.virtualGridY] = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
+
+      if (1 == thatPlayerInNextFrame.joinIndex) {
+        if (thatPlayerInNextFrame.inAir && 0 != thatPlayerInNextFrame.velY) {
+          console.log(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} inAir trajectory: {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+        }
+        if (currPlayerDownsync.inAir && !thatPlayerInNextFrame.inAir) {
+          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#2 at {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+        }
+        if (!currPlayerDownsync.inAir && thatPlayerInNextFrame.inAir) {
+          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} took off at {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+        }
+      }
     }
 
     return window.pb.protos.RoomDownsyncFrame.create({
@@ -1364,11 +1398,10 @@ cc.Class({
     This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd" if not interruptted.
     */
     const self = this;
-    let i = renderFrameIdSt,
-      prevLatestRdf = null,
+    let prevLatestRdf = null,
       latestRdf = null;
 
-    do {
+    for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
       latestRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing", this function can be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
       if (null == latestRdf) {
         console.warn(`Couldn't find renderFrame for i=${i} to rollback, self.renderFrameId=${self.renderFrameId}, lastAllConfirmedRenderFrameId=${self.lastAllConfirmedRenderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`);
@@ -1400,8 +1433,7 @@ cc.Class({
         self.chaserRenderFrameId = latestRdf.id;
       }
       self.recentRenderCache.setByFrameId(latestRdf, latestRdf.id);
-      ++i;
-    } while (i < renderFrameIdEd);
+    }
 
     return [prevLatestRdf, latestRdf];
   },
@@ -1496,6 +1528,7 @@ cc.Class({
   },
 
   calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformOverlap, effPushback) {
+    const self = this;
     let ret = [];
     for (const potential of potentials) {
       if (null == potential.data || !(true == potential.data.hardPushback)) continue;
