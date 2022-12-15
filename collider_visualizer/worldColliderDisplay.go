@@ -35,15 +35,15 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	spaceOffsetY := float64(spaceH) * 0.5
 
 	worldToVirtualGridRatio := float64(1000)
-	virtualGridToWorldRatio := float64(1)/worldToVirtualGridRatio
+	virtualGridToWorldRatio := float64(1) / worldToVirtualGridRatio
 	playerDefaultSpeed := 1 * worldToVirtualGridRatio
 	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 2)
 	playerColliderRadius := float64(12)
 	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
-    snapIntoPlatformOverlap := float64(0.1)
+	snapIntoPlatformOverlap := float64(0.1)
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
 	for i, playerPos := range playerPosList.Eles {
-        colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
+		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
 		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, snapIntoPlatformOverlap, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
 		Logger.Info(fmt.Sprintf("Player Collider#%d: player world pos=(%.2f, %.2f), shape=%v", i, playerPos.X, playerPos.Y, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
 		playerColliders[i] = playerCollider
@@ -65,7 +65,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		toTestPlayerCollider := playerColliders[0]
 		newVx, newVy := int32(27999), int32(-420270)
-        colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
+		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
 		toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderTLPos(newVx, newVy, colliderWidth, colliderHeight, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
 
 		Logger.Info(fmt.Sprintf("Checking collision for playerShape=%v", ConvexPolygonStr(toTestPlayerCollider.Shape.(*resolv.ConvexPolygon))))
@@ -75,7 +75,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 			playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
 			for _, obj := range collision.Objects {
 				bShape := obj.Shape.(*resolv.ConvexPolygon)
-			    Logger.Warn(fmt.Sprintf("Checking potential: a=%v, b=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(bShape)))
+				Logger.Warn(fmt.Sprintf("Checking potential: a=%v, b=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(bShape)))
 				if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, bShape); overlapped {
 					Logger.Warn(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(bShape), pushbackX, pushbackY))
 					effPushback.X += pushbackX
@@ -114,7 +114,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
-	bulletLeftToRight := false
+	bulletLeftToRight := true
 	if bulletLeftToRight {
 		xfac := float64(1.0)
 		offenderWx, offenderWy := playerPosList.Eles[0].X, playerPosList.Eles[0].Y
@@ -137,7 +137,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		}
 	}
 
-	bulletRightToLeft := false
+	bulletRightToLeft := true
 	if bulletRightToLeft {
 		xfac := float64(-1.0)
 		offenderWx, offenderWy := playerPosList.Eles[1].X, playerPosList.Eles[1].Y

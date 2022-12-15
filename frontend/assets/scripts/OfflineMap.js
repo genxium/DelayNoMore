@@ -196,7 +196,7 @@ cc.Class({
         }
       });
       self.selfPlayerInfo = {
-        id: 10
+        id: 11
       };
       self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);

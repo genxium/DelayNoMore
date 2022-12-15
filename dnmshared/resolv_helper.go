@@ -24,7 +24,7 @@ func GenerateRectCollider(wx, wy, w, h, bottomPadding, spaceOffsetX, spaceOffset
 }
 
 func generateRectColliderInCollisionSpace(blX, blY, w, h float64, tag string) *resolv.Object {
-	collider := resolv.NewObject(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details 
+	collider := resolv.NewObject(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details
 	shape := resolv.NewRectangle(0, 0, w, h)
 	collider.SetShape(shape)
 	return collider

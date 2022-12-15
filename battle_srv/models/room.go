@@ -791,7 +791,7 @@ func (pR *Room) OnDismissed() {
 	pR.SnapIntoPlatformThreshold = float64(0.5)
 	pR.JumpingInitVelY = int32(float64(7) * pR.WorldToVirtualGridRatio)
 	pR.GravityX = 0
-	pR.GravityY = -int32(float64(0.5)*pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases 
+	pR.GravityY = -int32(float64(0.5) * pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1396,7 +1396,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
 
-        colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4 
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
 		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth*0.5, colliderHeight*0.5, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
 		// Update in the collision system
 		playerCollider.Update()
@@ -1500,7 +1500,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			}
 			if 1 == joinIndex && currPlayerDownsync.InAir && isBarrier && !landedOnGravityPushback {
 				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by barrier & not landed at {renderFrame.id: %d, virtualX: %d, virtualY: %d, velX: %d, velY: %d} with effPushback={%.3f, %.3f}, playerColliderPos={%.3f, %.3f}, barrierPos={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, playerCollider.X-pR.collisionSpaceOffsetX, playerCollider.Y-pR.collisionSpaceOffsetY, bShape.X-pR.collisionSpaceOffsetX, bShape.Y-pR.collisionSpaceOffsetY, overlapResult.Overlap, len(hardPushbackNorms)))
-            }
+			}
 			if 1 == joinIndex && currPlayerDownsync.InAir && isAnotherPlayer {
 				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by another player at {renderFrame.id: %d, virtualX: %d, virtualY: %d, velX: %d, velY: %d} with effPushback={%.3f, %.3f}, landedOnGravityPushback=%v, fallStopping=%v, playerColliderPos={%.3f, %.3f}, anotherPlayerColliderPos={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, landedOnGravityPushback, fallStopping, playerCollider.X-pR.collisionSpaceOffsetX, playerCollider.Y-pR.collisionSpaceOffsetY, bShape.X-pR.collisionSpaceOffsetX, bShape.Y-pR.collisionSpaceOffsetY, overlapResult.Overlap, len(hardPushbackNorms)))
 			}
@@ -1602,19 +1602,19 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 		// Update "virtual grid position"
 		currPlayerDownsync, thatPlayerInNextFrame := currRenderFrame.Players[playerId], nextRenderFramePlayers[playerId]
-		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4 
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
 		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, colliderWidth*0.5, colliderHeight*0.5, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
 
 		if 1 == thatPlayerInNextFrame.JoinIndex {
-            if thatPlayerInNextFrame.InAir && (0 != thatPlayerInNextFrame.VelY) {
-			    Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d inAir trajectory: {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
-            }
-            if currPlayerDownsync.InAir && !thatPlayerInNextFrame.InAir {
-			    Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#2 at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
-            }
-            if !currPlayerDownsync.InAir && thatPlayerInNextFrame.InAir {
-			    Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d took off at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
-            } 
+			if thatPlayerInNextFrame.InAir && (0 != thatPlayerInNextFrame.VelY) {
+				// Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d inAir trajectory: {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
+			}
+			if currPlayerDownsync.InAir && !thatPlayerInNextFrame.InAir {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#2 at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
+			}
+			if !currPlayerDownsync.InAir && thatPlayerInNextFrame.InAir {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d took off at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
+			}
 		}
 	}
 
@@ -1649,7 +1649,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4 
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
 		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
 		playerCollider.Data = player
 		pR.Space.Add(playerCollider)

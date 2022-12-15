@@ -11,25 +11,25 @@ window.ATK_CHARACTER_STATE = {
 };
 
 window.toInAirConjugate = function(foo) {
-    switch (foo) {
+  switch (foo) {
     case window.ATK_CHARACTER_STATE.Idle1[0]:
     case window.ATK_CHARACTER_STATE.Walking[0]:
-        return window.ATK_CHARACTER_STATE.InAirIdle1[0]; 
+      return window.ATK_CHARACTER_STATE.InAirIdle1[0];
     case window.ATK_CHARACTER_STATE.Atk1[0]:
-        return window.ATK_CHARACTER_STATE.InAirAtk1[0]; 
+      return window.ATK_CHARACTER_STATE.InAirAtk1[0];
     case window.ATK_CHARACTER_STATE.Atked1[0]:
-        return window.ATK_CHARACTER_STATE.InAirAtked1[0]; 
+      return window.ATK_CHARACTER_STATE.InAirAtked1[0];
 
     case window.ATK_CHARACTER_STATE.InAirIdle1[0]:
-        return window.ATK_CHARACTER_STATE.Idle1[0]; 
+      return window.ATK_CHARACTER_STATE.Idle1[0];
     case window.ATK_CHARACTER_STATE.InAirAtk1[0]:
-        return window.ATK_CHARACTER_STATE.Atk1[0]; 
+      return window.ATK_CHARACTER_STATE.Atk1[0];
     case window.ATK_CHARACTER_STATE.InAirAtked1[0]:
-        return window.ATK_CHARACTER_STATE.Atked1[0]; 
+      return window.ATK_CHARACTER_STATE.Atked1[0];
     default:
-        console.warn(`Invalid characterState ${foo} received, no in air conjugate is available!`);
-        return null;
-    }
+      console.warn(`Invalid characterState ${foo} received, no in air conjugate is available!`);
+      return null;
+  }
 }
 
 window.ATK_CHARACTER_STATE_ARR = [];
@@ -81,7 +81,6 @@ cc.Class({
     this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
     if (!this.animComp) {
       this.animComp = this.effAnimNode.getComponent(cc.Animation);
-    this.effAnimNode.anchorY = 0.0; // Otherwise the anim will show with an incorrect y-offset even if the collider boundaries are all correct!
     } 
     this.effAnimNode.active = true;
   },
