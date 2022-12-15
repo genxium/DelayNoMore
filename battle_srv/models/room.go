@@ -1732,8 +1732,20 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 
 		   The use of "downsyncLoop of each player" also waives the need of guarding each "pR.PlayerDownsyncSessionDict[playerId]" from multithread-access (e.g. by a "pR.PlayerDownsyncSessionMutexDict[playerId]"), i.e. Gorilla v1.2.0 "conn.WriteMessage" isn't thread-safe https://github.com/gorilla/websocket/blob/v1.2.0/conn.go#L585.
 		*/
-		playerDownsyncChan <- (*inputsBufferSnapshot)
-		Logger.Debug(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
+		if player, existent := pR.Players[playerId]; existent {
+			playerBattleState := atomic.LoadInt32(&(player.BattleState))
+			switch playerBattleState {
+			case PlayerBattleStateIns.DISCONNECTED:
+			case PlayerBattleStateIns.LOST:
+			case PlayerBattleStateIns.EXPELLED_DURING_GAME:
+			case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+			case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
+			case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
+				continue
+			}
+			playerDownsyncChan <- (*inputsBufferSnapshot)
+			// Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
+		}
 	}
 }
 
