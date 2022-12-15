@@ -75,10 +75,10 @@ cc.Class({
 
     Moreover, "snapIntoPlatformOverlap" should be small enough such that the walking "velX" or jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
     */
-    self.snapIntoPlatformOverlap = 0.01;
+    self.snapIntoPlatformOverlap = 0.1;
     self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
-    self.jumpingInitVelY = 6 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -Math.ceil(4 * self.jumpingInitVelY / self.serverFps)]; // unit: (virtual grid length/renderFrame^2)
+    self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
+    [self.gravityX, self.gravityY] = [0, -0.5*self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -196,7 +196,7 @@ cc.Class({
         }
       });
       self.selfPlayerInfo = {
-        id: 11
+        id: 10
       };
       self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);

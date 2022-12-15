@@ -786,11 +786,11 @@ cc.Class({
     playerScriptIns.mapNode = self.node;
     const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
       colliderHeight = playerDownsyncInfo.colliderRadius * 4;
-    const [x0, y0] = self.virtualGridToPolygonColliderAnchorPos(vx, vy, colliderWidth, colliderHeight),
-      pts = [[0, 0], [colliderWidth, 0], [colliderWidth, colliderHeight], [0, colliderHeight]];
+    const cpos = self.virtualGridToPolygonColliderTLPos(vx, vy, colliderWidth*0.5, colliderHeight*0.5); // the top-left corner is kept having integer coords
+    const pts = [[0, 0], [colliderWidth, 0], [colliderWidth, -colliderHeight-self.snapIntoPlatformOverlap], [0, -colliderHeight-self.snapIntoPlatformOverlap]];
 
     // [WARNING] The animNode "anchor & offset" are tuned to fit in this collider by "ControlledCharacter prefab & AttackingCharacter.js"! 
-    const newPlayerCollider = self.collisionSys.createPolygon(x0, y0, pts);
+    const newPlayerCollider = self.collisionSys.createPolygon(cpos[0], cpos[1], pts);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     newPlayerCollider.data = playerDownsyncInfo;
     self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
@@ -1048,8 +1048,8 @@ cc.Class({
           const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
           const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
           const bulletWy = offenderWy + 0.5 * meleeBullet.hitboxSize.y;
-          const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
-            pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+          const [bulletCx, bulletCy] = self.worldToPolygonColliderTLPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5);
+          const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, -meleeBullet.hitboxSize.y], [0, -meleeBullet.hitboxSize.y]];
 
           g.moveTo(bulletCx, bulletCy);
           for (let j = 0; j < pts.length; j += 1) {
@@ -1118,7 +1118,8 @@ cc.Class({
         const joinIndex = parseInt(j) + 1;
         const playerRichInfo = self.playerRichInfoArr[j];
         const playerId = playerRichInfo.id;
-        const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
+        const currPlayerDownsync = currRenderFrame.players[playerId]; 
+        const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
         if (0 < thatPlayerInNextFrame.framesToRecover) {
           // No need to process inputs for this player, but there might be bullet pushbacks on this player  
           continue;
@@ -1184,11 +1185,15 @@ cc.Class({
       const playerId = playerRichInfo.id;
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
-
+      const currPlayerDownsync = currRenderFrame.players[playerId];
+      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
       // Reset playerCollider position from the "virtual grid position"
       const [newVx, newVy] = [currPlayerDownsync.virtualGridX + currPlayerDownsync.velX, currPlayerDownsync.virtualGridY + currPlayerDownsync.velY];
-      [playerCollider.x, playerCollider.y] = self.virtualGridToPolygonColliderAnchorPos(newVx, newVy, self.playerRichInfoArr[joinIndex - 1].colliderRadius, self.playerRichInfoArr[joinIndex - 1].colliderRadius);
+      const colliderWidth = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 2,
+        colliderHeight = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 4;
+      const newCpos = self.virtualGridToPolygonColliderTLPos(newVx, newVy, colliderWidth*0.5, colliderHeight*0.5);
+      playerCollider.x = newCpos[0];
+      playerCollider.y = newCpos[1]; 
 
       if (currPlayerDownsync.inAir) {
         thatPlayerInNextFrame.velX += self.gravityX;
@@ -1218,8 +1223,8 @@ cc.Class({
         const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
         const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
         const bulletWy = offenderWy + 0.5 * meleeBullet.hitboxSize.y;
-        const [bulletCx, bulletCy] = self.worldToPolygonColliderAnchorPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
-          pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, meleeBullet.hitboxSize.y], [0, meleeBullet.hitboxSize.y]];
+        const [bulletCx, bulletCy] = self.worldToPolygonColliderTLPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
+          pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, -meleeBullet.hitboxSize.y], [0, -meleeBullet.hitboxSize.y]];
         const newBulletCollider = collisionSys.createPolygon(bulletCx, bulletCy, pts);
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
@@ -1241,7 +1246,8 @@ cc.Class({
       const potentials = playerCollider.potentials();
       hardPushbackNorms[joinIndex - 1] = self.calcHardPushbacksNorms(playerCollider, potentials, result, self.snapIntoPlatformOverlap, effPushbacks[joinIndex - 1]);
 
-      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
+      const currPlayerDownsync = currRenderFrame.players[playerId];
+      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
       let fallStopping = false;
       let possiblyFallStoppedOnAnotherPlayer = false;
       for (const potential of potentials) {
@@ -1370,8 +1376,13 @@ cc.Class({
       const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
       const playerCollider = collisionSysMap.get(collisionPlayerIndex);
       // Update "virtual grid position"
-      const [currPlayerDownsync, thatPlayerInNextFrame] = [currRenderFrame.players[playerId], nextRenderFramePlayers[playerId]];
-      [thatPlayerInNextFrame.virtualGridX, thatPlayerInNextFrame.virtualGridY] = self.polygonColliderAnchorToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], self.playerRichInfoArr[j].colliderRadius, self.playerRichInfoArr[j].colliderRadius);
+      const currPlayerDownsync = currRenderFrame.players[playerId];
+      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
+      const colliderWidth = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 2,
+        colliderHeight = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 4;
+      const newVpos = self.polygonColliderTLToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], colliderWidth*0.5, colliderHeight*0.5);
+      thatPlayerInNextFrame.virtualGridX = newVpos[0];
+      thatPlayerInNextFrame.virtualGridY = newVpos[1];
 
       if (1 == thatPlayerInNextFrame.joinIndex) {
         if (thatPlayerInNextFrame.inAir && 0 != thatPlayerInNextFrame.velY) {
@@ -1507,24 +1518,24 @@ cc.Class({
     return [wx, wy];
   },
 
-  worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH) {
-    return [wx - halfBoundingW, wy - halfBoundingH];
+  worldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH) {
+    return [wx - halfBoundingW, wy + halfBoundingH];
   },
 
-  polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH) {
-    return [cx + halfBoundingW, cy + halfBoundingH];
+  polygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH) {
+    return [cx + halfBoundingW, cy - halfBoundingH];
   },
 
-  polygonColliderAnchorToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH) {
+  polygonColliderTLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH) {
     const self = this;
-    const [wx, wy] = self.polygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
+    const [wx, wy] = self.polygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
     return self.worldToVirtualGridPos(wx, wy)
   },
 
-  virtualGridToPolygonColliderAnchorPos(vx, vy, halfBoundingW, halfBoundingH) {
+  virtualGridToPolygonColliderTLPos(vx, vy, halfBoundingW, halfBoundingH) {
     const self = this;
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    return self.worldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH)
+    return self.worldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH)
   },
 
   calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformOverlap, effPushback) {

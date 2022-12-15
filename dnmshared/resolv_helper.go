@@ -12,19 +12,19 @@ import (
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
 	var s []string = make([]string, len(body.Points))
 	for i, p := range body.Points {
-		s[i] = fmt.Sprintf("[%.3f, %.3f]", p[0]+body.X, p[1]+body.Y)
+		s[i] = fmt.Sprintf("[%.2f, %.2f]", p[0]+body.X, p[1]+body.Y)
 	}
 
 	return fmt.Sprintf("{\n%s\n}", strings.Join(s, ",\n"))
 }
 
-func GenerateRectCollider(origX, origY, w, h, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
-	cx, cy := WorldToPolygonColliderAnchorPos(origX, origY, w*0.5, h*0.5, spaceOffsetX, spaceOffsetY)
-	return GenerateRectColliderInCollisionSpace(cx, cy, w, h, tag)
+func GenerateRectCollider(wx, wy, w, h, bottomPadding, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
+	blX, blY := WorldToPolygonColliderBLPos(wx, wy, w*0.5, h*0.5, bottomPadding, spaceOffsetX, spaceOffsetY)
+	return generateRectColliderInCollisionSpace(blX, blY, w, h+bottomPadding, tag)
 }
 
-func GenerateRectColliderInCollisionSpace(cx, cy, w, h float64, tag string) *resolv.Object {
-	collider := resolv.NewObject(cx, cy, w, h, tag)
+func generateRectColliderInCollisionSpace(blX, blY, w, h float64, tag string) *resolv.Object {
+	collider := resolv.NewObject(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details 
 	shape := resolv.NewRectangle(0, 0, w, h)
 	collider.SetShape(shape)
 	return collider
@@ -246,20 +246,38 @@ func VirtualGridToWorldPos(vx, vy int32, virtualGridToWorldRatio float64) (float
 	return wx, wy
 }
 
-func WorldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
-	return wx - halfBoundingW + collisionSpaceOffsetX, wy - halfBoundingH + collisionSpaceOffsetY
+func WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return wx - halfBoundingW + collisionSpaceOffsetX, wy - halfBoundingH - bottomPadding + collisionSpaceOffsetY
 }
 
-func PolygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
-	return cx + halfBoundingW - collisionSpaceOffsetX, cy + halfBoundingH - collisionSpaceOffsetY
+func WorldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return wx - halfBoundingW + collisionSpaceOffsetX, wy + halfBoundingH + collisionSpaceOffsetY
 }
 
-func PolygonColliderAnchorToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, worldToVirtualGridRatio float64) (int32, int32) {
-	wx, wy := PolygonColliderAnchorToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
+func PolygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return cx + halfBoundingW - collisionSpaceOffsetX, cy + halfBoundingH + bottomPadding - collisionSpaceOffsetY
+}
+
+func PolygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	return cx + halfBoundingW - collisionSpaceOffsetX, cy - halfBoundingH - collisionSpaceOffsetY
+}
+
+func PolygonColliderBLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64, worldToVirtualGridRatio float64) (int32, int32) {
+	wx, wy := PolygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 	return WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio)
 }
 
-func VirtualGridToPolygonColliderAnchorPos(vx, vy int32, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, virtualGridToWorldRatio float64) (float64, float64) {
+func PolygonColliderTLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, worldToVirtualGridRatio float64) (int32, int32) {
+	wx, wy := PolygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
+	return WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio)
+}
+
+func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64, virtualGridToWorldRatio float64) (float64, float64) {
 	wx, wy := VirtualGridToWorldPos(vx, vy, virtualGridToWorldRatio)
-	return WorldToPolygonColliderAnchorPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
+	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
+}
+
+func VirtualGridToPolygonColliderTLPos(vx, vy int32, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY float64, virtualGridToWorldRatio float64) (float64, float64) {
+	wx, wy := VirtualGridToWorldPos(vx, vy, virtualGridToWorldRatio)
+	return WorldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
