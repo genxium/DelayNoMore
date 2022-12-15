@@ -61,10 +61,13 @@ const (
 )
 
 const (
-	ATK_CHARACTER_STATE_IDLE1   = 0
-	ATK_CHARACTER_STATE_WALKING = 1
-	ATK_CHARACTER_STATE_ATK1    = 2
-	ATK_CHARACTER_STATE_ATKED1  = 3
+	ATK_CHARACTER_STATE_IDLE1        = 0
+	ATK_CHARACTER_STATE_WALKING      = 1
+	ATK_CHARACTER_STATE_ATK1         = 2
+	ATK_CHARACTER_STATE_ATKED1       = 3
+	ATK_CHARACTER_STATE_INAIR_IDLE1  = 4
+	ATK_CHARACTER_STATE_INAIR_ATK1   = 5
+	ATK_CHARACTER_STATE_INAIR_ATKED1 = 6
 )
 
 const (
@@ -198,6 +201,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 	pPlayerFromDbInit.Speed = pR.PlayerDefaultSpeed          // Hardcoded
 	pPlayerFromDbInit.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
+	pPlayerFromDbInit.InAir = true                           // Hardcoded
 
 	pR.Players[playerId] = pPlayerFromDbInit
 	pR.PlayerDownsyncSessionDict[playerId] = session
@@ -229,6 +233,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
 	pEffectiveInRoomPlayerInstance.Speed = pR.PlayerDefaultSpeed          // Hardcoded
 	pEffectiveInRoomPlayerInstance.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
+	pEffectiveInRoomPlayerInstance.InAir = true                           // Hardcoded
 
 	pR.PlayerDownsyncSessionDict[playerId] = session
 	pR.PlayerSignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
@@ -419,7 +424,7 @@ func (pR *Room) StartBattle() {
 			stCalculation := utils.UnixtimeNano()
 			elapsedNanosSinceLastFrameIdTriggered := stCalculation - pR.LastRenderFrameIdTriggeredAt
 			if elapsedNanosSinceLastFrameIdTriggered < pR.RollbackEstimatedDtNanos {
-				Logger.Warn(fmt.Sprintf("renderFrameId=%v@roomId=%v: Is backend running too fast? elapsedNanosSinceLastFrameIdTriggered=%v", pR.RenderFrameId, pR.Id, elapsedNanosSinceLastFrameIdTriggered))
+				Logger.Debug(fmt.Sprintf("renderFrameId=%v@roomId=%v: Is backend running too fast? elapsedNanosSinceLastFrameIdTriggered=%v", pR.RenderFrameId, pR.Id, elapsedNanosSinceLastFrameIdTriggered))
 			}
 
 			if pR.RenderFrameId > pR.BattleDurationFrames {
@@ -428,24 +433,6 @@ func (pR *Room) StartBattle() {
 
 			if swapped := atomic.CompareAndSwapInt32(&pR.State, RoomBattleStateIns.IN_BATTLE, RoomBattleStateIns.IN_BATTLE); !swapped {
 				return
-			}
-
-			if 0 == pR.RenderFrameId {
-				for _, player := range pR.PlayersArr {
-					playerId := player.Id
-					thatPlayerBattleState := atomic.LoadInt32(&(player.BattleState)) // Might be changed in "OnPlayerDisconnected/OnPlayerLost" from other threads
-					// [WARNING] DON'T try to send any message to an inactive player!
-					switch thatPlayerBattleState {
-					case PlayerBattleStateIns.DISCONNECTED:
-					case PlayerBattleStateIns.LOST:
-					case PlayerBattleStateIns.EXPELLED_DURING_GAME:
-					case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
-						continue
-					}
-					kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*RoomDownsyncFrame)
-					pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_START, playerId, true)
-				}
-				Logger.Info(fmt.Sprintf("In `battleMainLoop` for roomId=%v sent out kickoffFrame", pR.Id))
 			}
 
 			/*
@@ -457,6 +444,24 @@ func (pR *Room) StartBattle() {
 			nextRenderFrameId := int32((totalElapsedNanos + pR.dilutedRollbackEstimatedDtNanos - 1) / pR.dilutedRollbackEstimatedDtNanos) // fast ceiling
 			toSleepNanos := int64(0)
 			if nextRenderFrameId > pR.RenderFrameId {
+				if 0 == pR.RenderFrameId {
+					// It's important to send kickoff frame iff  "0 == pR.RenderFrameId && nextRenderFrameId > pR.RenderFrameId", otherwise it might send duplicate kickoff frames
+					for _, player := range pR.PlayersArr {
+						playerId := player.Id
+						thatPlayerBattleState := atomic.LoadInt32(&(player.BattleState)) // Might be changed in "OnPlayerDisconnected/OnPlayerLost" from other threads
+						// [WARNING] DON'T try to send any message to an inactive player!
+						switch thatPlayerBattleState {
+						case PlayerBattleStateIns.DISCONNECTED:
+						case PlayerBattleStateIns.LOST:
+						case PlayerBattleStateIns.EXPELLED_DURING_GAME:
+						case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+							continue
+						}
+						kickoffFrame := pR.RenderFrameBuffer.GetByFrameId(0).(*RoomDownsyncFrame)
+						pR.sendSafely(kickoffFrame, nil, DOWNSYNC_MSG_ACT_BATTLE_START, playerId, true)
+					}
+					Logger.Info(fmt.Sprintf("In `battleMainLoop` for roomId=%v sent out kickoffFrame", pR.Id))
+				}
 				prevRenderFrameId := pR.RenderFrameId
 				pR.RenderFrameId = nextRenderFrameId
 
@@ -563,12 +568,12 @@ func (pR *Room) OnBattleCmdReceived(pReq *WsReq) {
 	atomic.StoreInt32(&(player.AckingFrameId), ackingFrameId)
 	atomic.StoreInt32(&(player.AckingInputFrameId), ackingInputFrameId)
 
-	Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock about to lock: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
+	//Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock about to lock: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
 	pR.InputsBufferLock.Lock()
-	Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock locked: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
+	//Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock locked: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
 	defer func() {
 		pR.InputsBufferLock.Unlock()
-		Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock unlocked: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
+		//Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock unlocked: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
 	}()
 
 	inputsBufferSnapshot := pR.markConfirmationIfApplicable(inputFrameUpsyncBatch, playerId, player)
@@ -749,7 +754,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(55.0)
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
-	pR.BattleDurationFrames = 30 * pR.ServerFps
+	pR.BattleDurationFrames = 60 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
 	pR.MaxChasingRenderFramesPerUpdate = 8
@@ -770,7 +775,7 @@ func (pR *Room) OnDismissed() {
 		},
 		HitboxOffset: float64(12.0), // should be about the radius of the PlayerCollider
 		HitboxSize: &Vec2D{
-			X: float64(23.0),
+			X: float64(24.0),
 			Y: float64(32.0),
 		},
 
@@ -781,6 +786,12 @@ func (pR *Room) OnDismissed() {
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
+
+	pR.SnapIntoPlatformOverlap = float64(0.1)
+	pR.SnapIntoPlatformThreshold = float64(0.5)
+	pR.JumpingInitVelY = int32(float64(7) * pR.WorldToVirtualGridRatio)
+	pR.GravityX = 0
+	pR.GravityY = -int32(float64(0.5) * pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1277,7 +1288,10 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			VirtualGridY:    currPlayerDownsync.VirtualGridY,
 			DirX:            currPlayerDownsync.DirX,
 			DirY:            currPlayerDownsync.DirY,
+			VelX:            currPlayerDownsync.VelX,
+			VelY:            currPlayerDownsync.VelY,
 			CharacterState:  currPlayerDownsync.CharacterState,
+			InAir:           true,
 			Speed:           currPlayerDownsync.Speed,
 			BattleState:     currPlayerDownsync.BattleState,
 			Score:           currPlayerDownsync.Score,
@@ -1292,30 +1306,108 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		}
 	}
 
-	toRet := &RoomDownsyncFrame{
-		Id:             currRenderFrame.Id + 1,
-		Players:        nextRenderFramePlayers,
-		CountdownNanos: (pR.BattleDurationNanos - int64(currRenderFrame.Id)*pR.RollbackEstimatedDtNanos),
-		MeleeBullets:   make([]*MeleeBullet, 0), // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
+	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
+	effPushbacks := make([]Vec2D, pR.Capacity)
+	hardPushbackNorms := make([][]Vec2D, pR.Capacity)
+
+	// 1. Process player inputs
+	if nil != delayedInputFrame {
+		var delayedInputFrameForPrevRenderFrame *InputFrameDownsync = nil
+		tmp := pR.InputsBuffer.GetByFrameId(pR.ConvertToInputFrameId(currRenderFrame.Id-1, pR.InputDelayFrames))
+		if nil != tmp {
+			delayedInputFrameForPrevRenderFrame = tmp.(*InputFrameDownsync)
+		}
+		inputList := delayedInputFrame.InputList
+		for _, player := range pR.PlayersArr {
+			playerId := player.Id
+			joinIndex := player.JoinIndex
+			currPlayerDownsync, thatPlayerInNextFrame := currRenderFrame.Players[playerId], nextRenderFramePlayers[playerId]
+			if 0 < thatPlayerInNextFrame.FramesToRecover {
+				continue
+			}
+			decodedInput := pR.decodeInput(inputList[joinIndex-1])
+			prevBtnALevel, prevBtnBLevel := int32(0), int32(0)
+			if nil != delayedInputFrameForPrevRenderFrame {
+				prevDecodedInput := pR.decodeInput(delayedInputFrameForPrevRenderFrame.InputList[joinIndex-1])
+				prevBtnALevel = prevDecodedInput.BtnALevel
+				prevBtnBLevel = prevDecodedInput.BtnBLevel
+			}
+
+			if decodedInput.BtnBLevel > prevBtnBLevel {
+				characStateAlreadyInAir := false
+				if ATK_CHARACTER_STATE_INAIR_IDLE1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_ATK1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_ATKED1 == thatPlayerInNextFrame.CharacterState {
+					characStateAlreadyInAir = true
+				}
+				characStateIsInterruptWaivable := false
+				if ATK_CHARACTER_STATE_IDLE1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_WALKING == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_IDLE1 == thatPlayerInNextFrame.CharacterState {
+					characStateIsInterruptWaivable = true
+				}
+				if !characStateAlreadyInAir && characStateIsInterruptWaivable {
+					thatPlayerInNextFrame.VelY = pR.JumpingInitVelY
+					if 1 == currPlayerDownsync.JoinIndex {
+						Logger.Info(fmt.Sprintf("playerId=%v, joinIndex=%v jumped at {renderFrame.id: %d, virtualX: %d, virtualY: %d, nextVelX: %d, nextVelY: %d}, delayedInputFrame.id=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, delayedInputFrame.InputFrameId))
+					}
+				}
+			}
+
+			if decodedInput.BtnALevel > prevBtnALevel {
+				punchSkillId := int32(1)
+				punchConfig := pR.MeleeSkillConfig[punchSkillId]
+				var newMeleeBullet MeleeBullet = *punchConfig
+				newMeleeBullet.BattleLocalId = pR.BulletBattleLocalIdCounter
+				pR.BulletBattleLocalIdCounter += 1
+				newMeleeBullet.OffenderJoinIndex = joinIndex
+				newMeleeBullet.OffenderPlayerId = playerId
+				newMeleeBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newMeleeBullet)
+				thatPlayerInNextFrame.FramesToRecover = newMeleeBullet.RecoveryFrames
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
+				if false == currPlayerDownsync.InAir {
+					thatPlayerInNextFrame.VelX = 0
+				}
+				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a rising-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+
+			} else if decodedInput.BtnALevel < prevBtnALevel {
+				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
+			} else {
+				// No bullet trigger, process movement inputs
+				// Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
+				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
+					thatPlayerInNextFrame.DirX = decodedInput.Dx
+					thatPlayerInNextFrame.DirY = decodedInput.Dy
+					thatPlayerInNextFrame.VelX = decodedInput.Dx * currPlayerDownsync.Speed
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+					thatPlayerInNextFrame.VelX = 0
+				}
+			}
+		}
 	}
 
-	bulletPushbacks := make([]Vec2D, pR.Capacity) // Guaranteed determinism regardless of traversal order
-	effPushbacks := make([]Vec2D, pR.Capacity)    // Guaranteed determinism regardless of traversal order
-
-	// Reset playerCollider position from the "virtual grid position"
+	// 2. Process player movement
 	for _, player := range pR.PlayersArr {
 		playerId := player.Id
 		joinIndex := player.JoinIndex
-		bulletPushbacks[joinIndex-1].X, bulletPushbacks[joinIndex-1].Y = float64(0), float64(0)
 		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
-		currPlayerDownsync := currRenderFrame.Players[playerId]
-		newVx, newVy := currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 		playerCollider := collisionSysMap[collisionPlayerIndex]
-		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderAnchorPos(newVx, newVy, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
+		currPlayerDownsync, thatPlayerInNextFrame := currRenderFrame.Players[playerId], nextRenderFramePlayers[playerId]
+		// Reset playerCollider position from the "virtual grid position"
+		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
+
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
+		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth*0.5, colliderHeight*0.5, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.VirtualGridToWorldRatio)
+		// Update in the collision system
+		playerCollider.Update()
+
+		if currPlayerDownsync.InAir {
+			thatPlayerInNextFrame.VelX += pR.GravityX
+			thatPlayerInNextFrame.VelY += pR.GravityY
+		}
 	}
 
-	// Check bullet-anything collisions first, because the pushbacks caused by bullets might later be reverted by player-barrier collision
+	// 3. Add bullet colliders into collision system
 	bulletColliders := make(map[int32]*resolv.Object, 0) // Will all be removed at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` due to the need for being rollback-compatible
 	removedBulletsAtCurrFrame := make(map[int32]int32, 0)
 	for _, meleeBullet := range currRenderFrame.MeleeBullets {
@@ -1332,7 +1424,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, pR.VirtualGridToWorldRatio)
 			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
 
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, 0, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
 			newBulletCollider.Data = meleeBullet
 			pR.Space.Add(newBulletCollider)
 			collisionSysMap[collisionBulletIndex] = newBulletCollider
@@ -1342,6 +1434,98 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		}
 	}
 
+	// 4. Invoke collision system stepping (no-op for backend collision lib)
+
+	// 5. Calc pushbacks for each player (after its movement) w/o bullets
+	for _, player := range pR.PlayersArr {
+		joinIndex := player.JoinIndex
+		playerId := player.Id
+		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
+		hardPushbackNorms[joinIndex-1] = pR.calcHardPushbacksNorms(playerCollider, playerShape, pR.SnapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
+		if 0 < len(hardPushbackNorms[joinIndex-1]) {
+			Logger.Debug(fmt.Sprintf("playerId=%d, joinIndex=%d got %d non-empty hardPushbacks at renderFrame.id=%d", playerId, joinIndex, len(hardPushbackNorms), currRenderFrame.Id))
+		}
+		currPlayerDownsync, thatPlayerInNextFrame := currRenderFrame.Players[playerId], nextRenderFramePlayers[playerId]
+		fallStopping := false
+		possiblyFallStoppedOnAnotherPlayer := false
+		collision := playerCollider.Check(0, 0)
+		if nil == collision {
+			continue
+		}
+		for _, obj := range collision.Objects {
+			isBarrier, isAnotherPlayer, isBullet := false, false, false
+			switch obj.Data.(type) {
+			case *Barrier:
+				isBarrier = true
+			case *Player:
+				isAnotherPlayer = true
+			case *MeleeBullet:
+				isBullet = true
+			}
+			if isBullet {
+				// ignore bullets for this step
+				continue
+			}
+			bShape := obj.Shape.(*resolv.ConvexPolygon)
+			overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, bShape)
+			if !overlapped {
+				continue
+			}
+			normAlignmentWithGravity := (overlapResult.OverlapX*float64(0) + overlapResult.OverlapY*float64(-1.0))
+			landedOnGravityPushback := (pR.SnapIntoPlatformThreshold < normAlignmentWithGravity) // prevents false snapping on the lateral sides
+			if landedOnGravityPushback {
+				// kindly note that one player might land on top of another player, and snapping is also required in such case
+				pushbackX, pushbackY = (overlapResult.Overlap-pR.SnapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-pR.SnapIntoPlatformOverlap)*overlapResult.OverlapY
+				thatPlayerInNextFrame.InAir = false
+			}
+			for _, hardPushbackNorm := range hardPushbackNorms[joinIndex-1] {
+				projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
+				if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
+					pushbackX -= projectedMagnitude * hardPushbackNorm.X
+					pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+				}
+			}
+			effPushbacks[joinIndex-1].X += pushbackX
+			effPushbacks[joinIndex-1].Y += pushbackY
+			if currPlayerDownsync.InAir && landedOnGravityPushback {
+				fallStopping = true
+				if isAnotherPlayer {
+					possiblyFallStoppedOnAnotherPlayer = true
+				}
+				if 1 == thatPlayerInNextFrame.JoinIndex {
+					Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#1 at {renderFrame.id: %d, virtualX: %d, virtualY: %d, velX: %d, velY: %d} with effPushback={%.3f, %.3f}, overlapMag=%.4f, possiblyFallStoppedOnAnotherPlayer=%v", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap, possiblyFallStoppedOnAnotherPlayer))
+				}
+			}
+			if 1 == joinIndex && currPlayerDownsync.InAir && isBarrier && !landedOnGravityPushback {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by barrier & not landed at {renderFrame.id: %d, virtualX: %d, virtualY: %d, velX: %d, velY: %d} with effPushback={%.3f, %.3f}, playerColliderPos={%.3f, %.3f}, barrierPos={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, playerCollider.X-pR.collisionSpaceOffsetX, playerCollider.Y-pR.collisionSpaceOffsetY, bShape.X-pR.collisionSpaceOffsetX, bShape.Y-pR.collisionSpaceOffsetY, overlapResult.Overlap, len(hardPushbackNorms)))
+			}
+			if 1 == joinIndex && currPlayerDownsync.InAir && isAnotherPlayer {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by another player at {renderFrame.id: %d, virtualX: %d, virtualY: %d, velX: %d, velY: %d} with effPushback={%.3f, %.3f}, landedOnGravityPushback=%v, fallStopping=%v, playerColliderPos={%.3f, %.3f}, anotherPlayerColliderPos={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, landedOnGravityPushback, fallStopping, playerCollider.X-pR.collisionSpaceOffsetX, playerCollider.Y-pR.collisionSpaceOffsetY, bShape.X-pR.collisionSpaceOffsetX, bShape.Y-pR.collisionSpaceOffsetY, overlapResult.Overlap, len(hardPushbackNorms)))
+			}
+		}
+		if fallStopping {
+			thatPlayerInNextFrame.VelX = 0
+			thatPlayerInNextFrame.VelY = 0
+			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+			thatPlayerInNextFrame.FramesToRecover = 0
+		}
+		if currPlayerDownsync.InAir {
+			switch thatPlayerInNextFrame.CharacterState {
+			case ATK_CHARACTER_STATE_IDLE1:
+			case ATK_CHARACTER_STATE_WALKING:
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1
+			case ATK_CHARACTER_STATE_ATK1:
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATK1
+			case ATK_CHARACTER_STATE_ATKED1:
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+			default:
+			}
+		}
+	}
+
+	// 6. Check bullet-anything collisions
 	for _, bulletCollider := range bulletColliders {
 		shouldRemove := false
 		meleeBullet := bulletCollider.Data.(*MeleeBullet)
@@ -1355,15 +1539,32 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				case *Player:
 					if meleeBullet.OffenderPlayerId != t.Id {
 						if overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape); overlapped {
+							joinIndex := t.JoinIndex
 							xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
 							if 0 > offender.DirX {
 								xfac = float64(-1.0)
 							}
-							bulletPushbacks[t.JoinIndex-1].X += xfac * meleeBullet.Pushback
-							nextRenderFramePlayers[t.Id].CharacterState = ATK_CHARACTER_STATE_ATKED1
+							pushbackX, pushbackY := -xfac*meleeBullet.Pushback, float64(0)
+
+							for _, hardPushbackNorm := range hardPushbackNorms[joinIndex-1] {
+								projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
+								if 0 > projectedMagnitude {
+									Logger.Info(fmt.Sprintf("defenderPlayerId=%d, joinIndex=%d reducing bullet pushback={%.3f, %.3f} by {%.3f, %.3f} where hardPushbackNorm={%.3f, %.3f}, projectedMagnitude=%.3f at renderFrame.id=%d", t.Id, joinIndex, pushbackX, pushbackY, projectedMagnitude*hardPushbackNorm.X, projectedMagnitude*hardPushbackNorm.Y, hardPushbackNorm.X, hardPushbackNorm.Y, projectedMagnitude, currRenderFrame.Id))
+									pushbackX -= projectedMagnitude * hardPushbackNorm.X
+									pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+								}
+							}
+
+							effPushbacks[joinIndex-1].X += pushbackX
+							effPushbacks[joinIndex-1].Y += pushbackY
+							atkedPlayerInCurFrame, atkedPlayerInNextFrame := currRenderFrame.Players[t.Id], nextRenderFramePlayers[t.Id]
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+							if atkedPlayerInCurFrame.InAir {
+								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+							}
 							oldFramesToRecover := nextRenderFramePlayers[t.Id].FramesToRecover
 							if meleeBullet.HitStunFrames > oldFramesToRecover {
-								nextRenderFramePlayers[t.Id].FramesToRecover = meleeBullet.HitStunFrames
+								atkedPlayerInNextFrame.FramesToRecover = meleeBullet.HitStunFrames
 							}
 							Logger.Debug(fmt.Sprintf("roomId=%v, a meleeBullet collides w/ player at currRenderFrame.id=%v: b=%v, p=%v", pR.Id, currRenderFrame.Id, ConvexPolygonStr(bulletShape), ConvexPolygonStr(defenderShape)))
 						}
@@ -1379,6 +1580,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		}
 	}
 
+	// [WARNING] Remove bullets from collisionSys ANYWAY for the convenience of rollback
 	for _, meleeBullet := range currRenderFrame.MeleeBullets {
 		collisionBulletIndex := COLLISION_BULLET_INDEX_PREFIX + meleeBullet.BattleLocalId
 		if bulletCollider, existent := collisionSysMap[collisionBulletIndex]; existent {
@@ -1388,124 +1590,51 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 		if _, existent := removedBulletsAtCurrFrame[collisionBulletIndex]; existent {
 			continue
 		}
-		toRet.MeleeBullets = append(toRet.MeleeBullets, meleeBullet)
+		nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
 	}
 
-	if nil != delayedInputFrame {
-		var delayedInputFrameForPrevRenderFrame *InputFrameDownsync = nil
-		tmp := pR.InputsBuffer.GetByFrameId(pR.ConvertToInputFrameId(currRenderFrame.Id-1, pR.InputDelayFrames))
-		if nil != tmp {
-			delayedInputFrameForPrevRenderFrame = tmp.(*InputFrameDownsync)
-		}
-		inputList := delayedInputFrame.InputList
-		// Process player inputs
-		for _, player := range pR.PlayersArr {
-			playerId := player.Id
-			joinIndex := player.JoinIndex
-			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-			playerCollider := collisionSysMap[collisionPlayerIndex]
-			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
-			if 0 < thatPlayerInNextFrame.FramesToRecover {
-				// No need to process inputs for this player, but there might be bullet pushbacks on this player
-				// Also note that in this case we keep "CharacterState" of this player from last render frame
-				playerCollider.X += bulletPushbacks[joinIndex-1].X
-				playerCollider.Y += bulletPushbacks[joinIndex-1].Y
-				// Update in the collision system
-				playerCollider.Update()
-				if 0 != bulletPushbacks[joinIndex-1].X || 0 != bulletPushbacks[joinIndex-1].Y {
-					Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v is pushed back by (%.2f, %.2f) by bullet impacts, now its framesToRecover is %d at currRenderFrame.id=%v", pR.Id, playerId, bulletPushbacks[joinIndex-1].X, bulletPushbacks[joinIndex-1].Y, thatPlayerInNextFrame.FramesToRecover, currRenderFrame.Id))
-				}
-				continue
+	// 7. Get players out of stuck barriers if there's any
+	for _, player := range pR.PlayersArr {
+		joinIndex := player.JoinIndex
+		playerId := player.Id
+		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
+		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
+		// Update "virtual grid position"
+		currPlayerDownsync, thatPlayerInNextFrame := currRenderFrame.Players[playerId], nextRenderFramePlayers[playerId]
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
+		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, colliderWidth*0.5, colliderHeight*0.5, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
+
+		if 1 == thatPlayerInNextFrame.JoinIndex {
+			if thatPlayerInNextFrame.InAir && (0 != thatPlayerInNextFrame.VelY) {
+				// Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d inAir trajectory: {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			}
-			currPlayerDownsync := currRenderFrame.Players[playerId]
-			decodedInput := pR.decodeInput(inputList[joinIndex-1])
-			prevBtnALevel := int32(0)
-			if nil != delayedInputFrameForPrevRenderFrame {
-				prevDecodedInput := pR.decodeInput(delayedInputFrameForPrevRenderFrame.InputList[joinIndex-1])
-				prevBtnALevel = prevDecodedInput.BtnALevel
+			if currPlayerDownsync.InAir && !thatPlayerInNextFrame.InAir {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#2 at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			}
-
-			if decodedInput.BtnALevel > prevBtnALevel {
-				punchSkillId := int32(1)
-				punchConfig := pR.MeleeSkillConfig[punchSkillId]
-				var newMeleeBullet MeleeBullet = *punchConfig
-				newMeleeBullet.BattleLocalId = pR.BulletBattleLocalIdCounter
-				pR.BulletBattleLocalIdCounter += 1
-				newMeleeBullet.OffenderJoinIndex = joinIndex
-				newMeleeBullet.OffenderPlayerId = playerId
-				newMeleeBullet.OriginatedRenderFrameId = currRenderFrame.Id
-				toRet.MeleeBullets = append(toRet.MeleeBullets, &newMeleeBullet)
-				thatPlayerInNextFrame.FramesToRecover = newMeleeBullet.RecoveryFrames
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
-				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a rising-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
-
-			} else if decodedInput.BtnALevel < prevBtnALevel {
-				Logger.Debug(fmt.Sprintf("roomId=%v, playerId=%v triggered a falling-edge of btnA at currRenderFrame.id=%v, delayedInputFrame.id=%v", pR.Id, playerId, currRenderFrame.Id, delayedInputFrame.InputFrameId))
-			} else {
-				// No bullet trigger, process movement inputs
-				// Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
-				if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
-					thatPlayerInNextFrame.DirX = decodedInput.Dx
-					thatPlayerInNextFrame.DirY = decodedInput.Dy
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
-				} else {
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-				}
-			}
-
-			movementX, movementY := VirtualGridToWorldPos(decodedInput.Dx+decodedInput.Dx*currPlayerDownsync.Speed, decodedInput.Dy+decodedInput.Dy*currPlayerDownsync.Speed, pR.VirtualGridToWorldRatio)
-			playerCollider.X += movementX
-			playerCollider.Y += movementY
-
-			// Update in the collision system
-			playerCollider.Update()
-		}
-
-		// handle pushbacks upon collision after all movements treated as simultaneous
-		for _, player := range pR.PlayersArr {
-			joinIndex := player.JoinIndex
-			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-			playerCollider := collisionSysMap[collisionPlayerIndex]
-			if collision := playerCollider.Check(0, 0); collision != nil {
-				playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-				for _, obj := range collision.Objects {
-					barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-					if overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape); overlapped {
-						Logger.Debug(fmt.Sprintf("Overlapped: a=%v, b=%v, pushbackX=%v, pushbackY=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), pushbackX, pushbackY))
-						effPushbacks[joinIndex-1].X += pushbackX
-						effPushbacks[joinIndex-1].Y += pushbackY
-					} else {
-						Logger.Debug(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(barrierShape), overlapResult))
-					}
-				}
+			if !currPlayerDownsync.InAir && thatPlayerInNextFrame.InAir {
+				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d took off at {nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}, with playerColliderPos={%.3f, %.3f}, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, playerShape.X-pR.collisionSpaceOffsetX, playerShape.Y-pR.collisionSpaceOffsetY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			}
 		}
-
-		for _, player := range pR.PlayersArr {
-			playerId := player.Id
-			joinIndex := player.JoinIndex
-			collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-			playerCollider := collisionSysMap[collisionPlayerIndex]
-
-			// Update "virtual grid position"
-			newVx, newVy := PolygonColliderAnchorToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, player.ColliderRadius, player.ColliderRadius, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.WorldToVirtualGridRatio)
-			thatPlayerInNextFrame := nextRenderFramePlayers[playerId]
-			thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = newVx, newVy
-		}
-
-		Logger.Debug(fmt.Sprintf("After applyInputFrameDownsyncDynamicsOnSingleRenderFrame: currRenderFrame.Id=%v, inputList=%v, currRenderFrame.Players=%v, nextRenderFramePlayers=%v", currRenderFrame.Id, inputList, currRenderFrame.Players, nextRenderFramePlayers))
 	}
 
-	return toRet
+	return &RoomDownsyncFrame{
+		Id:             currRenderFrame.Id + 1,
+		Players:        nextRenderFramePlayers,
+		MeleeBullets:   nextRenderFrameMeleeBullets,
+		CountdownNanos: (pR.BattleDurationNanos - int64(currRenderFrame.Id)*pR.RollbackEstimatedDtNanos),
+	}
 }
 
 func (pR *Room) decodeInput(encodedInput uint64) *InputFrameDecoded {
 	encodedDirection := (encodedInput & uint64(15))
 	btnALevel := int32((encodedInput >> 4) & 1)
+	btnBLevel := int32((encodedInput >> 5) & 1)
 	return &InputFrameDecoded{
 		Dx:        DIRECTION_DECODER[encodedDirection][0],
 		Dy:        DIRECTION_DECODER[encodedDirection][1],
 		BtnALevel: btnALevel,
+		BtnBLevel: btnBLevel,
 	}
 }
 
@@ -1520,8 +1649,8 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*3
-		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player")
+		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
+		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, pR.SnapIntoPlatformOverlap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
 		playerCollider.Data = player
 		pR.Space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
@@ -1534,6 +1663,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	for _, barrier := range pR.Barriers {
 		boundaryUnaligned := barrier.Boundary
 		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Barrier")
+		barrierCollider.Data = barrier
 		pR.Space.Add(barrierCollider)
 	}
 }
@@ -1572,19 +1702,29 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 	}
 
 	if nil != inputsBufferSnapshot {
-		Logger.Warn(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
+		// Logger.Warn(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
 		pR.downsyncToAllPlayers(inputsBufferSnapshot)
 	}
 }
 
 func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot) {
 	/*
-			   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is LOCKED for preserving the order of generation of "inputsBufferSnapshot" -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
+		       [WARNING] This function MUST BE called while "pR.InputsBufferLock" is LOCKED to **preserve the order of generation of "inputsBufferSnapshot" for sending** -- see comments in "OnBattleCmdReceived" and [this issue](https://github.com/genxium/DelayNoMore/issues/12).
 
 		       Actually if each player session were both intrinsically thread-safe & non-blocking for writing (like Java NIO), I could've just called "playerSession.WriteMessage" while holding "pR.InputsBufferLock" -- but the ws session provided by Gorilla library is neither thread-safe nor non-blocking for writing, which is fine because it creates a chance for the users to solve an interesting problem :)
-	*/
-	/*
-	   Moreover, we're downsyncing a same "inputsBufferSnapshot" for all players in the same battle and this is by design, i.e. not respecting "player.LastSentInputFrameId" because "new all-confirmed inputFrameDownsyncs" are the same for all players and ws is TCP-based (no loss of consecutive packets except for reconnection -- which is already handled by READDED_BATTLE_COLLIDER_ACKED)
+
+			   Moreover, we're downsyncing a same "inputsBufferSnapshot" for all players in the same battle and this is by design, i.e. not respecting "player.LastSentInputFrameId" because "new all-confirmed inputFrameDownsyncs" are the same for all players and ws is TCP-based (no loss of consecutive packets except for reconnection -- which is already handled by READDED_BATTLE_COLLIDER_ACKED)
+
+		       Lastly noting just for fun, if in "OnBattleCmdReceived" we need downsync to a single specific player (keeping **the order of generation of "inputsBufferSnapshot" preserved for sending** of course), in theory it's better to do it by the following order.
+		       1. lock "InputsBuffer";
+		       2. generate downsync msg;
+		       3. lock "pR.PlayerDownsyncChanDict[playerId]";
+		       4. put downsync msg to "pR.PlayerDownsyncChanDict[playerId]";
+		       5. unlock "InputsBuffer";
+		       6. now other threads are allowed to lock "inputsBuffer", and we can do "other things" on "pR.PlayerDownsyncChanDict[playerId]";
+		       7. unlock "pR.PlayerDownsyncChanDict[playerId]".
+
+		       The difference from our current approach is that the "pR.PlayerDownsyncChanDict[playerId]" in use is a Golang channel, i.e. when executing #4 it automatically executes #3 (before) & #7 (after) as well, thus we couldn't do #5 & #6 in between.
 	*/
 	for playerId, playerDownsyncChan := range pR.PlayerDownsyncChanDict {
 		/*
@@ -1592,8 +1732,20 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 
 		   The use of "downsyncLoop of each player" also waives the need of guarding each "pR.PlayerDownsyncSessionDict[playerId]" from multithread-access (e.g. by a "pR.PlayerDownsyncSessionMutexDict[playerId]"), i.e. Gorilla v1.2.0 "conn.WriteMessage" isn't thread-safe https://github.com/gorilla/websocket/blob/v1.2.0/conn.go#L585.
 		*/
-		playerDownsyncChan <- (*inputsBufferSnapshot)
-		Logger.Debug(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
+		if player, existent := pR.Players[playerId]; existent {
+			playerBattleState := atomic.LoadInt32(&(player.BattleState))
+			switch playerBattleState {
+			case PlayerBattleStateIns.DISCONNECTED:
+			case PlayerBattleStateIns.LOST:
+			case PlayerBattleStateIns.EXPELLED_DURING_GAME:
+			case PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+			case PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK:
+			case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
+				continue
+			}
+			playerDownsyncChan <- (*inputsBufferSnapshot)
+			// Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
+		}
 	}
 }
 
@@ -1632,7 +1784,8 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 	   2. reconnection
 	*/
 
-	toSendInputFrameIdSt, toSendInputFrameIdEd := toSendInputFrameDownsyncsSnapshot[0].InputFrameId, toSendInputFrameDownsyncsSnapshot[len(toSendInputFrameDownsyncsSnapshot)-1].InputFrameId+1
+	//toSendInputFrameIdSt, toSendInputFrameIdEd := toSendInputFrameDownsyncsSnapshot[0].InputFrameId, toSendInputFrameDownsyncsSnapshot[len(toSendInputFrameDownsyncsSnapshot)-1].InputFrameId+1
+	_, toSendInputFrameIdEd := toSendInputFrameDownsyncsSnapshot[0].InputFrameId, toSendInputFrameDownsyncsSnapshot[len(toSendInputFrameDownsyncsSnapshot)-1].InputFrameId+1
 	if pR.BackendDynamicsEnabled && shouldResyncOverall {
 		tmp := pR.RenderFrameBuffer.GetByFrameId(refRenderFrameId)
 		if nil == tmp {
@@ -1645,7 +1798,7 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 		}
 		refRenderFrame.BackendUnconfirmedMask = unconfirmedMask
 		pR.sendSafely(refRenderFrame, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId, false)
-		Logger.Warn(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: InputsBuffer=%v", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, pR.InputsBufferString(false)))
+		// Logger.Warn(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: InputsBuffer=%v", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, pR.InputsBufferString(false)))
 	} else {
 		pR.sendSafely(nil, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId, false)
 	}
@@ -1686,4 +1839,30 @@ func (pR *Room) cloneInputsBuffer(stFrameId, edFrameId int32) []*InputFrameDowns
 	}
 
 	return cloned
+}
+
+func (pR *Room) calcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) []Vec2D {
+	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
+	collision := playerCollider.Check(0, 0)
+	if nil == collision {
+		return ret
+	}
+	for _, obj := range collision.Objects {
+		switch obj.Data.(type) {
+		case *Barrier:
+			barrierShape := obj.Shape.(*resolv.ConvexPolygon)
+			overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape)
+			if !overlapped {
+				continue
+			}
+			// ALWAY snap into hardPushbacks!
+			// [OverlapX, OverlapY] is the unit vector that points into the platform
+			pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
+			ret = append(ret, Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY})
+			pEffPushback.X += pushbackX
+			pEffPushback.Y += pushbackY
+		default:
+		}
+	}
+	return ret
 }

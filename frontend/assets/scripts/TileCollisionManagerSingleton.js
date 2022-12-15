@@ -108,6 +108,7 @@ TileCollisionManager.prototype.continuousMapNodePosToContinuousObjLayerOffset = 
 window.battleEntityTypeNameToGlobalGid = {};
 TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNode) {
   let toRet = {
+    playerStartingPositions: [],
     barriers: [],
   };
   const tiledMapIns = withTiledMapNode.getComponent(cc.TiledMap); // This is a magic name.
@@ -115,6 +116,18 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
   const allObjectGroups = tiledMapIns.getObjectGroups();
   for (let i = 0; i < allObjectGroups.length; ++i) {
     var objectGroup = allObjectGroups[i];
+    if ("PlayerStartingPos" == objectGroup.getGroupName()) {
+      var allObjects = objectGroup.getObjects();
+      for (let j = 0; j < allObjects.length; ++j) {
+        const cccMaskedX = allObjects[j].x,
+          cccMaskedY = allObjects[j].y;
+        const origX = cccMaskedX,
+          origY = withTiledMapNode.getContentSize().height - cccMaskedY; // FIXME: I don't know why CocosCreator did this, it's stupid and MIGHT NOT WORK IN ISOMETRIC orientation!   
+        let wpos = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, cc.v2(origX, origY));
+        toRet.playerStartingPositions.push(wpos);
+      }
+      continue;
+    }
     if ("barrier_and_shelter" != objectGroup.getProperty("type")) continue;
     var allObjects = objectGroup.getObjects();
     for (let j = 0; j < allObjects.length; ++j) {
@@ -123,21 +136,33 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
       if (0 < gid) {
         continue;
       }
-      const polylinePoints = object.polylinePoints;
-      if (null == polylinePoints) {
-        continue
-      }
       const boundaryType = object.boundary_type;
-      let toPushBarriers = [];
-      toPushBarriers.boundaryType = boundaryType;
+      let toPushBarrier = [];
+      toPushBarrier.boundaryType = boundaryType;
       switch (boundaryType) {
         case "barrier":
+          let polylinePoints = object.polylinePoints;
+          if (null == polylinePoints) {
+            polylinePoints = [{
+              x: 0,
+              y: 0
+            }, {
+              x: object.width,
+              y: 0
+            }, {
+              x: object.width,
+              y: -object.height
+            }, {
+              x: 0,
+              y: -object.height
+            }];
+          }
           for (let k = 0; k < polylinePoints.length; ++k) {
             /* Since CocosCreatorv2.1.3, the Y-coord of object polylines is inverted compared to that of the tmx file. */
-            toPushBarriers.push(this.continuousObjLayerVecToContinuousMapNodeVec(withTiledMapNode, cc.v2(polylinePoints[k].x, -polylinePoints[k].y)));
+            toPushBarrier.push(this.continuousObjLayerVecToContinuousMapNodeVec(withTiledMapNode, cc.v2(polylinePoints[k].x, -polylinePoints[k].y)));
           }
-          toPushBarriers.anchor = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset); // DON'T use "(object.x, object.y)" which are wrong/meaningless! 
-          toRet.barriers.push(toPushBarriers);
+          toPushBarrier.anchor = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, object.offset); // DON'T use "(object.x, object.y)" which are wrong/meaningless! 
+          toRet.barriers.push(toPushBarrier);
           break;
         default:
           break;

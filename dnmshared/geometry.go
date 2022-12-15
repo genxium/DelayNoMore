@@ -10,33 +10,33 @@ func NormVec2D(dx, dy float64) Vec2D {
 }
 
 func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
-	// Transform again to put "anchor" at the top-left point of the bounding box for "resolv"
-	boundingBoxTL := &Vec2D{
+	// Transform again to put "anchor" at the "bottom-left point (w.r.t. world space)" of the bounding box for "resolv"
+	boundingBoxBL := &Vec2D{
 		X: math.MaxFloat64,
 		Y: math.MaxFloat64,
 	}
 	for _, p := range input.Points {
-		if p.X < boundingBoxTL.X {
-			boundingBoxTL.X = p.X
+		if p.X < boundingBoxBL.X {
+			boundingBoxBL.X = p.X
 		}
-		if p.Y < boundingBoxTL.Y {
-			boundingBoxTL.Y = p.Y
+		if p.Y < boundingBoxBL.Y {
+			boundingBoxBL.Y = p.Y
 		}
 	}
 
-	// Now "input.Anchor" should move to "input.Anchor+boundingBoxTL", thus "boundingBoxTL" is also the value of the negative diff for all "input.Points"
+	// Now "input.Anchor" should move to "input.Anchor+boundingBoxBL", thus "boundingBoxBL" is also the value of the negative diff for all "input.Points"
 	output := &Polygon2D{
 		Anchor: &Vec2D{
-			X: input.Anchor.X + boundingBoxTL.X,
-			Y: input.Anchor.Y + boundingBoxTL.Y,
+			X: input.Anchor.X + boundingBoxBL.X,
+			Y: input.Anchor.Y + boundingBoxBL.Y,
 		},
 		Points: make([]*Vec2D, len(input.Points)),
 	}
 
 	for i, p := range input.Points {
 		output.Points[i] = &Vec2D{
-			X: p.X - boundingBoxTL.X,
-			Y: p.Y - boundingBoxTL.Y,
+			X: p.X - boundingBoxBL.X,
+			Y: p.Y - boundingBoxBL.Y,
 		}
 	}
 

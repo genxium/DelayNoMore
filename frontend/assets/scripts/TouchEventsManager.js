@@ -99,6 +99,7 @@ cc.Class({
     this.cachedBtnLeftLevel = 0;
     this.cachedBtnRightLevel = 0;
     this.cachedBtnALevel = 0;
+    this.cachedBtnBLevel = 0;
 
     this.canvasNode = this.mapNode.parent;
     this.mainCameraNode = this.canvasNode.getChildByName("Main Camera"); // Cannot drag and assign the `mainCameraNode` from CocosCreator EDITOR directly, otherwise it'll cause an infinite loading time, till v2.1.0.
@@ -168,6 +169,9 @@ cc.Class({
         case cc.macro.KEY.h:
           self.cachedBtnALevel = 1;
           break;
+        case cc.macro.KEY.j:
+          self.cachedBtnBLevel = 1;
+          break;
         default:
           break;
       }
@@ -189,6 +193,9 @@ cc.Class({
           break;
         case cc.macro.KEY.h:
           self.cachedBtnALevel = 0;
+          break;
+        case cc.macro.KEY.j:
+          self.cachedBtnBLevel = 0;
           break;
         default:
           break;
@@ -400,7 +407,8 @@ cc.Class({
   getEncodedInput() {
     const discretizedDir = this.discretizeDirection(this.stickhead.x, this.stickhead.y, this.joyStickEps).encodedIdx; // There're only 9 dirs, thus using only the lower 4-bits
     const btnALevel = (this.cachedBtnALevel << 4);
-    return (btnALevel + discretizedDir);
+    const btnBLevel = (this.cachedBtnBLevel << 5);
+    return (btnBLevel + btnALevel + discretizedDir);
   },
 
   decodeInput(encodedInput) {
@@ -410,10 +418,12 @@ cc.Class({
       console.error("Unexpected encodedDirection = ", encodedDirection);
     }
     const btnALevel = ((encodedInput >> 4) & 1);
+    const btnBLevel = ((encodedInput >> 5) & 1);
     return window.pb.protos.InputFrameDecoded.create({
       dx: mappedDirection[0],
       dy: mappedDirection[1],
       btnALevel: btnALevel,
+      btnBLevel: btnBLevel,
     });
   },
 });

@@ -9,28 +9,32 @@ message PlayerDownsync {
   int32 virtualGridX = 2; 
   int32 virtualGridY = 3; 
   int32 dirX = 4;
-  int32 dirY = 5;
-  int32 speed = 6; // in terms of virtual grid units
-  int32 battleState = 7;
-  int32 joinIndex = 8;
-  double colliderRadius = 9;
-  bool removed = 10;
-  int32 score = 11;
-  int32 lastMoveGmtMillis = 12;
-  int32 framesToRecover = 13;
-  int32 hp = 14;
-  int32 maxHp = 15;
-  int32 characterState = 16;
+  int32 dirY = 5; // "dirX" and "dirY" determines character facing  
+  int32 velX = 6; 
+  int32 velY = 7; // "velX" and "velY" is used to record the accumulated effect by accelerations (including gravity)
+  int32 speed = 8; // this is the instantaneous scalar attribute of a character, different from but will be accounted in "velX" and "velY" 
+  int32 battleState = 9;
+  int32 joinIndex = 10;
+  double colliderRadius = 11;
+  bool removed = 12;
+  int32 score = 13;
+  int32 lastMoveGmtMillis = 14;
+  int32 framesToRecover = 15;
+  int32 hp = 16;
+  int32 maxHp = 17;
+  int32 characterState = 18;
+  bool inAir = 19; // by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "inAir (prev -> curr)"  
 
-  string name = 17;
-  string displayName = 18;
-  string avatar = 19;
+  string name = 20;
+  string displayName = 21;
+  string avatar = 22;
 }
 
 message InputFrameDecoded {
   int32 dx = 1;
   int32 dy = 2;
   int32 btnALevel = 3;
+  int32 btnBLevel = 4;
 }
 
 message InputFrameUpsync {
@@ -133,6 +137,12 @@ message BattleColliderInfo {
   int32 renderCacheSize = 26;
 
   map<int32, MeleeBullet> meleeSkillConfig = 27; // skillId -> skill
+
+  double snapIntoPlatformOverlap = 28; 
+  double snapIntoPlatformThreshold = 29; 
+  int32 jumpingInitVelY = 30;
+  int32 gravityX = 31;
+  int32 gravityY = 32;
 }
 
 message RoomDownsyncFrame {

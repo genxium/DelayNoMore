@@ -13,6 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
+    self.showCriticalCoordinateLabels = true;
 
     cc.director.getCollisionManager().enabled = false;
 
@@ -34,9 +35,11 @@ cc.Class({
     self.inputFrameUpsyncDelayTolerance = 2;
 
     self.renderCacheSize = 1024;
+    self.serverFps = 60;
     self.rollbackEstimatedDt = 0.016667;
     self.rollbackEstimatedDtMillis = 16.667;
     self.rollbackEstimatedDtNanos = 16666666;
+    self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
@@ -67,6 +70,16 @@ cc.Class({
       }
     };
 
+    /* 
+    [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
+
+    Moreover, "snapIntoPlatformOverlap" should be small enough such that the walking "velX" or jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
+    */
+    self.snapIntoPlatformOverlap = 0.1;
+    self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
+    self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
+    [self.gravityX, self.gravityY] = [0, -0.5*self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
+
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
     const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", "dungeon");
@@ -79,6 +92,17 @@ cc.Class({
       tiledMapIns.tmxAsset = null;
       mapNode.removeAllChildren();
       self._resetCurrentMatch();
+
+      if (self.showCriticalCoordinateLabels) {
+        const drawer = new cc.Node();
+        drawer.setPosition(cc.v2(0, 0))
+        safelyAddChild(self.node, drawer);
+        setLocalZOrder(drawer, 999);
+        const g = drawer.addComponent(cc.Graphics);
+        g.lineWidth = 2;
+        self.g = g;
+      }
+
 
       tiledMapIns.tmxAsset = tmxAsset;
       const newMapSize = tiledMapIns.getMapSize();
@@ -95,8 +119,11 @@ cc.Class({
         const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
           return [p.x, p.y];
         }));
+        newBarrier.data = {
+          hardPushback: true
+        };
 
-        if (self.showCriticalCoordinateLabels) {
+        if (false && self.showCriticalCoordinateLabels) {
           for (let i = 0; i < boundaryObj.length; ++i) {
             const barrierVertLabelNode = new cc.Node();
             switch (i % 4) {
@@ -136,30 +163,36 @@ cc.Class({
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
         players: {
-          10: {
+          10: window.pb.protos.PlayerDownsync.create({
             id: 10,
             joinIndex: 1,
-            virtualGridX: 0,
-            virtualGridY: 0,
+            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0],
+            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1],
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
             framesToRecover: 0,
             dirX: 0,
             dirY: 0,
-          },
-          11: {
+            velX: 0,
+            velY: 0,
+            inAir: true,
+          }),
+          11: window.pb.protos.PlayerDownsync.create({
             id: 11,
             joinIndex: 2,
-            virtualGridX: 80 * self.worldToVirtualGridRatio,
-            virtualGridY: 0 * self.worldToVirtualGridRatio,
+            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0],
+            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1],
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.Idle1[0],
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
             framesToRecover: 0,
             dirX: 0,
             dirY: 0,
-          },
+            velX: 0,
+            velY: 0,
+            inAir: true,
+          }),
         }
       });
       self.selfPlayerInfo = {
@@ -177,7 +210,8 @@ cc.Class({
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
       const elapsedMillisSinceLastFrameIdTriggered = performance.now() - self.lastRenderFrameIdTriggeredAt;
-      if (elapsedMillisSinceLastFrameIdTriggered < (self.rollbackEstimatedDtMillis)) {
+      if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
+        // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
         // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
         return;
       }
@@ -194,11 +228,12 @@ cc.Class({
 
         const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
+        self.showDebugBoundaries(rdf);
+        ++self.renderFrameId;
+        self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
       } catch (err) {
         console.error("Error during Map.update", err);
-      } finally {
-        ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
       }
     }
   },
