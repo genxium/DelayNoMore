@@ -784,10 +784,16 @@ cc.Class({
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const colliderWidth = playerDownsyncInfo.colliderRadius * 2,
-      colliderHeight = playerDownsyncInfo.colliderRadius * 4;
-    const cpos = self.virtualGridToPolygonColliderTLPos(vx, vy, colliderWidth * 0.5, colliderHeight * 0.5); // the top-left corner is kept having integer coords
-    const pts = [[0, 0], [colliderWidth, 0], [colliderWidth, -colliderHeight - self.snapIntoPlatformOverlap], [0, -colliderHeight - self.snapIntoPlatformOverlap]];
+    const halfColliderWidth = playerDownsyncInfo.colliderRadius,
+      halfColliderHeight = playerDownsyncInfo.colliderRadius + playerDownsyncInfo.colliderRadius; // avoid multiplying
+    const colliderWidth = halfColliderWidth + halfColliderWidth,
+      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
+    const leftPadding = self.snapIntoPlatformOverlap,
+      rightPadding = self.snapIntoPlatformOverlap,
+      topPadding = self.snapIntoPlatformOverlap,
+      bottomPadding = self.snapIntoPlatformOverlap;
+    const cpos = self.virtualGridToPolygonColliderBLPos(vx, vy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding); // the collider center is kept having integer coords
+    const pts = [[0, 0], [leftPadding + colliderWidth + rightPadding, 0], [leftPadding + colliderWidth + rightPadding, bottomPadding + colliderHeight + topPadding], [0, bottomPadding + colliderHeight + topPadding]];
 
     // [WARNING] The animNode "anchor & offset" are tuned to fit in this collider by "ControlledCharacter prefab & AttackingCharacter.js"! 
     const newPlayerCollider = self.collisionSys.createPolygon(cpos[0], cpos[1], pts);
@@ -997,6 +1003,10 @@ cc.Class({
 
   showDebugBoundaries(rdf) {
     const self = this;
+    const leftPadding = self.snapIntoPlatformOverlap,
+      rightPadding = self.snapIntoPlatformOverlap,
+      topPadding = self.snapIntoPlatformOverlap,
+      bottomPadding = self.snapIntoPlatformOverlap;
     if (self.showCriticalCoordinateLabels) {
       let g = self.g;
       g.clear();
@@ -1048,8 +1058,10 @@ cc.Class({
           const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
           const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
           const bulletWy = offenderWy;
-          const bulletCpos = self.worldToPolygonColliderTLPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5);
-          const pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, -meleeBullet.hitboxSize.y], [0, -meleeBullet.hitboxSize.y]];
+          const halfColliderWidth = meleeBullet.hitboxSize.x * 0.5,
+            halfColliderHeight = meleeBullet.hitboxSize.y * 0.5; // avoid multiplying
+          const bulletCpos = self.worldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
+          const pts = [[0, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, bottomPadding + meleeBullet.hitboxSize.y + topPadding], [0, bottomPadding + meleeBullet.hitboxSize.y + topPadding]];
 
           g.moveTo(bulletCpos[0], bulletCpos[1]);
           for (let j = 0; j < pts.length; j += 1) {
@@ -1079,6 +1091,10 @@ cc.Class({
   // TODO: Write unit-test for this function to compare with its backend counter part
   applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap) {
     const self = this;
+    const leftPadding = self.snapIntoPlatformOverlap,
+      rightPadding = self.snapIntoPlatformOverlap,
+      topPadding = self.snapIntoPlatformOverlap,
+      bottomPadding = self.snapIntoPlatformOverlap;
     const nextRenderFramePlayers = {};
     for (let playerId in currRenderFrame.players) {
       const currPlayerDownsync = currRenderFrame.players[playerId];
@@ -1188,10 +1204,14 @@ cc.Class({
       const currPlayerDownsync = currRenderFrame.players[playerId];
       const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
       // Reset playerCollider position from the "virtual grid position"
-      const [newVx, newVy] = [currPlayerDownsync.virtualGridX + currPlayerDownsync.velX, currPlayerDownsync.virtualGridY + currPlayerDownsync.velY];
-      const colliderWidth = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 2,
-        colliderHeight = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 4;
-      const newCpos = self.virtualGridToPolygonColliderTLPos(newVx, newVy, colliderWidth * 0.5, colliderHeight * 0.5);
+      const newVpos = [currPlayerDownsync.virtualGridX + currPlayerDownsync.velX, currPlayerDownsync.virtualGridY + currPlayerDownsync.velY];
+      if (thatPlayerInNextFrame.velY == self.jumpingInitVelY) {
+        // This step can be waived, but putting the jumping inclination here makes it easier to read logs. 
+        newVpos[1] += self.jumpingInitVelY;
+      }
+      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
+        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
+      const newCpos = self.virtualGridToPolygonColliderBLPos(newVpos[0], newVpos[1], halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
       playerCollider.x = newCpos[0];
       playerCollider.y = newCpos[1];
 
@@ -1223,8 +1243,10 @@ cc.Class({
         const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
         const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
         const bulletWy = offenderWy;
-        const bulletCpos = self.worldToPolygonColliderTLPos(bulletWx, bulletWy, meleeBullet.hitboxSize.x * 0.5, meleeBullet.hitboxSize.y * 0.5),
-          pts = [[0, 0], [meleeBullet.hitboxSize.x, 0], [meleeBullet.hitboxSize.x, -meleeBullet.hitboxSize.y], [0, -meleeBullet.hitboxSize.y]];
+        const halfColliderWidth = meleeBullet.hitboxSize.x * 0.5,
+          halfColliderHeight = meleeBullet.hitboxSize.y * 0.5;
+        const bulletCpos = self.worldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
+        const pts = [[0, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, bottomPadding + meleeBullet.hitboxSize.y + topPadding], [0, bottomPadding + meleeBullet.hitboxSize.y + topPadding]];
         const newBulletCollider = collisionSys.createPolygon(bulletCpos[0], bulletCpos[1], pts);
         newBulletCollider.data = meleeBullet;
         collisionSysMap.set(collisionBulletIndex, newBulletCollider);
@@ -1248,6 +1270,9 @@ cc.Class({
 
       const currPlayerDownsync = currRenderFrame.players[playerId];
       const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
+      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
+        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
+
       let fallStopping = false;
       let possiblyFallStoppedOnAnotherPlayer = false;
       for (const potential of potentials) {
@@ -1261,9 +1286,15 @@ cc.Class({
         const landedOnGravityPushback = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
         let pushback = [result.overlap * result.overlap_x, result.overlap * result.overlap_y];
         if (landedOnGravityPushback) {
-          // kindly note that one player might land on top of another player, and snapping is also required in such case
+          // kindly note that one player might land on top of another player
           pushback = [(result.overlap - self.snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap) * result.overlap_y];
           thatPlayerInNextFrame.inAir = false;
+        }
+        if (isAnotherPlayer) {
+          /*
+            [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
+          */
+          pushback = [(result.overlap - self.snapIntoPlatformOverlap * 2) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap * 2) * result.overlap_y]; // will overwrite the previous pushback value if "landedOnGravityPushback" is also true
         }
         for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
           // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
@@ -1281,22 +1312,28 @@ cc.Class({
 
         effPushbacks[joinIndex - 1][0] += pushback[0];
         effPushbacks[joinIndex - 1][1] += pushback[1];
+        // It's not meaningful to log the virtual positions and velocities inside this step.
         if (currPlayerDownsync.inAir && landedOnGravityPushback) {
           fallStopping = true;
           if (isAnotherPlayer) {
             possiblyFallStoppedOnAnotherPlayer = true;
           }
-          if (1 == thatPlayerInNextFrame.joinIndex) {
-            console.log(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} fallStopping#1 at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, possiblyFallStoppedOnAnotherPlayer=${possiblyFallStoppedOnAnotherPlayer}`);
+        }
+
+        if (1 == joinIndex) {
+          if (fallStopping) {
+            console.info(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#1:
+{renderFrame.id: ${currRenderFrame.id}, possiblyFallStoppedOnAnotherPlayer: ${possiblyFallStoppedOnAnotherPlayer}}
+playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}`);
+          } else if (currPlayerDownsync.inAir && isBarrier && !landedOnGravityPushback) {
+            console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir & pushed back by barrier & not landed:
+{renderFrame.id: ${currRenderFrame.id}}
+playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
+          } else if (currPlayerDownsync.inAir && isAnotherPlayer) {
+            console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir and pushed back by another player
+{renderFrame.id: ${currRenderFrame.id}}
+playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, anotherPlayerColliderPos=${self.stringifyColliderCenterInWorld(potential, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, landedOnGravityPushback=${landedOnGravityPushback}, fallStopping=${fallStopping}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
           }
-        }
-
-        if (1 == joinIndex && currPlayerDownsync.inAir && isBarrier && !landedOnGravityPushback) {
-          console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir & pushed back by barrier & not landed at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, barrierPos={${potential.x.toFixed(3)}, ${potential.y.toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
-        }
-
-        if (1 == joinIndex && currPlayerDownsync.inAir && isAnotherPlayer) {
-          console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir and pushed back by another player at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, velX: ${currPlayerDownsync.velX}, velY: ${currPlayerDownsync.velY}} with effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, landedOnGravityPushback=${landedOnGravityPushback}, fallStopping=${fallStopping}, playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, anotherPlayerColliderPos={${potential.x.toFixed(3)}, ${potential.y.toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
         }
       }
 
@@ -1378,21 +1415,27 @@ cc.Class({
       // Update "virtual grid position"
       const currPlayerDownsync = currRenderFrame.players[playerId];
       const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-      const colliderWidth = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 2,
-        colliderHeight = self.playerRichInfoArr[joinIndex - 1].colliderRadius * 4;
-      const newVpos = self.polygonColliderTLToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], colliderWidth * 0.5, colliderHeight * 0.5);
+      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
+        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
+      const newVpos = self.polygonColliderBLToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
       thatPlayerInNextFrame.virtualGridX = newVpos[0];
       thatPlayerInNextFrame.virtualGridY = newVpos[1];
 
       if (1 == thatPlayerInNextFrame.joinIndex) {
-        if (thatPlayerInNextFrame.inAir && 0 != thatPlayerInNextFrame.velY) {
-          // console.log(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} inAir trajectory: {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
-        }
         if (currPlayerDownsync.inAir && !thatPlayerInNextFrame.inAir) {
-          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#2 at {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
-        }
-        if (!currPlayerDownsync.inAir && thatPlayerInNextFrame.inAir) {
-          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} took off at {nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, with playerColliderPos={${playerCollider.x.toFixed(3)}, ${playerCollider.y.toFixed(3)}}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#2:
+{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}
+	calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+        } else if (!currPlayerDownsync.inAir && thatPlayerInNextFrame.inAir) {
+          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} took off:
+{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}
+	calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+        } else if (thatPlayerInNextFrame.inAir && 0 != thatPlayerInNextFrame.velY) {
+          /*
+          console.log(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} inAir trajectory:
+{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}};
+          calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
+          */
         }
       }
     }
@@ -1457,16 +1500,16 @@ cc.Class({
       const immediatePlayerInfo = players[playerId];
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
 
-      const [theNode, theScriptIns] = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, immediatePlayerInfo);
+      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, immediatePlayerInfo);
 
       Object.assign(self.playerRichInfoDict.get(playerId), {
-        node: theNode,
-        scriptIns: theScriptIns,
+        node: nodeAndScriptIns[0],
+        scriptIns: nodeAndScriptIns[1],
       });
 
       if (self.selfPlayerInfo.id == playerId) {
         self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
-        theScriptIns.showArrowTipNode();
+        nodeAndScriptIns[1].showArrowTipNode();
       }
     }
     self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
@@ -1513,29 +1556,31 @@ cc.Class({
   virtualGridToWorldPos(vx, vy) {
     // No loss of precision
     const self = this;
-    let wx = parseFloat(vx) * self.virtualGridToWorldRatio;
-    let wy = parseFloat(vy) * self.virtualGridToWorldRatio;
-    return [wx, wy];
+    return [vx * self.virtualGridToWorldRatio, vy * self.virtualGridToWorldRatio];
   },
 
-  worldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH) {
-    return [wx - halfBoundingW, wy + halfBoundingH];
+  worldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
+    return [wx - halfBoundingW - leftPadding, wy - halfBoundingH - bottomPadding];
   },
 
-  polygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH) {
-    return [cx + halfBoundingW, cy - halfBoundingH];
+  polygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
+    return [cx + halfBoundingW + leftPadding, cy + halfBoundingH + bottomPadding];
   },
 
-  polygonColliderTLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH) {
+  polygonColliderBLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
     const self = this;
-    const [wx, wy] = self.polygonColliderTLToWorldPos(cx, cy, halfBoundingW, halfBoundingH);
+    const [wx, wy] = self.polygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding);
     return self.worldToVirtualGridPos(wx, wy)
   },
 
-  virtualGridToPolygonColliderTLPos(vx, vy, halfBoundingW, halfBoundingH) {
+  virtualGridToPolygonColliderBLPos(vx, vy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
     const self = this;
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    return self.worldToPolygonColliderTLPos(wx, wy, halfBoundingW, halfBoundingH)
+    return self.worldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding)
+  },
+
+  stringifyColliderCenterInWorld(playerCollider, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
+    return `{${(playerCollider.x + leftPadding + halfBoundingW).toFixed(2)}, ${(playerCollider.y + bottomPadding + halfBoundingH).toFixed(2)}}`;
   },
 
   calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformOverlap, effPushback) {
@@ -1546,11 +1591,10 @@ cc.Class({
       if (!collider.collides(potential, result)) continue;
       // ALWAY snap into hardPushbacks!
       // [overlay_x, overlap_y] is the unit vector that points into the platform
-      const [pushbackX, pushbackY] = [(result.overlap - snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - snapIntoPlatformOverlap) * result.overlap_y];
-
+      const pushback = [(result.overlap - snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - snapIntoPlatformOverlap) * result.overlap_y];
       ret.push([result.overlap_x, result.overlap_y]);
-      effPushback[0] += pushbackX;
-      effPushback[1] += pushbackY;
+      effPushback[0] += pushback[0];
+      effPushback[1] += pushback[1];
     }
 
     return ret;

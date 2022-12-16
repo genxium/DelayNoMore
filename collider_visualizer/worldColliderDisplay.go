@@ -37,14 +37,15 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	worldToVirtualGridRatio := float64(1000)
 	virtualGridToWorldRatio := float64(1) / worldToVirtualGridRatio
 	playerDefaultSpeed := 1 * worldToVirtualGridRatio
-	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 2)
+	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 3)
 	playerColliderRadius := float64(12)
 	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
 	snapIntoPlatformOverlap := float64(0.1)
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
+	topPadding, bottomPadding, leftPadding, rightPadding := snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap
 	for i, playerPos := range playerPosList.Eles {
 		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, snapIntoPlatformOverlap, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
+		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
 		Logger.Info(fmt.Sprintf("Player Collider#%d: player world pos=(%.2f, %.2f), shape=%v", i, playerPos.X, playerPos.Y, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
 		playerColliders[i] = playerCollider
 		space.Add(playerCollider)
@@ -60,13 +61,13 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 
 	world.Space = space
 
-	moveToCollide := false
+	moveToCollide := true
 	if moveToCollide {
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		toTestPlayerCollider := playerColliders[0]
-		newVx, newVy := int32(27999), int32(-420270)
-		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderTLPos(newVx, newVy, colliderWidth, colliderHeight, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		//colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
+		//newVx, newVy := int32(27999), int32(-420270)
+		//toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
 
 		Logger.Info(fmt.Sprintf("Checking collision for playerShape=%v", ConvexPolygonStr(toTestPlayerCollider.Shape.(*resolv.ConvexPolygon))))
 
@@ -114,13 +115,12 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
 		Damage:             int32(5),
 	}
-	bulletLeftToRight := true
+	bulletLeftToRight := false
 	if bulletLeftToRight {
 		xfac := float64(1.0)
 		offenderWx, offenderWy := playerPosList.Eles[0].X, playerPosList.Eles[0].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, 0, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet ->: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
@@ -137,13 +137,13 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		}
 	}
 
-	bulletRightToLeft := true
+	bulletRightToLeft := false
 	if bulletRightToLeft {
 		xfac := float64(-1.0)
 		offenderWx, offenderWy := playerPosList.Eles[1].X, playerPosList.Eles[1].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
 
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, 0, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet <-: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
