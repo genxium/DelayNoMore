@@ -76,6 +76,7 @@ message InputsBufferSnapshot {
   int32 refRenderFrameId = 1;    
   uint64 unconfirmedMask = 2;
   repeated InputFrameDownsync toSendInputFrameDownsyncs = 3;
+  bool shouldForceResync = 4;
 }
 
 message MeleeBullet { 
@@ -151,4 +152,5 @@ message RoomDownsyncFrame {
   int64 countdownNanos = 3;
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
   uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
+  bool shouldForceResync = 6;
 }

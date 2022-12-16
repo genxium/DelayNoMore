@@ -3654,6 +3654,7 @@ $root.protos = (function() {
          * @property {number|null} [refRenderFrameId] InputsBufferSnapshot refRenderFrameId
          * @property {number|Long|null} [unconfirmedMask] InputsBufferSnapshot unconfirmedMask
          * @property {Array.<protos.InputFrameDownsync>|null} [toSendInputFrameDownsyncs] InputsBufferSnapshot toSendInputFrameDownsyncs
+         * @property {boolean|null} [shouldForceResync] InputsBufferSnapshot shouldForceResync
          */
 
         /**
@@ -3697,6 +3698,14 @@ $root.protos = (function() {
         InputsBufferSnapshot.prototype.toSendInputFrameDownsyncs = $util.emptyArray;
 
         /**
+         * InputsBufferSnapshot shouldForceResync.
+         * @member {boolean} shouldForceResync
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         */
+        InputsBufferSnapshot.prototype.shouldForceResync = false;
+
+        /**
          * Creates a new InputsBufferSnapshot instance using the specified properties.
          * @function create
          * @memberof protos.InputsBufferSnapshot
@@ -3727,6 +3736,8 @@ $root.protos = (function() {
             if (message.toSendInputFrameDownsyncs != null && message.toSendInputFrameDownsyncs.length)
                 for (var i = 0; i < message.toSendInputFrameDownsyncs.length; ++i)
                     $root.protos.InputFrameDownsync.encode(message.toSendInputFrameDownsyncs[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.shouldForceResync);
             return writer;
         };
 
@@ -3773,6 +3784,10 @@ $root.protos = (function() {
                         if (!(message.toSendInputFrameDownsyncs && message.toSendInputFrameDownsyncs.length))
                             message.toSendInputFrameDownsyncs = [];
                         message.toSendInputFrameDownsyncs.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 4: {
+                        message.shouldForceResync = reader.bool();
                         break;
                     }
                 default:
@@ -3825,6 +3840,9 @@ $root.protos = (function() {
                         return "toSendInputFrameDownsyncs." + error;
                 }
             }
+            if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
+                if (typeof message.shouldForceResync !== "boolean")
+                    return "shouldForceResync: boolean expected";
             return null;
         };
 
@@ -3861,6 +3879,8 @@ $root.protos = (function() {
                     message.toSendInputFrameDownsyncs[i] = $root.protos.InputFrameDownsync.fromObject(object.toSendInputFrameDownsyncs[i]);
                 }
             }
+            if (object.shouldForceResync != null)
+                message.shouldForceResync = Boolean(object.shouldForceResync);
             return message;
         };
 
@@ -3886,6 +3906,7 @@ $root.protos = (function() {
                     object.unconfirmedMask = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.unconfirmedMask = options.longs === String ? "0" : 0;
+                object.shouldForceResync = false;
             }
             if (message.refRenderFrameId != null && message.hasOwnProperty("refRenderFrameId"))
                 object.refRenderFrameId = message.refRenderFrameId;
@@ -3899,6 +3920,8 @@ $root.protos = (function() {
                 for (var j = 0; j < message.toSendInputFrameDownsyncs.length; ++j)
                     object.toSendInputFrameDownsyncs[j] = $root.protos.InputFrameDownsync.toObject(message.toSendInputFrameDownsyncs[j], options);
             }
+            if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
+                object.shouldForceResync = message.shouldForceResync;
             return object;
         };
 
@@ -5576,6 +5599,7 @@ $root.protos = (function() {
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
+         * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
          */
 
         /**
@@ -5636,6 +5660,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.backendUnconfirmedMask = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
+         * RoomDownsyncFrame shouldForceResync.
+         * @member {boolean} shouldForceResync
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.shouldForceResync = false;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5673,6 +5705,8 @@ $root.protos = (function() {
                     $root.protos.MeleeBullet.encode(message.meleeBullets[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.backendUnconfirmedMask != null && Object.hasOwnProperty.call(message, "backendUnconfirmedMask"))
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
+            if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
+                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
             return writer;
         };
 
@@ -5748,6 +5782,10 @@ $root.protos = (function() {
                         message.backendUnconfirmedMask = reader.uint64();
                         break;
                     }
+                case 6: {
+                        message.shouldForceResync = reader.bool();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5815,6 +5853,9 @@ $root.protos = (function() {
             if (message.backendUnconfirmedMask != null && message.hasOwnProperty("backendUnconfirmedMask"))
                 if (!$util.isInteger(message.backendUnconfirmedMask) && !(message.backendUnconfirmedMask && $util.isInteger(message.backendUnconfirmedMask.low) && $util.isInteger(message.backendUnconfirmedMask.high)))
                     return "backendUnconfirmedMask: integer|Long expected";
+            if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
+                if (typeof message.shouldForceResync !== "boolean")
+                    return "shouldForceResync: boolean expected";
             return null;
         };
 
@@ -5870,6 +5911,8 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = object.backendUnconfirmedMask;
                 else if (typeof object.backendUnconfirmedMask === "object")
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
+            if (object.shouldForceResync != null)
+                message.shouldForceResync = Boolean(object.shouldForceResync);
             return message;
         };
 
@@ -5902,6 +5945,7 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.backendUnconfirmedMask = options.longs === String ? "0" : 0;
+                object.shouldForceResync = false;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -5926,6 +5970,8 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? String(message.backendUnconfirmedMask) : message.backendUnconfirmedMask;
                 else
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
+            if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
+                object.shouldForceResync = message.shouldForceResync;
             return object;
         };
 
