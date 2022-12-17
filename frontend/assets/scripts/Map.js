@@ -779,7 +779,7 @@ cc.Class({
     if (1 == joinIndex) {
       playerScriptIns.setSpecies("SoldierWaterGhost");
     } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierFireGhostFrameAnim");
+      playerScriptIns.setSpecies("UltramanTiga");
     }
 
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);

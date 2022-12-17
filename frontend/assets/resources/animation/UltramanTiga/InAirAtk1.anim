@@ -1,0 +1,37 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "InAirAtk1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.35,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0.016666666666666666,
+            "value": {
+              "__uuid__": "58e0a91a-e6ce-482d-8668-713867301837"
+            }
+          },
+          {
+            "frame": 0.2,
+            "value": {
+              "__uuid__": "aca5205f-5749-42fa-be3b-4f4888faf766"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "d0f43a74-3f79-42b6-9d1e-a6c17c0cd07f"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

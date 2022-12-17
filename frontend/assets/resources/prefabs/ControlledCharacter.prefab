@@ -779,7 +779,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "SoldierFireGhostFrameAnim",
+    "_name": "UltramanTiga",
     "_objFlags": 0,
     "_parent": {
       "__id__": 11
@@ -826,8 +826,8 @@
         0,
         0,
         1,
-        1,
-        1,
+        0.7,
+        0.7,
         1
       ]
     },
@@ -870,7 +870,7 @@
         "__uuid__": "43dbf141-be76-48c3-bdef-29233ccbe30d"
       },
       {
-        "__uuid__": "c738236a-0702-45f8-aa38-99457b051997"
+        "__uuid__": "8710591c-3f5e-4911-83e7-42cc18be6af9"
       },
       {
         "__uuid__": "c69bcceb-d7d1-4e33-9623-e2a374a0a6b6"
@@ -907,7 +907,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_atlas": {
-      "__uuid__": "145769c8-a259-42bc-8cce-6e035f493c70"
+      "__uuid__": "5d522f7b-359b-4f38-ac35-55fdbee56cae"
     },
     "_id": ""
   },
@@ -919,7 +919,7 @@
     "asset": {
       "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
     },
-    "fileId": "4c+Ci1MGpP47N3wJ0ujhEm",
+    "fileId": "17JdhftghBYr81MfV9i6cy",
     "sync": false
   },
   {

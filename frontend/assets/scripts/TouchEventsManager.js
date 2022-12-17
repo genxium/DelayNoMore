@@ -88,6 +88,14 @@ cc.Class({
       default: 0.0375,
       type: cc.Float
     },
+    btnA: {
+      default: null,
+      type: cc.Node
+    },
+    btnB: {
+      default: null,
+      type: cc.Node
+    },
   },
 
   start() {},
@@ -137,6 +145,7 @@ cc.Class({
     });
     translationListenerNode.inTouchPoints = new Map();
 
+    /*
     zoomingListenerNode.on(cc.Node.EventType.TOUCH_START, function(event) {
       self._touchStartEvent(event);
     });
@@ -150,6 +159,37 @@ cc.Class({
       self._touchEndEvent(event);
     });
     zoomingListenerNode.inTouchPoints = new Map();
+    */
+
+    if (self.btnA) {
+      self.btnA.on(cc.Node.EventType.TOUCH_START, function(evt) {
+        self.cachedBtnALevel = 1;
+        evt.target.runAction(cc.scaleTo(0.1, 0.3));
+      });
+      self.btnA.on(cc.Node.EventType.TOUCH_END, function(evt) {
+        self.cachedBtnALevel = 0;
+        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+      });
+      self.btnA.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
+        self.cachedBtnALevel = 0;
+        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+      });
+    }
+
+    if (self.btnB) {
+      self.btnB.on(cc.Node.EventType.TOUCH_START, function(evt) {
+        self.cachedBtnBLevel = 1;
+        evt.target.runAction(cc.scaleTo(0.1, 0.3));
+      });
+      self.btnB.on(cc.Node.EventType.TOUCH_END, function(evt) {
+        self.cachedBtnBLevel = 0;
+        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+      });
+      self.btnB.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
+        self.cachedBtnBLevel = 0;
+        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+      });
+    }
 
     // Setup keyboard controls for the ease of attach debugging
     cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, function(evt) {

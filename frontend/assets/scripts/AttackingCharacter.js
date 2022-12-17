@@ -98,7 +98,7 @@ cc.Class({
     }
 
     let newCharacterState = rdfPlayer.characterState;
-    const newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
+    let newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
     let playingAnimName = null;
     let underlyingAnimationCtrl = null;
 

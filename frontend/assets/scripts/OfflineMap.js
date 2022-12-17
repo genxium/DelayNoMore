@@ -47,7 +47,7 @@ cc.Class({
       1: {
         // for offender
         startupFrames: 10,
-        activeFrames: 3,
+        activeFrames: 20,
         recoveryFrames: 34, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
         recoveryFramesOnBlock: 34,
         recoveryFramesOnHit: 34,
@@ -196,7 +196,7 @@ cc.Class({
         }
       });
       self.selfPlayerInfo = {
-        id: 10
+        id: 11
       };
       self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
