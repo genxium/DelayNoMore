@@ -1060,7 +1060,11 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync
 				ConfirmedList: uint64(0),
 			}
 
-			tmp2 := pR.InputsBuffer.GetByFrameId(j - 1) // There's no need for the backend to find the "lastAllConfirmed inputs" for prefabbing, either "BackendDynamicsEnabled" is true or false
+			j2 := j - 1
+			if 0 <= pR.LastAllConfirmedInputFrameId && j2 >= pR.LastAllConfirmedInputFrameId {
+				j2 = pR.LastAllConfirmedInputFrameId
+			}
+			tmp2 := pR.InputsBuffer.GetByFrameId(j2)
 			if nil != tmp2 {
 				prevInputFrameDownsync := tmp2.(*InputFrameDownsync)
 				for i, _ := range currInputFrameDownsync.InputList {
@@ -1176,19 +1180,20 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 	var inputsBufferSnapshot *InputsBufferSnapshot = nil
 	if pR.LatestPlayerUpsyncedInputFrameId > (pR.LastAllConfirmedInputFrameId + (pR.NstDelayFrames >> pR.InputScaleFrames)) {
 		// Type#1 check whether there's a significantly slow ticker among players
+		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
+		if 0 > refRenderFrameIdIfNeeded {
+			return nil
+		}
+		Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames)))
 		for j := pR.LastAllConfirmedInputFrameId + 1; j <= pR.LatestPlayerUpsyncedInputFrameId; j++ {
 			tmp := pR.InputsBuffer.GetByFrameId(j)
 			if nil == tmp {
 				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
 			}
 			inputFrameDownsync := tmp.(*InputFrameDownsync)
+			inputFrameDownsync.ConfirmedList = allConfirmedMask
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
-		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
-		if 0 > refRenderFrameIdIfNeeded {
-			return nil
-		}
-		Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames)))
 		snapshotStFrameId := pR.ConvertToInputFrameId(refRenderFrameIdIfNeeded, pR.InputDelayFrames)
 		// Duplicate downsynced inputFrameIds will be filtered out by frontend.
 		toSendInputFrameDownsyncs := pR.cloneInputsBuffer(snapshotStFrameId, pR.LatestPlayerUpsyncedInputFrameId+1)
@@ -1674,9 +1679,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 
 	if ok, thatRenderFrameId := pR.shouldPrefabInputFrameDownsync(prevRenderFrameId, pR.RenderFrameId); ok {
 		noDelayInputFrameId := pR.ConvertToInputFrameId(thatRenderFrameId, 0)
-		if existingInputFrame := pR.InputsBuffer.GetByFrameId(noDelayInputFrameId); nil == existingInputFrame {
-			pR.prefabInputFrameDownsync(noDelayInputFrameId)
-		}
+		pR.prefabInputFrameDownsync(noDelayInputFrameId)
 	}
 
 	// Force setting all-confirmed of buffered inputFrames periodically, kindly note that if "pR.BackendDynamicsEnabled", what we want to achieve is "recovery upon reconnection", which certainly requires "forceConfirmationIfApplicable" to move "pR.LastAllConfirmedInputFrameId" forward as much as possible
