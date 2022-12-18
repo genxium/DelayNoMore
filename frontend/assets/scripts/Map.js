@@ -1326,9 +1326,11 @@ cc.Class({
 {renderFrame.id: ${currRenderFrame.id}, possiblyFallStoppedOnAnotherPlayer: ${possiblyFallStoppedOnAnotherPlayer}}
 playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}`);
           } else if (currPlayerDownsync.inAir && isBarrier && !landedOnGravityPushback) {
+            /*
             console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir & pushed back by barrier & not landed:
 {renderFrame.id: ${currRenderFrame.id}}
 playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
+            */
           } else if (currPlayerDownsync.inAir && isAnotherPlayer) {
             console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir and pushed back by another player
 {renderFrame.id: ${currRenderFrame.id}}

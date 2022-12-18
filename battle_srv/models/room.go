@@ -1180,6 +1180,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 	var inputsBufferSnapshot *InputsBufferSnapshot = nil
 	if pR.LatestPlayerUpsyncedInputFrameId > (pR.LastAllConfirmedInputFrameId + (pR.NstDelayFrames >> pR.InputScaleFrames)) {
 		// Type#1 check whether there's a significantly slow ticker among players
+		unconfirmedMask := uint64(0)
 		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
 		if 0 > refRenderFrameIdIfNeeded {
 			return nil
@@ -1191,6 +1192,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
 			}
 			inputFrameDownsync := tmp.(*InputFrameDownsync)
+			unconfirmedMask |= (allConfirmedMask ^ inputFrameDownsync.ConfirmedList)
 			inputFrameDownsync.ConfirmedList = allConfirmedMask
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
@@ -1200,7 +1202,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 
 		inputsBufferSnapshot = &InputsBufferSnapshot{
 			RefRenderFrameId:          refRenderFrameIdIfNeeded,
-			UnconfirmedMask:           allConfirmedMask, // Will force resync all players in the same battle.
+			UnconfirmedMask:           unconfirmedMask, // To avoid jamming the remaining active players if some players are lost till end of a battle
 			ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
 		}
 	} else {
