@@ -2,16 +2,16 @@
 1. Server received too late (solution: force confirmation)
 2. Client received too late (solution: prediction and frame chasing, big impact on user experience because the graphics will be inconsistent if mismatches occur too often)
 
-# Potential avalanche from local lag
+# Potential avalanche from `ACTIVE SLOW TICKER`
 Under the current "input delay" algorithm, the lag of a single player would cause all the other players to receive outdated commands, e.g. when at a certain moment   
-- player#1: renderFrameId = 100, significantly lagged due to local CPU overheated
+- player#1: renderFrameId = 100, **still active in battle but significantly lagged** due to local CPU overheated
 - player#2: renderFrameId = 240
 - player#3: renderFrameId = 239
 - player#4: renderFrameId = 242
 
 players #2, #3 #4 would receive "outdated(in their subjective feelings) but all-confirmed commands" from then on, thus forced to rollback and chase many frames - the lag due to "large range of frame-chasing" would then further deteriorate the situation - like an avalanche.   
 
-**BE CAUTIOUS, THIS SITUATION HAPPENS QUITE OFTEN FOR REAL DEVICES** where different operating systems and temporary CPU overheat cause different lags for different player in a same battle! If not properly handled, slow tickers would be `inputing in the "history" of other players`, resulting in too frequent prediction mismatch and thus inconsistent graphics for other players!
+**BE CAUTIOUS, THIS `ACTIVE SLOW TICKER` SITUATION HAPPENS QUITE OFTEN FOR REAL DEVICES** where different operating systems and temporary CPU overheat cause different lags for different player in a same battle! If not properly handled, slow tickers would be `inputing in the "history" of other players`, resulting in too frequent prediction mismatch and thus inconsistent graphics for other players!
 
 In a "no-server & p2p" setup, I couldn't think of a proper way to cope with such edge case. Solely on the frontend we could only mitigate the impact to players #2, #3, #4, e.g. a potential lag due to "large range of frame-chasing" is proactively avoided in `<proj-root>/frontend/assets/scripts/Map.js, function update(dt)`. 
 

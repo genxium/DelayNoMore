@@ -1747,7 +1747,7 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 				break
 			} else if PlayerBattleStateIns.ACTIVE == playerBattleState && 0 < (inputsBufferSnapshot.UnconfirmedMask&thatPlayerJoinMask) {
 				/*
-				   [WARNING] Whenever there's an ACTIVE SLOW TICKER, all players should also be resynced to avoid inconsistent display. See `<proj-root>/ConcerningEdgeCases.md` for more information.
+				   [WARNING] Whenever there's an `ACTIVE SLOW TICKER`, all players should also be resynced to avoid inconsistent display. See `<proj-root>/ConcerningEdgeCases.md` for more information.
 				*/
 				inputsBufferSnapshot.ShouldForceResync = true
 				break
