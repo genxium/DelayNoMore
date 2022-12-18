@@ -19,7 +19,7 @@ func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
 }
 
 func RectCenterStr(body *resolv.Object, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64) string {
-	return fmt.Sprintf("{%.2f, %.2f}", body.X + leftPadding + halfBoundingW - spaceOffsetX, body.Y + bottomPadding + halfBoundingH - spaceOffsetY)
+	return fmt.Sprintf("{%.2f, %.2f}", body.X+leftPadding+halfBoundingW-spaceOffsetX, body.Y+bottomPadding+halfBoundingH-spaceOffsetY)
 }
 
 func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {

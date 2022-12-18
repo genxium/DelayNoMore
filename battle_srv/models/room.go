@@ -161,8 +161,9 @@ type Room struct {
 	DismissalWaitGroup                     sync.WaitGroup
 	Barriers                               map[int32]*Barrier
 	InputsBuffer                           *RingBuffer // Indices are STRICTLY consecutive
-	InputsBufferLock                       sync.Mutex  // Guards [InputsBuffer, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange]
+	InputsBufferLock                       sync.Mutex  // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange]
 	RenderFrameBuffer                      *RingBuffer // Indices are STRICTLY consecutive
+	LatestPlayerUpsyncedInputFrameId       int32
 	LastAllConfirmedInputFrameId           int32
 	LastAllConfirmedInputFrameIdWithChange int32
 	LastAllConfirmedInputList              []uint64
@@ -502,7 +503,7 @@ func (pR *Room) StartBattle() {
 					return
 				}
 				pR.downsyncToSinglePlayer(playerId, player, inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, inputsBufferSnapshot.ToSendInputFrameDownsyncs, inputsBufferSnapshot.ShouldForceResync)
-				// Logger.Debug(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d)#2", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId))
+				//Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d)#2", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId))
 			default:
 			}
 		}
@@ -733,6 +734,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 
+	pR.LatestPlayerUpsyncedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameIdWithChange = -1
 	pR.LastAllConfirmedInputList = make([]uint64, pR.Capacity)
@@ -745,9 +747,9 @@ func (pR *Room) OnDismissed() {
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
-	dilutedServerFps := float64(55.0)
+	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
-	pR.BattleDurationFrames = 45 * pR.ServerFps
+	pR.BattleDurationFrames = 90 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = 2
 	pR.MaxChasingRenderFramesPerUpdate = 8
@@ -977,6 +979,7 @@ func (pR *Room) OnPlayerBattleColliderAcked(playerId int32) bool {
 	case PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK:
 		shouldTryToStartBattle = false
 		atomic.StoreInt32(&(targetPlayer.BattleState), PlayerBattleStateIns.READDED_BATTLE_COLLIDER_ACKED)
+		Logger.Warn(fmt.Sprintf("OnPlayerBattleColliderAcked-reAdded: roomId=%v, roomState=%v, targetPlayerId=%v, targetPlayerBattleState=%v, capacity=%v, EffectivePlayerCount=%v", pR.Id, pR.State, targetPlayer.Id, targetPlayer.BattleState, pR.Capacity, pR.EffectivePlayerCount))
 	default:
 	}
 
@@ -1101,6 +1104,10 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 		}
 		targetInputFrameDownsync.InputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
+
+		if inputFrameUpsync.InputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
+			pR.LatestPlayerUpsyncedInputFrameId = inputFrameUpsync.InputFrameId
+		}
 	}
 
 	newAllConfirmedCount := int32(0)
@@ -1166,31 +1173,40 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBu
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
 	// Force confirmation of non-all-confirmed inputFrame EXACTLY ONE AT A TIME, returns the non-confirmed mask of players, e.g. in a 4-player-battle returning 1001 means that players with JoinIndex=1 and JoinIndex=4 are non-confirmed for inputFrameId2
 
-	renderFrameId1 := (pR.RenderFrameId - pR.NstDelayFrames) // the renderFrameId which should've been rendered on frontend
-	if 0 > renderFrameId1 {
-		return nil
-	}
-	ok := false
-	renderFrameId2 := int32(-1)
-	if ok, renderFrameId2 = pR.shouldPrefabInputFrameDownsync(prevRenderFrameId-pR.NstDelayFrames, renderFrameId1); !ok {
-		/*
-		   The backend "shouldPrefabInputFrameDownsync" shares the same rule as frontend "shouldGenerateInputFrameUpsync".
+	inputFrameId2 := int32(-1)
+	if pR.LatestPlayerUpsyncedInputFrameId > (pR.LastAllConfirmedInputFrameId + (pR.NstDelayFrames >> pR.InputScaleFrames)) {
+		// Type#1 check whether there's a significantly slow ticker among players
+		Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation]For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames)))
+		inputFrameId2 = pR.LastAllConfirmedInputFrameId + 1
+	} else {
+		// Type#2 check whether there's a significantly slow ticker w.r.t. BackendDynamics, this applies when all players are disconnected temporarily
+		renderFrameId1 := (pR.RenderFrameId - pR.NstDelayFrames) // the "renderFrameId" which should've been rendered on frontend
+		if 0 > renderFrameId1 {
+			// Battle is still in an early stage, no action needed even if there were slow tickers
+			return nil
+		}
+		if ok, renderFrameId2 := pR.shouldPrefabInputFrameDownsync(prevRenderFrameId-pR.NstDelayFrames, renderFrameId1); ok {
+			/*
+			   The backend "shouldPrefabInputFrameDownsync" shares the same rule as frontend "shouldGenerateInputFrameUpsync".
 
-		   It's also important that "forceConfirmationIfApplicable" is NOT EXECUTED for every renderFrame, such that when a player is forced to resync, it has some time, i.e. (1 << InputScaleFrames) renderFrames, to upsync again.
-		*/
-		return nil
+			   It's also important that "forceConfirmationIfApplicable" is NOT EXECUTED for every renderFrame, such that when a player is forced to resync, it has some time, i.e. (1 << InputScaleFrames) renderFrames, to upsync again.
+			*/
+			inputFrameId2 = pR.ConvertToInputFrameId(renderFrameId2, 0) // The inputFrame to force confirmation (if necessary)
+			if inputFrameId2 > pR.LastAllConfirmedInputFrameId {
+				Logger.Debug(fmt.Sprintf("[type#2 forceConfirmation]For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, renderFrameId1:%d, renderFrameId2:%d, NstDelayFrames:%d, inputFrameId2:%d, LastAllConfirmedInputFrameId:%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, renderFrameId1, renderFrameId2, pR.NstDelayFrames, inputFrameId2, pR.LastAllConfirmedInputFrameId))
+			}
+		}
 	}
 
-	inputFrameId2 := pR.ConvertToInputFrameId(renderFrameId2, 0) // The inputFrame to force confirmation (if necessary)
-	if inputFrameId2 < pR.LastAllConfirmedInputFrameId {
-		// No need to force confirmation, the inputFrames already arrived
-		Logger.Debug(fmt.Sprintf("inputFrameId2=%v is already all-confirmed for roomId=%v[type#1], no need to force confirmation of it", inputFrameId2, pR.Id))
+	if pR.LastAllConfirmedInputFrameId >= inputFrameId2 {
+		// No need to force confirmation for either type
+		Logger.Debug(fmt.Sprintf("inputFrameId2=%v is already all-confirmed for roomId=%v, no need to force confirmation", inputFrameId2, pR.Id))
 		return nil
 	}
 
 	tmp := pR.InputsBuffer.GetByFrameId(inputFrameId2)
 	if nil == tmp {
-		panic(fmt.Sprintf("inputFrameId2=%v doesn't exist for roomId=%v, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", inputFrameId2, pR.Id, pR.InputsBufferString(false)))
+		panic(fmt.Sprintf("For roomId=%d, inputFrameId2=%v doesn't exist, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", pR.Id, inputFrameId2, pR.InputsBufferString(false)))
 	}
 
 	totPlayerCnt := uint32(pR.Capacity)
@@ -1489,9 +1505,9 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				if 1 == joinIndex {
 					halfColliderWidth, halfColliderHeight := player.ColliderRadius, player.ColliderRadius+player.ColliderRadius // avoid multiplying
 					if fallStopping {
-						Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#1\n{renderFrame.id: %d, possiblyFallStoppedOnAnotherPlayer: %v}\nplayerColliderPos=%v, effPushback={%.3f, %.3f}, overlapMag=%.4f", playerId, joinIndex, currRenderFrame.Id, possiblyFallStoppedOnAnotherPlayer, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap))
+						Logger.Debug(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#1\n{renderFrame.id: %d, possiblyFallStoppedOnAnotherPlayer: %v}\nplayerColliderPos=%v, effPushback={%.3f, %.3f}, overlapMag=%.4f", playerId, joinIndex, currRenderFrame.Id, possiblyFallStoppedOnAnotherPlayer, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap))
 					} else if currPlayerDownsync.InAir && isBarrier && !landedOnGravityPushback {
-						Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by barrier & not landed at {renderFrame.id: %d}\nplayerColliderPos=%v, effPushback={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap, len(hardPushbackNorms)))
+						//Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by barrier & not landed at {renderFrame.id: %d}\nplayerColliderPos=%v, effPushback={%.3f, %.3f}, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap, len(hardPushbackNorms)))
 					} else if currPlayerDownsync.InAir && isAnotherPlayer {
 						//Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d inAir & pushed back by another player\n{renderFrame.id: %d}\nplayerColliderPos=%v, anotherPlayerColliderPos=%v, effPushback={%.3f, %.3f}, landedOnGravityPushback=%v, fallStopping=%v, overlapMag=%.4f, len(hardPushbackNorms)=%d", playerId, joinIndex, currRenderFrame.Id, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), RectCenterStr(obj, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, landedOnGravityPushback, fallStopping, overlapResult.Overlap, len(hardPushbackNorms)))
 					}
@@ -1598,9 +1614,9 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 
 		if 1 == thatPlayerInNextFrame.JoinIndex {
 			if currPlayerDownsync.InAir && !thatPlayerInNextFrame.InAir {
-				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#2:\n{nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}\n\tcalculated from <- playerColliderPos=%v, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
+				//Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d fallStopping#2:\n{nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}\n\tcalculated from <- playerColliderPos=%v, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			} else if !currPlayerDownsync.InAir && thatPlayerInNextFrame.InAir {
-				Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d took off:\n{nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}\n\tcalculated from <- playerColliderPos=%v, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
+				//Logger.Warn(fmt.Sprintf("playerId=%d, joinIndex=%d took off:\n{nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}\n\tcalculated from <- playerColliderPos=%v, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			} else if thatPlayerInNextFrame.InAir && (0 != thatPlayerInNextFrame.VelY) {
 				//Logger.Info(fmt.Sprintf("playerId=%d, joinIndex=%d inAir trajectory:\n{nextRenderFrame.id: %d, nextVirtualX: %d, nextVirtualY: %d, nextVelX: %d, nextVelY: %d}\n\tcalculated from <- playerColliderPos=%v, effPushback={%.3f, %.3f}", playerId, joinIndex, currRenderFrame.Id+1, thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, RectCenterStr(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY), effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y))
 			}
@@ -1693,7 +1709,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 	}
 
 	if nil != inputsBufferSnapshot {
-		// Logger.Warn(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
+		Logger.Warn(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
 		pR.downsyncToAllPlayers(inputsBufferSnapshot)
 	}
 }
@@ -1725,7 +1741,14 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 			   That said, we ensured that if "false == BackendDynamicsEnabled" and noone ever disconnects & reconnects, the frontend collision handling results are always consistent.
 			*/
 			playerBattleState := atomic.LoadInt32(&(player.BattleState))
+			thatPlayerJoinMask := uint64(1 << uint32(player.JoinIndex-1))
 			if PlayerBattleStateIns.READDED_BATTLE_COLLIDER_ACKED == playerBattleState {
+				inputsBufferSnapshot.ShouldForceResync = true
+				break
+			} else if PlayerBattleStateIns.ACTIVE == playerBattleState && 0 < (inputsBufferSnapshot.UnconfirmedMask&thatPlayerJoinMask) {
+				/*
+				   [WARNING] Whenever there's an ACTIVE SLOW TICKER, all players should also be resynced to avoid inconsistent display. See `<proj-root>/ConcerningEdgeCases.md` for more information.
+				*/
 				inputsBufferSnapshot.ShouldForceResync = true
 				break
 			}
@@ -1746,7 +1769,9 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 
 		if playerDownsyncChan, existent := pR.PlayerDownsyncChanDict[player.Id]; existent {
 			playerDownsyncChan <- (*inputsBufferSnapshot)
-			// Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId, playerDownsyncChan))
+			//Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d, playerDownsyncChan:%p)#1", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, player.Id, playerDownsyncChan))
+		} else {
+			Logger.Warn(fmt.Sprintf("playerDownsyncChan for (roomId: %d, playerId:%d) is gone", pR.Id, player.Id))
 		}
 	}
 }
@@ -1793,7 +1818,9 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 		refRenderFrame.BackendUnconfirmedMask = unconfirmedMask
 		pR.sendSafely(refRenderFrame, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId, false)
 		//Logger.Warn(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: InputsBuffer=%v", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, pR.InputsBufferString(false)))
-		Logger.Debug(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId))
+		if shouldResync1 {
+			Logger.Warn(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: shouldResync1=%v, shouldResync2=%v, shouldResync3=%v, playerBattleState=%d", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, shouldResync1, shouldResync2, shouldResync3, playerBattleState))
+		}
 	} else {
 		pR.sendSafely(nil, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId, false)
 	}

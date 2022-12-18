@@ -146,7 +146,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
     try {
       const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
-      // console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
+      //console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_HB_REQ:
           window.handleHbRequirements(resp);

@@ -11,6 +11,8 @@ Under the current "input delay" algorithm, the lag of a single player would caus
 
 players #2, #3 #4 would receive "outdated(in their subjective feelings) but all-confirmed commands" from then on, thus forced to rollback and chase many frames - the lag due to "large range of frame-chasing" would then further deteriorate the situation - like an avalanche.   
 
+**BE CAUTIOUS, THIS SITUATION HAPPENS QUITE OFTEN FOR REAL DEVICES** where different operating systems and temporary CPU overheat cause different lags for different player in a same battle! If not properly handled, slow tickers would be `inputing in the "history" of other players`, resulting in too frequent prediction mismatch and thus inconsistent graphics for other players!
+
 In a "no-server & p2p" setup, I couldn't think of a proper way to cope with such edge case. Solely on the frontend we could only mitigate the impact to players #2, #3, #4, e.g. a potential lag due to "large range of frame-chasing" is proactively avoided in `<proj-root>/frontend/assets/scripts/Map.js, function update(dt)`. 
 
 To be fair, **a "p2p" setup can reduce round-trip to single-trip**, but w/o a point of authority in such case player#1 needs a way to recognize the slowness (e.g. check the received peer inputs) and ticks faster for a while to catch up; in contrast in a "server as authority" setup, the server could force confirming an inputFrame without player#1's upsync, and notify player#1 to apply a "roomDownsyncFrame" as well as drop all its outdated local inputFrames. 
