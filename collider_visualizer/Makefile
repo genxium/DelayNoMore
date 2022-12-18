@@ -2,7 +2,8 @@ PROJECTNAME=viscol.exe
 ROOT_DIR=.
 all: help
 ## Available proxies for downloading go modules are listed in "https://github.com/golang/go/wiki/Modules#how-do-i-use-vendoring-with-modules-is-vendoring-going-away". 
-GOPROXY=https://mirrors.aliyun.com/goproxy 
+#GOPROXY=https://mirrors.aliyun.com/goproxy 
+GOPROXY=https://goproxy.io
 
 build:
 	GOPROXY=$(GOPROXY) go build -o $(ROOT_DIR)/$(PROJECTNAME)

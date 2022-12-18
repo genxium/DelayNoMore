@@ -1,6 +1,7 @@
 PROJECTNAME=server.exe
 ROOT_DIR=.
-GOPROXY=https://mirrors.aliyun.com/goproxy 
+#GOPROXY=https://mirrors.aliyun.com/goproxy 
+GOPROXY=https://goproxy.io
 all: help
 
 gen-constants:

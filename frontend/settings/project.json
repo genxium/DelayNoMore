@@ -34,7 +34,6 @@
   "design-resolution-width": 960,
   "excluded-modules": [
     "Collider",
-    "DragonBones",
     "Geom Utils",
     "Mesh",
     "MotionStreak",
@@ -69,7 +68,7 @@
     "shelter_z_reducer",
     "shelter"
   ],
-  "last-module-event-record-time": 1579766511782,
+  "last-module-event-record-time": 1671346284377,
   "simulator-orientation": false,
   "simulator-resolution": {
     "height": 640,

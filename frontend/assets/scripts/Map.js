@@ -347,7 +347,6 @@ cc.Class({
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
-    cc.director.getCollisionManager().enabled = false;
     // self.musicEffectManagerScriptIns = self.node.getComponent("MusicEffectManager");
     self.musicEffectManagerScriptIns = null;
 

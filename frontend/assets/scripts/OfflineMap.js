@@ -15,8 +15,6 @@ cc.Class({
     window.mapIns = self;
     self.showCriticalCoordinateLabels = true;
 
-    cc.director.getCollisionManager().enabled = false;
-
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
 

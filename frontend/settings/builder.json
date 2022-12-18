@@ -17,13 +17,13 @@
   },
   "encryptJs": true,
   "excludeScenes": [
-    "475b849b-44b3-4390-982d-bd0d9e695093"
+    "368b10b6-88fc-423c-9fcd-545d9fc673bd"
   ],
   "fb-instant-games": {},
   "includeSDKBox": false,
   "inlineSpriteFrames": true,
   "inlineSpriteFrames_native": true,
-  "md5Cache": true,
+  "md5Cache": false,
   "mergeStartScene": true,
   "optimizeHotUpdate": false,
   "orientation": {
