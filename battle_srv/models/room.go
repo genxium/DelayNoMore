@@ -742,12 +742,12 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
 	pR.InputDelayFrames = 8
-	pR.NstDelayFrames = 8
+	pR.NstDelayFrames = 12
 	pR.InputScaleFrames = uint32(2)
 	pR.ServerFps = 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
-	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
+	dilutedServerFps := float64(57.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
 	pR.BattleDurationFrames = 90 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
@@ -1087,7 +1087,7 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 			continue
 		}
 		if clientInputFrameId < pR.LastAllConfirmedInputFrameId {
-			Logger.Info(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
 		if clientInputFrameId > pR.InputsBuffer.EdFrameId {
@@ -1171,78 +1171,61 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 
 func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) *InputsBufferSnapshot {
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
-	// Force confirmation of non-all-confirmed inputFrame EXACTLY ONE AT A TIME, returns the non-confirmed mask of players, e.g. in a 4-player-battle returning 1001 means that players with JoinIndex=1 and JoinIndex=4 are non-confirmed for inputFrameId2
-
-	inputFrameId2 := int32(-1)
+	totPlayerCnt := uint32(pR.Capacity)
+	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
+	var inputsBufferSnapshot *InputsBufferSnapshot = nil
 	if pR.LatestPlayerUpsyncedInputFrameId > (pR.LastAllConfirmedInputFrameId + (pR.NstDelayFrames >> pR.InputScaleFrames)) {
 		// Type#1 check whether there's a significantly slow ticker among players
-		Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation]For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames)))
-		inputFrameId2 = pR.LastAllConfirmedInputFrameId + 1
-	} else {
-		// Type#2 check whether there's a significantly slow ticker w.r.t. BackendDynamics, this applies when all players are disconnected temporarily
-		renderFrameId1 := (pR.RenderFrameId - pR.NstDelayFrames) // the "renderFrameId" which should've been rendered on frontend
-		if 0 > renderFrameId1 {
-			// Battle is still in an early stage, no action needed even if there were slow tickers
+		for j := pR.LastAllConfirmedInputFrameId + 1; j <= pR.LatestPlayerUpsyncedInputFrameId; j++ {
+			tmp := pR.InputsBuffer.GetByFrameId(j)
+			if nil == tmp {
+				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
+			}
+			inputFrameDownsync := tmp.(*InputFrameDownsync)
+			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
+		}
+		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
+		if 0 > refRenderFrameIdIfNeeded {
 			return nil
 		}
-		if ok, renderFrameId2 := pR.shouldPrefabInputFrameDownsync(prevRenderFrameId-pR.NstDelayFrames, renderFrameId1); ok {
-			/*
-			   The backend "shouldPrefabInputFrameDownsync" shares the same rule as frontend "shouldGenerateInputFrameUpsync".
+		Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames)))
+		snapshotStFrameId := pR.ConvertToInputFrameId(refRenderFrameIdIfNeeded, pR.InputDelayFrames)
+		// Duplicate downsynced inputFrameIds will be filtered out by frontend.
+		toSendInputFrameDownsyncs := pR.cloneInputsBuffer(snapshotStFrameId, pR.LatestPlayerUpsyncedInputFrameId+1)
 
-			   It's also important that "forceConfirmationIfApplicable" is NOT EXECUTED for every renderFrame, such that when a player is forced to resync, it has some time, i.e. (1 << InputScaleFrames) renderFrames, to upsync again.
-			*/
-			inputFrameId2 = pR.ConvertToInputFrameId(renderFrameId2, 0) // The inputFrame to force confirmation (if necessary)
-			if inputFrameId2 > pR.LastAllConfirmedInputFrameId {
-				Logger.Debug(fmt.Sprintf("[type#2 forceConfirmation]For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, renderFrameId1:%d, renderFrameId2:%d, NstDelayFrames:%d, inputFrameId2:%d, LastAllConfirmedInputFrameId:%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, renderFrameId1, renderFrameId2, pR.NstDelayFrames, inputFrameId2, pR.LastAllConfirmedInputFrameId))
+		inputsBufferSnapshot = &InputsBufferSnapshot{
+			RefRenderFrameId:          refRenderFrameIdIfNeeded,
+			UnconfirmedMask:           allConfirmedMask, // Will force resync all players in the same battle.
+			ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
+		}
+	} else {
+		// Type#2 helps resolve the edge case when all players are disconnected temporarily
+		shouldForceResync := false
+		for _, player := range pR.PlayersArr {
+			playerBattleState := atomic.LoadInt32(&(player.BattleState))
+			if PlayerBattleStateIns.READDED_BATTLE_COLLIDER_ACKED == playerBattleState {
+				shouldForceResync = true
+				break
+			}
+		}
+		if shouldForceResync {
+			refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
+			if 0 > refRenderFrameIdIfNeeded {
+				return nil
+			}
+			Logger.Warn(fmt.Sprintf("[type#2 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d; there's at least one reconnected player, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, pR.LastAllConfirmedInputFrameId))
+			snapshotStFrameId := pR.ConvertToInputFrameId(refRenderFrameIdIfNeeded, pR.InputDelayFrames)
+			// Duplicate downsynced inputFrameIds will be filtered out by frontend.
+			toSendInputFrameDownsyncs := pR.cloneInputsBuffer(snapshotStFrameId, pR.LatestPlayerUpsyncedInputFrameId+1)
+			inputsBufferSnapshot = &InputsBufferSnapshot{
+				RefRenderFrameId:          refRenderFrameIdIfNeeded,
+				UnconfirmedMask:           allConfirmedMask, // Will force resync all players in the same battle.
+				ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
 			}
 		}
 	}
 
-	if pR.LastAllConfirmedInputFrameId >= inputFrameId2 {
-		// No need to force confirmation for either type
-		Logger.Debug(fmt.Sprintf("inputFrameId2=%v is already all-confirmed for roomId=%v, no need to force confirmation", inputFrameId2, pR.Id))
-		return nil
-	}
-
-	tmp := pR.InputsBuffer.GetByFrameId(inputFrameId2)
-	if nil == tmp {
-		panic(fmt.Sprintf("For roomId=%d, inputFrameId2=%v doesn't exist, this is abnormal because the server should prefab inputFrameDownsync in a most advanced pace, check the prefab logic! InputsBuffer=%v", pR.Id, inputFrameId2, pR.InputsBufferString(false)))
-	}
-
-	totPlayerCnt := uint32(pR.Capacity)
-	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
-
-	// Force confirmation of "inputFrame2"
-	inputFrame2 := tmp.(*InputFrameDownsync)
-	oldConfirmedList := inputFrame2.ConfirmedList
-	unconfirmedMask := (oldConfirmedList ^ allConfirmedMask)
-	inputFrame2.ConfirmedList = allConfirmedMask
-	pR.onInputFrameDownsyncAllConfirmed(inputFrame2, -1)
-
-	if 0 < unconfirmedMask {
-		// This condition should be rarely met!
-		/*
-		   Upon resynced on frontend, "refRenderFrameId" is now set to as advanced as possible, and it's the frontend's responsibility now to pave way for the "gap inputFrames"
-
-		   If "NstDelayFrames" becomes larger, "pR.RenderFrameId - refRenderFrameId" possibly becomes larger because the force confirmation is delayed more.
-
-		   Upon resync, it's still possible that "refRenderFrameId < frontend.chaserRenderFrameId" -- and this is allowed.
-		*/
-		refRenderFrameIdIfNeeded := pR.ConvertToLastUsedRenderFrameId(pR.LastAllConfirmedInputFrameId, pR.InputDelayFrames)
-		if 0 > refRenderFrameIdIfNeeded {
-			// Without a "refRenderFrame", there's no point to force confirmation, i.e. nothing to downsync to the "ACTIVE but slowly ticking frontend(s)"
-			return nil
-		}
-		snapshotStFrameId := pR.ConvertToInputFrameId(refRenderFrameIdIfNeeded, pR.InputDelayFrames)
-		toSendInputFrameDownsyncs := pR.cloneInputsBuffer(snapshotStFrameId, pR.LastAllConfirmedInputFrameId+1)
-		return &InputsBufferSnapshot{
-			RefRenderFrameId:          refRenderFrameIdIfNeeded,
-			UnconfirmedMask:           unconfirmedMask,
-			ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
-		}
-	} else {
-		return nil
-	}
+	return inputsBufferSnapshot
 }
 
 func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRenderFrameId int32, spaceOffsetX, spaceOffsetY float64) {
@@ -1652,7 +1635,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 
 	topPadding, bottomPadding, leftPadding, rightPadding := pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap
 
-	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 2) // the approx minimum distance a player can move per frame in world coordinate
+	minStep := (int(float64(pR.PlayerDefaultSpeed)*pR.VirtualGridToWorldRatio) << 3) // the approx minimum distance a player can move per frame in world coordinate
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)           // allocate a new collision space everytime after a battle is settled
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
@@ -1709,7 +1692,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 	}
 
 	if nil != inputsBufferSnapshot {
-		Logger.Warn(fmt.Sprintf("roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
+		Logger.Debug(fmt.Sprintf("[forceConfirmation] roomId=%v, room.RenderFrameId=%v, room.CurDynamicsRenderFrameId=%v, room.LastAllConfirmedInputFrameId=%v, unconfirmedMask=%v", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LastAllConfirmedInputFrameId, inputsBufferSnapshot.UnconfirmedMask))
 		pR.downsyncToAllPlayers(inputsBufferSnapshot)
 	}
 }

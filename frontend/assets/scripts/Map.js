@@ -614,7 +614,7 @@ cc.Class({
       }
     }
 
-    if (null == self.renderFrameId || self.renderFrameId <= rdf.id) {
+    if (null == self.renderFrameId || self.renderFrameId <= rdf.id || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
 
       if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
