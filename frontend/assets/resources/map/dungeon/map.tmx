@@ -9,10 +9,10 @@
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
-  <object id="135" x="1290" y="1401.33">
+  <object id="135" x="999" y="1608">
    <point/>
   </object>
-  <object id="137" x="1648.33" y="1430.67">
+  <object id="137" x="1164" y="1548">
    <point/>
   </object>
  </objectgroup>
@@ -25,7 +25,7 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="55" x="735" y="1552" width="113.5" height="15.5">
+  <object id="55" x="736" y="1552" width="112" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -80,12 +80,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="73" x="783.75" y="1567.5" width="96.25" height="15.5">
+  <object id="73" x="784" y="1568" width="96" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="74" x="815.75" y="1583.75" width="96.25" height="15.5">
+  <object id="74" x="816" y="1584" width="96" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>

@@ -377,10 +377,6 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 			}
 
 			for _, singleObjInTmxFile := range objGroup.Objects {
-				if nil == singleObjInTmxFile.Properties.Property || "boundary_type" != singleObjInTmxFile.Properties.Property[0].Name || "barrier" != singleObjInTmxFile.Properties.Property[0].Value {
-					continue
-				}
-
 				if nil == singleObjInTmxFile.Polyline {
 					pts := make([]*Vec2D, 4)
 					s := make([]string, 0)
