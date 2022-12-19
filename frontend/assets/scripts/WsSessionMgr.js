@@ -144,6 +144,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     if (null == evt || null == evt.data) {
       return;
     }
+    // FIXME: In practice, it seems like the thread invoking "onmessage" could be different from "Map.update(dt)", which makes it necessary to guard "recentRenderCache & recentInputCache" for "_generateInputFrameUpsync & rollbackAndChase & onRoomDownsyncFrame & onInputFrameDownsyncBatch" to avoid mysterious RAM contamination, but there's no explicit mutex in JavaScript for browsers. 
     try {
       const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
       //console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
