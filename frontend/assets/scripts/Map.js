@@ -588,6 +588,11 @@ cc.Class({
     const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id);
     const shouldForceDumping2 = (rdf.id > self.renderFrameId + self.renderFrameIdLagTolerance);
     const shouldForceResync = rdf.shouldForceResync;
+    /*
+    TODO
+    
+    If "BackendUnconfirmedMask" is non-all-1 and contains the current player, show a label/button to hint manual reconnection. Note that the continuity of "recentInputCache" is not a good indicator, because due to network delay upon a [type#1 forceConfirmation] a player might just lag in upsync networking and have all consecutive inputFrameIds locally. 
+    */
 
     const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {

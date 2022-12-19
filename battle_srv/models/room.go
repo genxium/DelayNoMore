@@ -1175,11 +1175,13 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 
 	if 0 < newAllConfirmedCount {
 		/*
-		   [WARNING]
+				   [WARNING]
 
-		   If "pR.InputsBufferLock" was previously held by "doBattleMainLoopPerTickBackendDynamicsWithProperLocking", then "snapshotStFrameId" would be just (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount).
+				   If "pR.InputsBufferLock" was previously held by "doBattleMainLoopPerTickBackendDynamicsWithProperLocking", then "snapshotStFrameId" would be just (LastAllConfirmedInputFrameId - newAllConfirmedCount).
 
-		   However if "pR.InputsBufferLock" was previously held by another "OnBattleCmdReceived", "snapshotStFrameId" might be smaller than (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount)!
+				   However if "pR.InputsBufferLock" was previously held by another "OnBattleCmdReceived", the proper value for "snapshotStFrameId" might be smaller than (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount) -- but why? Especially when we've already wrapped this whole function in "InputsBufferLock", the order of "markConfirmationIfApplicable" generated snapshots is preserved for sending, isn't (LastAllConfirmedInputFrameId - newAllConfirmedCount) good enough here?
+
+		           Unfortunately no, for a reconnected player to get recovered asap (of course with BackendDynamicsEnabled), we put a check of READDED_BATTLE_COLLIDER_ACKED in "downsyncToSinglePlayer" -- which could be called right after "markConfirmationIfApplicable" yet without going through "forceConfirmationIfApplicable" -- and if a READDED_BATTLE_COLLIDER_ACKED player is found there we need a proper "(refRenderFrameId, snapshotStFrameId)" pair for that player!
 		*/
 		snapshotStFrameId := (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount)
 		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
@@ -1767,14 +1769,12 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 				break
 			}
 			/*
-							   [WARNING]
+			   [WARNING] There's a tradeoff here, if the `ACTIVE SLOW TICKER` doesn't resume for a long period of time, the current approach is to kick it out by "connWatchdog" instead of forcing resync of all players in the same battle all the way along.
 
-				                           There's a tradeoff here, if the `ACTIVE SLOW TICKER` doesn't resume for a long period of time, the current approach is to kick it out by "connWatchdog" instead of forcing resync of all players in the same battle all the way along.
+			   [FIXME]
+			   In practice, I tested in internet environment by toggling player#1 "CPU throttling: 1x -> 4x -> 1x -> 6x -> 1x" and checked the logs of all players which showed that "all received inputFrameIds are consecutive for all players", yet not forcing resync of all players here still result in occasional inconsistent graphics for the `ACTIVE NORMAL TICKER`s.
 
-							   [FIXME]
-							   In practice, I tested in internet environment by toggling player#1 "CPU throttling: 1x -> 4x -> 1x -> 6x -> 1x" and checked the logs of all players which showed that "all received inputFrameIds are consecutive for all players", yet not forcing resync of all players here still result in occasional inconsistent graphics for the `ACTIVE NORMAL TICKER`s.
-
-							   More investigation into this issue is needed, it's possible that the inconsistent graphics is just a result of difference of backend/frontend collision calculations, yet before it's totally resolved we'd keep forcing resync here.
+			   More investigation into this issue is needed, it's possible that the inconsistent graphics is just a result of difference of backend/frontend collision calculations, yet before it's totally resolved we'd keep forcing resync here.
 			*/
 			thatPlayerJoinMask := uint64(1 << uint32(player.JoinIndex-1))
 			isActiveSlowTicker := (0 < (thatPlayerJoinMask & inputsBufferSnapshot.UnconfirmedMask)) && (PlayerBattleStateIns.ACTIVE == playerBattleState)
