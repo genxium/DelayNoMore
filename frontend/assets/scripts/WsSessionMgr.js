@@ -146,7 +146,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     if (null == evt || null == evt.data) {
       return;
     }
-    // FIXME: In practice, it seems like the thread invoking "onmessage" could be different from "Map.update(dt)", which makes it necessary to guard "recentRenderCache & recentInputCache" for "_generateInputFrameUpsync & rollbackAndChase & onRoomDownsyncFrame & onInputFrameDownsyncBatch" to avoid mysterious RAM contamination, but there's no explicit mutex in JavaScript for browsers -- this issue is found in Firefox (108.0.1, 64-bit, Windows 11), but not in Chrome (108.0.5359.125, Official Build, 64-bit, Windows 11) -- just breakpoint in "Map.rollbackAndChase" then see whether the logs of "onmessage" can still be printed and whether the values of "recentRenderCache & recentInputCache" change in console). 
+    // FIXME: In practice, it seems like the thread invoking "onmessage" could be different from "Map.update(dt)", which makes it necessary to guard "recentRenderCache & recentInputCache" for "getOrPrefabInputFrameUpsync & rollbackAndChase & onRoomDownsyncFrame & onInputFrameDownsyncBatch" to avoid mysterious RAM contamination, but there's no explicit mutex in JavaScript for browsers -- this issue is found in Firefox (108.0.1, 64-bit, Windows 11), but not in Chrome (108.0.5359.125, Official Build, 64-bit, Windows 11) -- just breakpoint in "Map.rollbackAndChase" then see whether the logs of "onmessage" can still be printed and whether the values of "recentRenderCache & recentInputCache" change in console). 
     try {
       const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
       //console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);

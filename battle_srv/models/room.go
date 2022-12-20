@@ -772,13 +772,13 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
-	pR.BattleDurationFrames = 120 * pR.ServerFps
+	pR.BattleDurationFrames = 60 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = (pR.NstDelayFrames >> pR.InputScaleFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 12                                            // Don't set this value too high to avoid exhausting frontend CPU within a single frame
 
 	pR.BackendDynamicsEnabled = true               // [WARNING] When "false", recovery upon reconnection wouldn't work!
-	pR.ForceAllResyncOnAnyActiveSlowTicker = false // See tradeoff discussion in "downsyncToAllPlayers"
+	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
 	punchSkillId := int32(1)
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
@@ -879,7 +879,7 @@ func (pR *Room) OnPlayerDisconnected(playerId int32) {
 	default:
 		atomic.StoreInt32(&(pR.Players[playerId].BattleState), PlayerBattleStateIns.DISCONNECTED)
 		pR.clearPlayerNetworkSession(playerId) // Still need clear the network session pointers, because "OnPlayerDisconnected" is only triggered from "signalToCloseConnOfThisPlayer" in "ws/serve.go", when the same player reconnects the network session pointers will be re-assigned
-		Logger.Warn("OnPlayerDisconnected finished:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerBattleState", pR.Players[playerId].BattleState), zap.Any("nowRoomBattleState", pR.State), zap.Any("nowRoomEffectivePlayerCount", pR.EffectivePlayerCount))
+		Logger.Warn("OnPlayerDisconnected finished:", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("playerBattleState", pR.Players[playerId].BattleState), zap.Any("nowRoomBattleState", pR.State), zap.Any("nowRoomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("now InputsBuffer", pR.InputsBufferString(true)))
 	}
 }
 
@@ -1065,7 +1065,7 @@ func (pR *Room) shouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFr
 	return false, -1
 }
 
-func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync {
+func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync {
 	/*
 	   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked.
 
@@ -1108,6 +1108,7 @@ func (pR *Room) prefabInputFrameDownsync(inputFrameId int32) *InputFrameDownsync
 
 func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrameUpsync, playerId int32, player *Player) *InputsBufferSnapshot {
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
+	// Step#1, put the received "inputFrameUpsyncBatch" into "pR.InputsBuffer"
 	for _, inputFrameUpsync := range inputFrameUpsyncBatch {
 		clientInputFrameId := inputFrameUpsync.InputFrameId
 		if clientInputFrameId < pR.InputsBuffer.StFrameId {
@@ -1123,22 +1124,17 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 			Logger.Warn(fmt.Sprintf("Dropping too advanced inputFrameUpsync: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v; is this player cheating?", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
-		var targetInputFrameDownsync *InputFrameDownsync = nil
-		if clientInputFrameId == pR.InputsBuffer.EdFrameId {
-			targetInputFrameDownsync = pR.prefabInputFrameDownsync(clientInputFrameId)
-			Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-Prefabbed new inputFrameDownsync from inputFrameUpsync: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
-		} else {
-			targetInputFrameDownsync = pR.InputsBuffer.GetByFrameId(clientInputFrameId).(*InputFrameDownsync)
-			Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-stuffing inputFrameDownsync from inputFrameUpsync: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
-		}
+		// by now "clientInputFrameId <= pR.InputsBuffer.EdFrameId"
+		targetInputFrameDownsync := pR.getOrPrefabInputFrameDownsync(clientInputFrameId)
 		targetInputFrameDownsync.InputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
 
-		if inputFrameUpsync.InputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
-			pR.LatestPlayerUpsyncedInputFrameId = inputFrameUpsync.InputFrameId
+		if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
+			pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
 		}
 	}
 
+	// Step#2, mark confirmation without forcing
 	newAllConfirmedCount := int32(0)
 	inputFrameId1 := pR.LastAllConfirmedInputFrameId + 1
 	totPlayerCnt := uint32(pR.Capacity)
@@ -1156,23 +1152,21 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*InputFrame
 			for _, player := range pR.PlayersArr {
 				thatPlayerBattleState := atomic.LoadInt32(&(player.BattleState))
 				thatPlayerJoinMask := uint64(1 << uint32(player.JoinIndex-1))
-				if 0 == (inputFrameDownsync.ConfirmedList & thatPlayerJoinMask) {
-					if thatPlayerBattleState == PlayerBattleStateIns.ACTIVE {
-						shouldBreakConfirmation = true // Could be an `ACTIVE SLOW TICKER` here, but no action needed for now
-						break
-					} else {
-						Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v, skipping UNCONFIRMED BUT INACTIVE player(id:%v, joinIndex:%v) while checking inputFrameId=[%v, %v): InputsBuffer=%v", pR.Id, player.Id, player.JoinIndex, inputFrameId1, pR.InputsBuffer.EdFrameId, pR.InputsBufferString(false)))
-					}
+				isSlowTicker := (0 == (inputFrameDownsync.ConfirmedList & thatPlayerJoinMask))
+				isActiveSlowTicker := (isSlowTicker && thatPlayerBattleState == PlayerBattleStateIns.ACTIVE)
+				if isActiveSlowTicker {
+					shouldBreakConfirmation = true // Could be an `ACTIVE SLOW TICKER` here, but no action needed for now
+					break
 				}
+				Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v, skipping UNCONFIRMED BUT INACTIVE player(id:%v, joinIndex:%v) while checking inputFrameId=[%v, %v): InputsBuffer=%v", pR.Id, player.Id, player.JoinIndex, inputFrameId1, pR.InputsBuffer.EdFrameId, pR.InputsBufferString(false)))
 			}
 		}
 
 		if shouldBreakConfirmation {
 			break
-		} else {
-			newAllConfirmedCount += 1
-			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
+		newAllConfirmedCount += 1
+		pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 	}
 
 	if 0 < newAllConfirmedCount {
@@ -1217,7 +1211,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
 		if 0 < unconfirmedMask {
-			Logger.Warn(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames), pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
+			Logger.Debug(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames), pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
 		}
 	} else {
 		// Type#2 helps resolve the edge case when all players are disconnected temporarily
@@ -1360,9 +1354,9 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 				}
 				if !characStateAlreadyInAir && characStateIsInterruptWaivable {
 					thatPlayerInNextFrame.VelY = pR.JumpingInitVelY
-					// if 1 == currPlayerDownsync.JoinIndex {
-					// 	Logger.Info(fmt.Sprintf("playerId=%v, joinIndex=%v jumped at {renderFrame.id: %d, virtualX: %d, virtualY: %d, nextVelX: %d, nextVelY: %d, nextCharacterState=%d, inAir=%v}, delayedInputFrame.id=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, thatPlayerInNextFrame.CharacterState, currPlayerDownsync.InAir, delayedInputFrame.InputFrameId))
-					// }
+					if 1 == currPlayerDownsync.JoinIndex {
+						Logger.Info(fmt.Sprintf("playerId=%v, joinIndex=%v jumped at {renderFrame.id: %d, virtualX: %d, virtualY: %d, nextVelX: %d, nextVelY: %d, nextCharacterState=%d, inAir=%v}, delayedInputFrame.id=%d", playerId, joinIndex, currRenderFrame.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, thatPlayerInNextFrame.VelX, thatPlayerInNextFrame.VelY, thatPlayerInNextFrame.CharacterState, currPlayerDownsync.InAir, delayedInputFrame.InputFrameId))
+					}
 				}
 			}
 
@@ -1700,7 +1694,7 @@ func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRend
 
 	if ok, thatRenderFrameId := pR.shouldPrefabInputFrameDownsync(prevRenderFrameId, pR.RenderFrameId); ok {
 		noDelayInputFrameId := pR.ConvertToInputFrameId(thatRenderFrameId, 0)
-		pR.prefabInputFrameDownsync(noDelayInputFrameId)
+		pR.getOrPrefabInputFrameDownsync(noDelayInputFrameId)
 	}
 
 	// Force setting all-confirmed of buffered inputFrames periodically, kindly note that if "pR.BackendDynamicsEnabled", what we want to achieve is "recovery upon reconnection", which certainly requires "forceConfirmationIfApplicable" to move "pR.LastAllConfirmedInputFrameId" forward as much as possible
