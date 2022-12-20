@@ -12,7 +12,6 @@ window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
 window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED = 3;
 window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
 
-
 window.sendSafely = function(msgStr) {
   /**
   * - "If the data can't be sent (for example, because it needs to be buffered but the buffer is full), the socket is closed automatically."
@@ -28,10 +27,13 @@ window.sendUint8AsBase64Safely = function(msgUint8Arr) {
   window.clientSession.send(_uint8ToBase64(msgUint8Arr));
 }
 
-window.closeWSConnection = function() {
-  if (null == window.clientSession || window.clientSession.readyState != WebSocket.OPEN) return;
+window.closeWSConnection = function(code, reason) {
+  if (null == window.clientSession || window.clientSession.readyState != WebSocket.OPEN) {
+    console.log(`"window.clientSession" is already closed or destroyed.`);
+    return;
+  }
   console.log(`Closing "window.clientSession" from the client-side.`);
-  window.clientSession.close();
+  window.clientSession.close(code, reason);
 }
 
 window.getBoundRoomIdFromPersistentStorage = function() {
@@ -184,39 +186,33 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 
   clientSession.onerror = function(evt) {
     console.error("Error caught on the WS clientSession: ", evt);
-    if (window.handleClientSessionError) {
-      window.handleClientSessionError();
-    }
+    window.clearLocalStorageAndBackToLoginScene(true);
   };
 
   clientSession.onclose = function(evt) {
     // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
-    console.warn("The WS clientSession is closed: ", evt, clientSession);
-    if (false == evt.wasClean) {
-      /*
-      Chrome doesn't allow the use of "CustomCloseCode"s (yet) and will callback with a "WebsocketStdCloseCode 1006" and "false == evt.wasClean" here. See https://tools.ietf.org/html/rfc6455#section-7.4 for more information.
-      */
-      if (window.handleClientSessionError) {
-        window.handleClientSessionError();
-      }
-    } else {
-      switch (evt.code) {
-        case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
-        case constants.RET_CODE.PLAYER_NOT_READDABLE_TO_ROOM:
-          window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-          break;
-        case constants.RET_CODE.UNKNOWN_ERROR:
-        case constants.RET_CODE.MYSQL_ERROR:
-        case constants.RET_CODE.PLAYER_NOT_FOUND:
-        case constants.RET_CODE.PLAYER_CHEATING:
-        case 1006: // Peer(i.e. the backend) gone unexpectedly 
-          if (window.handleClientSessionError) {
-            window.handleClientSessionError();
-          }
-          break;
-        default:
-          break;
-      }
+    console.warn(`The WS clientSession is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
+    switch (evt.code) {
+      case constants.RET_CODE.BATTLE_STOPPED:
+        // deliberately do nothing
+        break;
+      case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
+      case constants.RET_CODE.PLAYER_NOT_READDABLE_TO_ROOM:
+        window.clearBoundRoomIdInBothVolatileAndPersistentStorage(); // To favor the player to join other rooms
+        mapIns.onManualRejoinRequired("Couldn't join any room at the moment, please retry");
+        break;
+      case constants.RET_CODE.ACTIVE_WATCHDOG:
+        mapIns.onManualRejoinRequired("Disconnected due to long-time inactivity, please rejoin");
+        break;
+      case constants.RET_CODE.UNKNOWN_ERROR:
+      case constants.RET_CODE.MYSQL_ERROR:
+      case constants.RET_CODE.PLAYER_NOT_FOUND:
+      case constants.RET_CODE.PLAYER_CHEATING:
+      case 1006: // Peer(i.e. the backend) gone unexpectedly 
+        window.clearLocalStorageAndBackToLoginScene(true);
+        break;
+      default:
+        break;
     }
   };
 };
@@ -227,19 +223,7 @@ window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdIn
   if (window.mapIns && window.mapIns.musicEffectManagerScriptIns) {
     window.mapIns.musicEffectManagerScriptIns.stopAllMusic();
   }
-  /**
-   * Here I deliberately removed the callback in the "common `handleClientSessionError` callback"
-   * within which another invocation to `clearLocalStorageAndBackToLoginScene` will be made.
-   *
-   * It'll be re-assigned to the common one upon reentrance of `Map.onLoad`.
-   *
-   * -- YFLu 2019-04-06
-   */
-  window.handleClientSessionError = () => {
-    console.warn("+++++++ Special handleClientSessionError() assigned within `clearLocalStorageAndBackToLoginScene`");
-    // TBD.
-    window.handleClientSessionError = null; // To ensure that it's called at most once. 
-  };
+
   window.closeWSConnection();
   window.clearSelfPlayer();
   if (true != shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {

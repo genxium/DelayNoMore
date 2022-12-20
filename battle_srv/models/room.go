@@ -170,9 +170,10 @@ type Room struct {
 	LastAllConfirmedInputList              []uint64
 	JoinIndexBooleanArr                    []bool
 
-	BackendDynamicsEnabled       bool
-	LastRenderFrameIdTriggeredAt int64
-	PlayerDefaultSpeed           int32
+	BackendDynamicsEnabled              bool
+	ForceAllResyncOnAnyActiveSlowTicker bool
+	LastRenderFrameIdTriggeredAt        int64
+	PlayerDefaultSpeed                  int32
 
 	BulletBattleLocalIdCounter      int32
 	dilutedRollbackEstimatedDtNanos int64
@@ -210,7 +211,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pR.PlayerSignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
 	newWatchdog := NewWatchdog(ConstVals.Ws.WillKickIfInactiveFor, func() {
 		Logger.Warn("Conn inactive watchdog triggered#1:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		signalToCloseConnOfThisPlayer(Constants.RetCode.UnknownError, "")
+		signalToCloseConnOfThisPlayer(Constants.RetCode.ActiveWatchdog, "")
 	})
 	newWatchdog.Stop()
 	pR.PlayerActiveWatchdogDict[playerId] = newWatchdog
@@ -247,7 +248,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pR.PlayerSignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
 	pR.PlayerActiveWatchdogDict[playerId] = NewWatchdog(ConstVals.Ws.WillKickIfInactiveFor, func() {
 		Logger.Warn("Conn inactive watchdog triggered#2:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		signalToCloseConnOfThisPlayer(Constants.RetCode.UnknownError, "")
+		signalToCloseConnOfThisPlayer(Constants.RetCode.ActiveWatchdog, "")
 	}) // For ReAdded player the new watchdog starts immediately
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("joinIndex", pEffectiveInRoomPlayerInstance.JoinIndex), zap.Any("playerBattleState", pEffectiveInRoomPlayerInstance.BattleState), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId), zap.Any("LastSentInputFrameId", pEffectiveInRoomPlayerInstance.LastSentInputFrameId))
@@ -776,7 +777,8 @@ func (pR *Room) OnDismissed() {
 	pR.InputFrameUpsyncDelayTolerance = (pR.NstDelayFrames >> pR.InputScaleFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 12                                            // Don't set this value too high to avoid exhausting frontend CPU within a single frame
 
-	pR.BackendDynamicsEnabled = true // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	pR.BackendDynamicsEnabled = true               // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	pR.ForceAllResyncOnAnyActiveSlowTicker = false // See tradeoff discussion in "downsyncToAllPlayers"
 	punchSkillId := int32(1)
 	pR.MeleeSkillConfig = make(map[int32]*MeleeBullet, 0)
 	pR.MeleeSkillConfig[punchSkillId] = &MeleeBullet{
@@ -1769,7 +1771,7 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 				break
 			}
 			/*
-			   [WARNING] There's a tradeoff here, if the `ACTIVE SLOW TICKER` doesn't resume for a long period of time, the current approach is to kick it out by "connWatchdog" instead of forcing resync of all players in the same battle all the way along.
+			   [WARNING] There's a tradeoff for setting/unsetting "ForceAllResyncOnAnyActiveSlowTicker" here, if the `ACTIVE SLOW TICKER` doesn't resume for a long period of time, the current approach is to kick it out by "connWatchdog" instead of forcing resync of all players in the same battle all the way along.
 
 			   [FIXME]
 			   In practice, I tested in internet environment by toggling player#1 "CPU throttling: 1x -> 4x -> 1x -> 6x -> 1x" and checked the logs of all players which showed that "all received inputFrameIds are consecutive for all players", yet not forcing resync of all players here still result in occasional inconsistent graphics for the `ACTIVE NORMAL TICKER`s.
@@ -1778,7 +1780,7 @@ func (pR *Room) downsyncToAllPlayers(inputsBufferSnapshot *InputsBufferSnapshot)
 			*/
 			thatPlayerJoinMask := uint64(1 << uint32(player.JoinIndex-1))
 			isActiveSlowTicker := (0 < (thatPlayerJoinMask & inputsBufferSnapshot.UnconfirmedMask)) && (PlayerBattleStateIns.ACTIVE == playerBattleState)
-			if isActiveSlowTicker {
+			if pR.ForceAllResyncOnAnyActiveSlowTicker && isActiveSlowTicker {
 				inputsBufferSnapshot.ShouldForceResync = true
 				break
 			}

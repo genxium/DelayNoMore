@@ -11,6 +11,7 @@ window.ALL_MAP_STATES = {
 };
 
 window.ALL_BATTLE_STATES = {
+  NONE: -1,
   WAITING: 0,
   IN_BATTLE: 1,
   IN_SETTLEMENT: 2,
@@ -222,15 +223,19 @@ cc.Class({
   onDestroy() {
     const self = this;
     console.warn("+++++++ Map onDestroy()");
-    if (null == self.battleState || ALL_BATTLE_STATES.WAITING == self.battleState) {
+    if (null == self.battleState || ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     }
     if (null != window.handleBattleColliderInfo) {
       window.handleBattleColliderInfo = null;
     }
-    if (null != window.handleClientSessionError) {
-      window.handleClientSessionError = null;
-    }
+  },
+
+  onManualRejoinRequired(labelString) {
+    const self = this;
+    self.battleState = ALL_BATTLE_STATES.NONE; // Effectively stops "update(dt)" 
+    self.showPopupInCanvas(self.gameRuleNode);
+    self.popupSimplePressToGo(labelString, false);
   },
 
   popupSimplePressToGo(labelString, hideYesButton) {
@@ -334,16 +339,6 @@ cc.Class({
     self.showCriticalCoordinateLabels = false;
 
     console.warn("+++++++ Map onLoad()");
-    window.handleClientSessionError = function() {
-      console.warn('+++++++ Common handleClientSessionError()');
-
-      if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
-        console.log("Battled ended by settlement");
-      } else {
-        console.warn("Connection lost, going back to login page");
-        window.clearLocalStorageAndBackToLoginScene(true);
-      }
-    };
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
@@ -759,6 +754,8 @@ cc.Class({
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
+    window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED);
+    self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
     self.logBattleStats();
     if (self.musicEffectManagerScriptIns) {
@@ -769,7 +766,6 @@ cc.Class({
     const resultPanelScriptIns = resultPanelNode.getComponent("ResultPanel");
     resultPanelScriptIns.showPlayerInfo(self.playerRichInfoDict);
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-    self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.showPopupInCanvas(resultPanelNode);
 
     // Clear player info
@@ -945,6 +941,7 @@ cc.Class({
 
   showPopupInCanvas(toShowNode) {
     const self = this;
+    toShowNode.active = true;
     self.disableInputControls();
     self.transitToState(ALL_MAP_STATES.SHOWING_MODAL_POPUP);
     safelyAddChild(self.widgetsAboveAllNode, toShowNode);

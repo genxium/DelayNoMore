@@ -23,9 +23,9 @@ var constants = {
     FILE_NAME: {
       TREASURE_PICKEDUP: "TreasurePicked",
       CRASHED_BY_TRAP_BULLET: "CrashedByTrapBullet",
-      HIGH_SCORE_TREASURE_PICKED:"HighScoreTreasurePicked",
-      COUNT_DOWN_10SEC_TO_END:"countDown10SecToEnd",
-      BGM: "BGM" 
+      HIGH_SCORE_TREASURE_PICKED: "HighScoreTreasurePicked",
+      COUNT_DOWN_10SEC_TO_END: "countDown10SecToEnd",
+      BGM: "BGM"
     }
   },
   ROUTE_PATH: (_ROUTE_PATH = {
@@ -55,39 +55,40 @@ var constants = {
   },
   RET_CODE: {
     /**
-    * NOTE: The "RET_CODE"s from 1000-1015 are reserved for the websocket "WebsocketStdCloseCode"s.
+    * NOTE: The "RET_CODE"s from 1000-1015 are reserved for the websocket "WebsocketStdCloseCode"s, custom codes should be between 3000-4999
     *
     * References
     * - https://tools.ietf.org/html/rfc6455#section-7.4
     * - https://godoc.org/github.com/gorilla/websocket#pkg-constants.
     */
-    "__comment__": "基础",
-    "OK": 9000,
-    "UNKNOWN_ERROR": 9001,
-    "INVALID_REQUEST_PARAM": 9002,
-    "IS_TEST_ACC": 9003,
-    "MYSQL_ERROR": 9004,
-    "NONEXISTENT_ACT": 9005,
-    "LACK_OF_DIAMOND": 9006,
-    "LACK_OF_GOLD": 9007,
-    "LACK_OF_ENERGY": 9008,
-    "NONEXISTENT_ACT_HANDLER": 9009,
-    "LOCALLY_NO_AVAILABLE_ROOM": 9010,
-    "LOCALLY_NO_SPECIFIED_ROOM": 9011,
-    "PLAYER_NOT_ADDABLE_TO_ROOM": 9012,
-    "PLAYER_NOT_READDABLE_TO_ROOM": 9013,
-    "PLAYER_NOT_FOUND": 9014,
-    "PLAYER_CHEATING": 9015,
-  
+    "__comment__": "Websocket",
+    "OK": 3000,
+    "UNKNOWN_ERROR": 3001,
+    "INVALID_REQUEST_PARAM": 3002,
+    "IS_TEST_ACC": 3003,
+    "MYSQL_ERROR": 3004,
+    "NONEXISTENT_ACT": 3005,
+    "LACK_OF_DIAMOND": 3006,
+    "LACK_OF_GOLD": 3007,
+    "LACK_OF_ENERGY": 3008,
+    "NONEXISTENT_ACT_HANDLER": 3009,
+    "LOCALLY_NO_AVAILABLE_ROOM": 3010,
+    "LOCALLY_NO_SPECIFIED_ROOM": 3011,
+    "PLAYER_NOT_ADDABLE_TO_ROOM": 3012,
+    "PLAYER_NOT_READDABLE_TO_ROOM": 3013,
+    "PLAYER_NOT_FOUND": 3014,
+    "PLAYER_CHEATING": 3015,
+    "WECHAT_SERVER_ERROR": 3016,
+    "IS_BOT_ACC": 3017,
+    "ACTIVE_WATCHDOG": 3018,
+    "BATTLE_STOPPED": 3019,
 
-    "__comment__": "SMS",
-    "SMS_CAPTCHA_REQUESTED_TOO_FREQUENTLY": 5001,
-    "SMS_CAPTCHA_NOT_MATCH": 5002,
+    "__comment__": "OTHERS",
     "INVALID_TOKEN": 2001,
 
     "DUPLICATED": 2002,
     "INCORRECT_HANDLE": 2004,
-    "NONEXISTENT_HANDLE": 2005,
+
     "INCORRECT_PASSWORD": 2006,
     "INCORRECT_CAPTCHA": 2007,
     "INVALID_EMAIL_LITERAL": 2008,
@@ -99,9 +100,14 @@ var constants = {
     "FAILED_TO_DELETE": 2015,
     "FAILED_TO_CREATE": 2016,
     "INCORRECT_PHONE_NUMBER": 2018,
-    "PASSWORD_RESET_CODE_GENERATION_PER_EMAIL_TOO_FREQUENTLY": 4000,
-    "TRADE_CREATION_TOO_FREQUENTLY": 4002,
-    "MAP_NOT_UNLOCKED": 4003,
+    "INSUFFICIENT_MEM_TO_ALLOCATE_CONNECTION": 2019,
+    "PASSWORD_RESET_CODE_GENERATION_PER_EMAIL_TOO_FREQUENTLY": 2020,
+    "TRADE_CREATION_TOO_FREQUENTLY": 2021,
+    "MAP_NOT_UNLOCKED": 2022,
+
+    "GET_SMS_CAPTCHA_RESP_ERROR_CODE": 2023,
+    "SMS_CAPTCHA_REQUESTED_TOO_FREQUENTLY": 2024,
+    "SMS_CAPTCHA_NOT_MATCH": 2025,
 
     "NOT_IMPLEMENTED_YET": 65535
   },
