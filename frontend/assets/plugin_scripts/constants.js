@@ -82,6 +82,7 @@ var constants = {
     "IS_BOT_ACC": 3017,
     "ACTIVE_WATCHDOG": 3018,
     "BATTLE_STOPPED": 3019,
+    "CLIENT_MISMATCHED_RENDER_FRAME": 3020,
 
     "__comment__": "OTHERS",
     "INVALID_TOKEN": 2001,

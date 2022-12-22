@@ -193,6 +193,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
     console.warn(`The WS clientSession is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
     switch (evt.code) {
+      case constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME:
+        break;
       case constants.RET_CODE.BATTLE_STOPPED:
         // deliberately do nothing
         break;
@@ -209,6 +211,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.PLAYER_NOT_FOUND:
       case constants.RET_CODE.PLAYER_CHEATING:
       case 1006: // Peer(i.e. the backend) gone unexpectedly 
+        console.warn(`recentRenderCache=${mapIns._stringifyRecentRenderCache(true)}
+recentInputCache=${mapIns._stringifyRecentInputCache(true)}`);
         window.clearLocalStorageAndBackToLoginScene(true);
         break;
       default:
