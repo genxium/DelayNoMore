@@ -117,6 +117,10 @@ cc.Class({
     return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames);
   },
 
+  _convertToLastUsedRenderFrameId(inputFrameId, inputDelayFrames) {
+    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames + (1 << this.inputScaleFrames) - 1);
+  },
+
   shouldGenerateInputFrameUpsync(renderFrameId) {
     return ((renderFrameId & ((1 << this.inputScaleFrames) - 1)) == 0);
   },
@@ -779,28 +783,15 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
     findingPlayerScriptIns.updatePlayersInfo(rdf.players);
   },
 
-  logBattleStats() {
-    const self = this;
-    let s = [];
-    s.push(`Battle stats: renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
-
-    for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
-      const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
-      s.push(JSON.stringify(inputFrameDownsync));
-    }
-
-    console.log(s.join('\n'));
-  },
-
   onBattleStopped() {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
+    self._stringifyRecentInputAndRenderCacheCorrespondingly();
     window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED);
     self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
-    self.logBattleStats();
     if (self.musicEffectManagerScriptIns) {
       self.musicEffectManagerScriptIns.stopAllMusic();
     }
@@ -908,14 +899,14 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
           const delayedInputFrameId = self._convertToInputFrameId(rdf.id, 0);
           const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.id);
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
-            console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}, @lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}:
+            console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${JSON.stringify(rdf)}
 othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}
-recentRenderCache=${self._stringifyRecentRenderCache(true)}
-recentInputCache=${self._stringifyRecentInputCache(true)}`);
-            closeWSConnection(constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME, "");
-            self.onManualRejoinRequired("[DEBUG] CLIENT_MISMATCHED_RENDER_FRAME");
+${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
+            // closeWSConnection(constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME, "");
+            // self.onManualRejoinRequired("[DEBUG] CLIENT_MISMATCHED_RENDER_FRAME");
             rdf = othersForcedDownsyncRenderFrame;
+            self.othersForcedDownsyncRenderFrameDict.delete(rdf.id);
           }
         }
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
@@ -1601,6 +1592,22 @@ playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColl
       return s.join('\n');
     }
     return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
+  },
+
+  _stringifyRecentInputAndRenderCacheCorrespondingly() {
+    const self = this;
+    let s = [];
+    s.push(`@lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @renderFrameId=${self.renderFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}`);
+
+    for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
+      let jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
+      let j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      if (i == self.recentRenderCache.stFrameId || j > jPrev) {
+        s.push(JSON.stringify(self.recentInputCache.getByFrameId(j)));
+      }
+      s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
+    }
+    return s.join('\n');
   },
 
   worldToVirtualGridPos(x, y) {

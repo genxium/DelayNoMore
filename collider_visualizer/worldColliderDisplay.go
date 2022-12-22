@@ -65,9 +65,11 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	if moveToCollide {
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		toTestPlayerCollider := playerColliders[0]
-		//colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		//newVx, newVy := int32(27999), int32(-420270)
-		//toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
+		newVx, newVy := int32(-189000), int32(-497000)
+		toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		playerColliders[1].X, playerColliders[1].Y = VirtualGridToPolygonColliderBLPos(int32(-165000), int32(-504000), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+        playerColliders[1].Update()
 
 		Logger.Info(fmt.Sprintf("Checking collision for playerShape=%v", ConvexPolygonStr(toTestPlayerCollider.Shape.(*resolv.ConvexPolygon))))
 

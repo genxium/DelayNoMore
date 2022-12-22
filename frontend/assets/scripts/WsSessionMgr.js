@@ -211,8 +211,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.PLAYER_NOT_FOUND:
       case constants.RET_CODE.PLAYER_CHEATING:
       case 1006: // Peer(i.e. the backend) gone unexpectedly 
-        console.warn(`recentRenderCache=${mapIns._stringifyRecentRenderCache(true)}
-recentInputCache=${mapIns._stringifyRecentInputCache(true)}`);
+        console.warn(`${mapIns._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
         window.clearLocalStorageAndBackToLoginScene(true);
         break;
       default:
