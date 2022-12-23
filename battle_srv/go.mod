@@ -1,6 +1,6 @@
 module battle_srv
 
-go 1.19
+go 1.18
 
 require (
 	github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414
@@ -22,6 +22,7 @@ require (
 	google.golang.org/protobuf v1.28.1
 
     dnmshared v0.0.0
+    jsexport v0.0.0
 )
 
 require (
@@ -48,4 +49,5 @@ require (
 
 replace (
 	dnmshared => ../dnmshared
+    jsexport => ../jsexport
 )

@@ -27,7 +27,7 @@ _(how rollback-and-chase in this project roughly works)_
 ## 1.1 Tools to install 
 ### Backend
 - [Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=command%20line%20tools) (on OSX) or [TDM-GCC](https://jmeubank.github.io/tdm-gcc/download/) (on Windows) (a `make` executable mandatory)
-- [Golang1.19.1](https://golang.org/dl/) (mandatory, in China please try a mirror site like [that of ustc](https://mirrors.ustc.edu.cn/golang/))
+- [Golang1.18.6](https://golang.org/dl/) (brought down to 1.18 for GopherJs support, mandatory, in China please try a mirror site like [that of ustc](https://mirrors.ustc.edu.cn/golang/))
 - [MySQL 5.7](https://dev.mysql.com/downloads/windows/installer/5.7.html) (mandatory, for OSX not all versions of 5.7 can be found thus 5.7.24 is recommended)
 - [Redis 3.0.503 or above](https://redis.io/download/) (mandatory)
 - [skeema](https://www.skeema.io/) (optional, only for convenient MySQL schema provisioning)

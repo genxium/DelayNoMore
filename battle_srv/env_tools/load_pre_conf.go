@@ -4,7 +4,7 @@ import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
 	"battle_srv/models"
-	. "battle_srv/protos"
+	. "jsexport/protos"
 	"battle_srv/storage"
 	. "dnmshared"
 	sq "github.com/Masterminds/squirrel"

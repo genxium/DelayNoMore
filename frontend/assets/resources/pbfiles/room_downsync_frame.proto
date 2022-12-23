@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "battle_srv/protos"; // here "./" corresponds to the "--go_out" value in "protoc" command 
+option go_package = "jsexport/protos"; // here "./" corresponds to the "--go_out" value in "protoc" command 
 
 package protos;
 import "geometry.proto"; // The import path here is only w.r.t. the proto file, not the Go package.

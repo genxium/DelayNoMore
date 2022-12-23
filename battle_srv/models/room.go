@@ -3,7 +3,8 @@ package models
 import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
-	. "battle_srv/protos"
+	. "jsexport/protos"
+	. "jsexport/models"
 	. "dnmshared"
 	. "dnmshared/sharedprotos"
 	"encoding/xml"

@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "battle_srv/protos"
+	. "jsexport/protos"
 )
 
 func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]*PlayerDownsync {

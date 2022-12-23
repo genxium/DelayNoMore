@@ -3,7 +3,7 @@ package ws
 import (
 	. "battle_srv/common"
 	"battle_srv/models"
-	pb "battle_srv/protos"
+	pb "jsexport/protos"
 	"container/heap"
 	"fmt"
 	"github.com/gin-gonic/gin"

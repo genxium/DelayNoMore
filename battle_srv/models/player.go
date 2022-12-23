@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "battle_srv/protos"
+	. "jsexport/protos"
 	"battle_srv/storage"
 	. "dnmshared"
 	"fmt"
