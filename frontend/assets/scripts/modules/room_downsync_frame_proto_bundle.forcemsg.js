@@ -3954,6 +3954,214 @@ $root.protos = (function() {
         return InputsBufferSnapshot;
     })();
 
+    protos.Barrier = (function() {
+
+        /**
+         * Properties of a Barrier.
+         * @memberof protos
+         * @interface IBarrier
+         * @property {sharedprotos.Polygon2D|null} [boundary] Barrier boundary
+         */
+
+        /**
+         * Constructs a new Barrier.
+         * @memberof protos
+         * @classdesc Represents a Barrier.
+         * @implements IBarrier
+         * @constructor
+         * @param {protos.IBarrier=} [properties] Properties to set
+         */
+        function Barrier(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Barrier boundary.
+         * @member {sharedprotos.Polygon2D|null|undefined} boundary
+         * @memberof protos.Barrier
+         * @instance
+         */
+        Barrier.prototype.boundary = null;
+
+        /**
+         * Creates a new Barrier instance using the specified properties.
+         * @function create
+         * @memberof protos.Barrier
+         * @static
+         * @param {protos.IBarrier=} [properties] Properties to set
+         * @returns {protos.Barrier} Barrier instance
+         */
+        Barrier.create = function create(properties) {
+            return new Barrier(properties);
+        };
+
+        /**
+         * Encodes the specified Barrier message. Does not implicitly {@link protos.Barrier.verify|verify} messages.
+         * @function encode
+         * @memberof protos.Barrier
+         * @static
+         * @param {protos.Barrier} message Barrier message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Barrier.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.boundary != null && Object.hasOwnProperty.call(message, "boundary"))
+                $root.sharedprotos.Polygon2D.encode(message.boundary, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Barrier message, length delimited. Does not implicitly {@link protos.Barrier.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.Barrier
+         * @static
+         * @param {protos.Barrier} message Barrier message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Barrier.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Barrier message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.Barrier
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.Barrier} Barrier
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Barrier.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Barrier();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.boundary = $root.sharedprotos.Polygon2D.decode(reader, reader.uint32());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Barrier message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.Barrier
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.Barrier} Barrier
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Barrier.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Barrier message.
+         * @function verify
+         * @memberof protos.Barrier
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Barrier.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.boundary != null && message.hasOwnProperty("boundary")) {
+                var error = $root.sharedprotos.Polygon2D.verify(message.boundary);
+                if (error)
+                    return "boundary." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Barrier message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.Barrier
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.Barrier} Barrier
+         */
+        Barrier.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.Barrier)
+                return object;
+            var message = new $root.protos.Barrier();
+            if (object.boundary != null) {
+                if (typeof object.boundary !== "object")
+                    throw TypeError(".protos.Barrier.boundary: object expected");
+                message.boundary = $root.sharedprotos.Polygon2D.fromObject(object.boundary);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Barrier message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.Barrier
+         * @static
+         * @param {protos.Barrier} message Barrier
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Barrier.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults)
+                object.boundary = null;
+            if (message.boundary != null && message.hasOwnProperty("boundary"))
+                object.boundary = $root.sharedprotos.Polygon2D.toObject(message.boundary, options);
+            return object;
+        };
+
+        /**
+         * Converts this Barrier to JSON.
+         * @function toJSON
+         * @memberof protos.Barrier
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Barrier.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Barrier
+         * @function getTypeUrl
+         * @memberof protos.Barrier
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Barrier.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.Barrier";
+        };
+
+        return Barrier;
+    })();
+
     protos.MeleeBullet = (function() {
 
         /**
@@ -5595,11 +5803,12 @@ $root.protos = (function() {
          * @memberof protos
          * @interface IRoomDownsyncFrame
          * @property {number|null} [id] RoomDownsyncFrame id
-         * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
+         * @property {Array.<protos.PlayerDownsync>|null} [playersArr] RoomDownsyncFrame playersArr
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
+         * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
          */
 
         /**
@@ -5611,8 +5820,9 @@ $root.protos = (function() {
          * @param {protos.IRoomDownsyncFrame=} [properties] Properties to set
          */
         function RoomDownsyncFrame(properties) {
-            this.players = {};
+            this.playersArr = [];
             this.meleeBullets = [];
+            this.players = {};
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -5628,12 +5838,12 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.id = 0;
 
         /**
-         * RoomDownsyncFrame players.
-         * @member {Object.<string,protos.PlayerDownsync>} players
+         * RoomDownsyncFrame playersArr.
+         * @member {Array.<protos.PlayerDownsync>} playersArr
          * @memberof protos.RoomDownsyncFrame
          * @instance
          */
-        RoomDownsyncFrame.prototype.players = $util.emptyObject;
+        RoomDownsyncFrame.prototype.playersArr = $util.emptyArray;
 
         /**
          * RoomDownsyncFrame countdownNanos.
@@ -5668,6 +5878,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.shouldForceResync = false;
 
         /**
+         * RoomDownsyncFrame players.
+         * @member {Object.<string,protos.PlayerDownsync>} players
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.players = $util.emptyObject;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5693,11 +5911,9 @@ $root.protos = (function() {
                 writer = $Writer.create();
             if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
-                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
+            if (message.playersArr != null && message.playersArr.length)
+                for (var i = 0; i < message.playersArr.length; ++i)
+                    $root.protos.PlayerDownsync.encode(message.playersArr[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.countdownNanos != null && Object.hasOwnProperty.call(message, "countdownNanos"))
                 writer.uint32(/* id 3, wireType 0 =*/24).int64(message.countdownNanos);
             if (message.meleeBullets != null && message.meleeBullets.length)
@@ -5707,6 +5923,11 @@ $root.protos = (function() {
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
+            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
+                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
+                    writer.uint32(/* id 99, wireType 2 =*/794).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
+                    $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                }
             return writer;
         };
 
@@ -5746,6 +5967,30 @@ $root.protos = (function() {
                         break;
                     }
                 case 2: {
+                        if (!(message.playersArr && message.playersArr.length))
+                            message.playersArr = [];
+                        message.playersArr.push($root.protos.PlayerDownsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 3: {
+                        message.countdownNanos = reader.int64();
+                        break;
+                    }
+                case 4: {
+                        if (!(message.meleeBullets && message.meleeBullets.length))
+                            message.meleeBullets = [];
+                        message.meleeBullets.push($root.protos.MeleeBullet.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 5: {
+                        message.backendUnconfirmedMask = reader.uint64();
+                        break;
+                    }
+                case 6: {
+                        message.shouldForceResync = reader.bool();
+                        break;
+                    }
+                case 99: {
                         if (message.players === $util.emptyObject)
                             message.players = {};
                         var end2 = reader.uint32() + reader.pos;
@@ -5766,24 +6011,6 @@ $root.protos = (function() {
                             }
                         }
                         message.players[key] = value;
-                        break;
-                    }
-                case 3: {
-                        message.countdownNanos = reader.int64();
-                        break;
-                    }
-                case 4: {
-                        if (!(message.meleeBullets && message.meleeBullets.length))
-                            message.meleeBullets = [];
-                        message.meleeBullets.push($root.protos.MeleeBullet.decode(reader, reader.uint32()));
-                        break;
-                    }
-                case 5: {
-                        message.backendUnconfirmedMask = reader.uint64();
-                        break;
-                    }
-                case 6: {
-                        message.shouldForceResync = reader.bool();
                         break;
                     }
                 default:
@@ -5824,18 +6051,13 @@ $root.protos = (function() {
             if (message.id != null && message.hasOwnProperty("id"))
                 if (!$util.isInteger(message.id))
                     return "id: integer expected";
-            if (message.players != null && message.hasOwnProperty("players")) {
-                if (!$util.isObject(message.players))
-                    return "players: object expected";
-                var key = Object.keys(message.players);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "players: integer key{k:int32} expected";
-                    {
-                        var error = $root.protos.PlayerDownsync.verify(message.players[key[i]]);
-                        if (error)
-                            return "players." + error;
-                    }
+            if (message.playersArr != null && message.hasOwnProperty("playersArr")) {
+                if (!Array.isArray(message.playersArr))
+                    return "playersArr: array expected";
+                for (var i = 0; i < message.playersArr.length; ++i) {
+                    var error = $root.protos.PlayerDownsync.verify(message.playersArr[i]);
+                    if (error)
+                        return "playersArr." + error;
                 }
             }
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
@@ -5856,6 +6078,20 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
+            if (message.players != null && message.hasOwnProperty("players")) {
+                if (!$util.isObject(message.players))
+                    return "players: object expected";
+                var key = Object.keys(message.players);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "players: integer key{k:int32} expected";
+                    {
+                        var error = $root.protos.PlayerDownsync.verify(message.players[key[i]]);
+                        if (error)
+                            return "players." + error;
+                    }
+                }
+            }
             return null;
         };
 
@@ -5873,14 +6109,14 @@ $root.protos = (function() {
             var message = new $root.protos.RoomDownsyncFrame();
             if (object.id != null)
                 message.id = object.id | 0;
-            if (object.players) {
-                if (typeof object.players !== "object")
-                    throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
-                message.players = {};
-                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
-                    if (typeof object.players[keys[i]] !== "object")
-                        throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.protos.PlayerDownsync.fromObject(object.players[keys[i]]);
+            if (object.playersArr) {
+                if (!Array.isArray(object.playersArr))
+                    throw TypeError(".protos.RoomDownsyncFrame.playersArr: array expected");
+                message.playersArr = [];
+                for (var i = 0; i < object.playersArr.length; ++i) {
+                    if (typeof object.playersArr[i] !== "object")
+                        throw TypeError(".protos.RoomDownsyncFrame.playersArr: object expected");
+                    message.playersArr[i] = $root.protos.PlayerDownsync.fromObject(object.playersArr[i]);
                 }
             }
             if (object.countdownNanos != null)
@@ -5913,6 +6149,16 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
+            if (object.players) {
+                if (typeof object.players !== "object")
+                    throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
+                message.players = {};
+                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
+                    if (typeof object.players[keys[i]] !== "object")
+                        throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
+                    message.players[keys[i]] = $root.protos.PlayerDownsync.fromObject(object.players[keys[i]]);
+                }
+            }
             return message;
         };
 
@@ -5929,8 +6175,10 @@ $root.protos = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.arrays || options.defaults)
+            if (options.arrays || options.defaults) {
+                object.playersArr = [];
                 object.meleeBullets = [];
+            }
             if (options.objects || options.defaults)
                 object.players = {};
             if (options.defaults) {
@@ -5949,11 +6197,10 @@ $root.protos = (function() {
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
-            var keys2;
-            if (message.players && (keys2 = Object.keys(message.players)).length) {
-                object.players = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.protos.PlayerDownsync.toObject(message.players[keys2[j]], options);
+            if (message.playersArr && message.playersArr.length) {
+                object.playersArr = [];
+                for (var j = 0; j < message.playersArr.length; ++j)
+                    object.playersArr[j] = $root.protos.PlayerDownsync.toObject(message.playersArr[j], options);
             }
             if (message.countdownNanos != null && message.hasOwnProperty("countdownNanos"))
                 if (typeof message.countdownNanos === "number")
@@ -5972,6 +6219,12 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
+            var keys2;
+            if (message.players && (keys2 = Object.keys(message.players)).length) {
+                object.players = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.players[keys2[j]] = $root.protos.PlayerDownsync.toObject(message.players[keys2[j]], options);
+            }
             return object;
         };
 

@@ -45,48 +45,13 @@ const (
 )
 
 const (
-	COLLISION_CATEGORY_CONTROLLED_PLAYER = (1 << 1)
-	COLLISION_CATEGORY_BARRIER           = (1 << 2)
-
-	COLLISION_MASK_FOR_CONTROLLED_PLAYER = (COLLISION_CATEGORY_BARRIER)
-	COLLISION_MASK_FOR_BARRIER           = (COLLISION_CATEGORY_CONTROLLED_PLAYER)
-
-	COLLISION_PLAYER_INDEX_PREFIX  = (1 << 17)
-	COLLISION_BARRIER_INDEX_PREFIX = (1 << 16)
-	COLLISION_BULLET_INDEX_PREFIX  = (1 << 15)
-)
-
-const (
 	MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED = -1
 	MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED      = -2
 )
 
 const (
-	ATK_CHARACTER_STATE_IDLE1        = int32(0)
-	ATK_CHARACTER_STATE_WALKING      = int32(1)
-	ATK_CHARACTER_STATE_ATK1         = int32(2)
-	ATK_CHARACTER_STATE_ATKED1       = int32(3)
-	ATK_CHARACTER_STATE_INAIR_IDLE1  = int32(4)
-	ATK_CHARACTER_STATE_INAIR_ATK1   = int32(5)
-	ATK_CHARACTER_STATE_INAIR_ATKED1 = int32(6)
-)
-
-const (
 	DEFAULT_PLAYER_RADIUS = float64(12)
 )
-
-// These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
-var DIRECTION_DECODER = [][]int32{
-	{0, 0},
-	{0, +2},
-	{0, -2},
-	{+2, 0},
-	{-2, 0},
-	{+1, +1},
-	{-1, -1},
-	{+1, -1},
-	{-1, +1},
-}
 
 type RoomBattleState struct {
 	IDLE                           int32

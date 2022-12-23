@@ -79,6 +79,10 @@ message InputsBufferSnapshot {
   bool shouldForceResync = 4;
 }
 
+message Barrier {
+  sharedprotos.Polygon2D boundary = 1;
+}
+
 message MeleeBullet { 
   // Jargon reference https://www.thegamer.com/fighting-games-frame-data-explained/
   // ALL lengths are in world coordinate
@@ -148,9 +152,11 @@ message BattleColliderInfo {
 
 message RoomDownsyncFrame {
   int32 id = 1;
-  map<int32, PlayerDownsync> players = 2;
+  repeated PlayerDownsync playersArr = 2;
   int64 countdownNanos = 3;
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
   uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
   bool shouldForceResync = 6;
+
+  map<int32, PlayerDownsync> players = 99; // TO BE DEPRECATED 
 }
