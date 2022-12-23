@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "battle_srv/protos"
+	. "jsexport/protos"
 	. "dnmshared"
 	. "dnmshared/sharedprotos"
 	"fmt"

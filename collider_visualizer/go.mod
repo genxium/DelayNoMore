@@ -3,7 +3,7 @@ module viscol
 go 1.18
 
 require (
-	battle_srv v0.0.0
+    jsexport v0.0.0
 	dnmshared v0.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.4.7
@@ -38,6 +38,7 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 )
 
-replace dnmshared => ../dnmshared
-
-replace battle_srv => ../battle_srv
+replace (
+    dnmshared => ../dnmshared
+    jsexport => ../jsexport
+)
