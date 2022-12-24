@@ -1401,8 +1401,7 @@ func (pR *Room) applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputF
 			}
 			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, pR.VirtualGridToWorldRatio)
 			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "MeleeBullet")
-			newBulletCollider.Data = meleeBullet
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			pR.Space.Add(newBulletCollider)
 			collisionSysMap[collisionBulletIndex] = newBulletCollider
 			bulletColliders[collisionBulletIndex] = newBulletCollider
@@ -1625,8 +1624,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	for _, player := range pR.Players {
 		wx, wy := VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
 		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
-		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
-		playerCollider.Data = player
+		playerCollider := GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, player, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
 		pR.Space.Add(playerCollider)
 		// Keep track of the collider in "pR.CollisionSysMap"
 		joinIndex := player.JoinIndex
@@ -1637,8 +1635,7 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 
 	for _, barrier := range pR.Barriers {
 		boundaryUnaligned := barrier.Boundary
-		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, "Barrier")
-		barrierCollider.Data = barrier
+		barrierCollider := GenerateConvexPolygonCollider(boundaryUnaligned, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, barrier, "Barrier")
 		pR.Space.Add(barrierCollider)
 	}
 }

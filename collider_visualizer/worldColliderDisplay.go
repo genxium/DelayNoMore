@@ -45,7 +45,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	topPadding, bottomPadding, leftPadding, rightPadding := snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap
 	for i, playerPos := range playerPosList.Eles {
 		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
+		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
 		Logger.Info(fmt.Sprintf("Player Collider#%d: player world pos=(%.2f, %.2f), shape=%v", i, playerPos.X, playerPos.Y, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
 		playerColliders[i] = playerCollider
 		space.Add(playerCollider)
@@ -53,7 +53,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 
 	barrierLocalId := 0
 	for _, barrierUnaligned := range barrierList.Eles {
-		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
+		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, nil, "Barrier")
 		Logger.Debug(fmt.Sprintf("Added barrier: shape=%v", ConvexPolygonStr(barrierCollider.Shape.(*resolv.ConvexPolygon))))
 		space.Add(barrierCollider)
 		barrierLocalId++
@@ -122,7 +122,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		xfac := float64(1.0)
 		offenderWx, offenderWy := playerPosList.Eles[0].X, playerPosList.Eles[0].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet ->: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
@@ -145,7 +145,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		offenderWx, offenderWy := playerPosList.Eles[1].X, playerPosList.Eles[1].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
 
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet <-: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))

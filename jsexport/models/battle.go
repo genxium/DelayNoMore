@@ -1,10 +1,10 @@
 package models
 
 import (
+	. "dnmshared"
+	. "dnmshared/sharedprotos"
 	"github.com/solarlune/resolv"
-    . "dnmshared/sharedprotos"
-    . "jsexport/protos"
-    . "dnmshared"
+	. "jsexport/protos"
 )
 
 const (
@@ -81,10 +81,10 @@ func CalcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.C
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *InputFrameDownsync, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, inputsBuffer *RingBuffer, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, delayedInputFrameForPrevRenderFrame *InputFrameDownsync, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
 	topPadding, bottomPadding, leftPadding, rightPadding := snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap
 	// [WARNING] This function MUST BE called while "InputsBufferLock" is locked!
-    roomCapacity := len(currRenderFrame.PlayersArr)
+	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
@@ -117,11 +117,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 
 	// 1. Process player inputs
 	if nil != delayedInputFrame {
-		var delayedInputFrameForPrevRenderFrame *InputFrameDownsync = nil
-		tmp := inputsBuffer.GetByFrameId(ConvertToInputFrameId(currRenderFrame.Id-1, inputDelayFrames, inputScaleFrames))
-		if nil != tmp {
-			delayedInputFrameForPrevRenderFrame = tmp.(*InputFrameDownsync)
-		}
 		inputList := delayedInputFrame.InputList
 		for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 			joinIndex := currPlayerDownsync.JoinIndex
@@ -150,16 +145,16 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 				}
 			}
 
-            // Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
-            if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
-                thatPlayerInNextFrame.DirX = decodedInput.Dx
-                thatPlayerInNextFrame.DirY = decodedInput.Dy
-                thatPlayerInNextFrame.VelX = decodedInput.Dx * currPlayerDownsync.Speed
-                thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
-            } else {
-                thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-                thatPlayerInNextFrame.VelX = 0
-            }
+			// Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
+			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
+				thatPlayerInNextFrame.DirX = decodedInput.Dx
+				thatPlayerInNextFrame.DirY = decodedInput.Dy
+				thatPlayerInNextFrame.VelX = decodedInput.Dx * currPlayerDownsync.Speed
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+			} else {
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+				thatPlayerInNextFrame.VelX = 0
+			}
 		}
 	}
 
@@ -187,9 +182,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 		}
 	}
 
-	// 3. Invoke collision system stepping (no-op for backend collision lib)
-
-	// 4. Calc pushbacks for each player (after its movement) w/o bullets
+	// 3. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
@@ -201,6 +194,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 		if collision := playerCollider.Check(0, 0); nil != collision {
 			for _, obj := range collision.Objects {
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
+				// TODO: Make this part work in JavaScript without having to expose all types Barrier/PlayerDownsync/MeleeBullet by js.MakeWrapper.
 				switch obj.Data.(type) {
 				case *Barrier:
 					isBarrier = true
@@ -226,7 +220,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 					thatPlayerInNextFrame.InAir = false
 				}
 				if isAnotherPlayer {
-                   // [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
+					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
 					pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapY
 				}
 				for _, hardPushbackNorm := range hardPushbackNorms[joinIndex-1] {
@@ -262,7 +256,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 		}
 	}
 
-	// 7. Get players out of stuck barriers if there's any
+	// 4. Get players out of stuck barriers if there's any
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
@@ -274,7 +268,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame *Input
 	}
 
 	return &RoomDownsyncFrame{
-		Id:             currRenderFrame.Id + 1,
-		PlayersArr:     nextRenderFramePlayers,
+		Id:         currRenderFrame.Id + 1,
+		PlayersArr: nextRenderFramePlayers,
 	}
 }

@@ -1,5 +1,11 @@
 package dnmshared
 
+const (
+	RING_BUFF_CONSECUTIVE_SET     = int32(0)
+	RING_BUFF_NON_CONSECUTIVE_SET = int32(1)
+	RING_BUFF_FAILED_TO_SET       = int32(2)
+)
+
 type RingBuffer struct {
 	Ed        int32 // write index, open index
 	St        int32 // read index, closed index
@@ -48,15 +54,15 @@ func (rb *RingBuffer) Pop() interface{} {
 	return pItem
 }
 
-func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
-	if 0 == rb.Cnt {
-		return nil
+func (rb *RingBuffer) GetArrIdxByOffset(offsetFromSt int32) int32 {
+	if 0 == rb.Cnt || 0 > offsetFromSt {
+		return -1
 	}
 	arrIdx := rb.St + offsetFromSt
 	if rb.St < rb.Ed {
 		// case#1: 0...st...ed...N-1
 		if rb.St <= arrIdx && arrIdx < rb.Ed {
-			return rb.Eles[arrIdx]
+			return arrIdx
 		}
 	} else {
 		// if rb.St >= rb.Ed
@@ -65,11 +71,19 @@ func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
 			arrIdx -= rb.N
 		}
 		if arrIdx >= rb.St || arrIdx < rb.Ed {
-			return rb.Eles[arrIdx]
+			return arrIdx
 		}
 	}
 
-	return nil
+	return -1
+}
+
+func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
+	arrIdx := rb.GetArrIdxByOffset(offsetFromSt)
+	if -1 == arrIdx {
+		return nil
+	}
+	return rb.Eles[arrIdx]
 }
 
 func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
@@ -77,4 +91,34 @@ func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
 		return nil
 	}
 	return rb.GetByOffset(frameId - rb.StFrameId)
+}
+
+// [WARNING] During a battle, frontend could receive non-consecutive frames (either renderFrame or inputFrame) due to resync, the buffer should handle these frames properly.
+func (rb *RingBuffer) SetByFrameId(pItem interface{}, frameId int32) (int32, int32, int32) {
+	oldStFrameId, oldEdFrameId := rb.StFrameId, rb.EdFrameId
+	if frameId < oldStFrameId {
+		return RING_BUFF_FAILED_TO_SET, oldStFrameId, oldEdFrameId
+	}
+	// By now "rb.StFrameId <= frameId"
+	if oldEdFrameId > frameId {
+		arrIdx := rb.GetArrIdxByOffset(frameId - rb.StFrameId)
+		if -1 != arrIdx {
+			rb.Eles[arrIdx] = pItem
+			return RING_BUFF_CONSECUTIVE_SET, oldStFrameId, oldEdFrameId
+		}
+	}
+
+	// By now "rb.EdFrameId <= frameId"
+	ret := RING_BUFF_CONSECUTIVE_SET
+	if oldEdFrameId < frameId {
+		rb.St, rb.Ed = 0, 0
+		rb.StFrameId, rb.EdFrameId = frameId, frameId
+		rb.Cnt = 0
+		ret = RING_BUFF_NON_CONSECUTIVE_SET
+	}
+
+	// By now "rb.EdFrameId == frameId"
+	rb.Put(pItem)
+
+	return ret, oldStFrameId, oldEdFrameId
 }

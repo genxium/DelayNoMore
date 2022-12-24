@@ -22,19 +22,20 @@ func RectCenterStr(body *resolv.Object, halfBoundingW, halfBoundingH, topPadding
 	return fmt.Sprintf("{%.2f, %.2f}", body.X+leftPadding+halfBoundingW-spaceOffsetX, body.Y+bottomPadding+halfBoundingH-spaceOffsetY)
 }
 
-func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
+func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *resolv.Object {
 	blX, blY := WorldToPolygonColliderBLPos(wx, wy, w*0.5, h*0.5, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY)
-	return generateRectColliderInCollisionSpace(blX, blY, leftPadding+w+rightPadding, bottomPadding+h+topPadding, tag)
+	return generateRectColliderInCollisionSpace(blX, blY, leftPadding+w+rightPadding, bottomPadding+h+topPadding, data, tag)
 }
 
-func generateRectColliderInCollisionSpace(blX, blY, w, h float64, tag string) *resolv.Object {
+func generateRectColliderInCollisionSpace(blX, blY, w, h float64, data interface{}, tag string) *resolv.Object {
 	collider := resolv.NewObject(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details
 	shape := resolv.NewRectangle(0, 0, w, h)
 	collider.SetShape(shape)
+    collider.Data = data 
 	return collider
 }
 
-func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, tag string) *resolv.Object {
+func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *resolv.Object {
 	aligned := AlignPolygon2DToBoundingBox(unalignedSrc)
 	var w, h float64 = 0, 0
 
@@ -60,6 +61,7 @@ func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceO
 
 	collider := resolv.NewObject(aligned.Anchor.X+spaceOffsetX, aligned.Anchor.Y+spaceOffsetY, w, h, tag)
 	collider.SetShape(shape)
+    collider.Data = data
 
 	return collider
 }
