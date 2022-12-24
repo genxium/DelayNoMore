@@ -6,6 +6,7 @@ all: help
 GOPROXY=https://goproxy.io
 
 serve:
+	gopherjs clean
 	gopherjs serve $(PROJECTNAME)
 
 build:

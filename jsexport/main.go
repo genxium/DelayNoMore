@@ -61,6 +61,23 @@ func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets
 	})
 }
 
+func NewInputFrameDownsyncJs(inputFrameId int32, inputList []uint64, confirmedList uint64) *js.Object {
+	return js.MakeFullWrapper(&InputFrameDownsync{
+		InputFrameId:  inputFrameId,
+		InputList:     inputList,
+		ConfirmedList: confirmedList,
+	})
+}
+
+func GetPlayersArrJs(rdf *RoomDownsyncFrame) []*js.Object {
+	// We couldn't just use the existing getters or field names to access non-primitive fields in Js
+	ret := make([]*js.Object, 0, len(rdf.PlayersArr))
+	for _, player := range rdf.PlayersArr {
+		ret = append(ret, js.MakeFullWrapper(player))
+	}
+	return ret
+}
+
 func GenerateRectColliderJs(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
 	/*
 	   [WARNING] It's important to note that we don't need "js.MakeFullWrapper" for a call sequence as follows.
@@ -70,13 +87,15 @@ func GenerateRectColliderJs(wx, wy, w, h, topPadding, bottomPadding, leftPadding
 	       space.Add(a);
 	   ```
 	   The "space" variable doesn't need access to the field of "a" in JavaScript level to run "space.Add(...)" method, which is good.
+    
+       However, the full wrapper access here is used for updating "collider.X/collider.Y" at JavaScript runtime. 
 	*/
-	return js.MakeWrapper(GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag))
+	return js.MakeFullWrapper(GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag))
 
 }
 
 func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
-    return js.MakeWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
+	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
 func CheckCollisionJs(obj *resolv.Object, dx, dy float64) *js.Object {
@@ -92,14 +111,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame, del
 
 func main() {
 	js.Global.Set("gopkgs", map[string]interface{}{
-		"NewVec2DJs":             NewVec2DJs,
-		"NewPolygon2DJs":         NewPolygon2DJs,
-		"NewBarrierJs":           NewBarrierJs,
-		"NewPlayerDownsyncJs":    NewPlayerDownsyncJs,
-		"NewRoomDownsyncFrameJs": NewRoomDownsyncFrameJs,
-		"NewCollisionSpaceJs":    NewCollisionSpaceJs,
-		"GenerateRectColliderJs": GenerateRectColliderJs,
-        "GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
-		"CheckCollisionJs":       CheckCollisionJs,
+		"NewVec2DJs":                      NewVec2DJs,
+		"NewPolygon2DJs":                  NewPolygon2DJs,
+		"NewBarrierJs":                    NewBarrierJs,
+		"NewPlayerDownsyncJs":             NewPlayerDownsyncJs,
+		"NewRoomDownsyncFrameJs":          NewRoomDownsyncFrameJs,
+		"NewCollisionSpaceJs":             NewCollisionSpaceJs,
+		"NewInputFrameDownsyncJs":         NewInputFrameDownsyncJs,
+		"GenerateRectColliderJs":          GenerateRectColliderJs,
+		"GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
+		"GetPlayersArrJs":                 GetPlayersArrJs,
+		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
+		"CheckCollisionJs": CheckCollisionJs,
 	})
 }

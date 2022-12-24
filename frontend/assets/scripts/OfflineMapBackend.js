@@ -76,7 +76,7 @@ cc.Class({
     self.snapIntoPlatformOverlap = 0.1;
     self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
     self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -0.5*self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
+    [self.gravityX, self.gravityY] = [0, -0.5 * self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -107,12 +107,13 @@ cc.Class({
       self.node.setPosition(cc.v2(0, 0));
 
       self._resetCurrentMatch();
-	  const spaceW = newMapSize.width * newTileSize.width;
-	  const spaceH = newMapSize.height * newTileSize.height;
-      const spaceOffsetX = (spaceW >> 1); 
-      const spaceOffsetY = (spaceH >> 1); 
-	  const minStep = 8;
+      const spaceW = newMapSize.width * newTileSize.width;
+      const spaceH = newMapSize.height * newTileSize.height;
+      self.spaceOffsetX = (spaceW >> 1);
+      self.spaceOffsetY = (spaceH >> 1);
+      const minStep = 8;
       self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs(spaceW, spaceH, minStep, minStep);
+      self.gopkgsCollisionSysMap = {}; // [WARNING] Don't use "JavaScript Map" which could cause loss of type information when passing through Golang transpiled functions!
 
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
@@ -124,7 +125,7 @@ cc.Class({
         const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
         const gopkgsBarrier = gopkgs.NewBarrierJs(gopkgsBoundary);
 
-        const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, spaceOffsetX, spaceOffsetY, gopkgsBarrier, "Barrier");
+        const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
         self.gopkgsCollisionSys.Add(newBarrierCollider);
 
         if (false && self.showCriticalCoordinateLabels) {
@@ -161,7 +162,7 @@ cc.Class({
         // console.log("Created barrier: ", newBarrierCollider);
         ++barrierIdCounter;
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
-        self.collisionSysMap.set(collisionBarrierIndex, newBarrierCollider);
+        self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
 
       const startPlayer1 = gopkgs.NewPlayerDownsyncJs(10, self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0], self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1], 0, 0, 0, 0, 1 * self.worldToVirtualGridRatio, 0, window.ATK_CHARACTER_STATE.InAirIdle1[0], 1, 100, 100, true, 12);
@@ -171,7 +172,11 @@ cc.Class({
       const startRdf = gopkgs.NewRoomDownsyncFrameJs(window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START, [startPlayer1, startPlayer2], []);
 
       self.selfPlayerInfo = {
-        id: 11
+        Id: 11,
+        JoinIndex: 2,
+        // For compatibility
+        id: 11,
+        joinIndex: 2,
       };
       self.onRoomDownsyncFrame(startRdf);
 
@@ -200,7 +205,7 @@ cc.Class({
           currSelfInput = prevAndCurrInputs[1];
         }
 
-        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
+        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, false);
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         self.showDebugBoundaries(rdf);
         ++self.renderFrameId;
@@ -229,7 +234,7 @@ cc.Class({
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
       shouldForceResync = false;
-      self.othersForcedDownsyncRenderFrameDict.set(rdf.id, rdf);
+      self.othersForcedDownsyncRenderFrameDict.set(rdf.Id, rdf);
     }
     /*
     TODO
@@ -250,8 +255,7 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    const players = rdf.Players;
-    self._initPlayerRichInfoDict(players);
+    self._initPlayerRichInfoDict(gopkgs.GetPlayersArrJs(rdf));
 
     if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
@@ -272,5 +276,122 @@ cc.Class({
     }
     // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
     return dumpRenderCacheRet;
+  },
+
+  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
+    const self = this;
+    let prevLatestRdf = null,
+      latestRdf = null;
+    for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
+      const currRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
+      if (null == currRdf) {
+        throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
+      }
+      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      const delayedInputFrame = self.recentInputCache.getByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
+      if (null == delayedInputFrame) {
+        // Shouldn't happen!
+        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
+      }
+
+      const delayedInputFrameJs = gopkgs.NewInputFrameDownsyncJs(j, delayedInputFrame.inputList, delayedInputFrame.confirmedList);
+      const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
+      const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
+      const delayedInputFrameForPrevRenderFrameJs = gopkgs.NewInputFrameDownsyncJs(jPrev, delayedInputFrameForPrevRenderFrame.inputList, delayedInputFrameForPrevRenderFrame.confirmedList);
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrameJs, delayedInputFrameForPrevRenderFrameJs, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
+
+      if (true == isChasing) {
+        // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+        self.chaserRenderFrameId = nextRdf.id;
+      } else if (nextRdf.id == self.chaserRenderFrameId + 1) {
+        self.chaserRenderFrameId = nextRdf.id; // To avoid redundant calculation 
+      }
+      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.id);
+      prevLatestRdf = currRdf;
+      latestRdf = nextRdf;
+    }
+
+    return [prevLatestRdf, latestRdf];
+  },
+
+  _initPlayerRichInfoDict(playersArr) {
+    const self = this;
+    for (let k in playersArr) {
+      const immediatePlayerInfo = playersArr[k];
+      const playerId = immediatePlayerInfo.Id;
+      if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
+      self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
+
+      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.JoinIndex, immediatePlayerInfo.VirtualGridX, immediatePlayerInfo.VirtualGridY, immediatePlayerInfo);
+
+      Object.assign(self.playerRichInfoDict.get(playerId), {
+        node: nodeAndScriptIns[0],
+        scriptIns: nodeAndScriptIns[1],
+      });
+
+      if (self.selfPlayerInfo.Id == playerId) {
+        self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
+        nodeAndScriptIns[1].showArrowTipNode();
+      }
+    }
+    self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
+      self.playerRichInfoArr[playerRichInfo.JoinIndex - 1] = playerRichInfo;
+    });
+  },
+
+  applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
+    const self = this;
+    const playersArr = gopkgs.GetPlayersArrJs(rdf);
+    for (let k in playersArr) {
+      const currPlayerDownsync = playersArr[k];
+      const prevRdfPlayer = (null == prevRdf ? null : gopkgs.GetPlayersArrJs(prevRdf)[k]);
+      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
+      const playerRichInfo = self.playerRichInfoArr[k];
+      playerRichInfo.node.setPosition(wx, wy);
+      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
+      currPlayerDownsync.characterState = currPlayerDownsync.CharacterState;
+      currPlayerDownsync.dirX = currPlayerDownsync.DirX;
+      currPlayerDownsync.dirY = currPlayerDownsync.DirY;
+      currPlayerDownsync.framesToRecover = currPlayerDownsync.FrameToRecover;
+      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
+    }
+  },
+
+  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
+    const self = this;
+    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
+    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    if (1 == joinIndex) {
+      playerScriptIns.setSpecies("SoldierWaterGhost");
+    } else if (2 == joinIndex) {
+      playerScriptIns.setSpecies("UltramanTiga");
+    }
+
+    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    newPlayerNode.setPosition(wx, wy);
+    playerScriptIns.mapNode = self.node;
+    const halfColliderWidth = playerDownsyncInfo.ColliderRadius,
+      halfColliderHeight = playerDownsyncInfo.ColliderRadius + playerDownsyncInfo.ColliderRadius; // avoid multiplying
+    const colliderWidth = halfColliderWidth + halfColliderWidth,
+      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
+    const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
+    self.gopkgsCollisionSys.Add(newPlayerCollider);
+    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
+    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
+
+    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
+
+    safelyAddChild(self.node, newPlayerNode);
+    setLocalZOrder(newPlayerNode, 5);
+
+    newPlayerNode.active = true;
+    playerDownsyncInfo.characterState = playerDownsyncInfo.CharacterState;
+    playerDownsyncInfo.dirX = playerDownsyncInfo.DirX;
+    playerDownsyncInfo.dirY = playerDownsyncInfo.DirY;
+    playerDownsyncInfo.framesToRecover = playerDownsyncInfo.FrameToRecover;
+    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
+
+    return [newPlayerNode, playerScriptIns];
   },
 });
