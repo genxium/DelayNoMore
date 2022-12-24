@@ -89,7 +89,6 @@ cc.Class({
 
       tiledMapIns.tmxAsset = null;
       mapNode.removeAllChildren();
-      self._resetCurrentMatch();
 
       if (self.showCriticalCoordinateLabels) {
         const drawer = new cc.Node();
@@ -101,25 +100,32 @@ cc.Class({
         self.g = g;
       }
 
-
       tiledMapIns.tmxAsset = tmxAsset;
       const newMapSize = tiledMapIns.getMapSize();
       const newTileSize = tiledMapIns.getTileSize();
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
 
+      self._resetCurrentMatch();
+	  const spaceW = newMapSize.width * newTileSize.width;
+	  const spaceH = newMapSize.height * newTileSize.height;
+      const spaceOffsetX = (spaceW >> 1); 
+      const spaceOffsetY = (spaceH >> 1); 
+	  const minStep = 8;
+      self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs(spaceW, spaceH, minStep, minStep);
+
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
       for (let boundaryObj of boundaryObjs.barriers) {
-        const x0 = boundaryObj.anchor.x,
-          y0 = boundaryObj.anchor.y;
+        const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(boundaryObj.anchor.x, boundaryObj.anchor.y);
+        const gopkgsBoundaryPts = Array.from(boundaryObj, p => {
+          return gopkgs.NewVec2DJs(p.x, p.y);
+        });
+        const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
+        const gopkgsBarrier = gopkgs.NewBarrierJs(gopkgsBoundary);
 
-        const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
-          return [p.x, p.y];
-        }));
-        newBarrier.data = {
-          hardPushback: true
-        };
+        const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, spaceOffsetX, spaceOffsetY, gopkgsBarrier, "Barrier");
+        self.gopkgsCollisionSys.Add(newBarrierCollider);
 
         if (false && self.showCriticalCoordinateLabels) {
           for (let i = 0; i < boundaryObj.length; ++i) {
@@ -152,51 +158,21 @@ cc.Class({
           }
 
         }
-        // console.log("Created barrier: ", newBarrier);
+        // console.log("Created barrier: ", newBarrierCollider);
         ++barrierIdCounter;
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
-        self.collisionSysMap.set(collisionBarrierIndex, newBarrier);
+        self.collisionSysMap.set(collisionBarrierIndex, newBarrierCollider);
       }
 
-      const startRdf = window.pb.protos.RoomDownsyncFrame.create({
-        id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
-        players: {
-          10: window.pb.protos.PlayerDownsync.create({
-            id: 10,
-            joinIndex: 1,
-            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0],
-            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1],
-            speed: 1 * self.worldToVirtualGridRatio,
-            colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
-            framesToRecover: 0,
-            dirX: 0,
-            dirY: 0,
-            velX: 0,
-            velY: 0,
-            inAir: true,
-          }),
-          11: window.pb.protos.PlayerDownsync.create({
-            id: 11,
-            joinIndex: 2,
-            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0],
-            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1],
-            speed: 1 * self.worldToVirtualGridRatio,
-            colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
-            framesToRecover: 0,
-            dirX: 0,
-            dirY: 0,
-            velX: 0,
-            velY: 0,
-            inAir: true,
-          }),
-        }
-      });
+      const startPlayer1 = gopkgs.NewPlayerDownsyncJs(10, self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0], self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1], 0, 0, 0, 0, 1 * self.worldToVirtualGridRatio, 0, window.ATK_CHARACTER_STATE.InAirIdle1[0], 1, 100, 100, true, 12);
+
+      const startPlayer2 = gopkgs.NewPlayerDownsyncJs(11, self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0], self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1], 0, 0, 0, 0, 1 * self.worldToVirtualGridRatio, 0, window.ATK_CHARACTER_STATE.InAirIdle1[0], 2, 100, 100, true, 12);
+
+      const startRdf = gopkgs.NewRoomDownsyncFrameJs(window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START, [startPlayer1, startPlayer2], []);
+
       self.selfPlayerInfo = {
         id: 11
       };
-      self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
@@ -219,7 +195,7 @@ cc.Class({
           currSelfInput = null;
         const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
         if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId);
+          const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];
         }
@@ -234,5 +210,67 @@ cc.Class({
         console.error("Error during Map.update", err);
       }
     }
+  },
+
+  onRoomDownsyncFrame(rdf, accompaniedInputFrameDownsyncBatch) {
+    // This function is also applicable to "re-joining".
+    const self = window.mapIns;
+    self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
+    if (!self.recentRenderCache) {
+      return;
+    }
+    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
+      return;
+    }
+    const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
+    let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
+    let shouldForceResync = rdf.ShouldForceResync;
+    const notSelfUnconfirmed = (0 == (rdf.BackendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
+    if (notSelfUnconfirmed) {
+      shouldForceDumping2 = false;
+      shouldForceResync = false;
+      self.othersForcedDownsyncRenderFrameDict.set(rdf.id, rdf);
+    }
+    /*
+    TODO
+    
+    If "BackendUnconfirmedMask" is non-all-1 and contains the current player, show a label/button to hint manual reconnection. Note that the continuity of "recentInputCache" is not a good indicator, because due to network delay upon a [type#1 forceConfirmation] a player might just lag in upsync networking and have all consecutive inputFrameIds locally. 
+    */
+
+    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
+    if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
+      throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.id=${rdf.id}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
+    }
+    if (!shouldForceResync && (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet)) {
+      /*
+      Don't change 
+      - chaserRenderFrameId, it's updated only in "rollbackAndChase & onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
+      */
+      return dumpRenderCacheRet;
+    }
+
+    // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
+    const players = rdf.Players;
+    self._initPlayerRichInfoDict(players);
+
+    if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
+      // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
+
+      if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id) {
+        console.log('On battle started! renderFrameId=', rdf.Id);
+      }
+      self.renderFrameId = rdf.Id;
+      self.lastRenderFrameIdTriggeredAt = performance.now();
+      // In this case it must be true that "rdf.id > chaserRenderFrameId".
+      self.chaserRenderFrameId = rdf.Id;
+
+      const canvasNode = self.canvasNode;
+      self.ctrl = canvasNode.getComponent("TouchEventsManager");
+      self.enableInputControls();
+      self.transitToState(ALL_MAP_STATES.VISUAL);
+      self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
+    }
+    // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
+    return dumpRenderCacheRet;
   },
 });

@@ -278,6 +278,7 @@
     "renderFrameIdLagTolerance": 4,
     "jigglingEps1D": 0.001,
     "bulletTriggerEnabled": true,
+    "closeOnForcedtoResyncNotSelf": true,
     "_id": "4b+kZ46VhC0LCBixXEK2dk"
   },
   {
@@ -460,7 +461,7 @@
       "array": [
         0,
         0,
-        216.50635094610968,
+        216.05530045313827,
         0,
         0,
         0,

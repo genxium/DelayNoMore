@@ -75,6 +75,10 @@ func GenerateRectColliderJs(wx, wy, w, h, topPadding, bottomPadding, leftPadding
 
 }
 
+func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
+    return js.MakeWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
+}
+
 func CheckCollisionJs(obj *resolv.Object, dx, dy float64) *js.Object {
 	// TODO: Support multiple tags in the future
 	// Unfortunately I couldn't find a way to just call "var a = GenerateRectColliderJs(...); space.Add(a); a.Check(...)" to get the collision result, the unwrapped method will result in stack overflow. Need a better solution later.
@@ -95,6 +99,7 @@ func main() {
 		"NewRoomDownsyncFrameJs": NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":    NewCollisionSpaceJs,
 		"GenerateRectColliderJs": GenerateRectColliderJs,
+        "GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
 		"CheckCollisionJs":       CheckCollisionJs,
 	})
 }

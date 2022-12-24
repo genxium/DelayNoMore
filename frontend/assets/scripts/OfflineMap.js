@@ -196,7 +196,6 @@ cc.Class({
       self.selfPlayerInfo = {
         id: 11
       };
-      self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
@@ -219,7 +218,7 @@ cc.Class({
           currSelfInput = null;
         const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
         if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId);
+          const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];
         }

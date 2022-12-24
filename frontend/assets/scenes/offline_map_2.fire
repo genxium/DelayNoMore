@@ -249,7 +249,7 @@
     "_id": "3crA1nz5xPSLAnCSLQIPOq"
   },
   {
-    "__type__": "47d7dy4S4lB2pxqJJlGOoai",
+    "__type__": "b3810kDSWtD14RhiYzulYVI",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -279,7 +279,7 @@
     "jigglingEps1D": 0.001,
     "bulletTriggerEnabled": true,
     "closeOnForcedtoResyncNotSelf": true,
-    "_id": "4b+kZ46VhC0LCBixXEK2dk"
+    "_id": "e5xQdv12xLoIRr0b36Pie+"
   },
   {
     "__type__": "cc.Node",
@@ -461,7 +461,7 @@
       "array": [
         0,
         0,
-        209.64964554467088,
+        216.05530045313827,
         0,
         0,
         0,

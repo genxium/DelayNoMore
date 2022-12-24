@@ -641,10 +641,6 @@ cc.Class({
       self.lastRenderFrameIdTriggeredAt = performance.now();
       // In this case it must be true that "rdf.id > chaserRenderFrameId".
       self.chaserRenderFrameId = rdf.id;
-      const candidateLastAllConfirmedInputFrame = self._convertToInputFrameId(rdf.id - 1, self.inputDelayFrames);
-      if (self.lastAllConfirmedInputFrame < candidateLastAllConfirmedInputFrame) {
-        self.lastAllConfirmedInputFrame = candidateLastAllConfirmedInputFrame;
-      }
 
       const canvasNode = self.canvasNode;
       self.ctrl = canvasNode.getComponent("TouchEventsManager");
