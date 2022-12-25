@@ -43,7 +43,7 @@ func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputSca
 	return ((renderFrameId - inputDelayFrames) >> inputScaleFrames)
 }
 
-func DecodeInput(encodedInput uint64) *InputFrameDecoded {
+func decodeInput(encodedInput uint64) *InputFrameDecoded {
 	encodedDirection := (encodedInput & uint64(15))
 	btnALevel := int32((encodedInput >> 4) & 1)
 	btnBLevel := int32((encodedInput >> 5) & 1)
@@ -255,7 +255,7 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
-func CalcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) []Vec2D {
+func calcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) []Vec2D {
 	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
 	collision := playerCollider.Check(0, 0)
 	if nil == collision {
@@ -281,8 +281,9 @@ func CalcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.C
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, delayedInputFrameForPrevRenderFrame *InputFrameDownsync, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
-	// [WARNING] This function MUST BE called while "InputsBufferLock" is locked!
+// [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
+	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
 	// Make a copy first
@@ -315,18 +316,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, delay
 	hardPushbackNorms := make([][]Vec2D, roomCapacity)
 
 	// 1. Process player inputs
-	if nil != delayedInputFrame {
-		inputList := delayedInputFrame.InputList
+	if nil != delayedInputList {
 		for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 			joinIndex := currPlayerDownsync.JoinIndex
 			thatPlayerInNextFrame := nextRenderFramePlayers[i]
 			if 0 < thatPlayerInNextFrame.FramesToRecover {
 				continue
 			}
-			decodedInput := DecodeInput(inputList[joinIndex-1])
+			decodedInput := decodeInput(delayedInputList[joinIndex-1])
 			prevBtnBLevel := int32(0)
-			if nil != delayedInputFrameForPrevRenderFrame {
-				prevDecodedInput := DecodeInput(delayedInputFrameForPrevRenderFrame.InputList[joinIndex-1])
+			if nil != delayedInputListForPrevRenderFrame {
+				prevDecodedInput := decodeInput(delayedInputListForPrevRenderFrame[joinIndex-1])
 				prevBtnBLevel = prevDecodedInput.BtnBLevel
 			}
 
@@ -386,7 +386,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, delay
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 		playerCollider := collisionSysMap[collisionPlayerIndex]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-		hardPushbackNorms[joinIndex-1] = CalcHardPushbacksNorms(playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
+		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		fallStopping := false
 		if collision := playerCollider.Check(0, 0); nil != collision {
@@ -394,12 +394,13 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, delay
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
 				// TODO: Make this part work in JavaScript without having to expose all types Barrier/PlayerDownsync/MeleeBullet by js.MakeWrapper.
 				switch obj.Data.(type) {
-				case *Barrier:
-					isBarrier = true
 				case *PlayerDownsync:
 					isAnotherPlayer = true
 				case *MeleeBullet:
 					isBullet = true
+				default:
+					// By default it's a regular barrier, even if data is nil
+					isBarrier = true
 				}
 				if isBullet {
 					// ignore bullets for this step

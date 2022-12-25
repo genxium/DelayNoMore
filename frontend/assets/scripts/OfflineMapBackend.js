@@ -294,11 +294,9 @@ cc.Class({
         throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
 
-      const delayedInputFrameJs = gopkgs.NewInputFrameDownsyncJs(j, delayedInputFrame.inputList, delayedInputFrame.confirmedList);
       const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
       const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
-      const delayedInputFrameForPrevRenderFrameJs = gopkgs.NewInputFrameDownsyncJs(jPrev, delayedInputFrameForPrevRenderFrame.inputList, delayedInputFrameForPrevRenderFrame.confirmedList);
-      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrameJs, delayedInputFrameForPrevRenderFrameJs, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame.inputList, (null == delayedInputFrameForPrevRenderFrame ? null : delayedInputFrameForPrevRenderFrame.inputList), currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!

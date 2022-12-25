@@ -47,12 +47,6 @@ type InputFrameUpsync struct {
 	Encoded      uint64
 }
 
-type InputFrameDownsync struct {
-	InputFrameId  int32
-	InputList     []uint64
-	ConfirmedList uint64
-}
-
 type Barrier struct {
 	Boundary *Polygon2D
 }

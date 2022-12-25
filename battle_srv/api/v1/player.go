@@ -5,7 +5,7 @@ import (
 	. "battle_srv/common"
 	"battle_srv/common/utils"
 	"battle_srv/models"
-	. "jsexport/protos"
+	. "battle_srv/protos"
 	"battle_srv/storage"
 	"bytes"
 	"crypto/sha256"
