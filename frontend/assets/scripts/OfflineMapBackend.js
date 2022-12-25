@@ -13,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
@@ -375,7 +375,18 @@ cc.Class({
       halfColliderHeight = playerDownsyncInfo.ColliderRadius + playerDownsyncInfo.ColliderRadius; // avoid multiplying
     const colliderWidth = halfColliderWidth + halfColliderWidth,
       colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
-    const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
+
+    const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY);
+    const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(cx, cy);
+    const gopkgsBoundaryPts = [
+      gopkgs.NewVec2DJs(0, 0),
+      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, 0),
+      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap),
+      gopkgs.NewVec2DJs(0, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap)
+    ];
+    const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
+    const newPlayerCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
+    //const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
     self.gopkgsCollisionSys.Add(newPlayerCollider);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
@@ -393,5 +404,46 @@ cc.Class({
     playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
 
     return [newPlayerNode, playerScriptIns];
+  },
+
+  showDebugBoundaries(rdf) {
+    const self = this;
+    const leftPadding = self.snapIntoPlatformOverlap,
+      rightPadding = self.snapIntoPlatformOverlap,
+      topPadding = self.snapIntoPlatformOverlap,
+      bottomPadding = self.snapIntoPlatformOverlap;
+    if (self.showCriticalCoordinateLabels) {
+      let g = self.g;
+      g.clear();
+
+      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys); 
+      for (let k in collisionSpaceObjs) {
+        const body = collisionSpaceObjs[k];
+        let padding = 0;
+        if (null != body.Data && null != body.Data.JoinIndex) {
+          // character
+          if (1 == body.Data.JoinIndex) {
+            g.strokeColor = cc.Color.BLUE;
+          } else {
+            g.strokeColor = cc.Color.RED;
+          }
+          padding = self.snapIntoPlatformOverlap;
+        } else {
+          // barrier
+          g.strokeColor = cc.Color.WHITE;
+        }
+        const points = body.Shape.Points; 
+        const wpos = [body.X-self.spaceOffsetX, body.Y-self.spaceOffsetY];
+        g.moveTo(wpos[0], wpos[1]);
+        const cnt = points.length;
+        for (let j = 0; j < cnt; j += 1) {
+          const x = wpos[0]+points[j][0],
+            y = wpos[1]+points[j][1];
+          g.lineTo(x, y);
+        }
+        g.lineTo(wpos[0], wpos[1]);
+        g.stroke();
+      }
+    }
   },
 });

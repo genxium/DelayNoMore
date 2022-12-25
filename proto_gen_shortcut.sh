@@ -9,7 +9,7 @@ protoc -I=$golang_basedir_1/../frontend/assets/resources/pbfiles/ --go_out=. geo
 echo "GOLANG part 1 done"
 
 # [WARNING] The following "room_downsync_frame.proto" is generated in another Go package than "geometry.proto", but the generated Go codes are also required to work with imports correctly!
-golang_basedir_2=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/jsexport
+golang_basedir_2=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/battle_srv
 protoc -I=$golang_basedir_2/../frontend/assets/resources/pbfiles/ --go_out=. room_downsync_frame.proto 
 echo "GOLANG part 2 done"
 
