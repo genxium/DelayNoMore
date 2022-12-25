@@ -1,8 +1,8 @@
 package main
 
 import (
+	"resolv"
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/solarlune/resolv"
 	. "jsexport/battle"
 )
 
@@ -51,6 +51,7 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 }
 
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets []*MeleeBullet) *js.Object {
+	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
 		Id:           id,
 		PlayersArr:   playersArr,
@@ -59,19 +60,11 @@ func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets
 }
 
 func GetCollisionSpaceObjsJs(space *resolv.Space) []*js.Object {
+	// [WARNING] We couldn't just use the existing method "space.Objects()" to access them in JavaScript, there'd a stackoverflow error
 	objs := space.Objects()
 	ret := make([]*js.Object, 0, len(objs))
 	for _, obj := range objs {
 		ret = append(ret, js.MakeFullWrapper(obj))
-	}
-	return ret
-}
-
-func GetPlayersArrJs(rdf *RoomDownsyncFrame) []*js.Object {
-	// We couldn't just use the existing getters or field names to access non-primitive fields in Js
-	ret := make([]*js.Object, 0, len(rdf.PlayersArr))
-	for _, player := range rdf.PlayersArr {
-		ret = append(ret, js.MakeFullWrapper(player))
 	}
 	return ret
 }
@@ -96,12 +89,6 @@ func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spac
 	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
-func CheckCollisionJs(obj *resolv.Object, dx, dy float64) *js.Object {
-	// TODO: Support multiple tags in the future
-	// Unfortunately I couldn't find a way to just call "var a = GenerateRectColliderJs(...); space.Add(a); a.Check(...)" to get the collision result, the unwrapped method will result in stack overflow. Need a better solution later.
-	return js.MakeFullWrapper(obj.Check(dx, dy))
-}
-
 func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
 	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio))
@@ -117,11 +104,9 @@ func main() {
 		"NewCollisionSpaceJs":             NewCollisionSpaceJs,
 		"GenerateRectColliderJs":          GenerateRectColliderJs,
 		"GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
-		"GetPlayersArrJs":                 GetPlayersArrJs,
 		"GetCollisionSpaceObjsJs":         GetCollisionSpaceObjsJs,
 		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
 		"WorldToPolygonColliderBLPos":                          WorldToPolygonColliderBLPos, // No need to wrap primitive return types
 		"PolygonColliderBLToWorldPos":                          PolygonColliderBLToWorldPos,
-		"CheckCollisionJs":                                     CheckCollisionJs,
 	})
 }

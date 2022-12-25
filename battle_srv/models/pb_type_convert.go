@@ -5,6 +5,17 @@ import (
 	"jsexport/battle"
 )
 
+func toPbRenderFrame(rdf *battle.RoomDownsyncFrame) {
+    if nil == rdf {
+        return nil
+    }
+    ret := &pb.RoomDownsyncFrame{
+        Id: rdf.Id,
+        PlayersArr: make([]pb.PlayerDownsync, len(rdf.PlayersArr)),
+        MeleeBullets: make([]pb.MeleeBullet, len(rdf.MeleeBullets)),
+    }
+}
+
 func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]*pb.PlayerDownsync {
 	toRet := make(map[int32]*pb.PlayerDownsync, 0)
 	if nil == modelInstances {
@@ -39,7 +50,7 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]
 	return toRet
 }
 
-func toJsPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]*battle.PlayerDownsync {
+func toJsPlayers(modelInstances map[int32]*Player) map[int32]*battle.PlayerDownsync {
 	toRet := make(map[int32]*battle.PlayerDownsync, 0)
 	if nil == modelInstances {
 		return toRet
@@ -62,11 +73,6 @@ func toJsPlayers(modelInstances map[int32]*Player, withMetaInfo bool) map[int32]
 			ColliderRadius: last.ColliderRadius,
 			Score:          last.Score,
 			Removed:        last.Removed,
-		}
-		if withMetaInfo {
-			toRet[k].Name = last.Name
-			toRet[k].DisplayName = last.DisplayName
-			toRet[k].Avatar = last.Avatar
 		}
 	}
 

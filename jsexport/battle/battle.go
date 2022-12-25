@@ -1,8 +1,7 @@
 package battle
 
 import (
-	"github.com/kvartborg/vector"
-	"github.com/solarlune/resolv"
+	"resolv"
 	"math"
 )
 
@@ -61,7 +60,7 @@ type SatResult struct {
 	OverlapY      float64
 	AContainedInB bool
 	BContainedInA bool
-	Axis          vector.Vector
+	Axis          resolv.Vector
 }
 
 func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64, *SatResult) {
@@ -77,7 +76,7 @@ func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.Conve
 		OverlapY:      0,
 		AContainedInB: true,
 		BContainedInA: true,
-		Axis:          vector.Vector{0, 0},
+		Axis:          resolv.Vector{0, 0},
 	}
 	if overlapped := isPolygonPairOverlapped(playerShape, barrierShape, overlapResult); overlapped {
 		pushbackX, pushbackY := overlapResult.Overlap*overlapResult.OverlapX, overlapResult.Overlap*overlapResult.OverlapY
@@ -116,7 +115,7 @@ func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 	return true
 }
 
-func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e vector.Vector, result *SatResult) bool {
+func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, result *SatResult) bool {
 	/*
 		[WARNING] This function is deliberately made private, it shouldn't be used alone (i.e. not along the norms of a polygon), otherwise the pushbacks calculated would be meaningless.
 

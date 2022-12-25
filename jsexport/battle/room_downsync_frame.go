@@ -30,9 +30,6 @@ type PlayerDownsync struct {
 	MaxHp             int32
 	CharacterState    int32
 	InAir             bool
-	Name              string
-	DisplayName       string
-	Avatar            string
 }
 
 type InputFrameDecoded struct {
@@ -80,5 +77,4 @@ type RoomDownsyncFrame struct {
 	MeleeBullets           []*MeleeBullet
 	BackendUnconfirmedMask uint64
 	ShouldForceResync      bool
-	Players                map[int32]*PlayerDownsync
 }

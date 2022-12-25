@@ -49,22 +49,17 @@ cc.Class({
         recoveryFrames: 34, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
         recoveryFramesOnBlock: 34,
         recoveryFramesOnHit: 34,
-        moveforward: {
-          x: 0,
-          y: 0,
-        },
         hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
-        hitboxSize: {
-          x: 23.0,
-          y: 32.0,
-        },
-
         // for defender
         hitStunFrames: 18,
         blockStunFrames: 9,
         pushback: 8.0,
         releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
-        damage: 5
+        damage: 5,
+        hitboxSizeX: 24.0,
+        hitboxSizeY: 32.0,
+        selfMoveforwardX: 0,
+        selfMoveforwardY: 0,
       }
     };
 
@@ -255,7 +250,7 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    self._initPlayerRichInfoDict(gopkgs.GetPlayersArrJs(rdf));
+    self._initPlayerRichInfoDict(rdf.PlayersArr);
 
     if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
@@ -340,10 +335,10 @@ cc.Class({
 
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
-    const playersArr = gopkgs.GetPlayersArrJs(rdf);
+    const playersArr = rdf.PlayersArr;
     for (let k in playersArr) {
       const currPlayerDownsync = playersArr[k];
-      const prevRdfPlayer = (null == prevRdf ? null : gopkgs.GetPlayersArrJs(prevRdf)[k]);
+      const prevRdfPlayer = (null == prevRdf ? null : prevRdf.PlayersArr[k]);
       const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
       const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
