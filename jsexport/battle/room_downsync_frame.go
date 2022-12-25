@@ -1,5 +1,7 @@
 package battle
 
+// TODO: Replace all "int32", "int64", "uint32" and "uint64" with just "int" for better performance in JavaScript! Reference https://github.com/gopherjs/gopherjs#performance-tips
+
 type Vec2D struct {
 	X float64
 	Y float64
@@ -56,9 +58,7 @@ type MeleeBullet struct {
 	RecoveryFrames          int32
 	RecoveryFramesOnBlock   int32
 	RecoveryFramesOnHit     int32
-	Moveforward             *Vec2D
 	HitboxOffset            float64
-	HitboxSize              *Vec2D
 	OriginatedRenderFrameId int32
 	// for defender
 	HitStunFrames      int32
@@ -68,6 +68,11 @@ type MeleeBullet struct {
 	Damage             int32
 	OffenderJoinIndex  int32
 	OffenderPlayerId   int32
+
+	SelfMoveforwardX float64
+	SelfMoveforwardY float64
+	HitboxSizeX      float64
+	HitboxSizeY      float64
 }
 
 type RoomDownsyncFrame struct {

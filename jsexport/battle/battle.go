@@ -1,8 +1,8 @@
 package battle
 
 import (
-	"resolv"
 	"math"
+	"resolv"
 )
 
 const (
@@ -35,7 +35,7 @@ const (
 	ATK_CHARACTER_STATE_INAIR_ATKED1 = int32(6)
 )
 
-func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputScaleFrames int32) int32 {
+func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputScaleFrames uint32) int32 {
 	if renderFrameId < inputDelayFrames {
 		return 0
 	}
@@ -281,7 +281,7 @@ func calcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.C
 }
 
 // [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)

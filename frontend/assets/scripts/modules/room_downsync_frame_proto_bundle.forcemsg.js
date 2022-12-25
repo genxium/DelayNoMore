@@ -4607,6 +4607,7 @@ $root.protos = (function() {
          * @property {number|null} [jumpingInitVelY] BattleColliderInfo jumpingInitVelY
          * @property {number|null} [gravityX] BattleColliderInfo gravityX
          * @property {number|null} [gravityY] BattleColliderInfo gravityY
+         * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
          */
 
         /**
@@ -4858,6 +4859,14 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.gravityY = 0;
 
         /**
+         * BattleColliderInfo collisionMinStep.
+         * @member {number} collisionMinStep
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.collisionMinStep = 0;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof protos.BattleColliderInfo
@@ -4942,6 +4951,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 28, wireType 0 =*/224).int32(message.gravityX);
             if (message.gravityY != null && Object.hasOwnProperty.call(message, "gravityY"))
                 writer.uint32(/* id 29, wireType 0 =*/232).int32(message.gravityY);
+            if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
+                writer.uint32(/* id 30, wireType 0 =*/240).int32(message.collisionMinStep);
             return writer;
         };
 
@@ -5111,6 +5122,10 @@ $root.protos = (function() {
                         message.gravityY = reader.int32();
                         break;
                     }
+                case 30: {
+                        message.collisionMinStep = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5244,6 +5259,9 @@ $root.protos = (function() {
             if (message.gravityY != null && message.hasOwnProperty("gravityY"))
                 if (!$util.isInteger(message.gravityY))
                     return "gravityY: integer expected";
+            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
+                if (!$util.isInteger(message.collisionMinStep))
+                    return "collisionMinStep: integer expected";
             return null;
         };
 
@@ -5339,6 +5357,8 @@ $root.protos = (function() {
                 message.gravityX = object.gravityX | 0;
             if (object.gravityY != null)
                 message.gravityY = object.gravityY | 0;
+            if (object.collisionMinStep != null)
+                message.collisionMinStep = object.collisionMinStep | 0;
             return message;
         };
 
@@ -5394,6 +5414,7 @@ $root.protos = (function() {
                 object.jumpingInitVelY = 0;
                 object.gravityX = 0;
                 object.gravityY = 0;
+                object.collisionMinStep = 0;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -5463,6 +5484,8 @@ $root.protos = (function() {
                 object.gravityX = message.gravityX;
             if (message.gravityY != null && message.hasOwnProperty("gravityY"))
                 object.gravityY = message.gravityY;
+            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
+                object.collisionMinStep = message.collisionMinStep;
             return object;
         };
 
@@ -5507,7 +5530,6 @@ $root.protos = (function() {
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
-         * @property {Object.<string,protos.PlayerDownsync>|null} [players] RoomDownsyncFrame players
          */
 
         /**
@@ -5521,7 +5543,6 @@ $root.protos = (function() {
         function RoomDownsyncFrame(properties) {
             this.playersArr = [];
             this.meleeBullets = [];
-            this.players = {};
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -5577,14 +5598,6 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.shouldForceResync = false;
 
         /**
-         * RoomDownsyncFrame players.
-         * @member {Object.<string,protos.PlayerDownsync>} players
-         * @memberof protos.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.players = $util.emptyObject;
-
-        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5622,11 +5635,6 @@ $root.protos = (function() {
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
-            if (message.players != null && Object.hasOwnProperty.call(message, "players"))
-                for (var keys = Object.keys(message.players), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 99, wireType 2 =*/794).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.protos.PlayerDownsync.encode(message.players[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
             return writer;
         };
 
@@ -5657,7 +5665,7 @@ $root.protos = (function() {
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -5687,29 +5695,6 @@ $root.protos = (function() {
                     }
                 case 6: {
                         message.shouldForceResync = reader.bool();
-                        break;
-                    }
-                case 99: {
-                        if (message.players === $util.emptyObject)
-                            message.players = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.protos.PlayerDownsync.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.players[key] = value;
                         break;
                     }
                 default:
@@ -5777,20 +5762,6 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
-            if (message.players != null && message.hasOwnProperty("players")) {
-                if (!$util.isObject(message.players))
-                    return "players: object expected";
-                var key = Object.keys(message.players);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "players: integer key{k:int32} expected";
-                    {
-                        var error = $root.protos.PlayerDownsync.verify(message.players[key[i]]);
-                        if (error)
-                            return "players." + error;
-                    }
-                }
-            }
             return null;
         };
 
@@ -5848,16 +5819,6 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
-            if (object.players) {
-                if (typeof object.players !== "object")
-                    throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
-                message.players = {};
-                for (var keys = Object.keys(object.players), i = 0; i < keys.length; ++i) {
-                    if (typeof object.players[keys[i]] !== "object")
-                        throw TypeError(".protos.RoomDownsyncFrame.players: object expected");
-                    message.players[keys[i]] = $root.protos.PlayerDownsync.fromObject(object.players[keys[i]]);
-                }
-            }
             return message;
         };
 
@@ -5878,8 +5839,6 @@ $root.protos = (function() {
                 object.playersArr = [];
                 object.meleeBullets = [];
             }
-            if (options.objects || options.defaults)
-                object.players = {};
             if (options.defaults) {
                 object.id = 0;
                 if ($util.Long) {
@@ -5918,12 +5877,6 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
-            var keys2;
-            if (message.players && (keys2 = Object.keys(message.players)).length) {
-                object.players = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.players[keys2[j]] = $root.protos.PlayerDownsync.toObject(message.players[keys2[j]], options);
-            }
             return object;
         };
 

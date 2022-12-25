@@ -146,6 +146,7 @@ message BattleColliderInfo {
   int32 jumpingInitVelY = 27;
   int32 gravityX = 28;
   int32 gravityY = 29;
+  int32 collisionMinStep = 30;
 }
 
 message RoomDownsyncFrame {
@@ -155,6 +156,4 @@ message RoomDownsyncFrame {
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
   uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
   bool shouldForceResync = 6;
-
-  map<int32, PlayerDownsync> players = 99; // TO BE DEPRECATED 
 }

@@ -31,6 +31,7 @@ cc.Class({
     self.inputDelayFrames = 8;
     self.inputScaleFrames = 2;
     self.inputFrameUpsyncDelayTolerance = 2;
+    self.collisionMinStep = 8;
 
     self.renderCacheSize = 1024;
     self.serverFps = 60;
@@ -101,15 +102,12 @@ cc.Class({
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
 
-      self._resetCurrentMatch();
-      const spaceW = newMapSize.width * newTileSize.width;
-      const spaceH = newMapSize.height * newTileSize.height;
-      self.spaceOffsetX = (spaceW >> 1);
-      self.spaceOffsetY = (spaceH >> 1);
-      const minStep = 8;
-      self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs(spaceW, spaceH, minStep, minStep);
-      self.gopkgsCollisionSysMap = {}; // [WARNING] Don't use "JavaScript Map" which could cause loss of type information when passing through Golang transpiled functions!
+      self.stageDiscreteW = newMapSize.width;
+      self.stageDiscreteH = newMapSize.height;
+      self.stageTileW = newTileSize.width;
+      self.stageTileH = newTileSize.height;
 
+      self._resetCurrentMatch();
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
       for (let boundaryObj of boundaryObjs.barriers) {
@@ -160,11 +158,41 @@ cc.Class({
         self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
 
-      const startPlayer1 = gopkgs.NewPlayerDownsyncJs(10, self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0], self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1], 0, 0, 0, 0, 1 * self.worldToVirtualGridRatio, 0, window.ATK_CHARACTER_STATE.InAirIdle1[0], 1, 100, 100, true, 12);
-
-      const startPlayer2 = gopkgs.NewPlayerDownsyncJs(11, self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0], self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1], 0, 0, 0, 0, 1 * self.worldToVirtualGridRatio, 0, window.ATK_CHARACTER_STATE.InAirIdle1[0], 2, 100, 100, true, 12);
-
-      const startRdf = gopkgs.NewRoomDownsyncFrameJs(window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START, [startPlayer1, startPlayer2], []);
+      const startRdf = window.pb.protos.RoomDownsyncFrame.create({
+        id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
+        playersArr: [
+          window.pb.protos.PlayerDownsync.create({
+            id: 10,
+            joinIndex: 1,
+            virtualGridX: boundaryObjs.playerStartingPositions[0].x * self.worldToVirtualGridRatio,
+            virtualGridY: boundaryObjs.playerStartingPositions[0].y * self.worldToVirtualGridRatio,
+            speed: 1 * self.worldToVirtualGridRatio,
+            colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
+            framesToRecover: 0,
+            dirX: 0,
+            dirY: 0,
+            velX: 0,
+            velY: 0,
+            inAir: true,
+          }),
+          window.pb.protos.PlayerDownsync.create({
+            id: 11,
+            joinIndex: 2,
+            virtualGridX: boundaryObjs.playerStartingPositions[1].x * self.worldToVirtualGridRatio,
+            virtualGridY: boundaryObjs.playerStartingPositions[1].y * self.worldToVirtualGridRatio,
+            speed: 1 * self.worldToVirtualGridRatio,
+            colliderRadius: 12,
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
+            framesToRecover: 0,
+            dirX: 0,
+            dirY: 0,
+            velX: 0,
+            velY: 0,
+            inAir: true,
+          }),
+        ]
+      });
 
       self.selfPlayerInfo = {
         Id: 11,
@@ -212,231 +240,4 @@ cc.Class({
     }
   },
 
-  onRoomDownsyncFrame(rdf, accompaniedInputFrameDownsyncBatch) {
-    // This function is also applicable to "re-joining".
-    const self = window.mapIns;
-    self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
-    if (!self.recentRenderCache) {
-      return;
-    }
-    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
-      return;
-    }
-    const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
-    let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
-    let shouldForceResync = rdf.ShouldForceResync;
-    const notSelfUnconfirmed = (0 == (rdf.BackendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
-    if (notSelfUnconfirmed) {
-      shouldForceDumping2 = false;
-      shouldForceResync = false;
-      self.othersForcedDownsyncRenderFrameDict.set(rdf.Id, rdf);
-    }
-    /*
-    TODO
-    
-    If "BackendUnconfirmedMask" is non-all-1 and contains the current player, show a label/button to hint manual reconnection. Note that the continuity of "recentInputCache" is not a good indicator, because due to network delay upon a [type#1 forceConfirmation] a player might just lag in upsync networking and have all consecutive inputFrameIds locally. 
-    */
-
-    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
-    if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
-      throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.id=${rdf.id}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
-    }
-    if (!shouldForceResync && (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdf.id && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet)) {
-      /*
-      Don't change 
-      - chaserRenderFrameId, it's updated only in "rollbackAndChase & onInputFrameDownsyncBatch" (except for when RING_BUFF_NON_CONSECUTIVE_SET)
-      */
-      return dumpRenderCacheRet;
-    }
-
-    // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    self._initPlayerRichInfoDict(rdf.PlayersArr);
-
-    if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
-      // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
-
-      if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id) {
-        console.log('On battle started! renderFrameId=', rdf.Id);
-      }
-      self.renderFrameId = rdf.Id;
-      self.lastRenderFrameIdTriggeredAt = performance.now();
-      // In this case it must be true that "rdf.id > chaserRenderFrameId".
-      self.chaserRenderFrameId = rdf.Id;
-
-      const canvasNode = self.canvasNode;
-      self.ctrl = canvasNode.getComponent("TouchEventsManager");
-      self.enableInputControls();
-      self.transitToState(ALL_MAP_STATES.VISUAL);
-      self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
-    }
-    // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
-    return dumpRenderCacheRet;
-  },
-
-  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
-    const self = this;
-    let prevLatestRdf = null,
-      latestRdf = null;
-    for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
-      const currRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
-      if (null == currRdf) {
-        throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
-      }
-      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      const delayedInputFrame = self.recentInputCache.getByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
-      if (null == delayedInputFrame) {
-        // Shouldn't happen!
-        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
-      }
-
-      const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
-      const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
-      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame.inputList, (null == delayedInputFrameForPrevRenderFrame ? null : delayedInputFrameForPrevRenderFrame.inputList), currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
-
-      if (true == isChasing) {
-        // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
-        self.chaserRenderFrameId = nextRdf.id;
-      } else if (nextRdf.id == self.chaserRenderFrameId + 1) {
-        self.chaserRenderFrameId = nextRdf.id; // To avoid redundant calculation 
-      }
-      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.id);
-      prevLatestRdf = currRdf;
-      latestRdf = nextRdf;
-    }
-
-    return [prevLatestRdf, latestRdf];
-  },
-
-  _initPlayerRichInfoDict(playersArr) {
-    const self = this;
-    for (let k in playersArr) {
-      const immediatePlayerInfo = playersArr[k];
-      const playerId = immediatePlayerInfo.Id;
-      if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
-      self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
-
-      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.JoinIndex, immediatePlayerInfo.VirtualGridX, immediatePlayerInfo.VirtualGridY, immediatePlayerInfo);
-
-      Object.assign(self.playerRichInfoDict.get(playerId), {
-        node: nodeAndScriptIns[0],
-        scriptIns: nodeAndScriptIns[1],
-      });
-
-      if (self.selfPlayerInfo.Id == playerId) {
-        self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
-        nodeAndScriptIns[1].showArrowTipNode();
-      }
-    }
-    self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      self.playerRichInfoArr[playerRichInfo.JoinIndex - 1] = playerRichInfo;
-    });
-  },
-
-  applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
-    const self = this;
-    const playersArr = rdf.PlayersArr;
-    for (let k in playersArr) {
-      const currPlayerDownsync = playersArr[k];
-      const prevRdfPlayer = (null == prevRdf ? null : prevRdf.PlayersArr[k]);
-      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
-      const playerRichInfo = self.playerRichInfoArr[k];
-      playerRichInfo.node.setPosition(wx, wy);
-      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
-      currPlayerDownsync.characterState = currPlayerDownsync.CharacterState;
-      currPlayerDownsync.dirX = currPlayerDownsync.DirX;
-      currPlayerDownsync.dirY = currPlayerDownsync.DirY;
-      currPlayerDownsync.framesToRecover = currPlayerDownsync.FrameToRecover;
-      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
-    }
-  },
-
-  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
-    const self = this;
-    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
-    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
-    if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierWaterGhost");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("UltramanTiga");
-    }
-
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    newPlayerNode.setPosition(wx, wy);
-    playerScriptIns.mapNode = self.node;
-    const halfColliderWidth = playerDownsyncInfo.ColliderRadius,
-      halfColliderHeight = playerDownsyncInfo.ColliderRadius + playerDownsyncInfo.ColliderRadius; // avoid multiplying
-    const colliderWidth = halfColliderWidth + halfColliderWidth,
-      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
-
-    const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY);
-    const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(cx, cy);
-    const gopkgsBoundaryPts = [
-      gopkgs.NewVec2DJs(0, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap),
-      gopkgs.NewVec2DJs(0, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap)
-    ];
-    const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
-    const newPlayerCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    //const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    self.gopkgsCollisionSys.Add(newPlayerCollider);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
-
-    safelyAddChild(self.node, newPlayerNode);
-    setLocalZOrder(newPlayerNode, 5);
-
-    newPlayerNode.active = true;
-    playerDownsyncInfo.characterState = playerDownsyncInfo.CharacterState;
-    playerDownsyncInfo.dirX = playerDownsyncInfo.DirX;
-    playerDownsyncInfo.dirY = playerDownsyncInfo.DirY;
-    playerDownsyncInfo.framesToRecover = playerDownsyncInfo.FrameToRecover;
-    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
-
-    return [newPlayerNode, playerScriptIns];
-  },
-
-  showDebugBoundaries(rdf) {
-    const self = this;
-    const leftPadding = self.snapIntoPlatformOverlap,
-      rightPadding = self.snapIntoPlatformOverlap,
-      topPadding = self.snapIntoPlatformOverlap,
-      bottomPadding = self.snapIntoPlatformOverlap;
-    if (self.showCriticalCoordinateLabels) {
-      let g = self.g;
-      g.clear();
-
-      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys); 
-      for (let k in collisionSpaceObjs) {
-        const body = collisionSpaceObjs[k];
-        let padding = 0;
-        if (null != body.Data && null != body.Data.JoinIndex) {
-          // character
-          if (1 == body.Data.JoinIndex) {
-            g.strokeColor = cc.Color.BLUE;
-          } else {
-            g.strokeColor = cc.Color.RED;
-          }
-          padding = self.snapIntoPlatformOverlap;
-        } else {
-          // barrier
-          g.strokeColor = cc.Color.WHITE;
-        }
-        const points = body.Shape.Points; 
-        const wpos = [body.X-self.spaceOffsetX, body.Y-self.spaceOffsetY];
-        g.moveTo(wpos[0], wpos[1]);
-        const cnt = points.length;
-        for (let j = 0; j < cnt; j += 1) {
-          const x = wpos[0]+points[j][0],
-            y = wpos[1]+points[j][1];
-          g.lineTo(x, y);
-        }
-        g.lineTo(wpos[0], wpos[1]);
-        g.stroke();
-      }
-    }
-  },
 });

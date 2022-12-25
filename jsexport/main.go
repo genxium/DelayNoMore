@@ -1,9 +1,9 @@
 package main
 
 import (
-	"resolv"
 	"github.com/gopherjs/gopherjs/js"
 	. "jsexport/battle"
+	"resolv"
 )
 
 func NewCollisionSpaceJs(spaceW, spaceH, minStepW, minStepH int) *js.Object {
@@ -50,6 +50,31 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
+func NewMeleeBulletJs(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitStunFrames, blockStunFrames, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId int32, pushback, hitboxOffset, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY float64) *js.Object {
+	return js.MakeWrapper(&MeleeBullet{
+		BattleLocalId:         battleLocalId,
+		StartupFrames:         startupFrames,
+		ActiveFrames:          activeFrames,
+		RecoveryFrames:        recoveryFrames,
+		RecoveryFramesOnBlock: recoveryFramesOnBlock,
+		RecoveryFramesOnHit:   recoveryFramesOnHit,
+		HitboxOffset:          hitboxOffset,
+		HitStunFrames:         hitStunFrames,
+		BlockStunFrames:       blockStunFrames,
+		Pushback:              pushback,
+		ReleaseTriggerType:    releaseTriggerType,
+		Damage:                damage,
+
+		SelfMoveforwardX: selfMoveforwardX,
+		SelfMoveforwardY: selfMoveforwardY,
+		HitboxSizeX:      hitboxSizeX,
+		HitboxSizeY:      hitboxSizeY,
+
+		OffenderJoinIndex: offenderJoinIndex,
+		OffenderPlayerId:  offenderPlayerId,
+	})
+}
+
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets []*MeleeBullet) *js.Object {
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
@@ -89,7 +114,7 @@ func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spac
 	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames int32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *js.Object {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
 	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio))
 }

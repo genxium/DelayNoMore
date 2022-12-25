@@ -16,13 +16,13 @@ require (
 	github.com/jmoiron/sqlx v0.0.0-20180614180643-0dae4fefe7c0
 	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
-	github.com/solarlune/resolv v0.5.1
 	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713
 	go.uber.org/zap v1.9.1
 	google.golang.org/protobuf v1.28.1
 
     dnmshared v0.0.0
     jsexport v0.0.0
+    resolv v0.0.0
 )
 
 require (
@@ -50,4 +50,5 @@ require (
 replace (
 	dnmshared => ../dnmshared
     jsexport => ../jsexport
+    resolv => ../resolv_tailored
 )

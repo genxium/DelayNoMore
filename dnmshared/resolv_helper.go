@@ -1,9 +1,9 @@
 package dnmshared
 
 import (
-	. "jsexport/battle"
 	"fmt"
-	"github.com/solarlune/resolv"
+	. "jsexport/battle"
+	"resolv"
 	"strings"
 )
 
