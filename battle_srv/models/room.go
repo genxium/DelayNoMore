@@ -13,13 +13,13 @@ import (
 	"io/ioutil"
 	"jsexport/battle"
 	"math/rand"
-	"os"
 	"path/filepath"
 	"resolv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+    "os"
 )
 
 const (
@@ -146,6 +146,8 @@ type Room struct {
 
 	TmxPointsMap   StrToVec2DListMap
 	TmxPolygonsMap StrToPolygon2DListMap
+
+	rdfIdToActuallyUsedInput map[int32]*pb.InputFrameDownsync
 }
 
 func (pR *Room) updateScore() {
@@ -342,6 +344,32 @@ func (pR *Room) InputsBufferString(allDetails bool) string {
 	}
 }
 
+func (pR *Room) inputFrameDownsyncStr(inputFrameDownsync *pb.InputFrameDownsync) string {
+	if nil == inputFrameDownsync {
+		return ""
+	}
+	s := make([]string, 0)
+	s = append(s, fmt.Sprintf("InputFrameId:%d", inputFrameDownsync.InputFrameId))
+	ss := make([]string, 0)
+	for _, v := range inputFrameDownsync.InputList {
+		ss = append(ss, fmt.Sprintf("\"%d\"", v))
+	}
+	s = append(s, fmt.Sprintf("InputList:[%v]", strings.Join(ss, ",")))
+	//s = append(s, fmt.Sprintf("ConfirmedList:%d", inputFrameDownsync.ConfirmedList))
+
+	return strings.Join(s, ",")
+}
+
+func (pR *Room) rdfIdToActuallyUsedInputString() string {
+	// Appending of the array of strings can be very SLOW due to on-demand heap allocation! Use this printing with caution.
+	s := make([]string, 0)
+	for rdfId := pR.RenderFrameBuffer.StFrameId; rdfId < pR.RenderFrameBuffer.EdFrameId; rdfId++ {
+		s = append(s, fmt.Sprintf("rdfId:%d\nactuallyUsedinputList:{%v}", rdfId, pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
+	}
+
+	return strings.Join(s, "\n")
+}
+
 func (pR *Room) StartBattle() {
 	if RoomBattleStateIns.WAITING != pR.State {
 		Logger.Debug("[StartBattle] Battle not started due to not being WAITING!", zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State))
@@ -378,7 +406,9 @@ func (pR *Room) StartBattle() {
 				Logger.Error("battleMainLoop, recovery spot#1, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
 			}
 			pR.StopBattleForSettlement()
+            rdfIdToActuallyUsedInputDump := pR.rdfIdToActuallyUsedInputString()
 			Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(false))) // This takes sometime to print
+            os.WriteFile(fmt.Sprintf("room_%d.txt", pR.Id), []byte(rdfIdToActuallyUsedInputDump), 0644) // DEBUG ONLY
 			pR.onBattleStoppedForSettlement()
 		}()
 
@@ -708,6 +738,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderCacheSize = 1024
 	pR.RenderFrameBuffer = NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
+	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
 
 	pR.LatestPlayerUpsyncedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameId = -1
@@ -724,7 +755,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
-	pR.BattleDurationFrames = 60 * pR.ServerFps
+	pR.BattleDurationFrames = 15 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = (pR.NstDelayFrames >> pR.InputScaleFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 12                                            // Don't set this value too high to avoid exhausting frontend CPU within a single frame
@@ -1232,6 +1263,16 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				}
 				delayedInputFrameForPrevRenderFrame := tmp.(*pb.InputFrameDownsync)
 				delayedInputListForPrevRenderFrame = &delayedInputFrameForPrevRenderFrame.InputList
+			}
+
+			actuallyUsedInputClone := make([]uint64, len(*delayedInputList), len(*delayedInputList))
+			for i, v := range *delayedInputList {
+				actuallyUsedInputClone[i] = v
+			}
+			pR.rdfIdToActuallyUsedInput[currRenderFrame.Id] = &pb.InputFrameDownsync{
+				InputFrameId:  delayedInputFrame.InputFrameId,
+				InputList:     actuallyUsedInputClone,
+				ConfirmedList: delayedInputFrame.ConfirmedList,
 			}
 		}
 

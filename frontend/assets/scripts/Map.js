@@ -161,7 +161,7 @@ cc.Class({
         inputList: prefabbedInputList,
         confirmedList: (1 << (joinIndex - 1))
       });
-
+      // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.inputFrameId}`);
       self.recentInputCache.put(prefabbedInputFrameDownsync);
     }
 
@@ -325,6 +325,7 @@ cc.Class({
     self.battleState = ALL_BATTLE_STATES.WAITING;
 
     self.othersForcedDownsyncRenderFrameDict = new Map();
+    self.rdfIdToActuallyUsedInput = new Map();
 
     self.countdownNanos = null;
     if (self.countdownLabel) {
@@ -753,6 +754,7 @@ cc.Class({
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
+      //console.log(`Confirmed inputFrameId=${inputFrameDownsync.inputFrameId}`);
       const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.setByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
       if (window.RING_BUFF_FAILED_TO_SET == ret) {
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
@@ -760,10 +762,7 @@ cc.Class({
     }
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
-    const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
-    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
-    if (renderFrameId1 >= self.renderFrameId) return; // No need to rollback when "renderFrameId1 == self.renderFrameId", because the "corresponding delayedInputFrame for renderFrameId1" is NOT YET EXECUTED BY NOW, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range.
-
+    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId, self.inputDelayFrames) - 1;
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
     /*
@@ -778,7 +777,7 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${inputFrameId1}
+    console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
 batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
@@ -800,7 +799,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
-    self._stringifyRecentInputAndRenderCacheCorrespondingly();
+    self._stringifyRdfIdToActuallyUsedInput();
     window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED);
     self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
@@ -922,7 +921,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
             console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${JSON.stringify(rdf)}
 othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}
-${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
+${self._stringifyRdfIdToActuallyUsedInput()}`);
             // closeWSConnection(constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME, "");
             // self.onManualRejoinRequired("[DEBUG] CLIENT_MISMATCHED_RENDER_FRAME");
             rdf = othersForcedDownsyncRenderFrame;
@@ -1114,6 +1113,13 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
 
       const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
       const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
+      const actuallyUsedInputClone = delayedInputFrame.inputList.slice();
+      const inputFrameDownsyncClone = {
+        inputFrameId: delayedInputFrame.inputFrameId,
+        inputList: actuallyUsedInputClone,
+        confirmedList: delayedInputFrame.confirmedList,
+      };
+      self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
       const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame.inputList, (null == delayedInputFrameForPrevRenderFrame ? null : delayedInputFrameForPrevRenderFrame.inputList), currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
 
       if (true == isChasing) {
@@ -1200,19 +1206,31 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
     return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
   },
 
-  _stringifyRecentInputAndRenderCacheCorrespondingly() {
+  inputFrameDownsyncStr(inputFrameDownsync) {
+    if (null == inputFrameDownsync) return "";
     const self = this;
     let s = [];
-    s.push(`@lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @renderFrameId=${self.renderFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}`);
-
-    for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
-      let jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
-      let j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      if (i == self.recentRenderCache.stFrameId || j > jPrev) {
-        s.push(JSON.stringify(self.recentInputCache.getByFrameId(j)));
-      }
-      s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
+    s.push(`InputFrameId:${inputFrameDownsync.inputFrameId}`);
+    let ss = [];
+    for (let k in inputFrameDownsync.inputList) {
+      ss.push(`"${inputFrameDownsync.inputList[k]}"`);
     }
+    s.push(`InputList:[${ss.join(',')}]`);
+    // The "confirmedList" is not worth comparing, because frontend might actually use a non-all-confirmed inputFrame during its history, as long as it's correctly predicted.
+    //s.push(`ConfirmedList:${inputFrameDownsync.confirmedList}`); 
+
+    return s.join(',');
+  },
+
+  _stringifyRdfIdToActuallyUsedInput() {
+    const self = this;
+    let s = [];
+    for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; i++) {
+      const actuallyUsedInputClone = self.rdfIdToActuallyUsedInput.get(i);
+      s.push(`rdfId:${i}
+actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
+    }
+
     return s.join('\n');
   },
 
