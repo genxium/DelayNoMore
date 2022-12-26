@@ -605,7 +605,7 @@ cc.Class({
     }
     const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
     let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
-    let shouldForceResync = rdf.ShouldForceResync;
+    let shouldForceResync = pbRdf.ShouldForceResync;
     const notSelfUnconfirmed = (0 == (rdf.BackendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
@@ -618,7 +618,7 @@ cc.Class({
     If "BackendUnconfirmedMask" is non-all-1 and contains the current player, show a label/button to hint manual reconnection. Note that the continuity of "recentInputCache" is not a good indicator, because due to network delay upon a [type#1 forceConfirmation] a player might just lag in upsync networking and have all consecutive inputFrameIds locally. 
     */
 
-    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
+    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.Id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
       throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.id=${rdf.id}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
@@ -646,6 +646,8 @@ cc.Class({
 
       if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id) {
         console.log('On battle started! renderFrameId=', rdf.Id);
+      } else {
+        console.log('On battle resynced! renderFrameId=', rdf.Id);
       }
       self.renderFrameId = rdf.Id;
       self.lastRenderFrameIdTriggeredAt = performance.now();
@@ -720,6 +722,9 @@ cc.Class({
 
   onInputFrameDownsyncBatch(batch) {
     // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
+    if (null == batch) {
+      return;
+    }
     const self = this;
     if (!self.recentInputCache) {
       return;
@@ -773,7 +778,9 @@ cc.Class({
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
     console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${inputFrameId1}
-lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
+lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
+recentInputCache=${self._stringifyRecentInputCache(false)}
+batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
     self.chaserRenderFrameId = renderFrameId1;
   },
 
@@ -1104,11 +1111,11 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
-        self.chaserRenderFrameId = nextRdf.id;
-      } else if (nextRdf.id == self.chaserRenderFrameId + 1) {
-        self.chaserRenderFrameId = nextRdf.id; // To avoid redundant calculation 
+        self.chaserRenderFrameId = nextRdf.Id;
+      } else if (nextRdf.Id == self.chaserRenderFrameId + 1) {
+        self.chaserRenderFrameId = nextRdf.Id; // To avoid redundant calculation 
       }
-      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.id);
+      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.Id);
       prevLatestRdf = currRdf;
       latestRdf = nextRdf;
     }
@@ -1158,15 +1165,30 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
     return `[stInputFrameId=${self.recentInputCache.stFrameId}, edInputFrameId=${self.recentInputCache.edFrameId})`;
   },
 
+  _stringifyGopkgRoomDownsyncFrame(rdf) {
+    let s = [];
+    s.push(`{`);
+    s.push(`  id: ${rdf.Id}`);
+    s.push(`  players: [`);
+    for (let k in rdf.PlayersArr) {
+      const player = rdf.PlayersArr[k];
+      s.push(`    {joinIndex: ${player.JoinIndex}, id: ${player.Id}, vx: ${player.VirtualGridX}, vy: ${player.VirtualGridY}, velX: ${player.VelX}, velY: ${player.VelY}}`);
+    }
+    s.push(`  ]`);
+    s.push(`}`);
+    return s.join("\n");
+  },
+
   _stringifyRecentRenderCache(usefullOutput) {
     const self = this;
     if (true == usefullOutput) {
       let s = [];
       for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
-        s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
+        const rdf = self.recentRenderCache.getByFrameId(i);
+        s.push(self._stringifyGopkgRoomDownsyncFrame(rdf));
       }
 
-      return s.join('\n');
+      return s.join("\n");
     }
     return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
   },

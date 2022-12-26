@@ -1160,7 +1160,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
 		if 0 < unconfirmedMask {
-			Logger.Debug(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames), pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
+			Logger.Info(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, oldLastAllConfirmedInputFrameId:%d, newLastAllConfirmedInputFrameId:%d, (pR.NstDelayFrames >> pR.InputScaleFrames):%d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameId, (pR.NstDelayFrames >> pR.InputScaleFrames), pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
 		}
 	} else {
 		// Type#2 helps resolve the edge case when all players are disconnected temporarily

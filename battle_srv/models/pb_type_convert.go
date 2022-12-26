@@ -10,9 +10,12 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 		return nil
 	}
 	ret := &pb.RoomDownsyncFrame{
-		Id:           rdf.Id,
-		PlayersArr:   make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
-		MeleeBullets: make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
+		Id:                     rdf.Id,
+		PlayersArr:             make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
+		MeleeBullets:           make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
+		CountdownNanos:         rdf.CountdownNanos,
+		BackendUnconfirmedMask: rdf.BackendUnconfirmedMask,
+		ShouldForceResync:      rdf.ShouldForceResync,
 	}
 
 	for i, last := range rdf.PlayersArr {
