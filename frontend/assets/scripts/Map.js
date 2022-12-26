@@ -605,8 +605,8 @@ cc.Class({
     }
     const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
     let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
-    let shouldForceResync = pbRdf.ShouldForceResync;
-    const notSelfUnconfirmed = (0 == (rdf.BackendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
+    let shouldForceResync = pbRdf.shouldForceResync;
+    const notSelfUnconfirmed = (0 == (pbRdf.backendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
       shouldForceResync = false;
@@ -647,7 +647,8 @@ cc.Class({
       if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id) {
         console.log('On battle started! renderFrameId=', rdf.Id);
       } else {
-        console.log('On battle resynced! renderFrameId=', rdf.Id);
+        self.hideFindingPlayersGUI();
+        console.warn('On battle resynced! renderFrameId=', rdf.Id);
       }
       self.renderFrameId = rdf.Id;
       self.lastRenderFrameIdTriggeredAt = performance.now();
@@ -1070,6 +1071,12 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
       currPlayerDownsync.dirY = currPlayerDownsync.DirY;
       currPlayerDownsync.framesToRecover = currPlayerDownsync.FrameToRecover;
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
+    }
+
+    // Update countdown
+    self.countdownNanos = self.battleDurationNanos - self.renderFrameId * self.rollbackEstimatedDtNanos;
+    if (self.countdownNanos <= 0) {
+      self.onBattleStopped(self.playerRichInfoDict);
     }
   },
 

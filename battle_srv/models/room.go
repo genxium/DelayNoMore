@@ -1212,8 +1212,8 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 		}
 		currRenderFrame := currRenderFrameTmp.(*battle.RoomDownsyncFrame)
 		delayedInputFrameId := pR.ConvertToInputFrameId(collisionSysRenderFrameId, pR.InputDelayFrames)
-		var delayedInputList []uint64 = nil
-		var delayedInputListForPrevRenderFrame []uint64 = nil
+		var delayedInputList *[]uint64 = nil
+		var delayedInputListForPrevRenderFrame *[]uint64 = nil
 		if 0 <= delayedInputFrameId {
 			if delayedInputFrameId > pR.LastAllConfirmedInputFrameId {
 				panic(fmt.Sprintf("delayedInputFrameId=%v is not yet all-confirmed for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! InputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.InputsBufferString(false)))
@@ -1223,19 +1223,19 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				panic(fmt.Sprintf("delayedInputFrameId=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId=%v! InputsBuffer=%v", delayedInputFrameId, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId, pR.InputsBufferString(false)))
 			}
 			delayedInputFrame := tmp.(*pb.InputFrameDownsync)
-			delayedInputList = delayedInputFrame.InputList
+			delayedInputList = &delayedInputFrame.InputList
 			delayedInputFrameIdForPrevRenderFrame := pR.ConvertToInputFrameId(collisionSysRenderFrameId-1, pR.InputDelayFrames)
 			if 0 <= delayedInputFrameIdForPrevRenderFrame {
-				tmp = pR.InputsBuffer.GetByFrameId(delayedInputFrameId)
+				tmp = pR.InputsBuffer.GetByFrameId(delayedInputFrameIdForPrevRenderFrame)
 				if nil == tmp {
 					panic(fmt.Sprintf("delayedInputFrameIdForPrevRenderFrame=%v doesn't exist for roomId=%v, this is abnormal because it's to be used for applying dynamics to [fromRenderFrameId:%v, toRenderFrameId:%v) @ collisionSysRenderFrameId-1=%v! InputsBuffer=%v", delayedInputFrameIdForPrevRenderFrame, pR.Id, fromRenderFrameId, toRenderFrameId, collisionSysRenderFrameId-1, pR.InputsBufferString(false)))
 				}
 				delayedInputFrameForPrevRenderFrame := tmp.(*pb.InputFrameDownsync)
-				delayedInputListForPrevRenderFrame = delayedInputFrameForPrevRenderFrame.InputList
+				delayedInputListForPrevRenderFrame = &delayedInputFrameForPrevRenderFrame.InputList
 			}
 		}
 
-		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.GravityX, pR.GravityY, pR.JumpingInitVelY, pR.InputDelayFrames, pR.InputScaleFrames, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformThreshold, pR.WorldToVirtualGridRatio, pR.VirtualGridToWorldRatio)
+		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(*delayedInputList, *delayedInputListForPrevRenderFrame, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.GravityX, pR.GravityY, pR.JumpingInitVelY, pR.InputDelayFrames, pR.InputScaleFrames, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformThreshold, pR.WorldToVirtualGridRatio, pR.VirtualGridToWorldRatio)
 		pR.RenderFrameBuffer.Put(nextRenderFrame)
 		pR.CurDynamicsRenderFrameId++
 	}
