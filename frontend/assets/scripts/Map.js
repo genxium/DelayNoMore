@@ -1206,6 +1206,11 @@ ${self._stringifyRdfIdToActuallyUsedInput()}`);
     return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
   },
 
+  playerDownsyncStr(playerDownsync) {
+    if (null == playerDownsync) return "";
+    return `{${playerDownsync.JoinIndex},${playerDownsync.VirtualGridX},${playerDownsync.VirtualGridY},${playerDownsync.VelX},${playerDownsync.VelY},${playerDownsync.InAir ? 1 : 0}}`;
+  },
+
   inputFrameDownsyncStr(inputFrameDownsync) {
     if (null == inputFrameDownsync) return "";
     const self = this;
@@ -1227,7 +1232,13 @@ ${self._stringifyRdfIdToActuallyUsedInput()}`);
     let s = [];
     for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; i++) {
       const actuallyUsedInputClone = self.rdfIdToActuallyUsedInput.get(i);
+      const rdf = self.recentRenderCache.getByFrameId(i);
+      const playersStrBldr = [];
+      for (let k in rdf.PlayersArr) {
+        playersStrBldr.push(self.playerDownsyncStr(rdf.PlayersArr[k]));
+      }
       s.push(`rdfId:${i}
+players:[${playersStrBldr.join(',')}]
 actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
     }
 

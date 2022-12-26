@@ -13,13 +13,13 @@ import (
 	"io/ioutil"
 	"jsexport/battle"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"resolv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-    "os"
 )
 
 const (
@@ -344,6 +344,19 @@ func (pR *Room) InputsBufferString(allDetails bool) string {
 	}
 }
 
+func (pR *Room) playerDownsyncStr(player *battle.PlayerDownsync) string {
+	if nil == player {
+		return ""
+	}
+	inAirInt := 0
+	if player.InAir {
+		inAirInt = 1
+	}
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, inAirInt)
+
+	return s
+}
+
 func (pR *Room) inputFrameDownsyncStr(inputFrameDownsync *pb.InputFrameDownsync) string {
 	if nil == inputFrameDownsync {
 		return ""
@@ -364,7 +377,12 @@ func (pR *Room) rdfIdToActuallyUsedInputString() string {
 	// Appending of the array of strings can be very SLOW due to on-demand heap allocation! Use this printing with caution.
 	s := make([]string, 0)
 	for rdfId := pR.RenderFrameBuffer.StFrameId; rdfId < pR.RenderFrameBuffer.EdFrameId; rdfId++ {
-		s = append(s, fmt.Sprintf("rdfId:%d\nactuallyUsedinputList:{%v}", rdfId, pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
+		rdf := pR.RenderFrameBuffer.GetByFrameId(rdfId).(*battle.RoomDownsyncFrame)
+		playersStrBldr := make([]string, 0, len(rdf.PlayersArr))
+		for _, player := range rdf.PlayersArr {
+			playersStrBldr = append(playersStrBldr, pR.playerDownsyncStr(player))
+		}
+		s = append(s, fmt.Sprintf("rdfId:%d\nplayers:[%v]\nactuallyUsedinputList:{%v}", rdfId, strings.Join(playersStrBldr, ","), pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
 	}
 
 	return strings.Join(s, "\n")
@@ -406,9 +424,9 @@ func (pR *Room) StartBattle() {
 				Logger.Error("battleMainLoop, recovery spot#1, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
 			}
 			pR.StopBattleForSettlement()
-            rdfIdToActuallyUsedInputDump := pR.rdfIdToActuallyUsedInputString()
+			rdfIdToActuallyUsedInputDump := pR.rdfIdToActuallyUsedInputString()
 			Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(false))) // This takes sometime to print
-            os.WriteFile(fmt.Sprintf("room_%d.txt", pR.Id), []byte(rdfIdToActuallyUsedInputDump), 0644) // DEBUG ONLY
+			os.WriteFile(fmt.Sprintf("room_%d.txt", pR.Id), []byte(rdfIdToActuallyUsedInputDump), 0644)                                                                                                                   // DEBUG ONLY
 			pR.onBattleStoppedForSettlement()
 		}()
 

@@ -11,13 +11,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
-	"github.com/solarlune/resolv"
 	"golang.org/x/image/font"
 
 	"encoding/xml"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"resolv"
 
 	. "dnmshared"
 )
