@@ -224,8 +224,8 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, re
 func WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio float64) (int32, int32) {
 	// [WARNING] Introduces loss of precision!
 	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-	var virtualGridX int32 = int32(math.Round(wx * worldToVirtualGridRatio))
-	var virtualGridY int32 = int32(math.Round(wy * worldToVirtualGridRatio))
+	var virtualGridX int32 = int32(math.Floor(wx * worldToVirtualGridRatio))
+	var virtualGridY int32 = int32(math.Floor(wy * worldToVirtualGridRatio))
 	return virtualGridX, virtualGridY
 }
 
@@ -254,30 +254,42 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
-func calcHardPushbacksNorms(playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) []Vec2D {
+func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) *[]Vec2D {
 	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
 	collision := playerCollider.Check(0, 0)
 	if nil == collision {
-		return ret
+		return &ret
 	}
+
+	//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
+	//fmt.Printf("joinIndex=%d calcHardPushbacksNorms has non-empty collision;playerColliderPos=(%.2f,%.2f)\n", joinIndex, playerColliderCenterX, playerColliderCenterY)
 	for _, obj := range collision.Objects {
+		isBarrier := false
 		switch obj.Data.(type) {
-		case *Barrier:
-			barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-			overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape)
-			if !overlapped {
-				continue
-			}
-			// ALWAY snap into hardPushbacks!
-			// [OverlapX, OverlapY] is the unit vector that points into the platform
-			pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
-			ret = append(ret, Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY})
-			pEffPushback.X += pushbackX
-			pEffPushback.Y += pushbackY
+		case *PlayerDownsync:
+		case *MeleeBullet:
 		default:
+			// By default it's a regular barrier, even if data is nil, note that Golang syntax of switch-case is kind of confusing, this "default" condition is met only if "!*PlayerDownsync && !*MeleeBullet".
+			isBarrier = true
 		}
+
+		if !isBarrier {
+			continue
+		}
+		barrierShape := obj.Shape.(*resolv.ConvexPolygon)
+		overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape)
+		if !overlapped {
+			continue
+		}
+		// ALWAY snap into hardPushbacks!
+		// [OverlapX, OverlapY] is the unit vector that points into the platform
+		pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
+		ret = append(ret, Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY})
+		pEffPushback.X += pushbackX
+		pEffPushback.Y += pushbackY
+		//fmt.Printf("joinIndex=%d calcHardPushbacksNorms found one hardpushback; immediatePushback=(%.2f,%.2f)\n", joinIndex, pushbackX, pushbackY)
 	}
-	return ret
+	return &ret
 }
 
 // [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
@@ -312,7 +324,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 	}
 
 	effPushbacks := make([]Vec2D, roomCapacity)
-	hardPushbackNorms := make([][]Vec2D, roomCapacity)
+	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
 
 	// 1. Process player inputs
 	if nil != delayedInputList {
@@ -385,13 +397,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 		playerCollider := collisionSysMap[collisionPlayerIndex]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
+		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		fallStopping := false
+		landedOnGravityPushback := false
 		if collision := playerCollider.Check(0, 0); nil != collision {
 			for _, obj := range collision.Objects {
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
-				// TODO: Make this part work in JavaScript without having to expose all types Barrier/PlayerDownsync/MeleeBullet by js.MakeWrapper.
 				switch obj.Data.(type) {
 				case *PlayerDownsync:
 					isAnotherPlayer = true
@@ -411,17 +422,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 					continue
 				}
 				normAlignmentWithGravity := (overlapResult.OverlapX*float64(0) + overlapResult.OverlapY*float64(-1.0))
-				landedOnGravityPushback := (snapIntoPlatformThreshold < normAlignmentWithGravity) // prevents false snapping on the lateral sides
-				if landedOnGravityPushback {
-					// kindly note that one player might land on top of another player, and snapping is also required in such case
-					pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
-					thatPlayerInNextFrame.InAir = false
-				}
 				if isAnotherPlayer {
 					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
 					pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapY
 				}
-				for _, hardPushbackNorm := range hardPushbackNorms[joinIndex-1] {
+				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
 					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
 					if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
 						pushbackX -= projectedMagnitude * hardPushbackNorm.X
@@ -430,16 +435,23 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 				}
 				effPushbacks[joinIndex-1].X += pushbackX
 				effPushbacks[joinIndex-1].Y += pushbackY
-				if currPlayerDownsync.InAir && landedOnGravityPushback {
-					fallStopping = true
+
+				if snapIntoPlatformThreshold < normAlignmentWithGravity {
+					landedOnGravityPushback = true
+					//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
+					//fmt.Printf("joinIndex=%d landedOnGravityPushback\n{renderFrame.id: %d, isBarrier: %v, isAnotherPlayer: %v}\nhardPushbackNormsOfThisPlayer=%v, playerColliderPos=(%.2f,%.2f), immediatePushback={%.3f, %.3f}, effPushback={%.3f, %.3f}, overlapMag=%.4f\n", joinIndex, currRenderFrame.Id, isBarrier, isAnotherPlayer, *hardPushbackNorms[joinIndex-1], playerColliderCenterX, playerColliderCenterY, pushbackX, pushbackY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap)
 				}
 			}
 		}
-		if fallStopping {
-			thatPlayerInNextFrame.VelX = 0
-			thatPlayerInNextFrame.VelY = 0
-			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-			thatPlayerInNextFrame.FramesToRecover = 0
+		if landedOnGravityPushback {
+			thatPlayerInNextFrame.InAir = false
+			if currPlayerDownsync.InAir {
+				// fallStopping
+				thatPlayerInNextFrame.VelX = 0
+				thatPlayerInNextFrame.VelY = 0
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+				thatPlayerInNextFrame.FramesToRecover = 0
+			}
 		}
 		if currPlayerDownsync.InAir {
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState

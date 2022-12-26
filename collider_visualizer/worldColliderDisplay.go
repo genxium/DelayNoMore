@@ -64,7 +64,7 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	if moveToCollide {
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
 		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		playerColliders[0].X, playerColliders[0].Y = VirtualGridToPolygonColliderBLPos(int32(-139000-2000), int32(-474500+2000), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		playerColliders[0].X, playerColliders[0].Y = VirtualGridToPolygonColliderBLPos(int32(-139000), int32(-474500), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
 		playerColliders[0].Update()
 
 		playerColliders[1].X, playerColliders[1].Y = VirtualGridToPolygonColliderBLPos(int32(-163000), int32(-520000), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
@@ -84,9 +84,9 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 					Logger.Warn(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(bShape), overlapResult))
 				}
 			}
-			toTestPlayerCollider.X -= effPushback.X
-			toTestPlayerCollider.Y -= effPushback.Y
-			toTestPlayerCollider.Update()
+			//toTestPlayerCollider.X -= effPushback.X
+			//toTestPlayerCollider.Y -= effPushback.Y
+			//toTestPlayerCollider.Update()
 			Logger.Info(fmt.Sprintf("effPushback={%v, %v}", effPushback.X, effPushback.Y))
 		}
 	}
