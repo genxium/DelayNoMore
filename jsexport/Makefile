@@ -11,9 +11,11 @@ serve:
 
 build:
 	gopherjs build $(PROJECTNAME)
+	rm ../frontend/assets/plugin_scripts/jsexport.js && mv ./jsexport.js ../frontend/assets/plugin_scripts/jsexport.js
 
 build-min:
 	gopherjs build -m $(PROJECTNAME)
+	rm ../frontend/assets/plugin_scripts/jsexport.js && mv ./jsexport.js ../frontend/assets/plugin_scripts/jsexport.js
 
 .PHONY: help
 

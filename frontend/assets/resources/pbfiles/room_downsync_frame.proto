@@ -147,6 +147,8 @@ message BattleColliderInfo {
   int32 gravityX = 28;
   int32 gravityY = 29;
   int32 collisionMinStep = 30;
+
+  bool frameDataLoggingEnabled = 999;
 }
 
 message RoomDownsyncFrame {

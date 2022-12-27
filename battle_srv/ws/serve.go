@@ -272,6 +272,8 @@ func Serve(c *gin.Context) {
 			GravityX:                  pRoom.GravityX,
 			GravityY:                  pRoom.GravityY,
 			CollisionMinStep:          pRoom.CollisionMinStep,
+
+			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
 		}
 
 		resp := &pb.WsResp{

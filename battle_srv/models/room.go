@@ -425,8 +425,10 @@ func (pR *Room) StartBattle() {
 			}
 			pR.StopBattleForSettlement()
 			Logger.Info(fmt.Sprintf("The `battleMainLoop` for roomId=%v is stopped@renderFrameId=%v, with battleDurationFrames=%v:\n%v", pR.Id, pR.RenderFrameId, pR.BattleDurationFrames, pR.InputsBufferString(false))) // This takes sometime to print
-			//rdfIdToActuallyUsedInputDump := pR.rdfIdToActuallyUsedInputString()
-			//os.WriteFile(fmt.Sprintf("room_%d.txt", pR.Id), []byte(rdfIdToActuallyUsedInputDump), 0644) // DEBUG ONLY
+			if pR.FrameDataLoggingEnabled {
+				rdfIdToActuallyUsedInputDump := pR.rdfIdToActuallyUsedInputString()
+				os.WriteFile(fmt.Sprintf("room_%d.txt", pR.Id), []byte(rdfIdToActuallyUsedInputDump), 0644) // DEBUG ONLY
+			}
 			pR.onBattleStoppedForSettlement()
 		}()
 
@@ -809,6 +811,8 @@ func (pR *Room) OnDismissed() {
 	pR.JumpingInitVelY = int32(float64(7) * pR.WorldToVirtualGridRatio)
 	pR.GravityX = 0
 	pR.GravityY = -int32(float64(0.5) * pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
+
+	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
@@ -1283,14 +1287,16 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 				delayedInputListForPrevRenderFrame = &delayedInputFrameForPrevRenderFrame.InputList
 			}
 
-			actuallyUsedInputClone := make([]uint64, len(*delayedInputList), len(*delayedInputList))
-			for i, v := range *delayedInputList {
-				actuallyUsedInputClone[i] = v
-			}
-			pR.rdfIdToActuallyUsedInput[currRenderFrame.Id] = &pb.InputFrameDownsync{
-				InputFrameId:  delayedInputFrame.InputFrameId,
-				InputList:     actuallyUsedInputClone,
-				ConfirmedList: delayedInputFrame.ConfirmedList,
+			if pR.FrameDataLoggingEnabled {
+				actuallyUsedInputClone := make([]uint64, len(*delayedInputList), len(*delayedInputList))
+				for i, v := range *delayedInputList {
+					actuallyUsedInputClone[i] = v
+				}
+				pR.rdfIdToActuallyUsedInput[currRenderFrame.Id] = &pb.InputFrameDownsync{
+					InputFrameId:  delayedInputFrame.InputFrameId,
+					InputList:     actuallyUsedInputClone,
+					ConfirmedList: delayedInputFrame.ConfirmedList,
+				}
 			}
 		}
 

@@ -1,3 +1,4 @@
+//go:build !amd64 || noasm
 // +build !amd64 noasm
 
 package resolv
@@ -21,4 +22,3 @@ func scalUnitaryTo(dst []float64, alpha float64, x []float64) {
 		dst[i] *= alpha
 	}
 }
-

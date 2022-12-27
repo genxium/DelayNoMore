@@ -1,7 +1,6 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
-const collisions = require('./modules/Collisions');
 const RingBuffer = require('./RingBuffer');
 
 window.ALL_MAP_STATES = {
@@ -1112,13 +1111,15 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
       const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
       const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
-      const actuallyUsedInputClone = delayedInputFrame.inputList.slice();
-      const inputFrameDownsyncClone = {
-        inputFrameId: delayedInputFrame.inputFrameId,
-        inputList: actuallyUsedInputClone,
-        confirmedList: delayedInputFrame.confirmedList,
-      };
-      self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
+      if (self.frameDataLoggingEnabled) {
+        const actuallyUsedInputClone = delayedInputFrame.inputList.slice();
+        const inputFrameDownsyncClone = {
+          inputFrameId: delayedInputFrame.inputFrameId,
+          inputList: actuallyUsedInputClone,
+          confirmedList: delayedInputFrame.confirmedList,
+        };
+        self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
+      }
       const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame.inputList, (null == delayedInputFrameForPrevRenderFrame ? null : delayedInputFrameForPrevRenderFrame.inputList), currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
 
       if (true == isChasing) {

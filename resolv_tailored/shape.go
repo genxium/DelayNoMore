@@ -2,7 +2,6 @@ package resolv
 
 import (
 	"math"
-	"sort"
 )
 
 type Shape interface {
@@ -518,18 +517,7 @@ func (cp *ConvexPolygon) calculateMTV(contactSet *ContactSet, otherShape Shape) 
 			}
 
 		}
-
-	case *Circle:
-
-		verts := append([]Vector{}, cp.Transformed()...)
-		// The center point of a contact could also be closer than the verts, particularly if we're testing from a Circle to another Shape.
-		verts = append(verts, contactSet.Center)
-		center := Vector{other.X, other.Y}
-		sort.Slice(verts, func(i, j int) bool { return verts[i].Sub(center).Magnitude() < verts[j].Sub(center).Magnitude() })
-
-		smallest = Vector{center[0] - verts[0][0], center[1] - verts[0][1]}
-		smallest = smallest.Unit().Scale(smallest.Magnitude() - other.Radius)
-
+		// Removed support of "Circle" to remove dependency of "sort" module
 	}
 
 	delta[0] = smallest[0]

@@ -4608,6 +4608,7 @@ $root.protos = (function() {
          * @property {number|null} [gravityX] BattleColliderInfo gravityX
          * @property {number|null} [gravityY] BattleColliderInfo gravityY
          * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
+         * @property {boolean|null} [frameDataLoggingEnabled] BattleColliderInfo frameDataLoggingEnabled
          */
 
         /**
@@ -4867,6 +4868,14 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.collisionMinStep = 0;
 
         /**
+         * BattleColliderInfo frameDataLoggingEnabled.
+         * @member {boolean} frameDataLoggingEnabled
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.frameDataLoggingEnabled = false;
+
+        /**
          * Creates a new BattleColliderInfo instance using the specified properties.
          * @function create
          * @memberof protos.BattleColliderInfo
@@ -4953,6 +4962,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 29, wireType 0 =*/232).int32(message.gravityY);
             if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
                 writer.uint32(/* id 30, wireType 0 =*/240).int32(message.collisionMinStep);
+            if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
+                writer.uint32(/* id 999, wireType 0 =*/7992).bool(message.frameDataLoggingEnabled);
             return writer;
         };
 
@@ -5126,6 +5137,10 @@ $root.protos = (function() {
                         message.collisionMinStep = reader.int32();
                         break;
                     }
+                case 999: {
+                        message.frameDataLoggingEnabled = reader.bool();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5262,6 +5277,9 @@ $root.protos = (function() {
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 if (!$util.isInteger(message.collisionMinStep))
                     return "collisionMinStep: integer expected";
+            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
+                if (typeof message.frameDataLoggingEnabled !== "boolean")
+                    return "frameDataLoggingEnabled: boolean expected";
             return null;
         };
 
@@ -5359,6 +5377,8 @@ $root.protos = (function() {
                 message.gravityY = object.gravityY | 0;
             if (object.collisionMinStep != null)
                 message.collisionMinStep = object.collisionMinStep | 0;
+            if (object.frameDataLoggingEnabled != null)
+                message.frameDataLoggingEnabled = Boolean(object.frameDataLoggingEnabled);
             return message;
         };
 
@@ -5415,6 +5435,7 @@ $root.protos = (function() {
                 object.gravityX = 0;
                 object.gravityY = 0;
                 object.collisionMinStep = 0;
+                object.frameDataLoggingEnabled = false;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
@@ -5486,6 +5507,8 @@ $root.protos = (function() {
                 object.gravityY = message.gravityY;
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 object.collisionMinStep = message.collisionMinStep;
+            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
+                object.frameDataLoggingEnabled = message.frameDataLoggingEnabled;
             return object;
         };
 

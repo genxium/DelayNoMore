@@ -2,7 +2,7 @@ package resolv
 
 import (
 	"math"
-	"sort"
+	//"sort"
 )
 
 // Object represents an object that can be spread across one or more Cells in a Space. An Object is essentially an AABB (Axis-Aligned Bounding Box) Rectangle.
@@ -284,26 +284,29 @@ func (obj *Object) Check(dx, dy float64, tags ...string) *Collision {
 		return nil
 	}
 
-	ox, oy := cc.checkingObject.Center()
-	oc := Vector{ox, oy}
+	/*
+	    // In my use case, order of objects within a collision instance is not needed, and this also favors both runtime performance & size reduction of `jsexport.js`.
 
-	sort.Slice(cc.Objects, func(i, j int) bool {
+		ox, oy := cc.checkingObject.Center()
+		oc := Vector{ox, oy}
+		sort.Slice(cc.Objects, func(i, j int) bool {
 
-		ix, iy := cc.Objects[i].Center()
-		jx, jy := cc.Objects[j].Center()
-		return Vector{ix, iy}.Sub(oc).Magnitude2() < Vector{jx, jy}.Sub(oc).Magnitude2()
+			ix, iy := cc.Objects[i].Center()
+			jx, jy := cc.Objects[j].Center()
+			return Vector{ix, iy}.Sub(oc).Magnitude2() < Vector{jx, jy}.Sub(oc).Magnitude2()
 
-	})
+		})
 
-	cw := cc.checkingObject.Space.CellWidth
-	ch := cc.checkingObject.Space.CellHeight
+		cw := cc.checkingObject.Space.CellWidth
+		ch := cc.checkingObject.Space.CellHeight
 
-	sort.Slice(cc.Cells, func(i, j int) bool {
+		sort.Slice(cc.Cells, func(i, j int) bool {
 
-		return Vector{float64(cc.Cells[i].X*cw + (cw / 2)), float64(cc.Cells[i].Y*ch + (ch / 2))}.Sub(oc).Magnitude2() <
-			Vector{float64(cc.Cells[j].X*cw + (cw / 2)), float64(cc.Cells[j].Y*ch + (ch / 2))}.Sub(oc).Magnitude2()
+			return Vector{float64(cc.Cells[i].X*cw + (cw / 2)), float64(cc.Cells[i].Y*ch + (ch / 2))}.Sub(oc).Magnitude2() <
+				Vector{float64(cc.Cells[j].X*cw + (cw / 2)), float64(cc.Cells[j].Y*ch + (ch / 2))}.Sub(oc).Magnitude2()
 
-	})
+		})
+	*/
 
 	return cc
 
