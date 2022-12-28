@@ -6,6 +6,18 @@ import (
 	"resolv"
 )
 
+func NewInputFrameDownsync(inputFrameId int32, inputList []uint64, confirmedList uint64) *js.Object {
+	return js.MakeFullWrapper(&InputFrameDownsync{
+		InputFrameId:  inputFrameId,
+		InputList:     inputList,
+		ConfirmedList: confirmedList,
+	})
+}
+
+func NewRingBufferJs(n int32) *js.Object {
+	return js.MakeFullWrapper(NewRingBuffer(n))
+}
+
 func NewCollisionSpaceJs(spaceW, spaceH, minStepW, minStepH int) *js.Object {
 	return js.MakeWrapper(resolv.NewSpace(spaceW, spaceH, minStepW, minStepH))
 }
@@ -50,31 +62,6 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
-func NewMeleeBulletJs(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitStunFrames, blockStunFrames, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId int32, pushback, hitboxOffset, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY float64) *js.Object {
-	return js.MakeWrapper(&MeleeBullet{
-		BattleLocalId:         battleLocalId,
-		StartupFrames:         startupFrames,
-		ActiveFrames:          activeFrames,
-		RecoveryFrames:        recoveryFrames,
-		RecoveryFramesOnBlock: recoveryFramesOnBlock,
-		RecoveryFramesOnHit:   recoveryFramesOnHit,
-		HitboxOffset:          hitboxOffset,
-		HitStunFrames:         hitStunFrames,
-		BlockStunFrames:       blockStunFrames,
-		Pushback:              pushback,
-		ReleaseTriggerType:    releaseTriggerType,
-		Damage:                damage,
-
-		SelfMoveforwardX: selfMoveforwardX,
-		SelfMoveforwardY: selfMoveforwardY,
-		HitboxSizeX:      hitboxSizeX,
-		HitboxSizeY:      hitboxSizeY,
-
-		OffenderJoinIndex: offenderJoinIndex,
-		OffenderPlayerId:  offenderPlayerId,
-	})
-}
-
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets []*MeleeBullet) *js.Object {
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
@@ -114,9 +101,9 @@ func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spac
 	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *js.Object {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64, playerOpPatternToSkillId map[int]int) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio))
+	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio, playerOpPatternToSkillId))
 }
 
 func main() {
@@ -127,6 +114,8 @@ func main() {
 		"NewPlayerDownsyncJs":             NewPlayerDownsyncJs,
 		"NewRoomDownsyncFrameJs":          NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":             NewCollisionSpaceJs,
+		"NewInputFrameDownsync":           NewInputFrameDownsync,
+		"NewRingBufferJs":                 NewRingBufferJs,
 		"GenerateRectColliderJs":          GenerateRectColliderJs,
 		"GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
 		"GetCollisionSpaceObjsJs":         GetCollisionSpaceObjsJs,

@@ -1,4 +1,4 @@
-package dnmshared
+package battle
 
 const (
 	RING_BUFF_CONSECUTIVE_SET     = int32(0)

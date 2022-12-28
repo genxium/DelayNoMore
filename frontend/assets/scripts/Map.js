@@ -140,28 +140,24 @@ cc.Class({
 
     let previousSelfInput = null,
       currSelfInput = null;
-    const joinIndex = self.selfPlayerInfo.joinIndex || self.selfPlayerInfo.JoinIndex;
-    const existingInputFrame = self.recentInputCache.getByFrameId(inputFrameId);
+    const joinIndex = self.selfPlayerInfo.JoinIndex;
+    const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
     const previousInputFrameDownsyncWithPrediction = self.getCachedInputFrameDownsyncWithPrediction(inputFrameId - 1);
-    previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.inputList[joinIndex - 1]);
+    previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.InputList[joinIndex - 1]);
     if (null != existingInputFrame) {
       // This could happen upon either [type#1] or [type#2] forceConfirmation, where "refRenderFrame" is accompanied by some "inputFrameDownsyncs". The check here also guarantees that we don't override history 
       console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
-      return [previousSelfInput, existingInputFrame.inputList[joinIndex - 1]];
+      return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
     }
 
-    const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.inputList.slice());
+    const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.InputList.slice());
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
-    while (self.recentInputCache.edFrameId <= inputFrameId) {
+    while (self.recentInputCache.EdFrameId <= inputFrameId) {
       // Fill the gap
-      const prefabbedInputFrameDownsync = window.pb.protos.InputFrameDownsync.create({
-        inputFrameId: self.recentInputCache.edFrameId,
-        inputList: prefabbedInputList,
-        confirmedList: (1 << (joinIndex - 1))
-      });
-      // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.inputFrameId}`);
-      self.recentInputCache.put(prefabbedInputFrameDownsync);
+      const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(self.recentInputCache.EdFrameId, prefabbedInputList.slice(), (1 << (joinIndex - 1)));
+      // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.InputFrameId}`);
+      self.recentInputCache.Put(prefabbedInputFrameDownsync);
     }
 
     return [previousSelfInput, currSelfInput];
@@ -184,18 +180,18 @@ cc.Class({
     const self = this;
     let inputFrameUpsyncBatch = [];
     let batchInputFrameIdSt = self.lastUpsyncInputFrameId + 1;
-    if (batchInputFrameIdSt < self.recentInputCache.stFrameId) {
+    if (batchInputFrameIdSt < self.recentInputCache.StFrameId) {
       // Upon resync, "self.lastUpsyncInputFrameId" might not have been updated properly.
-      batchInputFrameIdSt = self.recentInputCache.stFrameId;
+      batchInputFrameIdSt = self.recentInputCache.StFrameId;
     }
     for (let i = batchInputFrameIdSt; i <= latestLocalInputFrameId; ++i) {
-      const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
+      const inputFrameDownsync = self.recentInputCache.GetByFrameId(i);
       if (null == inputFrameDownsync) {
         console.error(`sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=i: latestLocalInputFrameId=${latestLocalInputFrameId}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
       } else {
         const inputFrameUpsync = {
           inputFrameId: i,
-          encoded: inputFrameDownsync.inputList[self.selfPlayerInfo.joinIndex - 1],
+          encoded: inputFrameDownsync.InputList[self.selfPlayerInfo.JoinIndex - 1],
         };
         inputFrameUpsyncBatch.push(inputFrameUpsync);
       }
@@ -204,15 +200,15 @@ cc.Class({
     // console.info(`inputFrameUpsyncBatch: ${JSON.stringify(inputFrameUpsyncBatch)}`);
     const reqData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
-      playerId: self.selfPlayerInfo.id,
+      playerId: self.selfPlayerInfo.Id,
       act: window.UPSYNC_MSG_ACT_PLAYER_CMD,
-      joinIndex: self.selfPlayerInfo.joinIndex,
+      joinIndex: self.selfPlayerInfo.JoinIndex,
       ackingInputFrameId: self.lastAllConfirmedInputFrameId,
       inputFrameUpsyncBatch: inputFrameUpsyncBatch,
     }).finish();
     window.sendSafely(reqData);
     self.lastUpsyncInputFrameId = latestLocalInputFrameId;
-    if (self.lastUpsyncInputFrameId >= self.recentInputCache.edFrameId) {
+    if (self.lastUpsyncInputFrameId >= self.recentInputCache.EdFrameId) {
       throw `noDelayInputFrameId=${self.lastUpsyncInputFrameId} == latestLocalInputFrameId=${latestLocalInputFrameId} seems not properly dumped #2: recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
   },
@@ -305,7 +301,7 @@ cc.Class({
     self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
-    self.recentInputCache = new RingBuffer((self.renderCacheSize >> 1) + 1);
+    self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
 
     const spaceW = self.stageDiscreteW * self.stageTileW;
     const spaceH = self.stageDiscreteH * self.stageTileH;
@@ -606,7 +602,7 @@ cc.Class({
     const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
     let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
     let shouldForceResync = pbRdf.shouldForceResync;
-    const notSelfUnconfirmed = (0 == (pbRdf.backendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
+    const notSelfUnconfirmed = (0 == (pbRdf.backendUnconfirmedMask & (1 << (self.selfPlayerInfo.JoinIndex - 1))));
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
       shouldForceResync = false;
@@ -721,7 +717,7 @@ cc.Class({
     return true;
   },
 
-  onInputFrameDownsyncBatch(batch) {
+  onInputFrameDownsyncBatch(batch /* []*pb.InputFrameDownsync */ ) {
     // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
     if (null == batch) {
       return;
@@ -743,7 +739,7 @@ cc.Class({
       }
       // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
       self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
-      const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
+      const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
       if (null != localInputFrame
         &&
         null == firstPredictedYetIncorrectInputFrameId
@@ -753,8 +749,9 @@ cc.Class({
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
+      inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
       //console.log(`Confirmed inputFrameId=${inputFrameDownsync.inputFrameId}`);
-      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.setByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
+      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.SetByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
       if (window.RING_BUFF_FAILED_TO_SET == ret) {
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
@@ -829,7 +826,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const colliderRadius = playerDownsyncInfo.colliderRadius || playerDownsyncInfo.ColliderRadius;
+    const colliderRadius = playerDownsyncInfo.ColliderRadius;
     const halfColliderWidth = colliderRadius,
       halfColliderHeight = colliderRadius + colliderRadius; // avoid multiplying
     const colliderWidth = halfColliderWidth + halfColliderWidth,
@@ -856,10 +853,6 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     setLocalZOrder(newPlayerNode, 5);
 
     newPlayerNode.active = true;
-    playerDownsyncInfo.characterState = playerDownsyncInfo.CharacterState;
-    playerDownsyncInfo.dirX = playerDownsyncInfo.DirX;
-    playerDownsyncInfo.dirY = playerDownsyncInfo.DirY;
-    playerDownsyncInfo.framesToRecover = playerDownsyncInfo.FrameToRecover;
     playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
 
     return [newPlayerNode, playerScriptIns];
@@ -1063,10 +1056,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
-      currPlayerDownsync.characterState = currPlayerDownsync.CharacterState;
-      currPlayerDownsync.dirX = currPlayerDownsync.DirX;
-      currPlayerDownsync.dirY = currPlayerDownsync.DirY;
-      currPlayerDownsync.framesToRecover = currPlayerDownsync.FrameToRecover;
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
     }
 
@@ -1079,13 +1068,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
     const self = this;
-    const inputFrameDownsync = self.recentInputCache.getByFrameId(inputFrameId);
+    const inputFrameDownsync = self.recentInputCache.GetByFrameId(inputFrameId); // "battle.InputFrameDownsync" in "jsexport"
     if (null != inputFrameDownsync && inputFrameId > self.lastAllConfirmedInputFrameId) {
-      const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId);
+      const lastAllConfirmedInputFrame = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
       if (null != lastAllConfirmedInputFrame) {
-        for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
-          if (i == (self.selfPlayerInfo.joinIndex - 1)) continue;
-          inputFrameDownsync.inputList[i] = (lastAllConfirmedInputFrame.inputList[i] & 15); // Don't predict attack input!
+        for (let i = 0; i < inputFrameDownsync.InputList.length; ++i) {
+          if (i == (self.selfPlayerInfo.JoinIndex - 1)) continue;
+          inputFrameDownsync.InputList[i] = (lastAllConfirmedInputFrame.InputList[i] & 15); // Don't predict attack input!
         }
       }
     }
@@ -1103,24 +1092,23 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
       const j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      const delayedInputFrame = self.recentInputCache.getByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
+      const delayedInputFrame = self.recentInputCache.GetByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
       if (null == delayedInputFrame) {
         // Shouldn't happen!
         throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
 
       const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
-      const delayedInputFrameForPrevRenderFrame = self.recentInputCache.getByFrameId(jPrev);
       if (self.frameDataLoggingEnabled) {
-        const actuallyUsedInputClone = delayedInputFrame.inputList.slice();
+        const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
         const inputFrameDownsyncClone = {
-          inputFrameId: delayedInputFrame.inputFrameId,
+          inputFrameId: delayedInputFrame.InputFrameId,
           inputList: actuallyUsedInputClone,
-          confirmedList: delayedInputFrame.confirmedList,
+          confirmedList: delayedInputFrame.ConfirmedList,
         };
         self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
       }
-      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(delayedInputFrame.inputList, (null == delayedInputFrameForPrevRenderFrame ? null : delayedInputFrameForPrevRenderFrame.inputList), currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio);
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio, self.playerOpPatternToSkillId);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
@@ -1140,7 +1128,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const self = this;
     for (let k in playersArr) {
       const immediatePlayerInfo = playersArr[k];
-      const playerId = immediatePlayerInfo.id || immediatePlayerInfo.Id;
+      const playerId = immediatePlayerInfo.Id;
       if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
       const joinIndex = immediatePlayerInfo.joinIndex || immediatePlayerInfo.JoinIndex;
@@ -1153,9 +1141,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         scriptIns: nodeAndScriptIns[1],
       });
 
-      const selfPlayerId = self.selfPlayerInfo.id || self.selfPlayerInfo.Id;
+      const selfPlayerId = self.selfPlayerInfo.Id;
       if (selfPlayerId == playerId) {
-        self.selfPlayerInfo.joinIndex = immediatePlayerInfo.joinIndex || immediatePlayerInfo.JoinIndex;
+        self.selfPlayerInfo.JoinIndex = immediatePlayerInfo.JoinIndex;
         nodeAndScriptIns[1].showArrowTipNode();
       }
     }
@@ -1169,13 +1157,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const self = this;
     if (true == usefullOutput) {
       let s = [];
-      for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
-        s.push(JSON.stringify(self.recentInputCache.getByFrameId(i)));
+      for (let i = self.recentInputCache.StFrameId; i < self.recentInputCache.EdFrameId; ++i) {
+        s.push(JSON.stringify(self.recentInputCache.GetByFrameId(i)));
       }
 
       return s.join('\n');
     }
-    return `[stInputFrameId=${self.recentInputCache.stFrameId}, edInputFrameId=${self.recentInputCache.edFrameId})`;
+    return `[stInputFrameId=${self.recentInputCache.StFrameId}, edInputFrameId=${self.recentInputCache.EdFrameId})`;
   },
 
   _stringifyGopkgRoomDownsyncFrame(rdf) {

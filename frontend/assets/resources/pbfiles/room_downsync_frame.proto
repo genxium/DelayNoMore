@@ -139,14 +139,12 @@ message BattleColliderInfo {
   int32 spAtkLookupFrames = 22;
   int32 renderCacheSize = 23;
 
-  map<int32, MeleeBullet> meleeSkillConfig = 24; // skillId -> skill
-
-  double snapIntoPlatformOverlap = 25; 
-  double snapIntoPlatformThreshold = 26; 
-  int32 jumpingInitVelY = 27;
-  int32 gravityX = 28;
-  int32 gravityY = 29;
-  int32 collisionMinStep = 30;
+  double snapIntoPlatformOverlap = 24; 
+  double snapIntoPlatformThreshold = 25; 
+  int32 jumpingInitVelY = 26;
+  int32 gravityX = 27;
+  int32 gravityY = 28;
+  int32 collisionMinStep = 29;
 
   bool frameDataLoggingEnabled = 999;
 }

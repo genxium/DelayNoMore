@@ -50,7 +50,7 @@ type Barrier struct {
 	Boundary *Polygon2D
 }
 
-type MeleeBullet struct {
+type Bullet struct {
 	// for offender
 	BattleLocalId           int32
 	StartupFrames           int32
@@ -75,11 +75,33 @@ type MeleeBullet struct {
 	HitboxSizeY      float64
 }
 
+type MeleeBullet struct {
+	Bullet
+}
+
+type FireballBullet struct {
+	VirtualGridX int32
+	VirtualGridY int32
+	DirX         int32
+	DirY         int32
+	VelX         int32
+	VelY         int32
+	Speed        int32
+	Bullet
+}
+
 type RoomDownsyncFrame struct {
 	Id                     int32
 	PlayersArr             []*PlayerDownsync
 	CountdownNanos         int64
 	MeleeBullets           []*MeleeBullet
+	FireballBullets        []*FireballBullet
 	BackendUnconfirmedMask uint64
 	ShouldForceResync      bool
+}
+
+type InputFrameDownsync struct {
+	InputFrameId  int32
+	InputList     []uint64
+	ConfirmedList uint64
 }

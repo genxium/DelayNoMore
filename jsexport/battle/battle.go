@@ -10,6 +10,9 @@ const (
 	COLLISION_PLAYER_INDEX_PREFIX  = (1 << 17)
 	COLLISION_BARRIER_INDEX_PREFIX = (1 << 16)
 	COLLISION_BULLET_INDEX_PREFIX  = (1 << 15)
+
+	PATTERN_ID_UNABLE_TO_OP = -2
+	PATTERN_ID_NO_OP        = -1
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -23,6 +26,32 @@ var DIRECTION_DECODER = [][]int32{
 	{-1, -1},
 	{+1, -1},
 	{-1, +1},
+}
+
+var skillIdToBullet = map[int]interface{}{
+	1: &MeleeBullet{
+		Bullet: Bullet{
+			// for offender
+			StartupFrames:         int32(10),
+			ActiveFrames:          int32(10),
+			RecoveryFrames:        int32(34),
+			RecoveryFramesOnBlock: int32(34),
+			RecoveryFramesOnHit:   int32(34),
+			HitboxOffset:          float64(12.0), // should be about the radius of the PlayerCollider
+
+			// for defender
+			HitStunFrames:      int32(18),
+			BlockStunFrames:    int32(9),
+			Pushback:           float64(8.0),
+			ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
+			Damage:             int32(5),
+
+			SelfMoveforwardX: 0,
+			SelfMoveforwardY: 0,
+			HitboxSizeX:      24.0,
+			HitboxSizeY:      32.0,
+		},
+	},
 }
 
 const (
@@ -292,8 +321,60 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 	return &ret
 }
 
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer, inputDelayFrames int32, inputScaleFrames uint32) (int, bool, int32, int32) {
+	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
+	delayedInputFrameId := ConvertToInputFrameId(currRenderFrame.Id, inputDelayFrames, inputScaleFrames)
+	delayedInputFrameIdForPrevRdf := ConvertToInputFrameId(currRenderFrame.Id-1, inputDelayFrames, inputScaleFrames)
+
+	if 0 >= delayedInputFrameId {
+		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
+	}
+
+	delayedInputList := inputsBuffer.GetByFrameId(delayedInputFrameId).(*InputFrameDownsync).InputList
+	var delayedInputListForPrevRdf []uint64 = nil
+	if 0 < delayedInputFrameIdForPrevRdf {
+		delayedInputListForPrevRdf = inputsBuffer.GetByFrameId(delayedInputFrameIdForPrevRdf).(*InputFrameDownsync).InputList
+	}
+
+	jumpedOrNot := false
+	joinIndex := currPlayerDownsync.JoinIndex
+	if 0 < currPlayerDownsync.FramesToRecover {
+		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
+	}
+	decodedInput := decodeInput(delayedInputList[joinIndex-1])
+	effDx, effDy := decodedInput.Dx, decodedInput.Dy
+	prevBtnALevel, prevBtnBLevel := int32(0), int32(0)
+	if nil != delayedInputListForPrevRdf {
+		prevDecodedInput := decodeInput(delayedInputListForPrevRdf[joinIndex-1])
+		prevBtnALevel = prevDecodedInput.BtnALevel
+		prevBtnBLevel = prevDecodedInput.BtnBLevel
+	}
+
+	if decodedInput.BtnBLevel > prevBtnBLevel {
+		characStateAlreadyInAir := false
+		if ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATK1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATKED1 == currPlayerDownsync.CharacterState {
+			characStateAlreadyInAir = true
+		}
+		characStateIsInterruptWaivable := false
+		if ATK_CHARACTER_STATE_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_WALKING == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState {
+			characStateIsInterruptWaivable = true
+		}
+		if !characStateAlreadyInAir && characStateIsInterruptWaivable {
+			jumpedOrNot = true
+		}
+	}
+
+	patternId := PATTERN_ID_NO_OP
+	if decodedInput.BtnALevel > prevBtnALevel {
+		patternId = 0
+		effDx, effDy = 0, 0 // Most patterns/skills should not allow simultaneous movement
+	}
+
+	return patternId, jumpedOrNot, effDx, effDy
+}
+
 // [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delayedInputListForPrevRenderFrame []uint64, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64, playerOpPatternToSkillId map[int]int) *RoomDownsyncFrame {
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
@@ -323,48 +404,47 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 		}
 	}
 
+	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	effPushbacks := make([]Vec2D, roomCapacity)
 	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
 
 	// 1. Process player inputs
-	if nil != delayedInputList {
-		for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
-			joinIndex := currPlayerDownsync.JoinIndex
-			thatPlayerInNextFrame := nextRenderFramePlayers[i]
-			if 0 < thatPlayerInNextFrame.FramesToRecover {
-				continue
-			}
-			decodedInput := decodeInput(delayedInputList[joinIndex-1])
-			prevBtnBLevel := int32(0)
-			if nil != delayedInputListForPrevRenderFrame {
-				prevDecodedInput := decodeInput(delayedInputListForPrevRenderFrame[joinIndex-1])
-				prevBtnBLevel = prevDecodedInput.BtnBLevel
-			}
+	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
+		thatPlayerInNextFrame := nextRenderFramePlayers[i]
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, inputDelayFrames, inputScaleFrames)
+		if PATTERN_ID_UNABLE_TO_OP == patternId {
+			continue
+		}
 
-			if decodedInput.BtnBLevel > prevBtnBLevel {
-				characStateAlreadyInAir := false
-				if ATK_CHARACTER_STATE_INAIR_IDLE1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_ATK1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_ATKED1 == thatPlayerInNextFrame.CharacterState {
-					characStateAlreadyInAir = true
-				}
-				characStateIsInterruptWaivable := false
-				if ATK_CHARACTER_STATE_IDLE1 == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_WALKING == thatPlayerInNextFrame.CharacterState || ATK_CHARACTER_STATE_INAIR_IDLE1 == thatPlayerInNextFrame.CharacterState {
-					characStateIsInterruptWaivable = true
-				}
-				if !characStateAlreadyInAir && characStateIsInterruptWaivable {
-					thatPlayerInNextFrame.VelY = jumpingInitVelY
+		if jumpedOrNot {
+			thatPlayerInNextFrame.VelY = jumpingInitVelY
+			thatPlayerInNextFrame.VirtualGridY += jumpingInitVelY // Immediately gets out of any snapping
+		}
+		joinIndex := currPlayerDownsync.JoinIndex
+		if PATTERN_ID_NO_OP != patternId {
+			if skillId, existent := playerOpPatternToSkillId[(int(joinIndex)<<uint(8))+patternId]; existent {
+				skillConfig := skillIdToBullet[skillId].(*MeleeBullet) // Hardcoded type "MeleeBullet" for now
+				var newMeleeBullet MeleeBullet = *skillConfig
+				newMeleeBullet.OffenderJoinIndex = joinIndex
+				newMeleeBullet.OffenderPlayerId = currPlayerDownsync.Id
+				newMeleeBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newMeleeBullet)
+				thatPlayerInNextFrame.FramesToRecover = newMeleeBullet.RecoveryFrames
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
+				if false == currPlayerDownsync.InAir {
+					thatPlayerInNextFrame.VelX = 0
 				}
 			}
+			continue
+		}
 
-			// Note that by now "0 == thatPlayerInNextFrame.FramesToRecover", we should change "CharacterState" to "WALKING" or "IDLE" depending on player inputs
-			if 0 != decodedInput.Dx || 0 != decodedInput.Dy {
-				thatPlayerInNextFrame.DirX = decodedInput.Dx
-				thatPlayerInNextFrame.DirY = decodedInput.Dy
-				thatPlayerInNextFrame.VelX = decodedInput.Dx * currPlayerDownsync.Speed
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
-			} else {
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-				thatPlayerInNextFrame.VelX = 0
-			}
+		if 0 != effDx || 0 != effDy {
+			thatPlayerInNextFrame.DirX, thatPlayerInNextFrame.DirY = effDx, effDy
+			thatPlayerInNextFrame.VelX = effDx * currPlayerDownsync.Speed
+			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+		} else {
+			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+			thatPlayerInNextFrame.VelX = 0
 		}
 	}
 
@@ -377,9 +457,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputList, delaye
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
-		if thatPlayerInNextFrame.VelY == jumpingInitVelY {
-			newVy += thatPlayerInNextFrame.VelY
-		}
 
 		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, virtualGridToWorldRatio)
 		// Update in the collision system

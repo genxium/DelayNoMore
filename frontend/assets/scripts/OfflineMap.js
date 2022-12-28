@@ -42,27 +42,11 @@ cc.Class({
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
-    self.meleeSkillConfig = {
-      1: {
-        // for offender
-        startupFrames: 10,
-        activeFrames: 20,
-        recoveryFrames: 34, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-        recoveryFramesOnBlock: 34,
-        recoveryFramesOnHit: 34,
-        hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
-        // for defender
-        hitStunFrames: 18,
-        blockStunFrames: 9,
-        pushback: 8.0,
-        releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
-        damage: 5,
-        hitboxSizeX: 24.0,
-        hitboxSizeY: 32.0,
-        selfMoveforwardX: 0,
-        selfMoveforwardY: 0,
-      }
-    };
+    const opJoinIndexPrefix1 = (1 << 8);
+    const opJoinIndexPrefix2 = (2 << 8);
+    self.playerOpPatternToSkillId = {};
+    self.playerOpPatternToSkillId[opJoinIndexPrefix1 + 0] = 1;
+    self.playerOpPatternToSkillId[opJoinIndexPrefix2 + 0] = 1;
 
     /* 
     [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
@@ -195,11 +179,8 @@ cc.Class({
       });
 
       self.selfPlayerInfo = {
-        Id: 11,
-        JoinIndex: 2,
-        // For compatibility
-        id: 11,
-        joinIndex: 2,
+        Id: 10,
+        JoinIndex: 1,
       };
       self.onRoomDownsyncFrame(startRdf);
 
