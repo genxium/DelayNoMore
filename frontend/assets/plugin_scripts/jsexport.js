@@ -4724,7 +4724,7 @@ $packages["resolv"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport/battle"] = (function() {
-	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, sliceType$3, sliceType$4, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, sliceType$5, sliceType$6, sliceType$7, sliceType$8, ptrType$7, ptrType$8, sliceType$9, sliceType$10, ptrType$9, sliceType$11, ptrType$10, ptrType$11, skillIdToBullet, NewRingBuffer, ConvertToInputFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, VirtualGridToPolygonColliderBLPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
+	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, sliceType$3, sliceType$4, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, sliceType$5, sliceType$6, sliceType$7, sliceType$8, ptrType$7, sliceType$9, ptrType$8, sliceType$10, sliceType$11, ptrType$9, sliceType$12, ptrType$10, ptrType$11, skillIdToBullet, NewRingBuffer, ConvertToInputFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, VirtualGridToPolygonColliderBLPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
 	math = $packages["math"];
 	resolv = $packages["resolv"];
 	Vec2D = $pkg.Vec2D = $newType(0, $kindStruct, "battle.Vec2D", true, "jsexport/battle", true, function(X_, Y_) {
@@ -4741,7 +4741,7 @@ $packages["jsexport/battle"] = (function() {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.Anchor = ptrType$9.nil;
-			this.Points = sliceType$11.nil;
+			this.Points = sliceType$12.nil;
 			return;
 		}
 		this.Anchor = Anchor_;
@@ -4894,7 +4894,7 @@ $packages["jsexport/battle"] = (function() {
 			this.PlayersArr = sliceType$6.nil;
 			this.CountdownNanos = new $Int64(0, 0);
 			this.MeleeBullets = sliceType$7.nil;
-			this.FireballBullets = sliceType$9.nil;
+			this.FireballBullets = sliceType$10.nil;
 			this.BackendUnconfirmedMask = new $Uint64(0, 0);
 			this.ShouldForceResync = false;
 			return;
@@ -4974,11 +4974,12 @@ $packages["jsexport/battle"] = (function() {
 	sliceType$7 = $sliceType(ptrType$4);
 	sliceType$8 = $sliceType(ptrType$2);
 	ptrType$7 = $ptrType(resolv.Object);
+	sliceType$9 = $sliceType(ptrType$7);
 	ptrType$8 = $ptrType(FireballBullet);
-	sliceType$9 = $sliceType(ptrType$8);
-	sliceType$10 = $sliceType($Float64);
+	sliceType$10 = $sliceType(ptrType$8);
+	sliceType$11 = $sliceType($Float64);
 	ptrType$9 = $ptrType(Vec2D);
-	sliceType$11 = $sliceType(ptrType$9);
+	sliceType$12 = $sliceType(ptrType$9);
 	ptrType$10 = $ptrType(Polygon2D);
 	ptrType$11 = $ptrType(RingBuffer);
 	NewRingBuffer = function(n) {
@@ -5412,7 +5413,7 @@ $packages["jsexport/battle"] = (function() {
 		return [patternId, jumpedOrNot, effDx, effDy];
 	};
 	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = function(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio, playerOpPatternToSkillId) {
-		var {_1, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _index, _index$1, _r, _r$1, _ref, _ref$1, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _tmp, _tmp$1, _tmp$10, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$2, _tuple$3, _tuple$4, bShape, collision, collisionPlayerIndex, collisionPlayerIndex$1, collisionPlayerIndex$2, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, effDx, effDy, effPushbacks, existent, gravityX, gravityY, hardPushbackNorm, hardPushbackNorms, i, i$1, i$2, i$3, i$4, inputDelayFrames, inputScaleFrames, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpingInitVelY, landedOnGravityPushback, newMeleeBullet, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, oldNextCharacterState, overlapResult, overlapped, patternId, playerCollider, playerCollider$1, playerCollider$2, playerOpPatternToSkillId, playerShape, projectedMagnitude, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, snapIntoPlatformOverlap, snapIntoPlatformThreshold, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, virtualGridToWorldRatio, worldToVirtualGridRatio, x, x$1, x$2, x$3, x$4, x$5, x$6, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio, playerOpPatternToSkillId});
+		var {_1, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _index$3, _r, _r$1, _r$2, _r$3, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, atkedPlayerInCurFrame, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, collision, collision$1, collisionPlayerIndex, collisionPlayerIndex$1, collisionPlayerIndex$2, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, gravityX, gravityY, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNorms, i, i$1, i$2, i$3, i$4, inputDelayFrames, inputScaleFrames, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, joinIndex$4, jumpedOrNot, jumpingInitVelY, landedOnGravityPushback, meleeBullet, meleeBullet$1, newBulletCollider, newMeleeBullet, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, offenderWx, offenderWy, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerOpPatternToSkillId, playerShape, projectedMagnitude, projectedMagnitude$1, pushbackX, pushbackX$1, pushbackY, pushbackY$1, roomCapacity, skillConfig, skillId, snapIntoPlatformOverlap, snapIntoPlatformThreshold, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, virtualGridToWorldRatio, worldToVirtualGridRatio, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio, playerOpPatternToSkillId});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
 		roomCapacity = currRenderFrame.PlayersArr.$length;
 		nextRenderFramePlayers = $makeSlice(sliceType$6, roomCapacity);
@@ -5515,76 +5516,108 @@ $packages["jsexport/battle"] = (function() {
 			_i$2++;
 		$s = 1; continue;
 		case 2:
-		_ref$3 = currRenderFrame.PlayersArr;
+		bulletColliders = $makeSlice(sliceType$9, 0, currRenderFrame.MeleeBullets.$length);
+		_ref$3 = currRenderFrame.MeleeBullets;
 		_i$3 = 0;
 		/* while (true) { */ case 4:
 			/* if (!(_i$3 < _ref$3.$length)) { break; } */ if(!(_i$3 < _ref$3.$length)) { $s = 5; continue; }
-			i$3 = _i$3;
-			currPlayerDownsync$3 = ((_i$3 < 0 || _i$3 >= _ref$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$3.$array[_ref$3.$offset + _i$3]);
+			meleeBullet = ((_i$3 < 0 || _i$3 >= _ref$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$3.$array[_ref$3.$offset + _i$3]);
+			/* */ if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) <= currRenderFrame.Id) && (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { $s = 6; continue; }
+			/* */ $s = 7; continue;
+			/* if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) <= currRenderFrame.Id) && (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { */ case 6:
+				offender = (x$2 = currRenderFrame.PlayersArr, x$3 = meleeBullet.Bullet.OffenderJoinIndex - 1 >> 0, ((x$3 < 0 || x$3 >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + x$3]));
+				xfac = 1;
+				if (0 > offender.DirX) {
+					xfac = -1;
+				}
+				_tuple$3 = VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, virtualGridToWorldRatio);
+				offenderWx = _tuple$3[0];
+				offenderWy = _tuple$3[1];
+				_tmp$6 = offenderWx + xfac * meleeBullet.Bullet.HitboxOffset;
+				_tmp$7 = offenderWy;
+				bulletWx = _tmp$6;
+				bulletWy = _tmp$7;
+				_r = GenerateRectCollider(bulletWx, bulletWy, meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet"); /* */ $s = 9; case 9: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+				newBulletCollider = _r;
+				$r = collisionSys.Add(new sliceType$9([newBulletCollider])); /* */ $s = 10; case 10: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+				bulletColliders = $append(bulletColliders, newBulletCollider);
+				$s = 8; continue;
+			/* } else { */ case 7:
+				nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, meleeBullet);
+			/* } */ case 8:
+			_i$3++;
+		$s = 4; continue;
+		case 5:
+		_ref$4 = currRenderFrame.PlayersArr;
+		_i$4 = 0;
+		/* while (true) { */ case 11:
+			/* if (!(_i$4 < _ref$4.$length)) { break; } */ if(!(_i$4 < _ref$4.$length)) { $s = 12; continue; }
+			i$3 = _i$4;
+			currPlayerDownsync$3 = ((_i$4 < 0 || _i$4 >= _ref$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$4.$array[_ref$4.$offset + _i$4]);
 			joinIndex$2 = currPlayerDownsync$3.JoinIndex;
 			collisionPlayerIndex$1 = 131072 + joinIndex$2 >> 0;
 			playerCollider$1 = (_entry$3 = collisionSysMap[$Int32.keyFor(collisionPlayerIndex$1)], _entry$3 !== undefined ? _entry$3.v : ptrType$7.nil);
 			playerShape = $assertType(playerCollider$1.Shape, ptrType$5);
-			_r = calcHardPushbacksNorms(joinIndex$2, playerCollider$1, playerShape, snapIntoPlatformOverlap, (x$2 = joinIndex$2 - 1 >> 0, ((x$2 < 0 || x$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$2]))); /* */ $s = 6; case 6: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
-			(x$3 = joinIndex$2 - 1 >> 0, ((x$3 < 0 || x$3 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$3] = _r));
+			_r$1 = calcHardPushbacksNorms(joinIndex$2, playerCollider$1, playerShape, snapIntoPlatformOverlap, (x$4 = joinIndex$2 - 1 >> 0, ((x$4 < 0 || x$4 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$4]))); /* */ $s = 13; case 13: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+			(x$5 = joinIndex$2 - 1 >> 0, ((x$5 < 0 || x$5 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$5] = _r$1));
 			thatPlayerInNextFrame$2 = ((i$3 < 0 || i$3 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$3]);
 			landedOnGravityPushback = false;
 			collision = playerCollider$1.Check(0, 0, new sliceType$4([]));
-			/* */ if (!(ptrType$1.nil === collision)) { $s = 7; continue; }
-			/* */ $s = 8; continue;
-			/* if (!(ptrType$1.nil === collision)) { */ case 7:
-				_ref$4 = collision.Objects;
-				_i$4 = 0;
-				/* while (true) { */ case 9:
-					/* if (!(_i$4 < _ref$4.$length)) { break; } */ if(!(_i$4 < _ref$4.$length)) { $s = 10; continue; }
-					obj = ((_i$4 < 0 || _i$4 >= _ref$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$4.$array[_ref$4.$offset + _i$4]);
-					_tmp$6 = false;
-					_tmp$7 = false;
+			/* */ if (!(ptrType$1.nil === collision)) { $s = 14; continue; }
+			/* */ $s = 15; continue;
+			/* if (!(ptrType$1.nil === collision)) { */ case 14:
+				_ref$5 = collision.Objects;
+				_i$5 = 0;
+				/* while (true) { */ case 16:
+					/* if (!(_i$5 < _ref$5.$length)) { break; } */ if(!(_i$5 < _ref$5.$length)) { $s = 17; continue; }
+					obj = ((_i$5 < 0 || _i$5 >= _ref$5.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$5.$array[_ref$5.$offset + _i$5]);
 					_tmp$8 = false;
-					isBarrier = _tmp$6;
-					isAnotherPlayer = _tmp$7;
-					isBullet = _tmp$8;
-					_ref$5 = obj.Data;
-					if ($assertType(_ref$5, ptrType$3, true)[1]) {
+					_tmp$9 = false;
+					_tmp$10 = false;
+					isBarrier = _tmp$8;
+					isAnotherPlayer = _tmp$9;
+					isBullet = _tmp$10;
+					_ref$6 = obj.Data;
+					if ($assertType(_ref$6, ptrType$3, true)[1]) {
 						isAnotherPlayer = true;
-					} else if ($assertType(_ref$5, ptrType$4, true)[1]) {
+					} else if ($assertType(_ref$6, ptrType$4, true)[1]) {
 						isBullet = true;
 					} else {
 						isBarrier = true;
 					}
 					if (isBullet) {
-						_i$4++;
-						/* continue; */ $s = 9; continue;
+						_i$5++;
+						/* continue; */ $s = 16; continue;
 					}
 					bShape = $assertType(obj.Shape, ptrType$5);
-					_r$1 = CalcPushbacks(0, 0, playerShape, bShape); /* */ $s = 11; case 11: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
-					_tuple$3 = _r$1;
-					overlapped = _tuple$3[0];
-					pushbackX = _tuple$3[1];
-					pushbackY = _tuple$3[2];
-					overlapResult = _tuple$3[3];
+					_r$2 = CalcPushbacks(0, 0, playerShape, bShape); /* */ $s = 18; case 18: if($c) { $c = false; _r$2 = _r$2.$blk(); } if (_r$2 && _r$2.$blk !== undefined) { break s; }
+					_tuple$4 = _r$2;
+					overlapped = _tuple$4[0];
+					pushbackX = _tuple$4[1];
+					pushbackY = _tuple$4[2];
+					overlapResult = _tuple$4[3];
 					if (!overlapped) {
-						_i$4++;
-						/* continue; */ $s = 9; continue;
+						_i$5++;
+						/* continue; */ $s = 16; continue;
 					}
 					normAlignmentWithGravity = overlapResult.OverlapX * 0 + overlapResult.OverlapY * -1;
 					if (isAnotherPlayer) {
-						_tmp$9 = (overlapResult.Overlap - snapIntoPlatformOverlap * 2) * overlapResult.OverlapX;
-						_tmp$10 = (overlapResult.Overlap - snapIntoPlatformOverlap * 2) * overlapResult.OverlapY;
-						pushbackX = _tmp$9;
-						pushbackY = _tmp$10;
+						_tmp$11 = (overlapResult.Overlap - snapIntoPlatformOverlap * 2) * overlapResult.OverlapX;
+						_tmp$12 = (overlapResult.Overlap - snapIntoPlatformOverlap * 2) * overlapResult.OverlapY;
+						pushbackX = _tmp$11;
+						pushbackY = _tmp$12;
 					}
-					_ref$6 = (x$4 = joinIndex$2 - 1 >> 0, ((x$4 < 0 || x$4 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$4])).$get();
-					_i$5 = 0;
+					_ref$7 = (x$6 = joinIndex$2 - 1 >> 0, ((x$6 < 0 || x$6 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$6])).$get();
+					_i$6 = 0;
 					while (true) {
-						if (!(_i$5 < _ref$6.$length)) { break; }
-						hardPushbackNorm = $clone(((_i$5 < 0 || _i$5 >= _ref$6.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$6.$array[_ref$6.$offset + _i$5]), Vec2D);
+						if (!(_i$6 < _ref$7.$length)) { break; }
+						hardPushbackNorm = $clone(((_i$6 < 0 || _i$6 >= _ref$7.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$7.$array[_ref$7.$offset + _i$6]), Vec2D);
 						projectedMagnitude = pushbackX * hardPushbackNorm.X + pushbackY * hardPushbackNorm.Y;
 						if (isBarrier || (isAnotherPlayer && 0 > projectedMagnitude)) {
 							pushbackX = pushbackX - (projectedMagnitude * hardPushbackNorm.X);
 							pushbackY = pushbackY - (projectedMagnitude * hardPushbackNorm.Y);
 						}
-						_i$5++;
+						_i$6++;
 					}
 					_index = joinIndex$2 - 1 >> 0;
 					((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X = ((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X + (pushbackX);
@@ -5593,13 +5626,13 @@ $packages["jsexport/battle"] = (function() {
 					if (snapIntoPlatformThreshold < normAlignmentWithGravity) {
 						landedOnGravityPushback = true;
 					}
-					_i$4++;
-				$s = 9; continue;
-				case 10:
-			/* } */ case 8:
+					_i$5++;
+				$s = 16; continue;
+				case 17:
+			/* } */ case 15:
 			if (landedOnGravityPushback) {
 				thatPlayerInNextFrame$2.InAir = false;
-				if (currPlayerDownsync$3.InAir) {
+				if (currPlayerDownsync$3.InAir && 0 > currPlayerDownsync$3.VelY) {
 					thatPlayerInNextFrame$2.VelX = 0;
 					thatPlayerInNextFrame$2.VelY = 0;
 					thatPlayerInNextFrame$2.CharacterState = 0;
@@ -5617,26 +5650,110 @@ $packages["jsexport/battle"] = (function() {
 					thatPlayerInNextFrame$2.CharacterState = 6;
 				}
 			}
-			_i$3++;
-		$s = 4; continue;
-		case 5:
-		_ref$7 = currRenderFrame.PlayersArr;
-		_i$6 = 0;
+			_i$4++;
+		$s = 11; continue;
+		case 12:
+		_ref$8 = bulletColliders;
+		_i$7 = 0;
+		/* while (true) { */ case 19:
+			/* if (!(_i$7 < _ref$8.$length)) { break; } */ if(!(_i$7 < _ref$8.$length)) { $s = 20; continue; }
+			bulletCollider = ((_i$7 < 0 || _i$7 >= _ref$8.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$8.$array[_ref$8.$offset + _i$7]);
+			meleeBullet$1 = $assertType(bulletCollider.Data, ptrType$4);
+			bulletShape = $assertType(bulletCollider.Shape, ptrType$5);
+			collision$1 = bulletCollider.Check(0, 0, new sliceType$4([]));
+			bulletCollider.Space.Remove(new sliceType$9([bulletCollider]));
+			if (ptrType$1.nil === collision$1) {
+				nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, meleeBullet$1);
+				_i$7++;
+				/* continue; */ $s = 19; continue;
+			}
+			offender$1 = (x$7 = currRenderFrame.PlayersArr, x$8 = meleeBullet$1.Bullet.OffenderJoinIndex - 1 >> 0, ((x$8 < 0 || x$8 >= x$7.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$7.$array[x$7.$offset + x$8]));
+			_ref$9 = collision$1.Objects;
+			_i$8 = 0;
+			/* while (true) { */ case 21:
+				/* if (!(_i$8 < _ref$9.$length)) { break; } */ if(!(_i$8 < _ref$9.$length)) { $s = 22; continue; }
+				obj$1 = ((_i$8 < 0 || _i$8 >= _ref$9.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$9.$array[_ref$9.$offset + _i$8]);
+				defenderShape = $assertType(obj$1.Shape, ptrType$5);
+				_ref$10 = obj$1.Data;
+				/* */ if ($assertType(_ref$10, ptrType$3, true)[1]) { $s = 23; continue; }
+				/* */ $s = 24; continue;
+				/* if ($assertType(_ref$10, ptrType$3, true)[1]) { */ case 23:
+					t = _ref$10.$val;
+					if (meleeBullet$1.Bullet.OffenderPlayerId === t.Id) {
+						_i$8++;
+						/* continue; */ $s = 21; continue;
+					}
+					_r$3 = CalcPushbacks(0, 0, bulletShape, defenderShape); /* */ $s = 26; case 26: if($c) { $c = false; _r$3 = _r$3.$blk(); } if (_r$3 && _r$3.$blk !== undefined) { break s; }
+					_tuple$5 = _r$3;
+					overlapped$1 = _tuple$5[0];
+					if (!overlapped$1) {
+						_i$8++;
+						/* continue; */ $s = 21; continue;
+					}
+					joinIndex$3 = t.JoinIndex;
+					xfac$1 = 1;
+					if (0 > offender$1.DirX) {
+						xfac$1 = -1;
+					}
+					_tmp$13 = -xfac$1 * meleeBullet$1.Bullet.Pushback;
+					_tmp$14 = 0;
+					pushbackX$1 = _tmp$13;
+					pushbackY$1 = _tmp$14;
+					_ref$11 = (x$9 = joinIndex$3 - 1 >> 0, ((x$9 < 0 || x$9 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$9])).$get();
+					_i$9 = 0;
+					while (true) {
+						if (!(_i$9 < _ref$11.$length)) { break; }
+						hardPushbackNorm$1 = $clone(((_i$9 < 0 || _i$9 >= _ref$11.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$11.$array[_ref$11.$offset + _i$9]), Vec2D);
+						projectedMagnitude$1 = pushbackX$1 * hardPushbackNorm$1.X + pushbackY$1 * hardPushbackNorm$1.Y;
+						if (0 > projectedMagnitude$1) {
+							pushbackX$1 = pushbackX$1 - (projectedMagnitude$1 * hardPushbackNorm$1.X);
+							pushbackY$1 = pushbackY$1 - (projectedMagnitude$1 * hardPushbackNorm$1.Y);
+						}
+						_i$9++;
+					}
+					_index$2 = joinIndex$3 - 1 >> 0;
+					((_index$2 < 0 || _index$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$2]).X = ((_index$2 < 0 || _index$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$2]).X + (pushbackX$1);
+					_index$3 = joinIndex$3 - 1 >> 0;
+					((_index$3 < 0 || _index$3 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$3]).Y = ((_index$3 < 0 || _index$3 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$3]).Y + (pushbackY$1);
+					_tmp$15 = (x$10 = currRenderFrame.PlayersArr, x$11 = t.JoinIndex - 1 >> 0, ((x$11 < 0 || x$11 >= x$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + x$11]));
+					_tmp$16 = (x$12 = t.JoinIndex - 1 >> 0, ((x$12 < 0 || x$12 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$12]));
+					atkedPlayerInCurFrame = _tmp$15;
+					atkedPlayerInNextFrame = _tmp$16;
+					atkedPlayerInNextFrame.CharacterState = 3;
+					if (atkedPlayerInCurFrame.InAir) {
+						atkedPlayerInNextFrame.CharacterState = 6;
+					}
+					oldFramesToRecover = (x$13 = t.JoinIndex - 1 >> 0, ((x$13 < 0 || x$13 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$13])).FramesToRecover;
+					if (meleeBullet$1.Bullet.HitStunFrames > oldFramesToRecover) {
+						atkedPlayerInNextFrame.FramesToRecover = meleeBullet$1.Bullet.HitStunFrames;
+					}
+					$s = 25; continue;
+				/* } else { */ case 24:
+					t$1 = _ref$10;
+				/* } */ case 25:
+				_i$8++;
+			$s = 21; continue;
+			case 22:
+			_i$7++;
+		$s = 19; continue;
+		case 20:
+		_ref$12 = currRenderFrame.PlayersArr;
+		_i$10 = 0;
 		while (true) {
-			if (!(_i$6 < _ref$7.$length)) { break; }
-			i$4 = _i$6;
-			currPlayerDownsync$4 = ((_i$6 < 0 || _i$6 >= _ref$7.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$7.$array[_ref$7.$offset + _i$6]);
-			joinIndex$3 = currPlayerDownsync$4.JoinIndex;
-			collisionPlayerIndex$2 = 131072 + joinIndex$3 >> 0;
+			if (!(_i$10 < _ref$12.$length)) { break; }
+			i$4 = _i$10;
+			currPlayerDownsync$4 = ((_i$10 < 0 || _i$10 >= _ref$12.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$12.$array[_ref$12.$offset + _i$10]);
+			joinIndex$4 = currPlayerDownsync$4.JoinIndex;
+			collisionPlayerIndex$2 = 131072 + joinIndex$4 >> 0;
 			playerCollider$2 = (_entry$4 = collisionSysMap[$Int32.keyFor(collisionPlayerIndex$2)], _entry$4 !== undefined ? _entry$4.v : ptrType$7.nil);
 			thatPlayerInNextFrame$3 = ((i$4 < 0 || i$4 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$4]);
-			_tuple$4 = PolygonColliderBLToVirtualGridPos(playerCollider$2.X - (x$5 = joinIndex$3 - 1 >> 0, ((x$5 < 0 || x$5 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$5])).X, playerCollider$2.Y - (x$6 = joinIndex$3 - 1 >> 0, ((x$6 < 0 || x$6 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$6])).Y, playerCollider$2.W * 0.5, playerCollider$2.H * 0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, worldToVirtualGridRatio);
-			thatPlayerInNextFrame$3.VirtualGridX = _tuple$4[0];
-			thatPlayerInNextFrame$3.VirtualGridY = _tuple$4[1];
-			_i$6++;
+			_tuple$6 = PolygonColliderBLToVirtualGridPos(playerCollider$2.X - (x$14 = joinIndex$4 - 1 >> 0, ((x$14 < 0 || x$14 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$14])).X, playerCollider$2.Y - (x$15 = joinIndex$4 - 1 >> 0, ((x$15 < 0 || x$15 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$15])).Y, playerCollider$2.W * 0.5, playerCollider$2.H * 0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, worldToVirtualGridRatio);
+			thatPlayerInNextFrame$3.VirtualGridX = _tuple$6[0];
+			thatPlayerInNextFrame$3.VirtualGridY = _tuple$6[1];
+			_i$10++;
 		}
-		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), sliceType$7.nil, sliceType$9.nil, new $Uint64(0, 0), false);
-		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _index, _index$1, _r, _r$1, _ref, _ref$1, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _tmp, _tmp$1, _tmp$10, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$2, _tuple$3, _tuple$4, bShape, collision, collisionPlayerIndex, collisionPlayerIndex$1, collisionPlayerIndex$2, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, effDx, effDy, effPushbacks, existent, gravityX, gravityY, hardPushbackNorm, hardPushbackNorms, i, i$1, i$2, i$3, i$4, inputDelayFrames, inputScaleFrames, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpingInitVelY, landedOnGravityPushback, newMeleeBullet, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, oldNextCharacterState, overlapResult, overlapped, patternId, playerCollider, playerCollider$1, playerCollider$2, playerOpPatternToSkillId, playerShape, projectedMagnitude, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, snapIntoPlatformOverlap, snapIntoPlatformThreshold, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, virtualGridToWorldRatio, worldToVirtualGridRatio, x, x$1, x$2, x$3, x$4, x$5, x$6, $s};return $f;
+		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), nextRenderFrameMeleeBullets, sliceType$10.nil, new $Uint64(0, 0), false);
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _index$3, _r, _r$1, _r$2, _r$3, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, atkedPlayerInCurFrame, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, collision, collision$1, collisionPlayerIndex, collisionPlayerIndex$1, collisionPlayerIndex$2, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, gravityX, gravityY, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNorms, i, i$1, i$2, i$3, i$4, inputDelayFrames, inputScaleFrames, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, joinIndex$4, jumpedOrNot, jumpingInitVelY, landedOnGravityPushback, meleeBullet, meleeBullet$1, newBulletCollider, newMeleeBullet, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, offenderWx, offenderWy, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerOpPatternToSkillId, playerShape, projectedMagnitude, projectedMagnitude$1, pushbackX, pushbackX$1, pushbackY, pushbackY$1, roomCapacity, skillConfig, skillId, snapIntoPlatformOverlap, snapIntoPlatformThreshold, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, virtualGridToWorldRatio, worldToVirtualGridRatio, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, $s};return $f;
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame;
 	GenerateRectCollider = function(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag) {
@@ -5669,7 +5786,7 @@ $packages["jsexport/battle"] = (function() {
 		_tmp$1 = 0;
 		w = _tmp;
 		h = _tmp$1;
-		shape = resolv.NewConvexPolygon(sliceType$10.nil);
+		shape = resolv.NewConvexPolygon(sliceType$11.nil);
 		_ref = aligned.Points;
 		_i = 0;
 		while (true) {
@@ -5700,7 +5817,7 @@ $packages["jsexport/battle"] = (function() {
 		while (true) {
 			if (!(i$1 < aligned.Points.$length)) { break; }
 			p = (x = aligned.Points, ((i$1 < 0 || i$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + i$1]));
-			shape.AddPoints(new sliceType$10([p.X, p.Y]));
+			shape.AddPoints(new sliceType$11([p.X, p.Y]));
 			i$1 = i$1 + (1) >> 0;
 		}
 		collider = resolv.NewObject(aligned.Anchor.X + spaceOffsetX, aligned.Anchor.Y + spaceOffsetY, w, h, new sliceType$4([tag]));
@@ -5726,7 +5843,7 @@ $packages["jsexport/battle"] = (function() {
 			}
 			_i++;
 		}
-		output = new Polygon2D.ptr(new Vec2D.ptr(input.Anchor.X + boundingBoxBL.X, input.Anchor.Y + boundingBoxBL.Y), $makeSlice(sliceType$11, input.Points.$length));
+		output = new Polygon2D.ptr(new Vec2D.ptr(input.Anchor.X + boundingBoxBL.X, input.Anchor.Y + boundingBoxBL.Y), $makeSlice(sliceType$12, input.Points.$length));
 		_ref$1 = input.Points;
 		_i$1 = 0;
 		while (true) {
@@ -5741,14 +5858,14 @@ $packages["jsexport/battle"] = (function() {
 	$pkg.AlignPolygon2DToBoundingBox = AlignPolygon2DToBoundingBox;
 	ptrType$11.methods = [{prop: "Put", name: "Put", pkg: "", typ: $funcType([$emptyInterface], [], false)}, {prop: "Pop", name: "Pop", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetArrIdxByOffset", name: "GetArrIdxByOffset", pkg: "", typ: $funcType([$Int32], [$Int32], false)}, {prop: "GetByOffset", name: "GetByOffset", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "GetByFrameId", name: "GetByFrameId", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "SetByFrameId", name: "SetByFrameId", pkg: "", typ: $funcType([$emptyInterface, $Int32], [$Int32, $Int32, $Int32], false)}];
 	Vec2D.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
-	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$9, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$11, tag: ""}]);
+	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$9, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$12, tag: ""}]);
 	PlayerDownsync.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleState", name: "BattleState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JoinIndex", name: "JoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ColliderRadius", name: "ColliderRadius", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Removed", name: "Removed", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Score", name: "Score", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LastMoveGmtMillis", name: "LastMoveGmtMillis", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesToRecover", name: "FramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hp", name: "Hp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "MaxHp", name: "MaxHp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CharacterState", name: "CharacterState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InAir", name: "InAir", embedded: false, exported: true, typ: $Bool, tag: ""}]);
 	InputFrameDecoded.init("", [{prop: "Dx", name: "Dx", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Dy", name: "Dy", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnALevel", name: "BtnALevel", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnBLevel", name: "BtnBLevel", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	Barrier.init("", [{prop: "Boundary", name: "Boundary", embedded: false, exported: true, typ: ptrType$10, tag: ""}]);
 	Bullet.init("", [{prop: "BattleLocalId", name: "BattleLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StartupFrames", name: "StartupFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveFrames", name: "ActiveFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFrames", name: "RecoveryFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnBlock", name: "RecoveryFramesOnBlock", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnHit", name: "RecoveryFramesOnHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffset", name: "HitboxOffset", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OriginatedRenderFrameId", name: "OriginatedRenderFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitStunFrames", name: "HitStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlockStunFrames", name: "BlockStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Pushback", name: "Pushback", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "ReleaseTriggerType", name: "ReleaseTriggerType", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Damage", name: "Damage", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderJoinIndex", name: "OffenderJoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderPlayerId", name: "OffenderPlayerId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfMoveforwardX", name: "SelfMoveforwardX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "SelfMoveforwardY", name: "SelfMoveforwardY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "HitboxSizeX", name: "HitboxSizeX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "HitboxSizeY", name: "HitboxSizeY", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	MeleeBullet.init("", [{prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
 	FireballBullet.init("", [{prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
-	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$6, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$9, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}]);
+	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$6, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$10, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}]);
 	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$5, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
 	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
 	SatResult.init("", [{prop: "Overlap", name: "Overlap", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapX", name: "OverlapX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapY", name: "OverlapY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "AContainedInB", name: "AContainedInB", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BContainedInA", name: "BContainedInA", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Axis", name: "Axis", embedded: false, exported: true, typ: resolv.Vector, tag: ""}]);
@@ -5758,7 +5875,7 @@ $packages["jsexport/battle"] = (function() {
 		$r = math.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$r = resolv.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$pkg.DIRECTION_DECODER = new sliceType$1([new sliceType([0, 0]), new sliceType([0, 2]), new sliceType([0, -2]), new sliceType([2, 0]), new sliceType([-2, 0]), new sliceType([1, 1]), new sliceType([-1, -1]), new sliceType([1, -1]), new sliceType([-1, 1])]);
-		skillIdToBullet = $makeMap($Int.keyFor, [{ k: 1, v: new MeleeBullet.ptr(new Bullet.ptr(0, 10, 10, 34, 34, 34, 12, 0, 18, 9, 8, 1, 5, 0, 0, 0, 0, 24, 32)) }]);
+		skillIdToBullet = $makeMap($Int.keyFor, [{ k: 1, v: new MeleeBullet.ptr(new Bullet.ptr(0, 5, 10, 34, 34, 34, 12, 0, 18, 9, 8, 1, 5, 0, 0, 0, 0, 24, 32)) }]);
 		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
 	};
 	$pkg.$init = $init;

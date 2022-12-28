@@ -32,7 +32,7 @@ var skillIdToBullet = map[int]interface{}{
 	1: &MeleeBullet{
 		Bullet: Bullet{
 			// for offender
-			StartupFrames:         int32(10),
+			StartupFrames:         int32(5),
 			ActiveFrames:          int32(10),
 			RecoveryFrames:        int32(34),
 			RecoveryFramesOnBlock: int32(34),
@@ -468,7 +468,27 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 	}
 
-	// 3. Calc pushbacks for each player (after its movement) w/o bullets
+	// 3. Add bullet colliders into collision system
+	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
+	for _, meleeBullet := range currRenderFrame.MeleeBullets {
+		if (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id) {
+			offender := currRenderFrame.PlayersArr[meleeBullet.OffenderJoinIndex-1]
+
+			xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
+			if 0 > offender.DirX {
+				xfac = float64(-1.0)
+			}
+			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, virtualGridToWorldRatio)
+			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+			collisionSys.Add(newBulletCollider)
+			bulletColliders = append(bulletColliders, newBulletCollider)
+		} else {
+			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
+		}
+	}
+
+	// 4. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
@@ -522,7 +542,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 		if landedOnGravityPushback {
 			thatPlayerInNextFrame.InAir = false
-			if currPlayerDownsync.InAir {
+			if currPlayerDownsync.InAir && 0 > currPlayerDownsync.VelY {
 				// fallStopping
 				thatPlayerInNextFrame.VelX = 0
 				thatPlayerInNextFrame.VelY = 0
@@ -543,7 +563,61 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 	}
 
-	// 4. Get players out of stuck barriers if there's any
+	// 5. Check bullet-anything collisions
+	for _, bulletCollider := range bulletColliders {
+		meleeBullet := bulletCollider.Data.(*MeleeBullet)
+		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+		collision := bulletCollider.Check(0, 0)
+		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
+		if nil == collision {
+			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
+			continue
+		}
+		offender := currRenderFrame.PlayersArr[meleeBullet.OffenderJoinIndex-1]
+		for _, obj := range collision.Objects {
+			defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+			switch t := obj.Data.(type) {
+			case *PlayerDownsync:
+				if meleeBullet.OffenderPlayerId == t.Id {
+					continue
+				}
+				overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+				if !overlapped {
+					continue
+				}
+				joinIndex := t.JoinIndex
+				xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
+				if 0 > offender.DirX {
+					xfac = float64(-1.0)
+				}
+				pushbackX, pushbackY := -xfac*meleeBullet.Pushback, float64(0)
+
+				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
+					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
+					if 0 > projectedMagnitude {
+						//fmt.Printf("defenderPlayerId=%d, joinIndex=%d reducing bullet pushback={%.3f, %.3f} by {%.3f, %.3f} where hardPushbackNorm={%.3f, %.3f}, projectedMagnitude=%.3f at renderFrame.id=%d", t.Id, joinIndex, pushbackX, pushbackY, projectedMagnitude*hardPushbackNorm.X, projectedMagnitude*hardPushbackNorm.Y, hardPushbackNorm.X, hardPushbackNorm.Y, projectedMagnitude, currRenderFrame.Id)
+						pushbackX -= projectedMagnitude * hardPushbackNorm.X
+						pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+					}
+				}
+
+				effPushbacks[joinIndex-1].X += pushbackX
+				effPushbacks[joinIndex-1].Y += pushbackY
+				atkedPlayerInCurFrame, atkedPlayerInNextFrame := currRenderFrame.PlayersArr[t.JoinIndex-1], nextRenderFramePlayers[t.JoinIndex-1]
+				atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+				if atkedPlayerInCurFrame.InAir {
+					atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+				}
+				oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+				if meleeBullet.HitStunFrames > oldFramesToRecover {
+					atkedPlayerInNextFrame.FramesToRecover = meleeBullet.HitStunFrames
+				}
+			default:
+			}
+		}
+	}
+
+	// 6. Get players out of stuck barriers if there's any
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
@@ -554,8 +628,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	return &RoomDownsyncFrame{
-		Id:         currRenderFrame.Id + 1,
-		PlayersArr: nextRenderFramePlayers,
+		Id:           currRenderFrame.Id + 1,
+		PlayersArr:   nextRenderFramePlayers,
+		MeleeBullets: nextRenderFrameMeleeBullets,
 	}
 }
 
