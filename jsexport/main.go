@@ -42,23 +42,24 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, characterState, joinIndex, hp, maxHp int32, inAir bool, colliderRadius float64) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, speed, battleState, characterState, joinIndex, hp, maxHp int32, inAir bool, colliderRadius float64) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
-		Id:             id,
-		VirtualGridX:   virtualGridX,
-		VirtualGridY:   virtualGridY,
-		DirX:           dirX,
-		DirY:           dirY,
-		VelX:           velX,
-		VelY:           velY,
-		Speed:          speed,
-		BattleState:    battleState,
-		JoinIndex:      joinIndex,
-		ColliderRadius: colliderRadius,
-		Hp:             hp,
-		MaxHp:          maxHp,
-		CharacterState: characterState,
-		InAir:          inAir,
+		Id:              id,
+		VirtualGridX:    virtualGridX,
+		VirtualGridY:    virtualGridY,
+		DirX:            dirX,
+		DirY:            dirY,
+		VelX:            velX,
+		VelY:            velY,
+		FramesToRecover: framesToRecover,
+		Speed:           speed,
+		BattleState:     battleState,
+		JoinIndex:       joinIndex,
+		ColliderRadius:  colliderRadius,
+		Hp:              hp,
+		MaxHp:           maxHp,
+		CharacterState:  characterState,
+		InAir:           inAir,
 	})
 }
 

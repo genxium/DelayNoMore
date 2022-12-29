@@ -353,7 +353,7 @@ func (pR *Room) playerDownsyncStr(player *battle.PlayerDownsync) string {
 	if player.InAir {
 		inAirInt = 1
 	}
-	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, inAirInt)
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, player.FramesToRecover,inAirInt)
 
 	return s
 }
@@ -744,7 +744,7 @@ func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.BulletBattleLocalIdCounter = 0
-	pR.WorldToVirtualGridRatio = float64(1000)
+	pR.WorldToVirtualGridRatio = float64(100)
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
 	pR.SpAtkLookupFrames = 5
 	pR.PlayerDefaultSpeed = int32(float64(1) * pR.WorldToVirtualGridRatio)                        // in virtual grids per frame
@@ -784,7 +784,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(pR.ServerFps) / dilutedServerFps)
-	pR.BattleDurationFrames = 60 * pR.ServerFps
+	pR.BattleDurationFrames = 15 * pR.ServerFps
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = (pR.NstDelayFrames >> pR.InputScaleFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 12                                            // Don't set this value too high to avoid exhausting frontend CPU within a single frame
@@ -797,7 +797,7 @@ func (pR *Room) OnDismissed() {
 	pR.GravityX = 0
 	pR.GravityY = -int32(float64(0.5) * pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
+	pR.FrameDataLoggingEnabled = true // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
