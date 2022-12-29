@@ -67,7 +67,6 @@ cc.Class({
     this.speciesName = null;
     this.hp = 100;
     this.maxHp = 100;
-    this.framesToRecover = 0;
     this.inAir = true;
   },
 
@@ -86,18 +85,18 @@ cc.Class({
   },
 
   updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch) {
-    // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevRdfPlayer.characterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
+    // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevRdfPlayer.CharacterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
 
     // Update directions
     if (this.animComp && this.animComp.node) {
-      if (0 > rdfPlayer.dirX) {
+      if (0 > rdfPlayer.DirX) {
         this.animComp.node.scaleX = (-1.0);
-      } else if (0 < rdfPlayer.dirX) {
+      } else if (0 < rdfPlayer.DirX) {
         this.animComp.node.scaleX = (1.0);
       }
     }
 
-    let newCharacterState = rdfPlayer.characterState;
+    let newCharacterState = rdfPlayer.CharacterState;
     let newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
     let playingAnimName = null;
     let underlyingAnimationCtrl = null;
@@ -110,7 +109,7 @@ cc.Class({
       playingAnimName = (!underlyingAnimationCtrl ? null : underlyingAnimationCtrl.name);
     }
 
-    // It turns out that "prevRdfPlayer.characterState" is not useful in this function :)
+    // It turns out that "prevRdfPlayer.CharacterState" is not useful in this function :)
     if (newAnimName == playingAnimName && window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No need to interrupt
       // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${playingAnimName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, to: ${JSON.stringify(rdfPlayer)}`);
@@ -131,7 +130,7 @@ cc.Class({
       underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, 0, -1);
     } else {
       const animationData = underlyingAnimationCtrl._animations[newAnimName];
-      let fromAnimFrame = (animationData.frameCount - rdfPlayer.framesToRecover);
+      let fromAnimFrame = (animationData.frameCount - rdfPlayer.FramesToRecover);
       if (fromAnimFrame < 0) {
         // For Atk1 or Atk2, it's possible that the "meleeBullet.recoveryFrames" is configured to be slightly larger than corresponding animation duration frames
         fromAnimFrame = 0;
@@ -149,7 +148,7 @@ cc.Class({
     }
     // The "playTimes" counterpart is managed by each "cc.AnimationClip.wrapMode", already preset in the editor.
     const targetClip = this.animComp.getClips()[newCharacterState]; // The clips follow the exact order in ATK_CHARACTER_STATE
-    let fromTime = (targetClip.duration - rdfPlayer.framesToRecover / targetClip.sample); // TODO: Anyway to avoid using division here?
+    let fromTime = (targetClip.duration - rdfPlayer.FramesToRecover / targetClip.sample); // TODO: Anyway to avoid using division here?
     if (fromTime < 0) {
       // For Atk1 or Atk2, it's possible that the "meleeBullet.recoveryFrames" is configured to be slightly larger than corresponding animation duration frames
       fromTime = 0;

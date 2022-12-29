@@ -1,14 +1,13 @@
 package main
 
 import (
-	. "battle_srv/protos"
 	. "dnmshared"
-	. "dnmshared/sharedprotos"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/solarlune/resolv"
 	"go.uber.org/zap"
 	"image/color"
+	. "jsexport/battle"
+	"resolv"
 )
 
 type WorldColliderDisplay struct {
@@ -39,21 +38,21 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	playerDefaultSpeed := 1 * worldToVirtualGridRatio
 	minStep := (int(float64(playerDefaultSpeed)*virtualGridToWorldRatio) << 3)
 	playerColliderRadius := float64(12)
-	playerColliders := make([]*resolv.Object, len(playerPosList.Eles))
+	playerColliders := make([]*resolv.Object, len(playerPosList))
 	snapIntoPlatformOverlap := float64(0.1)
 	space := resolv.NewSpace(int(spaceW), int(spaceH), minStep, minStep)
 	topPadding, bottomPadding, leftPadding, rightPadding := snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap
-	for i, playerPos := range playerPosList.Eles {
+	for i, playerPos := range playerPosList {
 		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "Player") // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
+		playerCollider := GenerateRectCollider(playerPos.X, playerPos.Y, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, fmt.Sprintf("Player%d", i+1)) // [WARNING] Deliberately not using a circle because "resolv v0.5.1" doesn't yet align circle center with space cell center, regardless of the "specified within-object offset"
 		Logger.Info(fmt.Sprintf("Player Collider#%d: player world pos=(%.2f, %.2f), shape=%v", i, playerPos.X, playerPos.Y, ConvexPolygonStr(playerCollider.Shape.(*resolv.ConvexPolygon))))
 		playerColliders[i] = playerCollider
 		space.Add(playerCollider)
 	}
 
 	barrierLocalId := 0
-	for _, barrierUnaligned := range barrierList.Eles {
-		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, "Barrier")
+	for _, barrierUnaligned := range barrierList {
+		barrierCollider := GenerateConvexPolygonCollider(barrierUnaligned, spaceOffsetX, spaceOffsetY, nil, "Barrier")
 		Logger.Debug(fmt.Sprintf("Added barrier: shape=%v", ConvexPolygonStr(barrierCollider.Shape.(*resolv.ConvexPolygon))))
 		space.Add(barrierCollider)
 		barrierLocalId++
@@ -64,16 +63,14 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	moveToCollide := true
 	if moveToCollide {
 		effPushback := Vec2D{X: float64(0), Y: float64(0)}
-		toTestPlayerCollider := playerColliders[0]
 		colliderWidth, colliderHeight := playerColliderRadius*2, playerColliderRadius*4
-		newVx, newVy := int32(-189000), int32(-497000)
-		toTestPlayerCollider.X, toTestPlayerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
-		playerColliders[1].X, playerColliders[1].Y = VirtualGridToPolygonColliderBLPos(int32(-165000), int32(-504000), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
-        playerColliders[1].Update()
+		playerColliders[0].X, playerColliders[0].Y = VirtualGridToPolygonColliderBLPos(int32(-139000), int32(-474500), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		playerColliders[0].Update()
 
-		Logger.Info(fmt.Sprintf("Checking collision for playerShape=%v", ConvexPolygonStr(toTestPlayerCollider.Shape.(*resolv.ConvexPolygon))))
+		playerColliders[1].X, playerColliders[1].Y = VirtualGridToPolygonColliderBLPos(int32(-163000), int32(-520000), colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, virtualGridToWorldRatio)
+		playerColliders[1].Update()
 
-		toTestPlayerCollider.Update()
+		toTestPlayerCollider := playerColliders[1]
 		if collision := toTestPlayerCollider.Check(0, 0); collision != nil {
 			playerShape := toTestPlayerCollider.Shape.(*resolv.ConvexPolygon)
 			for _, obj := range collision.Objects {
@@ -87,9 +84,9 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 					Logger.Warn(fmt.Sprintf("Collided BUT not overlapped: a=%v, b=%v, overlapResult=%v", ConvexPolygonStr(playerShape), ConvexPolygonStr(bShape), overlapResult))
 				}
 			}
-			toTestPlayerCollider.X -= effPushback.X
-			toTestPlayerCollider.Y -= effPushback.Y
-			toTestPlayerCollider.Update()
+			//toTestPlayerCollider.X -= effPushback.X
+			//toTestPlayerCollider.Y -= effPushback.Y
+			//toTestPlayerCollider.Update()
 			Logger.Info(fmt.Sprintf("effPushback={%v, %v}", effPushback.X, effPushback.Y))
 		}
 	}
@@ -100,15 +97,11 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 		RecoveryFrames:        int32(61),
 		RecoveryFramesOnBlock: int32(61),
 		RecoveryFramesOnHit:   int32(61),
-		Moveforward: &Vec2D{
-			X: 0,
-			Y: 0,
-		},
-		HitboxOffset: float64(24.0),
-		HitboxSize: &Vec2D{
-			X: float64(45.0),
-			Y: float64(32.0),
-		},
+		SelfMoveforwardX:      0,
+		SelfMoveforwardY:      0,
+		HitboxOffset:          float64(24.0),
+		HitboxSizeX:           float64(45.0),
+		HitboxSizeY:           float64(32.0),
 
 		// for defender
 		HitStunFrames:      int32(18),
@@ -120,9 +113,9 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	bulletLeftToRight := false
 	if bulletLeftToRight {
 		xfac := float64(1.0)
-		offenderWx, offenderWy := playerPosList.Eles[0].X, playerPosList.Eles[0].Y
+		offenderWx, offenderWy := playerPosList[0].X, playerPosList[0].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet ->: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
@@ -142,10 +135,10 @@ func NewWorldColliderDisplay(game *Game, stageDiscreteW, stageDiscreteH, stageTi
 	bulletRightToLeft := false
 	if bulletRightToLeft {
 		xfac := float64(-1.0)
-		offenderWx, offenderWy := playerPosList.Eles[1].X, playerPosList.Eles[1].Y
+		offenderWx, offenderWy := playerPosList[1].X, playerPosList[1].Y
 		bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
 
-		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSize.X, meleeBullet.HitboxSize.Y, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, "MeleeBullet")
+		newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, nil, "MeleeBullet")
 		space.Add(newBulletCollider)
 		bulletShape := newBulletCollider.Shape.(*resolv.ConvexPolygon)
 		Logger.Warn(fmt.Sprintf("bullet <-: Added bullet collider to space: a=%v", ConvexPolygonStr(bulletShape)))
@@ -172,11 +165,14 @@ func (world *WorldColliderDisplay) Update() {
 func (world *WorldColliderDisplay) Draw(screen *ebiten.Image) {
 
 	for _, o := range world.Space.Objects() {
-		if o.HasTags("Player") {
-			drawColor := color.RGBA{0, 255, 0, 255}
+		if o.HasTags("Player1") {
+			drawColor := color.RGBA{255, 0, 0, 255}
+			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
+		} else if o.HasTags("Player2") {
+			drawColor := color.RGBA{0, 0, 255, 255}
 			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
 		} else if o.HasTags("MeleeBullet") {
-			drawColor := color.RGBA{0, 0, 255, 255}
+			drawColor := color.RGBA{78, 255, 112, 255}
 			DrawPolygon(screen, o.Shape.(*resolv.ConvexPolygon), drawColor)
 		} else {
 			drawColor := color.RGBA{60, 60, 60, 255}

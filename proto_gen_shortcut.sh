@@ -6,7 +6,7 @@
 
 golang_basedir_1=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/dnmshared
 protoc -I=$golang_basedir_1/../frontend/assets/resources/pbfiles/ --go_out=. geometry.proto 
-echo "GOLANG part 1 done"
+echo "GOLANG part 1 done" # [WARNING] The output of "part 1" is DEPRECATED, the codes are not using it anymore. 
 
 # [WARNING] The following "room_downsync_frame.proto" is generated in another Go package than "geometry.proto", but the generated Go codes are also required to work with imports correctly!
 golang_basedir_2=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/battle_srv

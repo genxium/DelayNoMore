@@ -58,7 +58,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "autoReleaseAssets": false,
-    "_id": "368b10b6-88fc-423c-9fcd-545d9fc673bd"
+    "_id": "8491a86c-bec9-4813-968a-128ca01639e0"
   },
   {
     "__type__": "cc.Node",
@@ -249,7 +249,7 @@
     "_id": "3crA1nz5xPSLAnCSLQIPOq"
   },
   {
-    "__type__": "47d7dy4S4lB2pxqJJlGOoai",
+    "__type__": "b3810kDSWtD14RhiYzulYVI",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -278,7 +278,8 @@
     "renderFrameIdLagTolerance": 4,
     "jigglingEps1D": 0.001,
     "bulletTriggerEnabled": true,
-    "_id": "4b+kZ46VhC0LCBixXEK2dk"
+    "closeOnForcedtoResyncNotSelf": true,
+    "_id": "e5xQdv12xLoIRr0b36Pie+"
   },
   {
     "__type__": "cc.Node",

@@ -197,6 +197,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
         break;
       case constants.RET_CODE.BATTLE_STOPPED:
         // deliberately do nothing
+        if (mapIns.frameDataLoggingEnabled) {
+          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+        }
         break;
       case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
       case constants.RET_CODE.PLAYER_NOT_READDABLE_TO_ROOM:
@@ -211,7 +214,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.PLAYER_NOT_FOUND:
       case constants.RET_CODE.PLAYER_CHEATING:
       case 1006: // Peer(i.e. the backend) gone unexpectedly 
-        console.warn(`${mapIns._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
+        if (mapIns.frameDataLoggingEnabled) {
+          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+        }
         window.clearLocalStorageAndBackToLoginScene(true);
         break;
       default:

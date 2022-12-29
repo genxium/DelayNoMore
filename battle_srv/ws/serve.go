@@ -240,14 +240,12 @@ func Serve(c *gin.Context) {
 
 		// Construct "battleColliderInfo" to downsync
 		bciFrame := &pb.BattleColliderInfo{
-			BoundRoomId:           pRoom.Id,
-			StageName:             pRoom.StageName,
-			StrToVec2DListMap:     pRoom.StrToVec2DListMap,
-			StrToPolygon2DListMap: pRoom.StrToPolygon2DListMap,
-			StageDiscreteW:        pRoom.StageDiscreteW,
-			StageDiscreteH:        pRoom.StageDiscreteH,
-			StageTileW:            pRoom.StageTileW,
-			StageTileH:            pRoom.StageTileH,
+			BoundRoomId:    pRoom.Id,
+			StageName:      pRoom.StageName,
+			StageDiscreteW: pRoom.StageDiscreteW,
+			StageDiscreteH: pRoom.StageDiscreteH,
+			StageTileW:     pRoom.StageTileW,
+			StageTileH:     pRoom.StageTileH,
 
 			IntervalToPing:                  int32(Constants.Ws.IntervalToPing),
 			WillKickIfInactiveFor:           int32(Constants.Ws.WillKickIfInactiveFor),
@@ -267,12 +265,14 @@ func Serve(c *gin.Context) {
 
 			SpAtkLookupFrames:         pRoom.SpAtkLookupFrames,
 			RenderCacheSize:           pRoom.RenderCacheSize,
-			MeleeSkillConfig:          pRoom.MeleeSkillConfig,
 			SnapIntoPlatformOverlap:   pRoom.SnapIntoPlatformOverlap,
 			SnapIntoPlatformThreshold: pRoom.SnapIntoPlatformThreshold,
 			JumpingInitVelY:           pRoom.JumpingInitVelY,
 			GravityX:                  pRoom.GravityX,
 			GravityY:                  pRoom.GravityY,
+			CollisionMinStep:          pRoom.CollisionMinStep,
+
+			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
 		}
 
 		resp := &pb.WsResp{

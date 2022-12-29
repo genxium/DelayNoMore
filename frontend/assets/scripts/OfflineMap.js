@@ -13,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
@@ -31,6 +31,7 @@ cc.Class({
     self.inputDelayFrames = 8;
     self.inputScaleFrames = 2;
     self.inputFrameUpsyncDelayTolerance = 2;
+    self.collisionMinStep = 8;
 
     self.renderCacheSize = 1024;
     self.serverFps = 60;
@@ -41,32 +42,11 @@ cc.Class({
 
     self.worldToVirtualGridRatio = 1000;
     self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
-    self.meleeSkillConfig = {
-      1: {
-        // for offender
-        startupFrames: 10,
-        activeFrames: 20,
-        recoveryFrames: 34, // usually but not always "startupFrames+activeFrames", I hereby set it to be 1 frame more than the actual animation to avoid critical transition, i.e. when the animation is 1 frame from ending but "rdfPlayer.framesToRecover" is already counted 0 and the player triggers an other same attack, making an effective bullet trigger but no animation is played due to same animName is still playing
-        recoveryFramesOnBlock: 34,
-        recoveryFramesOnHit: 34,
-        moveforward: {
-          x: 0,
-          y: 0,
-        },
-        hitboxOffset: 12.0, // should be about the radius of the PlayerCollider 
-        hitboxSize: {
-          x: 23.0,
-          y: 32.0,
-        },
-
-        // for defender
-        hitStunFrames: 18,
-        blockStunFrames: 9,
-        pushback: 8.0,
-        releaseTriggerType: 1, // 1: rising-edge, 2: falling-edge  
-        damage: 5
-      }
-    };
+    const opJoinIndexPrefix1 = (1 << 8);
+    const opJoinIndexPrefix2 = (2 << 8);
+    self.playerOpPatternToSkillId = {};
+    self.playerOpPatternToSkillId[opJoinIndexPrefix1 + 0] = 1;
+    self.playerOpPatternToSkillId[opJoinIndexPrefix2 + 0] = 1;
 
     /* 
     [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
@@ -76,7 +56,7 @@ cc.Class({
     self.snapIntoPlatformOverlap = 0.1;
     self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
     self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -0.5*self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
+    [self.gravityX, self.gravityY] = [0, -0.5 * self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -89,7 +69,6 @@ cc.Class({
 
       tiledMapIns.tmxAsset = null;
       mapNode.removeAllChildren();
-      self._resetCurrentMatch();
 
       if (self.showCriticalCoordinateLabels) {
         const drawer = new cc.Node();
@@ -101,25 +80,30 @@ cc.Class({
         self.g = g;
       }
 
-
       tiledMapIns.tmxAsset = tmxAsset;
       const newMapSize = tiledMapIns.getMapSize();
       const newTileSize = tiledMapIns.getTileSize();
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
 
+      self.stageDiscreteW = newMapSize.width;
+      self.stageDiscreteH = newMapSize.height;
+      self.stageTileW = newTileSize.width;
+      self.stageTileH = newTileSize.height;
+
+      self._resetCurrentMatch();
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
       for (let boundaryObj of boundaryObjs.barriers) {
-        const x0 = boundaryObj.anchor.x,
-          y0 = boundaryObj.anchor.y;
+        const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(boundaryObj.anchor.x, boundaryObj.anchor.y);
+        const gopkgsBoundaryPts = Array.from(boundaryObj, p => {
+          return gopkgs.NewVec2DJs(p.x, p.y);
+        });
+        const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
+        const gopkgsBarrier = gopkgs.NewBarrierJs(gopkgsBoundary);
 
-        const newBarrier = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj, p => {
-          return [p.x, p.y];
-        }));
-        newBarrier.data = {
-          hardPushback: true
-        };
+        const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
+        self.gopkgsCollisionSys.Add(newBarrierCollider);
 
         if (false && self.showCriticalCoordinateLabels) {
           for (let i = 0; i < boundaryObj.length; ++i) {
@@ -152,20 +136,20 @@ cc.Class({
           }
 
         }
-        // console.log("Created barrier: ", newBarrier);
+        // console.log("Created barrier: ", newBarrierCollider);
         ++barrierIdCounter;
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
-        self.collisionSysMap.set(collisionBarrierIndex, newBarrier);
+        self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
-        players: {
-          10: window.pb.protos.PlayerDownsync.create({
+        playersArr: [
+          window.pb.protos.PlayerDownsync.create({
             id: 10,
             joinIndex: 1,
-            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[0],
-            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y)[1],
+            virtualGridX: boundaryObjs.playerStartingPositions[0].x * self.worldToVirtualGridRatio,
+            virtualGridY: boundaryObjs.playerStartingPositions[0].y * self.worldToVirtualGridRatio,
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
@@ -176,11 +160,11 @@ cc.Class({
             velY: 0,
             inAir: true,
           }),
-          11: window.pb.protos.PlayerDownsync.create({
+          window.pb.protos.PlayerDownsync.create({
             id: 11,
             joinIndex: 2,
-            virtualGridX: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[0],
-            virtualGridY: self.worldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y)[1],
+            virtualGridX: boundaryObjs.playerStartingPositions[1].x * self.worldToVirtualGridRatio,
+            virtualGridY: boundaryObjs.playerStartingPositions[1].y * self.worldToVirtualGridRatio,
             speed: 1 * self.worldToVirtualGridRatio,
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
@@ -191,12 +175,13 @@ cc.Class({
             velY: 0,
             inAir: true,
           }),
-        }
+        ]
       });
+
       self.selfPlayerInfo = {
-        id: 11
+        Id: 10,
+        JoinIndex: 1,
       };
-      self._initPlayerRichInfoDict(startRdf.players);
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
@@ -219,12 +204,12 @@ cc.Class({
           currSelfInput = null;
         const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
         if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self._generateInputFrameUpsync(noDelayInputFrameId);
+          const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];
         }
 
-        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
+        const [prevRdf, rdf] = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, false);
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         self.showDebugBoundaries(rdf);
         ++self.renderFrameId;
@@ -235,4 +220,5 @@ cc.Class({
       }
     }
   },
+
 });

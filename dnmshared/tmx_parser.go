@@ -3,13 +3,13 @@ package dnmshared
 import (
 	"bytes"
 	"compress/zlib"
-	. "dnmshared/sharedprotos"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"io/ioutil"
+	. "jsexport/battle"
 	"math"
 	"strconv"
 	"strings"
@@ -175,8 +175,8 @@ func (l *TmxLayer) decodeBase64() ([]uint32, error) {
 	return gids, nil
 }
 
-type StrToVec2DListMap map[string]*Vec2DList
-type StrToPolygon2DListMap map[string]*Polygon2DList
+type StrToVec2DListMap map[string](*[]*Vec2D)
+type StrToPolygon2DListMap map[string](*[]*Polygon2D)
 
 func tmxPolylineToPolygon2D(pTmxMapIns *TmxMap, singleObjInTmxFile *TmxOrTsxObject, targetPolyline *TmxOrTsxPolyline) (*Polygon2D, error) {
 	if nil == targetPolyline {
@@ -321,21 +321,18 @@ func DeserializeTsxToColliderDict(pTmxMapIns *TmxMap, byteArrOfTsxFile []byte, f
 				theStrToPolygon2DListMap = gidBoundariesMap[globalGid]
 			}
 
-			var pThePolygon2DList *Polygon2DList
-			if _, ok := theStrToPolygon2DListMap[key]; ok {
-				pThePolygon2DList = theStrToPolygon2DListMap[key]
-			} else {
-				pThePolygon2DList = &Polygon2DList{
-					Eles: make([]*Polygon2D, 0),
-				}
-				theStrToPolygon2DListMap[key] = pThePolygon2DList
+			var pThePolygon2DList *[]*Polygon2D = nil
+			if _, ok := theStrToPolygon2DListMap[key]; !ok {
+				tmp := make([]*Polygon2D, 0)
+				theStrToPolygon2DListMap[key] = &tmp
 			}
+			pThePolygon2DList = theStrToPolygon2DListMap[key]
 
 			thePolygon2DFromPolyline, err := tsxPolylineToOffsetsWrtTileCenter(pTmxMapIns, singleObj, singleObj.Polyline, pTsxIns)
 			if nil != err {
 				panic(err)
 			}
-			pThePolygon2DList.Eles = append(pThePolygon2DList.Eles, thePolygon2DFromPolyline)
+			*pThePolygon2DList = append(*pThePolygon2DList, thePolygon2DFromPolyline)
 		}
 	}
 	return nil
@@ -348,13 +345,10 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 	for _, objGroup := range pTmxMapIns.ObjectGroups {
 		switch objGroup.Name {
 		case "PlayerStartingPos":
-			var pTheVec2DListToCache *Vec2DList
-			_, ok := toRetStrToVec2DListMap[objGroup.Name]
-			if false == ok {
-				pTheVec2DListToCache = &Vec2DList{
-					Eles: make([]*Vec2D, 0),
-				}
-				toRetStrToVec2DListMap[objGroup.Name] = pTheVec2DListToCache
+			var pTheVec2DListToCache *[]*Vec2D = nil
+			if _, ok := toRetStrToVec2DListMap[objGroup.Name]; !ok {
+				tmp := make([]*Vec2D, 0)
+				toRetStrToVec2DListMap[objGroup.Name] = &tmp
 			}
 			pTheVec2DListToCache = toRetStrToVec2DListMap[objGroup.Name]
 			for _, singleObjInTmxFile := range objGroup.Objects {
@@ -363,18 +357,16 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 					Y: singleObjInTmxFile.Y,
 				}
 				thePosInWorld := pTmxMapIns.continuousObjLayerOffsetToContinuousMapNodePos(theUntransformedPos)
-				pTheVec2DListToCache.Eles = append(pTheVec2DListToCache.Eles, &thePosInWorld)
+				*pTheVec2DListToCache = append(*pTheVec2DListToCache, &thePosInWorld)
 			}
 		case "Barrier":
 			// Note that in this case, the "Polygon2D.Anchor" of each "TmxOrTsxObject" is exactly overlapping with "Polygon2D.Points[0]".
-			var pThePolygon2DListToCache *Polygon2DList
-			_, ok := toRetStrToPolygon2DListMap[objGroup.Name]
-			if false == ok {
-				pThePolygon2DListToCache = &Polygon2DList{
-					Eles: make([]*Polygon2D, 0),
-				}
-				toRetStrToPolygon2DListMap[objGroup.Name] = pThePolygon2DListToCache
+			var pThePolygon2DListToCache *[]*Polygon2D = nil
+			if _, ok := toRetStrToPolygon2DListMap[objGroup.Name]; !ok {
+				tmp := make([]*Polygon2D, 0)
+				toRetStrToPolygon2DListMap[objGroup.Name] = &tmp
 			}
+			pThePolygon2DListToCache = toRetStrToPolygon2DListMap[objGroup.Name]
 
 			for _, singleObjInTmxFile := range objGroup.Objects {
 				if nil == singleObjInTmxFile.Polyline {
@@ -408,7 +400,7 @@ func ParseTmxLayersAndGroups(pTmxMapIns *TmxMap, gidBoundariesMap map[int]StrToP
 				if nil != err {
 					panic(err)
 				}
-				pThePolygon2DListToCache.Eles = append(pThePolygon2DListToCache.Eles, thePolygon2DInWorld)
+				*pThePolygon2DListToCache = append(*pThePolygon2DListToCache, thePolygon2DInWorld)
 			}
 		default:
 		}

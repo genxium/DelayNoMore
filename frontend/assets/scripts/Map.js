@@ -1,7 +1,6 @@
 const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
-const collisions = require('./modules/Collisions');
 const RingBuffer = require('./RingBuffer');
 
 window.ALL_MAP_STATES = {
@@ -141,28 +140,36 @@ cc.Class({
 
     let previousSelfInput = null,
       currSelfInput = null;
-    const joinIndex = self.selfPlayerInfo.joinIndex;
-    const existingInputFrame = self.recentInputCache.getByFrameId(inputFrameId);
-    const previousInputFrameDownsyncWithPrediction = self.getCachedInputFrameDownsyncWithPrediction(inputFrameId - 1);
-    previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.inputList[joinIndex - 1]);
+    const joinIndex = self.selfPlayerInfo.JoinIndex;
+    const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
+    const previousInputFrameDownsync = self.recentInputCache.GetByFrameId(inputFrameId - 1);
+    previousSelfInput = (null == previousInputFrameDownsync ? null : previousInputFrameDownsync.InputList[joinIndex - 1]);
     if (null != existingInputFrame) {
       // This could happen upon either [type#1] or [type#2] forceConfirmation, where "refRenderFrame" is accompanied by some "inputFrameDownsyncs". The check here also guarantees that we don't override history 
       console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
-      return [previousSelfInput, existingInputFrame.inputList[joinIndex - 1]];
+      return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
     }
 
-    const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.inputList.slice());
+    const lastAllConfirmedInputFrame = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
+    const prefabbedInputList = new Array(self.playerRichInfoDict.size).fill(0);
+    // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "prefabbedInputList"
+    for (let k in prefabbedInputList) {
+      if (null != previousInputFrameDownsync) {
+        prefabbedInputList[k] = previousInputFrameDownsync.InputList[k];
+      }
+      if (0 <= self.lastAllConfirmedInputFrameId && inputFrameId - 1 > self.lastAllConfirmedInputFrameId) {
+        prefabbedInputList[k] = lastAllConfirmedInputFrame.InputList[k];
+      }
+      // Don't predict "btnA & btnB"!
+      prefabbedInputList[k] = (prefabbedInputList[k] & 15);
+    }
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
-    while (self.recentInputCache.edFrameId <= inputFrameId) {
+    while (self.recentInputCache.EdFrameId <= inputFrameId) {
       // Fill the gap
-      const prefabbedInputFrameDownsync = window.pb.protos.InputFrameDownsync.create({
-        inputFrameId: self.recentInputCache.edFrameId,
-        inputList: prefabbedInputList,
-        confirmedList: (1 << (self.selfPlayerInfo.joinIndex - 1))
-      });
-
-      self.recentInputCache.put(prefabbedInputFrameDownsync);
+      const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(self.recentInputCache.EdFrameId, prefabbedInputList.slice(), (1 << (joinIndex - 1)));
+      // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.InputFrameId}`);
+      self.recentInputCache.Put(prefabbedInputFrameDownsync);
     }
 
     return [previousSelfInput, currSelfInput];
@@ -185,18 +192,18 @@ cc.Class({
     const self = this;
     let inputFrameUpsyncBatch = [];
     let batchInputFrameIdSt = self.lastUpsyncInputFrameId + 1;
-    if (batchInputFrameIdSt < self.recentInputCache.stFrameId) {
+    if (batchInputFrameIdSt < self.recentInputCache.StFrameId) {
       // Upon resync, "self.lastUpsyncInputFrameId" might not have been updated properly.
-      batchInputFrameIdSt = self.recentInputCache.stFrameId;
+      batchInputFrameIdSt = self.recentInputCache.StFrameId;
     }
     for (let i = batchInputFrameIdSt; i <= latestLocalInputFrameId; ++i) {
-      const inputFrameDownsync = self.recentInputCache.getByFrameId(i);
+      const inputFrameDownsync = self.recentInputCache.GetByFrameId(i);
       if (null == inputFrameDownsync) {
         console.error(`sendInputFrameUpsyncBatch: recentInputCache is NOT having inputFrameId=i: latestLocalInputFrameId=${latestLocalInputFrameId}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
       } else {
         const inputFrameUpsync = {
           inputFrameId: i,
-          encoded: inputFrameDownsync.inputList[self.selfPlayerInfo.joinIndex - 1],
+          encoded: inputFrameDownsync.InputList[self.selfPlayerInfo.JoinIndex - 1],
         };
         inputFrameUpsyncBatch.push(inputFrameUpsync);
       }
@@ -205,15 +212,15 @@ cc.Class({
     // console.info(`inputFrameUpsyncBatch: ${JSON.stringify(inputFrameUpsyncBatch)}`);
     const reqData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
-      playerId: self.selfPlayerInfo.id,
+      playerId: self.selfPlayerInfo.Id,
       act: window.UPSYNC_MSG_ACT_PLAYER_CMD,
-      joinIndex: self.selfPlayerInfo.joinIndex,
+      joinIndex: self.selfPlayerInfo.JoinIndex,
       ackingInputFrameId: self.lastAllConfirmedInputFrameId,
       inputFrameUpsyncBatch: inputFrameUpsyncBatch,
     }).finish();
     window.sendSafely(reqData);
     self.lastUpsyncInputFrameId = latestLocalInputFrameId;
-    if (self.lastUpsyncInputFrameId >= self.recentInputCache.edFrameId) {
+    if (self.lastUpsyncInputFrameId >= self.recentInputCache.EdFrameId) {
       throw `noDelayInputFrameId=${self.lastUpsyncInputFrameId} == latestLocalInputFrameId=${latestLocalInputFrameId} seems not properly dumped #2: recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
   },
@@ -306,13 +313,17 @@ cc.Class({
     self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
-    self.recentInputCache = new RingBuffer((self.renderCacheSize >> 1) + 1);
+    self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
 
-    self.collisionSys = new collisions.Collisions();
+    const spaceW = self.stageDiscreteW * self.stageTileW;
+    const spaceH = self.stageDiscreteH * self.stageTileH;
+    self.spaceOffsetX = (spaceW >> 1);
+    self.spaceOffsetY = (spaceH >> 1);
+    self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs(spaceW, spaceH, self.collisionMinStep, self.collisionMinStep);
+    self.gopkgsCollisionSysMap = {}; // [WARNING] Don't use "JavaScript Map" which could cause loss of type information when passing through Golang transpiled functions!
 
     self.collisionBarrierIndexPrefix = (1 << 16); // For tracking the movements of barriers, though not yet actually used 
     self.collisionBulletIndexPrefix = (1 << 15); // For tracking the movements of bullets 
-    self.collisionSysMap = new Map();
 
     console.log(`collisionSys & collisionSysMap reset`);
 
@@ -321,6 +332,7 @@ cc.Class({
     self.battleState = ALL_BATTLE_STATES.WAITING;
 
     self.othersForcedDownsyncRenderFrameDict = new Map();
+    self.rdfIdToActuallyUsedInput = new Map();
 
     self.countdownNanos = null;
     if (self.countdownLabel) {
@@ -403,7 +415,6 @@ cc.Class({
       console.log(`Received parsedBattleColliderInfo via ws`);
       // TODO: Upon reconnection, the backend might have already been sending down data that'd trigger "onRoomDownsyncFrame & onInputFrameDownsyncBatch", but frontend could reject those data due to "battleState != PlayerBattleState.ACTIVE".
       Object.assign(self, parsedBattleColliderInfo);
-      self.gravityX = parsedBattleColliderInfo.gravityX; // to avoid integer default value 0 accidentally becoming null in "Object.assign(...)"
       self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
@@ -454,21 +465,19 @@ cc.Class({
         }
 
         let barrierIdCounter = 0;
-        const refBoundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node).barriers;
-        const boundaryObjs = parsedBattleColliderInfo.strToPolygon2DListMap;
-        for (let k = 0; k < boundaryObjs["Barrier"].eles.length; k++) {
-          let boundaryObj = boundaryObjs["Barrier"].eles[k];
-          const refBoundaryObj = refBoundaryObjs[k];
-          // boundaryObj = refBoundaryObj; 
-          const [x0, y0] = [boundaryObj.anchor.x, boundaryObj.anchor.y];
-          const newBarrierCollider = self.collisionSys.createPolygon(x0, y0, Array.from(boundaryObj.points, p => {
-            return [p.x, p.y];
-          }));
-          newBarrierCollider.data = {
-            hardPushback: true
-          };
+        const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);
+        for (let boundaryObj of boundaryObjs.barriers) {
+          const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(boundaryObj.anchor.x, boundaryObj.anchor.y);
+          const gopkgsBoundaryPts = Array.from(boundaryObj, p => {
+            return gopkgs.NewVec2DJs(p.x, p.y);
+          });
+          const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
+          const gopkgsBarrier = gopkgs.NewBarrierJs(gopkgsBoundary);
 
-          if (self.showCriticalCoordinateLabels) {
+          const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
+          self.gopkgsCollisionSys.Add(newBarrierCollider);
+
+          if (false && self.showCriticalCoordinateLabels) {
             for (let i = 0; i < boundaryObj.length; ++i) {
               const barrierVertLabelNode = new cc.Node();
               switch (i % 4) {
@@ -499,15 +508,14 @@ cc.Class({
             }
 
           }
+          // console.log("Created barrier: ", newBarrierCollider);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
-          self.collisionSysMap.set(collisionBarrierIndex, newBarrierCollider);
-        // console.log(`Created new barrier collider: ${collisionBarrierIndex}`);
+          self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
         }
-
         self.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
         Object.assign(self.selfPlayerInfo, {
-          id: self.selfPlayerInfo.playerId
+          Id: self.selfPlayerInfo.playerId
         });
 
         const reqData = window.pb.protos.WsReq.encode({
@@ -578,8 +586,22 @@ cc.Class({
     this._inputControlEnabled = false;
   },
 
-  onRoomDownsyncFrame(rdf, accompaniedInputFrameDownsyncBatch) {
+  onRoomDownsyncFrame(pbRdf /* pb.RoomDownsyncFrame */ , accompaniedInputFrameDownsyncBatch /* pb.InputFrameDownsyncBatch */ ) {
+    const jsPlayersArr = new Array().fill(null);
+    for (let k in pbRdf.playersArr) {
+      const pbPlayer = pbRdf.playersArr[k];
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.inAir, pbPlayer.colliderRadius);
+      jsPlayersArr[k] = jsPlayer;
+    }
+    const jsMeleeBulletsArr = [];
+    for (let k in pbRdf.meleeBullets) {
+      const pbBullet = pbRdf.meleeBullets[k];
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.battleLocalId, pbBullet.startupFrames, pbBullet.activeFrames, pbBullet.recoveryFrames, pbBullet.recoveryFramesOnBlock, pbBullet.recoveryFramesOnHit, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.releaseTriggerType, pbBullet.damage, pbBullet.offenderJoinIndex, pbBullet.offenderPlayerId, pbBullet.pushback, pbBullet.hitboxOffset, pbBullet.selfMoveforwardX, pbBullet.selfMoveforwardY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY);
+      jsMeleeBulletsArr.push(jsBullet);
+    }
+
     // This function is also applicable to "re-joining".
+    const rdf = gopkgs.NewRoomDownsyncFrameJs(pbRdf.id, jsPlayersArr, jsMeleeBulletsArr);
     const self = window.mapIns;
     self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
     if (!self.recentRenderCache) {
@@ -588,14 +610,14 @@ cc.Class({
     if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
       return;
     }
-    const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id);
-    let shouldForceDumping2 = (rdf.id >= self.renderFrameId + self.renderFrameIdLagTolerance);
-    let shouldForceResync = rdf.shouldForceResync;
-    const notSelfUnconfirmed = (0 == (rdf.backendUnconfirmedMask & (1 << (self.selfPlayerInfo.joinIndex - 1))));
+    const shouldForceDumping1 = (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id);
+    let shouldForceDumping2 = (rdf.Id >= self.renderFrameId + self.renderFrameIdLagTolerance);
+    let shouldForceResync = pbRdf.shouldForceResync;
+    const notSelfUnconfirmed = (0 == (pbRdf.backendUnconfirmedMask & (1 << (self.selfPlayerInfo.JoinIndex - 1))));
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
       shouldForceResync = false;
-      self.othersForcedDownsyncRenderFrameDict.set(rdf.id, rdf);
+      self.othersForcedDownsyncRenderFrameDict.set(rdf.Id, rdf);
     }
     /*
     TODO
@@ -603,7 +625,7 @@ cc.Class({
     If "BackendUnconfirmedMask" is non-all-1 and contains the current player, show a label/button to hint manual reconnection. Note that the continuity of "recentInputCache" is not a good indicator, because due to network delay upon a [type#1 forceConfirmation] a player might just lag in upsync networking and have all consecutive inputFrameIds locally. 
     */
 
-    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
+    const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.setByFrameId(rdf, rdf.Id) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
       throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.id=${rdf.id}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
@@ -616,51 +638,44 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    const players = rdf.players;
-    self._initPlayerRichInfoDict(players);
+    self.playerOpPatternToSkillId = pbRdf.playerOpPatternToSkillId;
+    self._initPlayerRichInfoDict(rdf.PlayersArr);
 
     // Show the top status indicators for IN_BATTLE 
     if (self.playersInfoNode) {
       const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-      for (let i in players) {
-        playersInfoScriptIns.updateData(players[i]);
+      for (let i in pbRdf.playersArr) {
+        playersInfoScriptIns.updateData(pbRdf.playersArr[i]);
       }
     }
 
     if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
 
-      if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id) {
-        console.log('On battle started! renderFrameId=', rdf.id);
+      if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.Id) {
+        console.log('On battle started! renderFrameId=', rdf.Id);
       } else {
-        self.hideFindingPlayersGUI(rdf);
-        console.warn(`Got resync@localRenderFrameId=${self.renderFrameId} -> rdf.id=${rdf.id} & rdf.backendUnconfirmedMask=${rdf.backendUnconfirmedMask}, @lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}, @localRecentInputCache=${mapIns._stringifyRecentInputCache(false)}`);
+        self.hideFindingPlayersGUI();
+        console.warn('On battle resynced! renderFrameId=', rdf.Id);
       }
-
-      self.renderFrameId = rdf.id;
+      self.renderFrameId = rdf.Id;
       self.lastRenderFrameIdTriggeredAt = performance.now();
       // In this case it must be true that "rdf.id > chaserRenderFrameId".
-      self.chaserRenderFrameId = rdf.id;
-      const candidateLastAllConfirmedInputFrame = self._convertToInputFrameId(rdf.id - 1, self.inputDelayFrames);
-      if (self.lastAllConfirmedInputFrame < candidateLastAllConfirmedInputFrame) {
-        self.lastAllConfirmedInputFrame = candidateLastAllConfirmedInputFrame;
-      }
+      self.chaserRenderFrameId = rdf.Id;
 
       const canvasNode = self.canvasNode;
       self.ctrl = canvasNode.getComponent("TouchEventsManager");
       self.enableInputControls();
       self.transitToState(ALL_MAP_STATES.VISUAL);
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
+    }
 
-      if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
-        self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
-      }
+    if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
+      self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
+    }
 
-      if (null != self.musicEffectManagerScriptIns) {
-        self.musicEffectManagerScriptIns.playBGM();
-      }
-    } else {
-      console.warn(`Anomaly when onRoomDownsyncFrame is called by rdf=${JSON.stringify(rdf)}, recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`);
+    if (null != self.musicEffectManagerScriptIns) {
+      self.musicEffectManagerScriptIns.playBGM();
     }
 
     // [WARNING] Leave all graphical updates in "update(dt)" by "applyRoomDownsyncFrameDynamics"
@@ -714,8 +729,11 @@ cc.Class({
     return true;
   },
 
-  onInputFrameDownsyncBatch(batch) {
+  onInputFrameDownsyncBatch(batch /* []*pb.InputFrameDownsync */ ) {
     // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
+    if (null == batch) {
+      return;
+    }
     const self = this;
     if (!self.recentInputCache) {
       return;
@@ -733,27 +751,26 @@ cc.Class({
       }
       // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
       self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
-      const localInputFrame = self.recentInputCache.getByFrameId(inputFrameDownsyncId);
+      const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
       if (null != localInputFrame
         &&
         null == firstPredictedYetIncorrectInputFrameId
         &&
-        !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)
+        !self.equalInputLists(localInputFrame.InputList, inputFrameDownsync.inputList)
       ) {
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
-      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.setByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
+      const inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
+      //console.log(`Confirmed inputFrameId=${inputFrameDownsync.inputFrameId}`);
+      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.SetByFrameId(inputFrameDownsyncLocal, inputFrameDownsync.inputFrameId);
       if (window.RING_BUFF_FAILED_TO_SET == ret) {
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
     }
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
-    const inputFrameId1 = firstPredictedYetIncorrectInputFrameId;
-    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(inputFrameId1, self.inputDelayFrames); // a.k.a. "firstRenderFrameIdUsingIncorrectInputFrameId"
-    if (renderFrameId1 >= self.renderFrameId) return; // No need to rollback when "renderFrameId1 == self.renderFrameId", because the "corresponding delayedInputFrame for renderFrameId1" is NOT YET EXECUTED BY NOW, it just went through "++self.renderFrameId" in "update(dt)" and javascript-runtime is mostly single-threaded in our programmable range.
-
+    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId, self.inputDelayFrames) - 1;
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
     /*
@@ -768,19 +785,21 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${inputFrameId1}
-lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
+    console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
+lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
+recentInputCache=${self._stringifyRecentInputCache(false)}
+batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
     self.chaserRenderFrameId = renderFrameId1;
   },
 
-  onPlayerAdded(rdf) {
+  onPlayerAdded(rdf /* pb.RoomDownsyncFrame */ ) {
     const self = this;
     // Update the "finding player" GUI and show it if not previously present
     if (!self.findingPlayerNode.parent) {
       self.showPopupInCanvas(self.findingPlayerNode);
     }
     let findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-    findingPlayerScriptIns.updatePlayersInfo(rdf.players);
+    findingPlayerScriptIns.updatePlayersInfo(rdf.playersArr);
   },
 
   onBattleStopped() {
@@ -788,7 +807,7 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
-    self._stringifyRecentInputAndRenderCacheCorrespondingly();
+    self._stringifyRdfIdToActuallyUsedInput();
     window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED);
     self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
@@ -819,24 +838,28 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
     const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const halfColliderWidth = playerDownsyncInfo.colliderRadius,
-      halfColliderHeight = playerDownsyncInfo.colliderRadius + playerDownsyncInfo.colliderRadius; // avoid multiplying
+    const colliderRadius = playerDownsyncInfo.ColliderRadius;
+    const halfColliderWidth = colliderRadius,
+      halfColliderHeight = colliderRadius + colliderRadius; // avoid multiplying
     const colliderWidth = halfColliderWidth + halfColliderWidth,
       colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
-    const leftPadding = self.snapIntoPlatformOverlap,
-      rightPadding = self.snapIntoPlatformOverlap,
-      topPadding = self.snapIntoPlatformOverlap,
-      bottomPadding = self.snapIntoPlatformOverlap;
-    const cpos = self.virtualGridToPolygonColliderBLPos(vx, vy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding); // the collider center is kept having integer coords
-    const pts = [[0, 0], [leftPadding + colliderWidth + rightPadding, 0], [leftPadding + colliderWidth + rightPadding, bottomPadding + colliderHeight + topPadding], [0, bottomPadding + colliderHeight + topPadding]];
 
-    // [WARNING] The animNode "anchor & offset" are tuned to fit in this collider by "ControlledCharacter prefab & AttackingCharacter.js"! 
-    const newPlayerCollider = self.collisionSys.createPolygon(cpos[0], cpos[1], pts);
+    const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY);
+    const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(cx, cy);
+    const gopkgsBoundaryPts = [
+      gopkgs.NewVec2DJs(0, 0),
+      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, 0),
+      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap),
+      gopkgs.NewVec2DJs(0, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap)
+    ];
+    const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
+    const newPlayerCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
+    //const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
+    self.gopkgsCollisionSys.Add(newPlayerCollider);
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    newPlayerCollider.data = playerDownsyncInfo;
-    self.collisionSysMap.set(collisionPlayerIndex, newPlayerCollider);
+    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
 
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.colliderRadius}`);
+    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);
@@ -880,12 +903,12 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
         }
         if (prevChaserRenderFrameId < nextChaserRenderFrameId) {
           // Do not execute "rollbackAndChase" when "prevChaserRenderFrameId == nextChaserRenderFrameId", otherwise if "nextChaserRenderFrameId == self.renderFrameId" we'd be wasting computing power once. 
-          self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.collisionSys, self.collisionSysMap, true);
+          self.rollbackAndChase(prevChaserRenderFrameId, nextChaserRenderFrameId, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, true);
         }
         let t2 = performance.now();
 
         // Inside the following "self.rollbackAndChase" actually ROLLS FORWARD w.r.t. the corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
-        const latestRdfResults = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.collisionSys, self.collisionSysMap, false);
+        const latestRdfResults = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, false);
         let prevRdf = latestRdfResults[0],
           rdf = latestRdfResults[1];
         /*
@@ -901,8 +924,7 @@ lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}`);
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
             console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${JSON.stringify(rdf)}
-othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}
-${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
+othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}`);
             // closeWSConnection(constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME, "");
             // self.onManualRejoinRequired("[DEBUG] CLIENT_MISMATCHED_RENDER_FRAME");
             rdf = othersForcedDownsyncRenderFrame;
@@ -1007,10 +1029,9 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
     self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
   },
 
-  onBattleReadyToStart(rdf) {
+  onBattleReadyToStart(rdf /* pb.RoomDownsyncFrame */ ) {
     const self = this;
-    const players = rdf.players;
-    self._initPlayerRichInfoDict(players);
+    const players = rdf.playersArr;
 
     // Show the top status indicators for IN_BATTLE 
     if (self.playersInfoNode) {
@@ -1039,13 +1060,14 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
 
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
-    for (let [playerId, playerRichInfo] of self.playerRichInfoDict.entries()) {
-      const currPlayerDownsync = rdf.players[playerId];
-      const prevRdfPlayer = (null == prevRdf ? null : prevRdf.players[playerId]);
-      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.virtualGridX, currPlayerDownsync.virtualGridY);
-      //const justJiggling = (self.jigglingEps1D >= Math.abs(wx - playerRichInfo.node.x) && self.jigglingEps1D >= Math.abs(wy - playerRichInfo.node.y));
+    const playersArr = rdf.PlayersArr;
+    for (let k in playersArr) {
+      const currPlayerDownsync = playersArr[k];
+      const prevRdfPlayer = (null == prevRdf ? null : prevRdf.PlayersArr[k]);
+      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
+      const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
-      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.speed);
+      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
     }
 
@@ -1054,6 +1076,167 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
     if (self.countdownNanos <= 0) {
       self.onBattleStopped(self.playerRichInfoDict);
     }
+  },
+
+  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
+    const self = this;
+    let prevLatestRdf = null,
+      latestRdf = null;
+    for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
+      const currRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
+      if (null == currRdf) {
+        throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
+      }
+      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      const delayedInputFrame = self.recentInputCache.GetByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
+      if (null == delayedInputFrame) {
+        // Shouldn't happen!
+        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
+      }
+
+      const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
+      if (self.frameDataLoggingEnabled) {
+        const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
+        const inputFrameDownsyncClone = {
+          inputFrameId: delayedInputFrame.InputFrameId,
+          inputList: actuallyUsedInputClone,
+          confirmedList: delayedInputFrame.ConfirmedList,
+        };
+        self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
+      }
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio, self.playerOpPatternToSkillId);
+
+      if (true == isChasing) {
+        // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
+        self.chaserRenderFrameId = nextRdf.Id;
+      } else if (nextRdf.Id == self.chaserRenderFrameId + 1) {
+        self.chaserRenderFrameId = nextRdf.Id; // To avoid redundant calculation 
+      }
+      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.Id);
+      prevLatestRdf = currRdf;
+      latestRdf = nextRdf;
+    }
+
+    return [prevLatestRdf, latestRdf];
+  },
+
+  _initPlayerRichInfoDict(playersArr) {
+    const self = this;
+    for (let k in playersArr) {
+      const immediatePlayerInfo = playersArr[k];
+      const playerId = immediatePlayerInfo.Id;
+      if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
+      self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
+      const joinIndex = immediatePlayerInfo.joinIndex || immediatePlayerInfo.JoinIndex;
+      const vx = immediatePlayerInfo.virtualGridX || immediatePlayerInfo.VirtualGridX;
+      const vy = immediatePlayerInfo.virtualGridY || immediatePlayerInfo.VirtualGridY;
+      const nodeAndScriptIns = self.spawnPlayerNode(joinIndex, vx, vy, immediatePlayerInfo);
+
+      Object.assign(self.playerRichInfoDict.get(playerId), {
+        node: nodeAndScriptIns[0],
+        scriptIns: nodeAndScriptIns[1],
+      });
+
+      const selfPlayerId = self.selfPlayerInfo.Id;
+      if (selfPlayerId == playerId) {
+        self.selfPlayerInfo.JoinIndex = immediatePlayerInfo.JoinIndex;
+        nodeAndScriptIns[1].showArrowTipNode();
+      }
+    }
+    self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
+    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
+      self.playerRichInfoArr[playerRichInfo.JoinIndex - 1] = playerRichInfo;
+    });
+  },
+
+  _stringifyRecentInputCache(usefullOutput) {
+    const self = this;
+    if (true == usefullOutput) {
+      let s = [];
+      for (let i = self.recentInputCache.StFrameId; i < self.recentInputCache.EdFrameId; ++i) {
+        s.push(JSON.stringify(self.recentInputCache.GetByFrameId(i)));
+      }
+
+      return s.join('\n');
+    }
+    return `[stInputFrameId=${self.recentInputCache.StFrameId}, edInputFrameId=${self.recentInputCache.EdFrameId})`;
+  },
+
+  _stringifyGopkgRoomDownsyncFrame(rdf) {
+    let s = [];
+    s.push(`{`);
+    s.push(`  id: ${rdf.Id}`);
+    s.push(`  players: [`);
+    for (let k in rdf.PlayersArr) {
+      const player = rdf.PlayersArr[k];
+      s.push(`    {joinIndex: ${player.JoinIndex}, id: ${player.Id}, vx: ${player.VirtualGridX}, vy: ${player.VirtualGridY}, velX: ${player.VelX}, velY: ${player.VelY}}`);
+    }
+    s.push(`  ]`);
+    s.push(`}`);
+    return s.join("\n");
+  },
+
+  _stringifyRecentRenderCache(usefullOutput) {
+    const self = this;
+    if (true == usefullOutput) {
+      let s = [];
+      for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
+        const rdf = self.recentRenderCache.getByFrameId(i);
+        s.push(self._stringifyGopkgRoomDownsyncFrame(rdf));
+      }
+
+      return s.join("\n");
+    }
+    return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
+  },
+
+  playerDownsyncStr(playerDownsync) {
+    if (null == playerDownsync) return "";
+    return `{${playerDownsync.JoinIndex},${playerDownsync.VirtualGridX},${playerDownsync.VirtualGridY},${playerDownsync.VelX},${playerDownsync.VelY},${playerDownsync.FramesToRecover},${playerDownsync.InAir ? 1 : 0}}`;
+  },
+
+  inputFrameDownsyncStr(inputFrameDownsync) {
+    if (null == inputFrameDownsync) return "";
+    const self = this;
+    let s = [];
+    s.push(`InputFrameId:${inputFrameDownsync.inputFrameId}`);
+    let ss = [];
+    for (let k in inputFrameDownsync.inputList) {
+      ss.push(`"${inputFrameDownsync.inputList[k]}"`);
+    }
+    s.push(`InputList:[${ss.join(',')}]`);
+    // The "confirmedList" is not worth comparing, because frontend might actually use a non-all-confirmed inputFrame during its history, as long as it's correctly predicted.
+    //s.push(`ConfirmedList:${inputFrameDownsync.confirmedList}`); 
+
+    return s.join(',');
+  },
+
+  _stringifyRdfIdToActuallyUsedInput() {
+    const self = this;
+    let s = [];
+    for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; i++) {
+      const actuallyUsedInputClone = self.rdfIdToActuallyUsedInput.get(i);
+      const rdf = self.recentRenderCache.getByFrameId(i);
+      const playersStrBldr = [];
+      for (let k in rdf.PlayersArr) {
+        playersStrBldr.push(self.playerDownsyncStr(rdf.PlayersArr[k]));
+      }
+      s.push(`rdfId:${i}
+players:[${playersStrBldr.join(',')}]
+actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
+    }
+
+    return s.join('\n');
+  },
+
+  stringifyColliderCenterInWorld(playerCollider, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
+    return `{${(playerCollider.x + leftPadding + halfBoundingW).toFixed(2)}, ${(playerCollider.y + bottomPadding + halfBoundingH).toFixed(2)}}`;
+  },
+
+  virtualGridToWorldPos(vx, vy) {
+    // No loss of precision
+    const self = this;
+    return [vx * self.virtualGridToWorldRatio, vy * self.virtualGridToWorldRatio];
   },
 
   showDebugBoundaries(rdf) {
@@ -1066,603 +1249,34 @@ ${self._stringifyRecentInputAndRenderCacheCorrespondingly()}`);
       let g = self.g;
       g.clear();
 
-      for (let k in self.collisionSys._bvh._bodies) {
-        const body = self.collisionSys._bvh._bodies[k];
-        if (!body._polygon) continue;
-        if (null != body.data && null != body.data.joinIndex) {
+      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys);
+      for (let k in collisionSpaceObjs) {
+        const body = collisionSpaceObjs[k];
+        let padding = 0;
+        if (null != body.Data && null != body.Data.JoinIndex) {
           // character
-          if (1 == body.data.joinIndex) {
+          if (1 == body.Data.JoinIndex) {
             g.strokeColor = cc.Color.BLUE;
           } else {
             g.strokeColor = cc.Color.RED;
           }
+          padding = self.snapIntoPlatformOverlap;
         } else {
           // barrier
           g.strokeColor = cc.Color.WHITE;
         }
-        g.moveTo(body.x, body.y);
-        const cnt = body._coords.length;
-        for (let j = 0; j < cnt; j += 2) {
-          const x = body._coords[j],
-            y = body._coords[j + 1];
+        const points = body.Shape.Points;
+        const wpos = [body.X - self.spaceOffsetX, body.Y - self.spaceOffsetY];
+        g.moveTo(wpos[0], wpos[1]);
+        const cnt = points.length;
+        for (let j = 0; j < cnt; j += 1) {
+          const x = wpos[0] + points[j][0],
+            y = wpos[1] + points[j][1];
           g.lineTo(x, y);
         }
-        g.lineTo(body.x, body.y);
+        g.lineTo(wpos[0], wpos[1]);
         g.stroke();
       }
-      // For convenience of recovery upon reconnection, active bullets are always created & immediately removed from "collisionSys" within "applyInputFrameDownsyncDynamicsOnSingleRenderFrame"
-
-      for (let k in rdf.meleeBullets) {
-        const meleeBullet = rdf.meleeBullets[k];
-        if (
-          meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames <= rdf.id
-          &&
-          meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > rdf.id
-        ) {
-          const offender = rdf.players[meleeBullet.offenderPlayerId];
-          if (1 == offender.joinIndex) {
-            g.strokeColor = cc.Color.BLUE;
-          } else {
-            g.strokeColor = cc.Color.RED;
-          }
-
-          let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
-          if (0 > offender.dirX) {
-            xfac = -1;
-          }
-          const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
-          const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
-          const bulletWy = offenderWy;
-          const halfColliderWidth = meleeBullet.hitboxSize.x * 0.5,
-            halfColliderHeight = meleeBullet.hitboxSize.y * 0.5; // avoid multiplying
-          const bulletCpos = self.worldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
-          const pts = [[0, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, bottomPadding + meleeBullet.hitboxSize.y + topPadding], [0, bottomPadding + meleeBullet.hitboxSize.y + topPadding]];
-
-          g.moveTo(bulletCpos[0], bulletCpos[1]);
-          for (let j = 0; j < pts.length; j += 1) {
-            g.lineTo(pts[j][0] + bulletCpos[0], pts[j][1] + bulletCpos[1]);
-          }
-          g.lineTo(bulletCpos[0], bulletCpos[1]);
-          g.stroke();
-        }
-      }
     }
-  },
-
-  getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
-    const self = this;
-    const inputFrameDownsync = self.recentInputCache.getByFrameId(inputFrameId);
-    if (null != inputFrameDownsync && inputFrameId > self.lastAllConfirmedInputFrameId) {
-      const lastAllConfirmedInputFrame = self.recentInputCache.getByFrameId(self.lastAllConfirmedInputFrameId);
-      if (null != lastAllConfirmedInputFrame) {
-        for (let i = 0; i < inputFrameDownsync.inputList.length; ++i) {
-          if (i == (self.selfPlayerInfo.joinIndex - 1)) continue;
-          inputFrameDownsync.inputList[i] = (lastAllConfirmedInputFrame.inputList[i] & 15); // Don't predict attack input!
-        }
-      }
-    }
-
-    return inputFrameDownsync;
-  },
-
-  // TODO: Write unit-test for this function to compare with its backend counter part
-  applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRenderFrame, collisionSys, collisionSysMap) {
-    const self = this;
-    const leftPadding = self.snapIntoPlatformOverlap,
-      rightPadding = self.snapIntoPlatformOverlap,
-      topPadding = self.snapIntoPlatformOverlap,
-      bottomPadding = self.snapIntoPlatformOverlap;
-    const nextRenderFramePlayers = {};
-    for (let playerId in currRenderFrame.players) {
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      nextRenderFramePlayers[playerId] = {
-        id: playerId,
-        virtualGridX: currPlayerDownsync.virtualGridX,
-        virtualGridY: currPlayerDownsync.virtualGridY,
-        dirX: currPlayerDownsync.dirX,
-        dirY: currPlayerDownsync.dirY,
-        velX: currPlayerDownsync.velX,
-        velY: currPlayerDownsync.velY,
-        characterState: currPlayerDownsync.characterState,
-        inAir: true,
-        speed: currPlayerDownsync.speed,
-        battleState: currPlayerDownsync.battleState,
-        score: currPlayerDownsync.score,
-        removed: currPlayerDownsync.removed,
-        joinIndex: currPlayerDownsync.joinIndex,
-        framesToRecover: (0 < currPlayerDownsync.framesToRecover ? currPlayerDownsync.framesToRecover - 1 : 0),
-        hp: currPlayerDownsync.hp,
-        maxHp: currPlayerDownsync.maxHp,
-      };
-    }
-
-    const nextRenderFrameMeleeBullets = [];
-    const effPushbacks = new Array(self.playerRichInfoArr.length);
-    const hardPushbackNorms = new Array(self.playerRichInfoArr.length);
-
-    // 1. Process player inputs
-    /*
-    [WARNING] Player input alone WOULD NOT take "characterState" into any "ATK_CHARACTER_STATE_IN_AIR_SET", only after the calculation of "effPushbacks" do we know exactly whether or not a player is "inAir", the finalize the transition of "thatPlayerInNextFrame.characterState". 
-    */
-    if (null != delayedInputFrame) {
-      const delayedInputFrameForPrevRenderFrame = self.getCachedInputFrameDownsyncWithPrediction(self._convertToInputFrameId(currRenderFrame.id - 1, self.inputDelayFrames));
-      const inputList = delayedInputFrame.inputList;
-      for (let j in self.playerRichInfoArr) {
-        const joinIndex = parseInt(j) + 1;
-        const playerRichInfo = self.playerRichInfoArr[j];
-        const playerId = playerRichInfo.id;
-        const currPlayerDownsync = currRenderFrame.players[playerId];
-        const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-        if (0 < thatPlayerInNextFrame.framesToRecover) {
-          // No need to process inputs for this player, but there might be bullet pushbacks on this player  
-          continue;
-        }
-
-        const decodedInput = self.ctrl.decodeInput(inputList[joinIndex - 1]);
-        const prevDecodedInput = (null == delayedInputFrameForPrevRenderFrame ? null : self.ctrl.decodeInput(delayedInputFrameForPrevRenderFrame.inputList[joinIndex - 1]));
-        const prevBtnALevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnALevel);
-        const prevBtnBLevel = (null == prevDecodedInput ? 0 : prevDecodedInput.btnBLevel);
-        if (1 == decodedInput.btnBLevel && 0 == prevBtnBLevel) {
-          const characStateAlreadyInAir = window.ATK_CHARACTER_STATE_IN_AIR_SET.has(thatPlayerInNextFrame.characterState);
-          const characStateIsInterruptWaivable = window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(thatPlayerInNextFrame.characterState);
-          if (
-            !characStateAlreadyInAir
-            &&
-            characStateIsInterruptWaivable
-          ) {
-            thatPlayerInNextFrame.velY = self.jumpingInitVelY;
-            if (1 == joinIndex) {
-              console.log(`playerId=${playerId}, joinIndex=${joinIndex} jumped at {renderFrame.id: ${currRenderFrame.id}, virtualX: ${currPlayerDownsync.virtualGridX}, virtualY: ${currPlayerDownsync.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-            }
-          }
-        }
-
-        if (1 == decodedInput.btnALevel && 0 == prevBtnALevel) {
-          const punchSkillId = 1;
-          const punch = window.pb.protos.MeleeBullet.create(self.meleeSkillConfig[punchSkillId]);
-          thatPlayerInNextFrame.framesToRecover = punch.recoveryFrames;
-          punch.battleLocalId = self.bulletBattleLocalIdCounter++;
-          punch.offenderJoinIndex = joinIndex;
-          punch.offenderPlayerId = playerId;
-          punch.originatedRenderFrameId = currRenderFrame.id;
-          nextRenderFrameMeleeBullets.push(punch);
-          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} triggered a rising-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-
-          thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atk1[0];
-          if (false == currPlayerDownsync.inAir) {
-            thatPlayerInNextFrame.velX = 0; // prohibits simultaneous movement with Atk1 on the ground
-          }
-        } else if (0 == decodedInput.btnALevel && 1 == prevBtnALevel) {
-          // console.log(`playerId=${playerId} triggered a falling-edge of btnA at renderFrame.id=${currRenderFrame.id}, delayedInputFrame.id=${delayedInputFrame.inputFrameId}`);
-        } else {
-          // No bullet trigger, process joystick movement inputs.
-          if (0 != decodedInput.dx || 0 != decodedInput.dy) {
-            // Update directions and thus would eventually update moving animation accordingly
-            thatPlayerInNextFrame.dirX = decodedInput.dx;
-            thatPlayerInNextFrame.dirY = decodedInput.dy;
-            thatPlayerInNextFrame.velX = decodedInput.dx * currPlayerDownsync.speed;
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Walking[0];
-          } else {
-            thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-            thatPlayerInNextFrame.velX = 0;
-          }
-        }
-      }
-    }
-
-    // 2. Process player movement
-    for (let j in self.playerRichInfoArr) {
-      const joinIndex = parseInt(j) + 1;
-      effPushbacks[joinIndex - 1] = [0.0, 0.0];
-      const playerRichInfo = self.playerRichInfoArr[j];
-      const playerId = playerRichInfo.id;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-      // Reset playerCollider position from the "virtual grid position"
-      const newVpos = [currPlayerDownsync.virtualGridX + currPlayerDownsync.velX, currPlayerDownsync.virtualGridY + currPlayerDownsync.velY];
-      if (thatPlayerInNextFrame.velY == self.jumpingInitVelY) {
-        // This step can be waived, but putting the jumping inclination here makes it easier to read logs. 
-        newVpos[1] += self.jumpingInitVelY;
-      }
-      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
-        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
-      const newCpos = self.virtualGridToPolygonColliderBLPos(newVpos[0], newVpos[1], halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
-      playerCollider.x = newCpos[0];
-      playerCollider.y = newCpos[1];
-
-      if (currPlayerDownsync.inAir) {
-        thatPlayerInNextFrame.velX += self.gravityX;
-        thatPlayerInNextFrame.velY += self.gravityY;
-      }
-    }
-
-    // 3. Add bullet colliders into collision system
-    const bulletColliders = new Map(); // Will all be removed at the end of `applyInputFrameDownsyncDynamicsOnSingleRenderFrame` due to the need for being rollback-compatible
-    const removedBulletsAtCurrFrame = new Set();
-    for (let k in currRenderFrame.meleeBullets) {
-      const meleeBullet = currRenderFrame.meleeBullets[k];
-      if (
-        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames <= currRenderFrame.id
-        &&
-        meleeBullet.originatedRenderFrameId + meleeBullet.startupFrames + meleeBullet.activeFrames > currRenderFrame.id
-      ) {
-        const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
-        const collisionOffenderIndex = self.collisionPlayerIndexPrefix + meleeBullet.offenderJoinIndex;
-        const offenderCollider = collisionSysMap.get(collisionOffenderIndex);
-        const offender = currRenderFrame.players[meleeBullet.offenderPlayerId];
-
-        let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
-        if (0 > offender.dirX) {
-          xfac = -1;
-        }
-        const [offenderWx, offenderWy] = self.virtualGridToWorldPos(offender.virtualGridX, offender.virtualGridY);
-        const bulletWx = offenderWx + xfac * meleeBullet.hitboxOffset;
-        const bulletWy = offenderWy;
-        const halfColliderWidth = meleeBullet.hitboxSize.x * 0.5,
-          halfColliderHeight = meleeBullet.hitboxSize.y * 0.5;
-        const bulletCpos = self.worldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
-        const pts = [[0, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, 0], [leftPadding + meleeBullet.hitboxSize.x + rightPadding, bottomPadding + meleeBullet.hitboxSize.y + topPadding], [0, bottomPadding + meleeBullet.hitboxSize.y + topPadding]];
-        const newBulletCollider = collisionSys.createPolygon(bulletCpos[0], bulletCpos[1], pts);
-        newBulletCollider.data = meleeBullet;
-        collisionSysMap.set(collisionBulletIndex, newBulletCollider);
-        bulletColliders.set(collisionBulletIndex, newBulletCollider);
-      }
-    }
-
-    // 4. Invoke collision system stepping
-    collisionSys.update();
-    const result = collisionSys.createResult(); // Can I reuse a "self.collisionSysResult" object throughout the whole battle?
-
-    // 5. Calc pushbacks for each player (after its movement) w/o bullets
-    for (let j in self.playerRichInfoArr) {
-      const joinIndex = parseInt(j) + 1;
-      const playerRichInfo = self.playerRichInfoArr[j];
-      const playerId = playerRichInfo.id;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      const potentials = playerCollider.potentials();
-      hardPushbackNorms[joinIndex - 1] = self.calcHardPushbacksNorms(playerCollider, potentials, result, self.snapIntoPlatformOverlap, effPushbacks[joinIndex - 1]);
-
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
-        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
-
-      let fallStopping = false;
-      let possiblyFallStoppedOnAnotherPlayer = false;
-      for (const potential of potentials) {
-        let [isBarrier, isAnotherPlayer, isBullet] = [true == potential.data.hardPushback, null != potential.data.joinIndex, null != potential.data.offenderJoinIndex];
-        // ignore bullets for this step
-        if (isBullet) continue;
-        // Test if the player collides with the wall/another player
-        if (!playerCollider.collides(potential, result)) continue;
-
-        const normAlignmentWithGravity = (result.overlap_x * 0 + result.overlap_y * (-1.0));
-        const landedOnGravityPushback = (self.snapIntoPlatformThreshold < normAlignmentWithGravity); // prevents false snapping on the lateral sides
-        let pushback = [result.overlap * result.overlap_x, result.overlap * result.overlap_y];
-        if (landedOnGravityPushback) {
-          // kindly note that one player might land on top of another player
-          pushback = [(result.overlap - self.snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap) * result.overlap_y];
-          thatPlayerInNextFrame.inAir = false;
-        }
-        if (isAnotherPlayer) {
-          /*
-            [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
-          */
-          pushback = [(result.overlap - self.snapIntoPlatformOverlap * 2) * result.overlap_x, (result.overlap - self.snapIntoPlatformOverlap * 2) * result.overlap_y]; // will overwrite the previous pushback value if "landedOnGravityPushback" is also true
-        }
-        for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
-          // remove pushback component on the directions of "hardPushbackNorms[joinIndex-1]" (by now those hardPushbacks are already accounted in "effPushbacks[joinIndex-1]")
-          const projectedMagnitude = pushback[0] * hardPushbackNorm[0] + pushback[1] * hardPushbackNorm[1];
-          if (isBarrier
-            ||
-            (isAnotherPlayer && 0 > projectedMagnitude)
-          ) {
-            // [WARNING] Pushing by another player is different from pushing by barrier!
-            // Otherwise the player couldn't be pushed by another player to opposite dir of a side wall 
-            pushback[0] -= projectedMagnitude * hardPushbackNorm[0];
-            pushback[1] -= projectedMagnitude * hardPushbackNorm[1];
-          }
-        }
-
-        effPushbacks[joinIndex - 1][0] += pushback[0];
-        effPushbacks[joinIndex - 1][1] += pushback[1];
-        // It's not meaningful to log the virtual positions and velocities inside this step.
-        if (currPlayerDownsync.inAir && landedOnGravityPushback) {
-          fallStopping = true;
-          if (isAnotherPlayer) {
-            possiblyFallStoppedOnAnotherPlayer = true;
-          }
-        }
-
-        if (1 == joinIndex) {
-          if (fallStopping) {
-            /*
-            console.info(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#1:
-{renderFrame.id: ${currRenderFrame.id}, possiblyFallStoppedOnAnotherPlayer: ${possiblyFallStoppedOnAnotherPlayer}}
-playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}`);
-            */
-          } else if (currPlayerDownsync.inAir && isBarrier && !landedOnGravityPushback) {
-            /*
-            console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir & pushed back by barrier & not landed:
-{renderFrame.id: ${currRenderFrame.id}}
-playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
-            */
-          } else if (currPlayerDownsync.inAir && isAnotherPlayer) {
-            console.warn(`playerId=${playerId}, joinIndex=${currPlayerDownsync.joinIndex} inAir and pushed back by another player
-{renderFrame.id: ${currRenderFrame.id}}
-playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, anotherPlayerColliderPos=${self.stringifyColliderCenterInWorld(potential, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}, landedOnGravityPushback=${landedOnGravityPushback}, fallStopping=${fallStopping}, overlayMag=${result.overlap.toFixed(4)}, len(hardPushbackNorms)=${hardPushbackNorms.length}`);
-          }
-        }
-      }
-
-      if (fallStopping) {
-        thatPlayerInNextFrame.velX = 0;
-        thatPlayerInNextFrame.velY = 0;
-        thatPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Idle1[0];
-        thatPlayerInNextFrame.framesToRecover = 0;
-      }
-      if (currPlayerDownsync.inAir) {
-        thatPlayerInNextFrame.characterState = window.toInAirConjugate(thatPlayerInNextFrame.characterState);
-      }
-    }
-
-    // 6. Check bullet-anything collisions
-    bulletColliders.forEach((bulletCollider, collisionBulletIndex) => {
-      const potentials = bulletCollider.potentials();
-      const offender = currRenderFrame.players[bulletCollider.data.offenderPlayerId];
-      let shouldRemove = false;
-      for (const potential of potentials) {
-        if (null != potential.data && potential.data.joinIndex == bulletCollider.data.offenderJoinIndex) continue;
-        if (!bulletCollider.collides(potential, result)) continue;
-        if (null != potential.data && null != potential.data.joinIndex) {
-          const playerId = potential.data.id;
-          const joinIndex = potential.data.joinIndex;
-          let xfac = 1;
-          if (0 > offender.dirX) {
-            xfac = -1;
-          }
-          // Only for straight punch, there's no y-pushback 
-          let bulletPushback = [-xfac * bulletCollider.data.pushback, 0];
-          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} is supposed to be pushed back by meleeBullet for bulletPushback=${JSON.stringify(bulletPushback)} at renderFrame.id=${currRenderFrame.id}`);
-          for (let hardPushbackNorm of hardPushbackNorms[joinIndex - 1]) {
-            const projectedMagnitude = bulletPushback[0] * hardPushbackNorm[0] + bulletPushback[1] * hardPushbackNorm[1];
-            if (0 > projectedMagnitude) {
-              // Otherwise when smashing into a wall the atked player would be pushed into the wall first and only got back in the next renderFrame, not what I want here
-              bulletPushback[0] -= (projectedMagnitude * hardPushbackNorm[0]);
-              bulletPushback[1] -= (projectedMagnitude * hardPushbackNorm[1]);
-            //   console.log(`playerId=${playerId}, joinIndex=${joinIndex} reducing bulletPushback=${JSON.stringify(bulletPushback)} by ${JSON.stringify([projectedMagnitude * hardPushbackNorm[0], projectedMagnitude * hardPushbackNorm[1]])} where hardPushbackNorm=${JSON.stringify(hardPushbackNorm)}, projectedMagnitude=${projectedMagnitude} at renderFrame.id=${currRenderFrame.id}`);
-            }
-          }
-          // console.log(`playerId=${playerId}, joinIndex=${joinIndex} is actually pushed back by meleeBullet for bulletPushback=${JSON.stringify(bulletPushback)} at renderFrame.id=${currRenderFrame.id}`);
-          effPushbacks[joinIndex - 1][0] += bulletPushback[0];
-          effPushbacks[joinIndex - 1][1] += bulletPushback[1];
-          const [atkedPlayerInCurFrame, atkedPlayerInNextFrame] = [currRenderFrame.players[potential.data.id], nextRenderFramePlayers[potential.data.id]];
-          atkedPlayerInNextFrame.characterState = window.ATK_CHARACTER_STATE.Atked1[0];
-          if (atkedPlayerInCurFrame.inAir) {
-            atkedPlayerInNextFrame.characterState = window.toInAirConjugate(atkedPlayerInNextFrame.characterState);
-          }
-          const oldFramesToRecover = atkedPlayerInNextFrame.framesToRecover;
-          atkedPlayerInNextFrame.framesToRecover = (oldFramesToRecover > bulletCollider.data.hitStunFrames ? oldFramesToRecover : bulletCollider.data.hitStunFrames); // In case the hit player is already stun, we extend it 
-        }
-        shouldRemove = true;
-      }
-      if (shouldRemove) {
-        removedBulletsAtCurrFrame.add(collisionBulletIndex);
-      }
-    });
-
-    // [WARNING] Remove bullets from collisionSys ANYWAY for the convenience of rollback
-    for (let k in currRenderFrame.meleeBullets) {
-      const meleeBullet = currRenderFrame.meleeBullets[k];
-      const collisionBulletIndex = self.collisionBulletIndexPrefix + meleeBullet.battleLocalId;
-      if (collisionSysMap.has(collisionBulletIndex)) {
-        const bulletCollider = collisionSysMap.get(collisionBulletIndex);
-        bulletCollider.remove();
-        collisionSysMap.delete(collisionBulletIndex);
-      }
-      if (removedBulletsAtCurrFrame.has(collisionBulletIndex)) continue;
-      nextRenderFrameMeleeBullets.push(meleeBullet);
-    }
-
-    // 7. Get players out of stuck barriers if there's any
-    for (let j in self.playerRichInfoArr) {
-      const joinIndex = parseInt(j) + 1;
-      const playerId = self.playerRichInfoArr[j].id;
-      const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-      const playerCollider = collisionSysMap.get(collisionPlayerIndex);
-      // Update "virtual grid position"
-      const currPlayerDownsync = currRenderFrame.players[playerId];
-      const thatPlayerInNextFrame = nextRenderFramePlayers[playerId];
-      const halfColliderWidth = self.playerRichInfoArr[j].colliderRadius,
-        halfColliderHeight = self.playerRichInfoArr[j].colliderRadius + self.playerRichInfoArr[j].colliderRadius; // avoid multiplying
-      const newVpos = self.polygonColliderBLToVirtualGridPos(playerCollider.x - effPushbacks[joinIndex - 1][0], playerCollider.y - effPushbacks[joinIndex - 1][1], halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding);
-      thatPlayerInNextFrame.virtualGridX = newVpos[0];
-      thatPlayerInNextFrame.virtualGridY = newVpos[1];
-
-      if (1 == thatPlayerInNextFrame.joinIndex) {
-        if (currPlayerDownsync.inAir && !thatPlayerInNextFrame.inAir) {
-          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} fallStopping#2:
-{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}
-	calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
-        } else if (!currPlayerDownsync.inAir && thatPlayerInNextFrame.inAir) {
-          console.warn(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} took off:
-{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}}
-	calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
-        } else if (thatPlayerInNextFrame.inAir && 0 != thatPlayerInNextFrame.velY) {
-          /*
-          console.log(`playerId=${playerId}, joinIndex=${thatPlayerInNextFrame.joinIndex} inAir trajectory:
-{nextRenderFrame.id: ${currRenderFrame.id + 1}, nextVirtualX: ${thatPlayerInNextFrame.virtualGridX}, nextVirtualY: ${thatPlayerInNextFrame.virtualGridY}, nextVelX: ${thatPlayerInNextFrame.velX}, nextVelY: ${thatPlayerInNextFrame.velY}};
-          calculated from <- playerColliderPos=${self.stringifyColliderCenterInWorld(playerCollider, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding)}, effPushback={${effPushbacks[joinIndex - 1][0].toFixed(3)}, ${effPushbacks[joinIndex - 1][1].toFixed(3)}}`);
-          */
-        }
-      }
-    }
-
-    return window.pb.protos.RoomDownsyncFrame.create({
-      id: currRenderFrame.id + 1,
-      players: nextRenderFramePlayers,
-      meleeBullets: nextRenderFrameMeleeBullets,
-    });
-  },
-
-  rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {
-    /*
-    This function eventually calculates a "RoomDownsyncFrame" where "RoomDownsyncFrame.id == renderFrameIdEd" if not interruptted.
-    */
-    const self = this;
-    let prevLatestRdf = null,
-      latestRdf = null;
-    for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
-      const currRdf = self.recentRenderCache.getByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
-      if (null == currRdf) {
-        throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
-      }
-      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      const delayedInputFrame = self.recentInputCache.getByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
-      if (null == delayedInputFrame) {
-        // Shouldn't happen!
-        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
-      }
-      const nextRdf = self.applyInputFrameDownsyncDynamicsOnSingleRenderFrame(delayedInputFrame, currRdf, collisionSys, collisionSysMap);
-
-      if (true == isChasing) {
-        // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
-        self.chaserRenderFrameId = nextRdf.id;
-      } else if (nextRdf.id == self.chaserRenderFrameId + 1) {
-        self.chaserRenderFrameId = nextRdf.id; // To avoid redundant calculation 
-      }
-      self.recentRenderCache.setByFrameId(nextRdf, nextRdf.id);
-      prevLatestRdf = currRdf;
-      latestRdf = nextRdf;
-    }
-
-    return [prevLatestRdf, latestRdf];
-  },
-
-  _initPlayerRichInfoDict(players) {
-    const self = this;
-    for (let k in players) {
-      const playerId = parseInt(k);
-      if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
-      const immediatePlayerInfo = players[playerId];
-      self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
-
-      const nodeAndScriptIns = self.spawnPlayerNode(immediatePlayerInfo.joinIndex, immediatePlayerInfo.virtualGridX, immediatePlayerInfo.virtualGridY, immediatePlayerInfo);
-
-      Object.assign(self.playerRichInfoDict.get(playerId), {
-        node: nodeAndScriptIns[0],
-        scriptIns: nodeAndScriptIns[1],
-      });
-
-      if (self.selfPlayerInfo.id == playerId) {
-        self.selfPlayerInfo = Object.assign(self.selfPlayerInfo, immediatePlayerInfo);
-        nodeAndScriptIns[1].showArrowTipNode();
-      }
-    }
-    self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
-    self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      self.playerRichInfoArr[playerRichInfo.joinIndex - 1] = playerRichInfo;
-    });
-  },
-
-  _stringifyRecentInputCache(usefullOutput) {
-    const self = this;
-    if (true == usefullOutput) {
-      let s = [];
-      for (let i = self.recentInputCache.stFrameId; i < self.recentInputCache.edFrameId; ++i) {
-        s.push(JSON.stringify(self.recentInputCache.getByFrameId(i)));
-      }
-
-      return s.join('\n');
-    }
-    return `[stInputFrameId=${self.recentInputCache.stFrameId}, edInputFrameId=${self.recentInputCache.edFrameId})`;
-  },
-
-  _stringifyRecentRenderCache(usefullOutput) {
-    const self = this;
-    if (true == usefullOutput) {
-      let s = [];
-      for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
-        s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
-      }
-
-      return s.join('\n');
-    }
-    return `[stRenderFrameId=${self.recentRenderCache.stFrameId}, edRenderFrameId=${self.recentRenderCache.edFrameId})`;
-  },
-
-  _stringifyRecentInputAndRenderCacheCorrespondingly() {
-    const self = this;
-    let s = [];
-    s.push(`@lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, @renderFrameId=${self.renderFrameId}, @chaserRenderFrameId=${self.chaserRenderFrameId}`);
-
-    for (let i = self.recentRenderCache.stFrameId; i < self.recentRenderCache.edFrameId; ++i) {
-      let jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
-      let j = self._convertToInputFrameId(i, self.inputDelayFrames);
-      if (i == self.recentRenderCache.stFrameId || j > jPrev) {
-        s.push(JSON.stringify(self.recentInputCache.getByFrameId(j)));
-      }
-      s.push(JSON.stringify(self.recentRenderCache.getByFrameId(i)));
-    }
-    return s.join('\n');
-  },
-
-  worldToVirtualGridPos(x, y) {
-    // [WARNING] Introduces loss of precision!
-    const self = this;
-    // In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-    let virtualGridX = Math.round(x * self.worldToVirtualGridRatio);
-    let virtualGridY = Math.round(y * self.worldToVirtualGridRatio);
-    return [virtualGridX, virtualGridY];
-  },
-
-  virtualGridToWorldPos(vx, vy) {
-    // No loss of precision
-    const self = this;
-    return [vx * self.virtualGridToWorldRatio, vy * self.virtualGridToWorldRatio];
-  },
-
-  worldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
-    return [wx - halfBoundingW - leftPadding, wy - halfBoundingH - bottomPadding];
-  },
-
-  polygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
-    return [cx + halfBoundingW + leftPadding, cy + halfBoundingH + bottomPadding];
-  },
-
-  polygonColliderBLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
-    const self = this;
-    const [wx, wy] = self.polygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding);
-    return self.worldToVirtualGridPos(wx, wy)
-  },
-
-  virtualGridToPolygonColliderBLPos(vx, vy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
-    const self = this;
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    return self.worldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding)
-  },
-
-  stringifyColliderCenterInWorld(playerCollider, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding) {
-    return `{${(playerCollider.x + leftPadding + halfBoundingW).toFixed(2)}, ${(playerCollider.y + bottomPadding + halfBoundingH).toFixed(2)}}`;
-  },
-
-  calcHardPushbacksNorms(collider, potentials, result, snapIntoPlatformOverlap, effPushback) {
-    const self = this;
-    let ret = [];
-    for (const potential of potentials) {
-      if (null == potential.data || !(true == potential.data.hardPushback)) continue;
-      if (!collider.collides(potential, result)) continue;
-      // ALWAY snap into hardPushbacks!
-      // [overlay_x, overlap_y] is the unit vector that points into the platform
-      const pushback = [(result.overlap - snapIntoPlatformOverlap) * result.overlap_x, (result.overlap - snapIntoPlatformOverlap) * result.overlap_y];
-      ret.push([result.overlap_x, result.overlap_y]);
-      effPushback[0] += pushback[0];
-      effPushback[1] += pushback[1];
-    }
-
-    return ret;
   },
 });
