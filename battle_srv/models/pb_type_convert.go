@@ -10,12 +10,13 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 		return nil
 	}
 	ret := &pb.RoomDownsyncFrame{
-		Id:                     rdf.Id,
-		PlayersArr:             make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
-		MeleeBullets:           make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
-		CountdownNanos:         rdf.CountdownNanos,
-		BackendUnconfirmedMask: rdf.BackendUnconfirmedMask,
-		ShouldForceResync:      rdf.ShouldForceResync,
+		Id:                       rdf.Id,
+		PlayersArr:               make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
+		MeleeBullets:             make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
+		CountdownNanos:           rdf.CountdownNanos,
+		BackendUnconfirmedMask:   rdf.BackendUnconfirmedMask,
+		ShouldForceResync:        rdf.ShouldForceResync,
+		PlayerOpPatternToSkillId: make(map[int32]int32),
 	}
 
 	for i, last := range rdf.PlayersArr {
@@ -63,6 +64,10 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			OffenderPlayerId:  last.OffenderPlayerId,
 		}
 		ret.MeleeBullets[i] = pbBullet
+	}
+
+	for i, last := range rdf.PlayerOpPatternToSkillId {
+		ret.PlayerOpPatternToSkillId[int32(i)] = int32(last)
 	}
 
 	return ret

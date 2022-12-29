@@ -62,6 +62,33 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
+func NewMeleeBulletJs(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitStunFrames, blockStunFrames, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId int32, pushback, hitboxOffset, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY float64) *js.Object {
+	return js.MakeWrapper(&MeleeBullet{
+		Bullet: Bullet{
+			BattleLocalId:         battleLocalId,
+			StartupFrames:         startupFrames,
+			ActiveFrames:          activeFrames,
+			RecoveryFrames:        recoveryFrames,
+			RecoveryFramesOnBlock: recoveryFramesOnBlock,
+			RecoveryFramesOnHit:   recoveryFramesOnHit,
+			HitboxOffset:          hitboxOffset,
+			HitStunFrames:         hitStunFrames,
+			BlockStunFrames:       blockStunFrames,
+			Pushback:              pushback,
+			ReleaseTriggerType:    releaseTriggerType,
+			Damage:                damage,
+
+			SelfMoveforwardX: selfMoveforwardX,
+			SelfMoveforwardY: selfMoveforwardY,
+			HitboxSizeX:      hitboxSizeX,
+			HitboxSizeY:      hitboxSizeY,
+
+			OffenderJoinIndex: offenderJoinIndex,
+			OffenderPlayerId:  offenderPlayerId,
+		},
+	})
+}
+
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets []*MeleeBullet) *js.Object {
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
@@ -112,6 +139,7 @@ func main() {
 		"NewPolygon2DJs":                  NewPolygon2DJs,
 		"NewBarrierJs":                    NewBarrierJs,
 		"NewPlayerDownsyncJs":             NewPlayerDownsyncJs,
+		"NewMeleeBulletJs":                NewMeleeBulletJs,
 		"NewRoomDownsyncFrameJs":          NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":             NewCollisionSpaceJs,
 		"NewInputFrameDownsync":           NewInputFrameDownsync,

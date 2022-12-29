@@ -4724,7 +4724,7 @@ $packages["resolv"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport/battle"] = (function() {
-	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, sliceType$3, sliceType$4, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, sliceType$5, sliceType$6, sliceType$7, sliceType$8, ptrType$7, sliceType$9, ptrType$8, sliceType$10, sliceType$11, ptrType$9, sliceType$12, ptrType$10, ptrType$11, skillIdToBullet, NewRingBuffer, ConvertToInputFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, VirtualGridToPolygonColliderBLPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
+	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, sliceType$3, sliceType$4, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, sliceType$5, sliceType$6, sliceType$7, sliceType$8, ptrType$7, sliceType$9, ptrType$8, sliceType$10, sliceType$11, ptrType$9, sliceType$12, ptrType$10, mapType, ptrType$11, skillIdToBullet, NewRingBuffer, ConvertToInputFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, VirtualGridToPolygonColliderBLPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
 	math = $packages["math"];
 	resolv = $packages["resolv"];
 	Vec2D = $pkg.Vec2D = $newType(0, $kindStruct, "battle.Vec2D", true, "jsexport/battle", true, function(X_, Y_) {
@@ -4887,7 +4887,7 @@ $packages["jsexport/battle"] = (function() {
 		this.Speed = Speed_;
 		this.Bullet = Bullet_;
 	});
-	RoomDownsyncFrame = $pkg.RoomDownsyncFrame = $newType(0, $kindStruct, "battle.RoomDownsyncFrame", true, "jsexport/battle", true, function(Id_, PlayersArr_, CountdownNanos_, MeleeBullets_, FireballBullets_, BackendUnconfirmedMask_, ShouldForceResync_) {
+	RoomDownsyncFrame = $pkg.RoomDownsyncFrame = $newType(0, $kindStruct, "battle.RoomDownsyncFrame", true, "jsexport/battle", true, function(Id_, PlayersArr_, CountdownNanos_, MeleeBullets_, FireballBullets_, BackendUnconfirmedMask_, ShouldForceResync_, PlayerOpPatternToSkillId_) {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.Id = 0;
@@ -4897,6 +4897,7 @@ $packages["jsexport/battle"] = (function() {
 			this.FireballBullets = sliceType$10.nil;
 			this.BackendUnconfirmedMask = new $Uint64(0, 0);
 			this.ShouldForceResync = false;
+			this.PlayerOpPatternToSkillId = false;
 			return;
 		}
 		this.Id = Id_;
@@ -4906,6 +4907,7 @@ $packages["jsexport/battle"] = (function() {
 		this.FireballBullets = FireballBullets_;
 		this.BackendUnconfirmedMask = BackendUnconfirmedMask_;
 		this.ShouldForceResync = ShouldForceResync_;
+		this.PlayerOpPatternToSkillId = PlayerOpPatternToSkillId_;
 	});
 	InputFrameDownsync = $pkg.InputFrameDownsync = $newType(0, $kindStruct, "battle.InputFrameDownsync", true, "jsexport/battle", true, function(InputFrameId_, InputList_, ConfirmedList_) {
 		this.$val = this;
@@ -4981,6 +4983,7 @@ $packages["jsexport/battle"] = (function() {
 	ptrType$9 = $ptrType(Vec2D);
 	sliceType$12 = $sliceType(ptrType$9);
 	ptrType$10 = $ptrType(Polygon2D);
+	mapType = $mapType($Int, $Int);
 	ptrType$11 = $ptrType(RingBuffer);
 	NewRingBuffer = function(n) {
 		var n;
@@ -5752,7 +5755,7 @@ $packages["jsexport/battle"] = (function() {
 			thatPlayerInNextFrame$3.VirtualGridY = _tuple$6[1];
 			_i$10++;
 		}
-		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), nextRenderFrameMeleeBullets, sliceType$10.nil, new $Uint64(0, 0), false);
+		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), nextRenderFrameMeleeBullets, sliceType$10.nil, new $Uint64(0, 0), false, false);
 		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _index$3, _r, _r$1, _r$2, _r$3, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, atkedPlayerInCurFrame, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, collision, collision$1, collisionPlayerIndex, collisionPlayerIndex$1, collisionPlayerIndex$2, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, gravityX, gravityY, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNorms, i, i$1, i$2, i$3, i$4, inputDelayFrames, inputScaleFrames, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, joinIndex$4, jumpedOrNot, jumpingInitVelY, landedOnGravityPushback, meleeBullet, meleeBullet$1, newBulletCollider, newMeleeBullet, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, offenderWx, offenderWy, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerOpPatternToSkillId, playerShape, projectedMagnitude, projectedMagnitude$1, pushbackX, pushbackX$1, pushbackY, pushbackY$1, roomCapacity, skillConfig, skillId, snapIntoPlatformOverlap, snapIntoPlatformThreshold, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, virtualGridToWorldRatio, worldToVirtualGridRatio, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, $s};return $f;
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame;
@@ -5865,7 +5868,7 @@ $packages["jsexport/battle"] = (function() {
 	Bullet.init("", [{prop: "BattleLocalId", name: "BattleLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StartupFrames", name: "StartupFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveFrames", name: "ActiveFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFrames", name: "RecoveryFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnBlock", name: "RecoveryFramesOnBlock", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnHit", name: "RecoveryFramesOnHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffset", name: "HitboxOffset", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OriginatedRenderFrameId", name: "OriginatedRenderFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitStunFrames", name: "HitStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlockStunFrames", name: "BlockStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Pushback", name: "Pushback", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "ReleaseTriggerType", name: "ReleaseTriggerType", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Damage", name: "Damage", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderJoinIndex", name: "OffenderJoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderPlayerId", name: "OffenderPlayerId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfMoveforwardX", name: "SelfMoveforwardX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "SelfMoveforwardY", name: "SelfMoveforwardY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "HitboxSizeX", name: "HitboxSizeX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "HitboxSizeY", name: "HitboxSizeY", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	MeleeBullet.init("", [{prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
 	FireballBullet.init("", [{prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
-	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$6, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$10, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}]);
+	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$6, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$10, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "PlayerOpPatternToSkillId", name: "PlayerOpPatternToSkillId", embedded: false, exported: true, typ: mapType, tag: ""}]);
 	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$5, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
 	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
 	SatResult.init("", [{prop: "Overlap", name: "Overlap", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapX", name: "OverlapX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapY", name: "OverlapY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "AContainedInB", name: "AContainedInB", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BContainedInA", name: "BContainedInA", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Axis", name: "Axis", embedded: false, exported: true, typ: resolv.Vector, tag: ""}]);
@@ -5882,7 +5885,7 @@ $packages["jsexport/battle"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport"] = (function() {
-	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, ptrType$6, funcType$10, ptrType$7, ptrType$8, ptrType$9, mapType, mapType$1, funcType$11, funcType$12, mapType$2, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateRectColliderJs, GenerateConvexPolygonColliderJs, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, main;
+	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, ptrType$6, funcType$11, ptrType$7, ptrType$8, ptrType$9, mapType, mapType$1, funcType$12, funcType$13, mapType$2, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateRectColliderJs, GenerateConvexPolygonColliderJs, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, main;
 	js = $packages["github.com/gopherjs/gopherjs/js"];
 	battle = $packages["jsexport/battle"];
 	resolv = $packages["resolv"];
@@ -5902,21 +5905,22 @@ $packages["jsexport"] = (function() {
 	funcType$1 = $funcType([ptrType, sliceType$1], [ptrType$5], false);
 	funcType$2 = $funcType([ptrType$1], [ptrType$5], false);
 	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Float64], [ptrType$5], false);
-	funcType$4 = $funcType([$Int32, sliceType$2, sliceType$3], [ptrType$5], false);
-	funcType$5 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
-	funcType$6 = $funcType([$Int32, sliceType, $Uint64], [ptrType$5], false);
-	funcType$7 = $funcType([$Int32], [ptrType$5], false);
-	funcType$8 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
-	funcType$9 = $funcType([ptrType$1, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
+	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64], [ptrType$5], false);
+	funcType$5 = $funcType([$Int32, sliceType$2, sliceType$3], [ptrType$5], false);
+	funcType$6 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
+	funcType$7 = $funcType([$Int32, sliceType, $Uint64], [ptrType$5], false);
+	funcType$8 = $funcType([$Int32], [ptrType$5], false);
+	funcType$9 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
+	funcType$10 = $funcType([ptrType$1, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
 	ptrType$6 = $ptrType(resolv.Space);
-	funcType$10 = $funcType([ptrType$6], [sliceType$5], false);
+	funcType$11 = $funcType([ptrType$6], [sliceType$5], false);
 	ptrType$7 = $ptrType(battle.RingBuffer);
 	ptrType$8 = $ptrType(battle.RoomDownsyncFrame);
 	ptrType$9 = $ptrType(resolv.Object);
 	mapType = $mapType($Int32, ptrType$9);
 	mapType$1 = $mapType($Int, $Int);
-	funcType$11 = $funcType([ptrType$7, ptrType$8, ptrType$6, mapType, $Int32, $Int32, $Int32, $Int32, $Uint32, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, mapType$1], [ptrType$5], false);
-	funcType$12 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64], [$Float64, $Float64], false);
+	funcType$12 = $funcType([ptrType$7, ptrType$8, ptrType$6, mapType, $Int32, $Int32, $Int32, $Int32, $Uint32, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, mapType$1], [ptrType$5], false);
+	funcType$13 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64], [$Float64, $Float64], false);
 	mapType$2 = $mapType($String, $emptyInterface);
 	NewInputFrameDownsync = function(inputFrameId, inputList, confirmedList) {
 		var {$24r, _r, confirmedList, inputFrameId, inputList, $s, $r, $c} = $restore(this, {inputFrameId, inputList, confirmedList});
@@ -5969,10 +5973,15 @@ $packages["jsexport"] = (function() {
 		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, 0, hp, maxHp, characterState, inAir));
 	};
 	$pkg.NewPlayerDownsyncJs = NewPlayerDownsyncJs;
+	NewMeleeBulletJs = function(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitStunFrames, blockStunFrames, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId, pushback, hitboxOffset, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY) {
+		var activeFrames, battleLocalId, blockStunFrames, damage, hitStunFrames, hitboxOffset, hitboxSizeX, hitboxSizeY, offenderJoinIndex, offenderPlayerId, pushback, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, releaseTriggerType, selfMoveforwardX, selfMoveforwardY, startupFrames;
+		return js.MakeWrapper(new battle.MeleeBullet.ptr(new battle.Bullet.ptr(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitboxOffset, 0, hitStunFrames, blockStunFrames, pushback, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY)));
+	};
+	$pkg.NewMeleeBulletJs = NewMeleeBulletJs;
 	NewRoomDownsyncFrameJs = function(id, playersArr, meleeBullets) {
 		var {$24r, _r, id, meleeBullets, playersArr, $s, $r, $c} = $restore(this, {id, playersArr, meleeBullets});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
-		_r = js.MakeFullWrapper(new battle.RoomDownsyncFrame.ptr(id, playersArr, new $Int64(0, 0), meleeBullets, sliceType$4.nil, new $Uint64(0, 0), false)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		_r = js.MakeFullWrapper(new battle.RoomDownsyncFrame.ptr(id, playersArr, new $Int64(0, 0), meleeBullets, sliceType$4.nil, new $Uint64(0, 0), false, false)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
 		$24r = _r;
 		$s = 2; case 2: return $24r;
 		/* */ } return; } var $f = {$blk: NewRoomDownsyncFrameJs, $c: true, $r, $24r, _r, id, meleeBullets, playersArr, $s};return $f;
@@ -6028,7 +6037,7 @@ $packages["jsexport"] = (function() {
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs;
 	main = function() {
-		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$4(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$5(NewCollisionSpaceJs) }, { k: "NewInputFrameDownsync", v: new funcType$6(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$7(NewRingBufferJs) }, { k: "GenerateRectColliderJs", v: new funcType$8(GenerateRectColliderJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$9(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$10(GetCollisionSpaceObjsJs) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$11(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$12(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$12(battle.PolygonColliderBLToWorldPos) }]), mapType$2);
+		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$5(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$6(NewCollisionSpaceJs) }, { k: "NewInputFrameDownsync", v: new funcType$7(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$8(NewRingBufferJs) }, { k: "GenerateRectColliderJs", v: new funcType$9(GenerateRectColliderJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$10(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$11(GetCollisionSpaceObjsJs) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$12(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$13(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$13(battle.PolygonColliderBLToWorldPos) }]), mapType$2);
 	};
 	$init = function() {
 		$pkg.$init = function() {};

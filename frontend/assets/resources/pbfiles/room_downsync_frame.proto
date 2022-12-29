@@ -156,4 +156,5 @@ message RoomDownsyncFrame {
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
   uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
   bool shouldForceResync = 6;
+  map<int32, int32> playerOpPatternToSkillId = 7; 
 }

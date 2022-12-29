@@ -265,7 +265,6 @@ func Serve(c *gin.Context) {
 
 			SpAtkLookupFrames:         pRoom.SpAtkLookupFrames,
 			RenderCacheSize:           pRoom.RenderCacheSize,
-			MeleeSkillConfig:          pRoom.MeleeSkillConfig,
 			SnapIntoPlatformOverlap:   pRoom.SnapIntoPlatformOverlap,
 			SnapIntoPlatformThreshold: pRoom.SnapIntoPlatformThreshold,
 			JumpingInitVelY:           pRoom.JumpingInitVelY,

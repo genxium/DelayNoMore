@@ -91,13 +91,14 @@ type FireballBullet struct {
 }
 
 type RoomDownsyncFrame struct {
-	Id                     int32
-	PlayersArr             []*PlayerDownsync
-	CountdownNanos         int64
-	MeleeBullets           []*MeleeBullet
-	FireballBullets        []*FireballBullet
-	BackendUnconfirmedMask uint64
-	ShouldForceResync      bool
+	Id                       int32
+	PlayersArr               []*PlayerDownsync
+	CountdownNanos           int64
+	MeleeBullets             []*MeleeBullet
+	FireballBullets          []*FireballBullet
+	BackendUnconfirmedMask   uint64
+	ShouldForceResync        bool
+	PlayerOpPatternToSkillId map[int]int
 }
 
 type InputFrameDownsync struct {

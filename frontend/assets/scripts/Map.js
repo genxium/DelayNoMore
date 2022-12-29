@@ -403,7 +403,6 @@ cc.Class({
       console.log(`Received parsedBattleColliderInfo via ws`);
       // TODO: Upon reconnection, the backend might have already been sending down data that'd trigger "onRoomDownsyncFrame & onInputFrameDownsyncBatch", but frontend could reject those data due to "battleState != PlayerBattleState.ACTIVE".
       Object.assign(self, parsedBattleColliderInfo);
-      self.gravityX = parsedBattleColliderInfo.gravityX; // to avoid integer default value 0 accidentally becoming null in "Object.assign(...)"
       self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
@@ -504,7 +503,7 @@ cc.Class({
         }
         self.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
         Object.assign(self.selfPlayerInfo, {
-          id: self.selfPlayerInfo.playerId
+          Id: self.selfPlayerInfo.playerId
         });
 
         const reqData = window.pb.protos.WsReq.encode({
@@ -627,6 +626,7 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
+    self.playerOpPatternToSkillId = pbRdf.playerOpPatternToSkillId;
     self._initPlayerRichInfoDict(rdf.PlayersArr);
 
     // Show the top status indicators for IN_BATTLE 
@@ -744,14 +744,14 @@ cc.Class({
         &&
         null == firstPredictedYetIncorrectInputFrameId
         &&
-        !self.equalInputLists(localInputFrame.inputList, inputFrameDownsync.inputList)
+        !self.equalInputLists(localInputFrame.InputList, inputFrameDownsync.inputList)
       ) {
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
-      inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
+      const inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
       //console.log(`Confirmed inputFrameId=${inputFrameDownsync.inputFrameId}`);
-      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.SetByFrameId(inputFrameDownsync, inputFrameDownsync.inputFrameId);
+      const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.SetByFrameId(inputFrameDownsyncLocal, inputFrameDownsync.inputFrameId);
       if (window.RING_BUFF_FAILED_TO_SET == ret) {
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }

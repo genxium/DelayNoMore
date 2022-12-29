@@ -4601,7 +4601,6 @@ $root.protos = (function() {
          * @property {number|null} [virtualGridToWorldRatio] BattleColliderInfo virtualGridToWorldRatio
          * @property {number|null} [spAtkLookupFrames] BattleColliderInfo spAtkLookupFrames
          * @property {number|null} [renderCacheSize] BattleColliderInfo renderCacheSize
-         * @property {Object.<string,protos.MeleeBullet>|null} [meleeSkillConfig] BattleColliderInfo meleeSkillConfig
          * @property {number|null} [snapIntoPlatformOverlap] BattleColliderInfo snapIntoPlatformOverlap
          * @property {number|null} [snapIntoPlatformThreshold] BattleColliderInfo snapIntoPlatformThreshold
          * @property {number|null} [jumpingInitVelY] BattleColliderInfo jumpingInitVelY
@@ -4620,7 +4619,6 @@ $root.protos = (function() {
          * @param {protos.IBattleColliderInfo=} [properties] Properties to set
          */
         function BattleColliderInfo(properties) {
-            this.meleeSkillConfig = {};
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -4812,14 +4810,6 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.renderCacheSize = 0;
 
         /**
-         * BattleColliderInfo meleeSkillConfig.
-         * @member {Object.<string,protos.MeleeBullet>} meleeSkillConfig
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.meleeSkillConfig = $util.emptyObject;
-
-        /**
          * BattleColliderInfo snapIntoPlatformOverlap.
          * @member {number} snapIntoPlatformOverlap
          * @memberof protos.BattleColliderInfo
@@ -4945,23 +4935,18 @@ $root.protos = (function() {
                 writer.uint32(/* id 22, wireType 0 =*/176).int32(message.spAtkLookupFrames);
             if (message.renderCacheSize != null && Object.hasOwnProperty.call(message, "renderCacheSize"))
                 writer.uint32(/* id 23, wireType 0 =*/184).int32(message.renderCacheSize);
-            if (message.meleeSkillConfig != null && Object.hasOwnProperty.call(message, "meleeSkillConfig"))
-                for (var keys = Object.keys(message.meleeSkillConfig), i = 0; i < keys.length; ++i) {
-                    writer.uint32(/* id 24, wireType 2 =*/194).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]);
-                    $root.protos.MeleeBullet.encode(message.meleeSkillConfig[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                }
             if (message.snapIntoPlatformOverlap != null && Object.hasOwnProperty.call(message, "snapIntoPlatformOverlap"))
-                writer.uint32(/* id 25, wireType 1 =*/201).double(message.snapIntoPlatformOverlap);
+                writer.uint32(/* id 24, wireType 1 =*/193).double(message.snapIntoPlatformOverlap);
             if (message.snapIntoPlatformThreshold != null && Object.hasOwnProperty.call(message, "snapIntoPlatformThreshold"))
-                writer.uint32(/* id 26, wireType 1 =*/209).double(message.snapIntoPlatformThreshold);
+                writer.uint32(/* id 25, wireType 1 =*/201).double(message.snapIntoPlatformThreshold);
             if (message.jumpingInitVelY != null && Object.hasOwnProperty.call(message, "jumpingInitVelY"))
-                writer.uint32(/* id 27, wireType 0 =*/216).int32(message.jumpingInitVelY);
+                writer.uint32(/* id 26, wireType 0 =*/208).int32(message.jumpingInitVelY);
             if (message.gravityX != null && Object.hasOwnProperty.call(message, "gravityX"))
-                writer.uint32(/* id 28, wireType 0 =*/224).int32(message.gravityX);
+                writer.uint32(/* id 27, wireType 0 =*/216).int32(message.gravityX);
             if (message.gravityY != null && Object.hasOwnProperty.call(message, "gravityY"))
-                writer.uint32(/* id 29, wireType 0 =*/232).int32(message.gravityY);
+                writer.uint32(/* id 28, wireType 0 =*/224).int32(message.gravityY);
             if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
-                writer.uint32(/* id 30, wireType 0 =*/240).int32(message.collisionMinStep);
+                writer.uint32(/* id 29, wireType 0 =*/232).int32(message.collisionMinStep);
             if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
                 writer.uint32(/* id 999, wireType 0 =*/7992).bool(message.frameDataLoggingEnabled);
             return writer;
@@ -4994,7 +4979,7 @@ $root.protos = (function() {
         BattleColliderInfo.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -5091,49 +5076,26 @@ $root.protos = (function() {
                         break;
                     }
                 case 24: {
-                        if (message.meleeSkillConfig === $util.emptyObject)
-                            message.meleeSkillConfig = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = null;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = $root.protos.MeleeBullet.decode(reader, reader.uint32());
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.meleeSkillConfig[key] = value;
-                        break;
-                    }
-                case 25: {
                         message.snapIntoPlatformOverlap = reader.double();
                         break;
                     }
-                case 26: {
+                case 25: {
                         message.snapIntoPlatformThreshold = reader.double();
                         break;
                     }
-                case 27: {
+                case 26: {
                         message.jumpingInitVelY = reader.int32();
                         break;
                     }
-                case 28: {
+                case 27: {
                         message.gravityX = reader.int32();
                         break;
                     }
-                case 29: {
+                case 28: {
                         message.gravityY = reader.int32();
                         break;
                     }
-                case 30: {
+                case 29: {
                         message.collisionMinStep = reader.int32();
                         break;
                     }
@@ -5245,20 +5207,6 @@ $root.protos = (function() {
             if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
                 if (!$util.isInteger(message.renderCacheSize))
                     return "renderCacheSize: integer expected";
-            if (message.meleeSkillConfig != null && message.hasOwnProperty("meleeSkillConfig")) {
-                if (!$util.isObject(message.meleeSkillConfig))
-                    return "meleeSkillConfig: object expected";
-                var key = Object.keys(message.meleeSkillConfig);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "meleeSkillConfig: integer key{k:int32} expected";
-                    {
-                        var error = $root.protos.MeleeBullet.verify(message.meleeSkillConfig[key[i]]);
-                        if (error)
-                            return "meleeSkillConfig." + error;
-                    }
-                }
-            }
             if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
                 if (typeof message.snapIntoPlatformOverlap !== "number")
                     return "snapIntoPlatformOverlap: number expected";
@@ -5355,16 +5303,6 @@ $root.protos = (function() {
                 message.spAtkLookupFrames = object.spAtkLookupFrames | 0;
             if (object.renderCacheSize != null)
                 message.renderCacheSize = object.renderCacheSize | 0;
-            if (object.meleeSkillConfig) {
-                if (typeof object.meleeSkillConfig !== "object")
-                    throw TypeError(".protos.BattleColliderInfo.meleeSkillConfig: object expected");
-                message.meleeSkillConfig = {};
-                for (var keys = Object.keys(object.meleeSkillConfig), i = 0; i < keys.length; ++i) {
-                    if (typeof object.meleeSkillConfig[keys[i]] !== "object")
-                        throw TypeError(".protos.BattleColliderInfo.meleeSkillConfig: object expected");
-                    message.meleeSkillConfig[keys[i]] = $root.protos.MeleeBullet.fromObject(object.meleeSkillConfig[keys[i]]);
-                }
-            }
             if (object.snapIntoPlatformOverlap != null)
                 message.snapIntoPlatformOverlap = Number(object.snapIntoPlatformOverlap);
             if (object.snapIntoPlatformThreshold != null)
@@ -5395,8 +5333,6 @@ $root.protos = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.objects || options.defaults)
-                object.meleeSkillConfig = {};
             if (options.defaults) {
                 object.stageName = "";
                 object.stageDiscreteW = 0;
@@ -5489,12 +5425,6 @@ $root.protos = (function() {
                 object.spAtkLookupFrames = message.spAtkLookupFrames;
             if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
                 object.renderCacheSize = message.renderCacheSize;
-            var keys2;
-            if (message.meleeSkillConfig && (keys2 = Object.keys(message.meleeSkillConfig)).length) {
-                object.meleeSkillConfig = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.meleeSkillConfig[keys2[j]] = $root.protos.MeleeBullet.toObject(message.meleeSkillConfig[keys2[j]], options);
-            }
             if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
                 object.snapIntoPlatformOverlap = options.json && !isFinite(message.snapIntoPlatformOverlap) ? String(message.snapIntoPlatformOverlap) : message.snapIntoPlatformOverlap;
             if (message.snapIntoPlatformThreshold != null && message.hasOwnProperty("snapIntoPlatformThreshold"))
@@ -5553,6 +5483,7 @@ $root.protos = (function() {
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
+         * @property {Object.<string,number>|null} [playerOpPatternToSkillId] RoomDownsyncFrame playerOpPatternToSkillId
          */
 
         /**
@@ -5566,6 +5497,7 @@ $root.protos = (function() {
         function RoomDownsyncFrame(properties) {
             this.playersArr = [];
             this.meleeBullets = [];
+            this.playerOpPatternToSkillId = {};
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -5621,6 +5553,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.shouldForceResync = false;
 
         /**
+         * RoomDownsyncFrame playerOpPatternToSkillId.
+         * @member {Object.<string,number>} playerOpPatternToSkillId
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.playerOpPatternToSkillId = $util.emptyObject;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5658,6 +5598,9 @@ $root.protos = (function() {
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
+            if (message.playerOpPatternToSkillId != null && Object.hasOwnProperty.call(message, "playerOpPatternToSkillId"))
+                for (var keys = Object.keys(message.playerOpPatternToSkillId), i = 0; i < keys.length; ++i)
+                    writer.uint32(/* id 7, wireType 2 =*/58).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]).uint32(/* id 2, wireType 0 =*/16).int32(message.playerOpPatternToSkillId[keys[i]]).ldelim();
             return writer;
         };
 
@@ -5688,7 +5631,7 @@ $root.protos = (function() {
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -5718,6 +5661,29 @@ $root.protos = (function() {
                     }
                 case 6: {
                         message.shouldForceResync = reader.bool();
+                        break;
+                    }
+                case 7: {
+                        if (message.playerOpPatternToSkillId === $util.emptyObject)
+                            message.playerOpPatternToSkillId = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = 0;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.int32();
+                                break;
+                            case 2:
+                                value = reader.int32();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.playerOpPatternToSkillId[key] = value;
                         break;
                     }
                 default:
@@ -5785,6 +5751,17 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
+            if (message.playerOpPatternToSkillId != null && message.hasOwnProperty("playerOpPatternToSkillId")) {
+                if (!$util.isObject(message.playerOpPatternToSkillId))
+                    return "playerOpPatternToSkillId: object expected";
+                var key = Object.keys(message.playerOpPatternToSkillId);
+                for (var i = 0; i < key.length; ++i) {
+                    if (!$util.key32Re.test(key[i]))
+                        return "playerOpPatternToSkillId: integer key{k:int32} expected";
+                    if (!$util.isInteger(message.playerOpPatternToSkillId[key[i]]))
+                        return "playerOpPatternToSkillId: integer{k:int32} expected";
+                }
+            }
             return null;
         };
 
@@ -5842,6 +5819,13 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
+            if (object.playerOpPatternToSkillId) {
+                if (typeof object.playerOpPatternToSkillId !== "object")
+                    throw TypeError(".protos.RoomDownsyncFrame.playerOpPatternToSkillId: object expected");
+                message.playerOpPatternToSkillId = {};
+                for (var keys = Object.keys(object.playerOpPatternToSkillId), i = 0; i < keys.length; ++i)
+                    message.playerOpPatternToSkillId[keys[i]] = object.playerOpPatternToSkillId[keys[i]] | 0;
+            }
             return message;
         };
 
@@ -5862,6 +5846,8 @@ $root.protos = (function() {
                 object.playersArr = [];
                 object.meleeBullets = [];
             }
+            if (options.objects || options.defaults)
+                object.playerOpPatternToSkillId = {};
             if (options.defaults) {
                 object.id = 0;
                 if ($util.Long) {
@@ -5900,6 +5886,12 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
+            var keys2;
+            if (message.playerOpPatternToSkillId && (keys2 = Object.keys(message.playerOpPatternToSkillId)).length) {
+                object.playerOpPatternToSkillId = {};
+                for (var j = 0; j < keys2.length; ++j)
+                    object.playerOpPatternToSkillId[keys2[j]] = message.playerOpPatternToSkillId[keys2[j]];
+            }
             return object;
         };
 
