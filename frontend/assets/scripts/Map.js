@@ -142,15 +142,27 @@ cc.Class({
       currSelfInput = null;
     const joinIndex = self.selfPlayerInfo.JoinIndex;
     const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
-    const previousInputFrameDownsyncWithPrediction = self.getCachedInputFrameDownsyncWithPrediction(inputFrameId - 1);
-    previousSelfInput = (null == previousInputFrameDownsyncWithPrediction ? null : previousInputFrameDownsyncWithPrediction.InputList[joinIndex - 1]);
+    const previousInputFrameDownsync = self.recentInputCache.GetByFrameId(inputFrameId - 1);
+    previousSelfInput = (null == previousInputFrameDownsync ? null : previousInputFrameDownsync.InputList[joinIndex - 1]);
     if (null != existingInputFrame) {
       // This could happen upon either [type#1] or [type#2] forceConfirmation, where "refRenderFrame" is accompanied by some "inputFrameDownsyncs". The check here also guarantees that we don't override history 
       console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
       return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
     }
 
-    const prefabbedInputList = (null == previousInputFrameDownsyncWithPrediction ? new Array(self.playerRichInfoDict.size).fill(0) : previousInputFrameDownsyncWithPrediction.InputList.slice());
+    const lastAllConfirmedInputFrame = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
+    const prefabbedInputList = new Array(self.playerRichInfoDict.size).fill(0);
+    // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "prefabbedInputList"
+    for (let k in prefabbedInputList) {
+      if (null != previousInputFrameDownsync) {
+        prefabbedInputList[k] = previousInputFrameDownsync.InputList[k];
+      }
+      if (0 <= self.lastAllConfirmedInputFrameId && inputFrameId - 1 > self.lastAllConfirmedInputFrameId) {
+        prefabbedInputList[k] = lastAllConfirmedInputFrame.InputList[k];
+      }
+      // Don't predict "btnA & btnB"!
+      prefabbedInputList[k] = (prefabbedInputList[k] & 15);
+    }
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     while (self.recentInputCache.EdFrameId <= inputFrameId) {
@@ -584,7 +596,7 @@ cc.Class({
     const jsMeleeBulletsArr = [];
     for (let k in pbRdf.meleeBullets) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBullet(pbBullet.battleLocalId, pbBullet.startupFrames, pbBullet.activeFrames, pbBullet.recoveryFrames, pbBullet.recoveryFramesOnBlock, pbBullet.recoveryFramesOnHit, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.releaseTriggerType, pbBullet.damage, pbBullet.offenderJoinIndex, pbBullet.offenderPlayerId, pbBullet.pushback, pbBullet.hitboxOffset, pbBullet.selfMoveforwardX, pbBullet.selfMoveforwardY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY);
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.battleLocalId, pbBullet.startupFrames, pbBullet.activeFrames, pbBullet.recoveryFrames, pbBullet.recoveryFramesOnBlock, pbBullet.recoveryFramesOnHit, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.releaseTriggerType, pbBullet.damage, pbBullet.offenderJoinIndex, pbBullet.offenderPlayerId, pbBullet.pushback, pbBullet.hitboxOffset, pbBullet.selfMoveforwardX, pbBullet.selfMoveforwardY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY);
       jsMeleeBulletsArr.push(jsBullet);
     }
 
@@ -1064,22 +1076,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     if (self.countdownNanos <= 0) {
       self.onBattleStopped(self.playerRichInfoDict);
     }
-  },
-
-  getCachedInputFrameDownsyncWithPrediction(inputFrameId) {
-    const self = this;
-    const inputFrameDownsync = self.recentInputCache.GetByFrameId(inputFrameId); // "battle.InputFrameDownsync" in "jsexport"
-    if (null != inputFrameDownsync && inputFrameId > self.lastAllConfirmedInputFrameId) {
-      const lastAllConfirmedInputFrame = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
-      if (null != lastAllConfirmedInputFrame) {
-        for (let i = 0; i < inputFrameDownsync.InputList.length; ++i) {
-          if (i == (self.selfPlayerInfo.JoinIndex - 1)) continue;
-          inputFrameDownsync.InputList[i] = (lastAllConfirmedInputFrame.InputList[i] & 15); // Don't predict attack input!
-        }
-      }
-    }
-
-    return inputFrameDownsync;
   },
 
   rollbackAndChase(renderFrameIdSt, renderFrameIdEd, collisionSys, collisionSysMap, isChasing) {

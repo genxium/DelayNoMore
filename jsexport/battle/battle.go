@@ -542,7 +542,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 		if landedOnGravityPushback {
 			thatPlayerInNextFrame.InAir = false
-			if currPlayerDownsync.InAir && 0 > currPlayerDownsync.VelY {
+			if currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY {
 				// fallStopping
 				thatPlayerInNextFrame.VelX = 0
 				thatPlayerInNextFrame.VelY = 0

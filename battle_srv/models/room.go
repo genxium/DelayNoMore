@@ -1073,15 +1073,17 @@ func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputF
 			}
 
 			j2 := j - 1
-			if 0 <= pR.LastAllConfirmedInputFrameId && j2 >= pR.LastAllConfirmedInputFrameId {
-				j2 = pR.LastAllConfirmedInputFrameId
-			}
 			tmp2 := pR.InputsBuffer.GetByFrameId(j2)
 			if nil != tmp2 {
 				prevInputFrameDownsync := tmp2.(*battle.InputFrameDownsync)
 				for i, _ := range currInputFrameDownsync.InputList {
-					currInputFrameDownsync.InputList[i] = (prevInputFrameDownsync.InputList[i] & uint64(15)) // Don't predict attack input!
+					currInputFrameDownsync.InputList[i] = prevInputFrameDownsync.InputList[i]
 				}
+			}
+
+			for i, _ := range currInputFrameDownsync.InputList {
+				// Don't predict "btnA & btnB"!
+				currInputFrameDownsync.InputList[i] = (currInputFrameDownsync.InputList[i] & uint64(15))
 			}
 
 			pR.InputsBuffer.Put(currInputFrameDownsync)
