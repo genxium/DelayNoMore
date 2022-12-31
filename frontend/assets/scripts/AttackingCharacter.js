@@ -5,32 +5,14 @@ window.ATK_CHARACTER_STATE = {
   Walking: [1, "Walking"],
   Atk1: [2, "Atk1"],
   Atked1: [3, "Atked1"],
-  InAirIdle1: [4, "InAirIdle1"],
-  InAirAtk1: [5, "Atk1"],
-  InAirAtked1: [6, "Atked1"],
+  InAirIdle1NoJump: [4, "InAirIdle1NoJump"],
+  InAirIdle1ByJump: [5, "InAirIdle1ByJump"], // The cycling part of it would be exactly "InAirIdle1NoJump"
+  InAirAtk1: [6, "InAirAtk1"],
+  InAirAtked1: [7, "InAirAtked1"],
+  BlownUp1: [8, "BlownUp1"],
+  LayDown1: [9, "LayDown1"],
+  GetUp1: [10, "GetUp1"],
 };
-
-window.toInAirConjugate = function(foo) {
-  switch (foo) {
-    case window.ATK_CHARACTER_STATE.Idle1[0]:
-    case window.ATK_CHARACTER_STATE.Walking[0]:
-      return window.ATK_CHARACTER_STATE.InAirIdle1[0];
-    case window.ATK_CHARACTER_STATE.Atk1[0]:
-      return window.ATK_CHARACTER_STATE.InAirAtk1[0];
-    case window.ATK_CHARACTER_STATE.Atked1[0]:
-      return window.ATK_CHARACTER_STATE.InAirAtked1[0];
-
-    case window.ATK_CHARACTER_STATE.InAirIdle1[0]:
-      return window.ATK_CHARACTER_STATE.Idle1[0];
-    case window.ATK_CHARACTER_STATE.InAirAtk1[0]:
-      return window.ATK_CHARACTER_STATE.Atk1[0];
-    case window.ATK_CHARACTER_STATE.InAirAtked1[0]:
-      return window.ATK_CHARACTER_STATE.Atked1[0];
-    default:
-      console.warn(`Invalid characterState ${foo} received, no in air conjugate is available!`);
-      return null;
-  }
-}
 
 window.ATK_CHARACTER_STATE_ARR = [];
 for (let k in window.ATK_CHARACTER_STATE) {
@@ -40,12 +22,18 @@ for (let k in window.ATK_CHARACTER_STATE) {
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET = new Set();
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Idle1[0]);
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Walking[0]);
-window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1ByJump[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.BlownUp1[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.LayDown1[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.GetUp1[0]);
 
 window.ATK_CHARACTER_STATE_IN_AIR_SET = new Set();
-window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1ByJump[0]);
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtk1[0]);
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtked1[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.BlownUp1[0]);
 
 /*
 Kindly note that the use of dragonBones anim is an informed choice for the feasibility of "gotoAndPlayByFrame", which is a required feature by "Map.rollbackAndChase". You might find that "cc.Animation" -- the traditional frame anim -- can also suffice this requirement, yet if we want to develop 3D frontend in the future, working with skeletal anim will make a smoother transition.
@@ -80,11 +68,11 @@ cc.Class({
     this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
     if (!this.animComp) {
       this.animComp = this.effAnimNode.getComponent(cc.Animation);
-    } 
+    }
     this.effAnimNode.active = true;
   },
 
-  updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch) {
+  updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch, chConfig) {
     // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevRdfPlayer.CharacterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
 
     // Update directions
@@ -117,29 +105,25 @@ cc.Class({
     }
 
     if (this.animComp instanceof dragonBones.ArmatureDisplay) {
-      this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName);
+      this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName, chConfig);
     } else {
-      this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName);
+      this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName, chConfig);
     }
   },
 
-  _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName) {
+  _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName, chConfig) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
       // console.warn(`#DragonBones JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
       underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, 0, -1);
     } else {
       const animationData = underlyingAnimationCtrl._animations[newAnimName];
-      let fromAnimFrame = (animationData.frameCount - rdfPlayer.FramesToRecover);
-      if (fromAnimFrame < 0) {
-        // For Atk1 or Atk2, it's possible that the "meleeBullet.recoveryFrames" is configured to be slightly larger than corresponding animation duration frames
-        fromAnimFrame = 0;
-      }
-      underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, fromAnimFrame, 1);
+      let frameIdxInAnim = rdfPlayer.FramesInChState;
+      underlyingAnimationCtrl.gotoAndPlayByFrame(newAnimName, frameIdxInAnim, 1);
     }
   },
 
-  _interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName) {
+  _interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName, chConfig) {
     if (window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No "framesToRecover"
       //console.warn(`#FrameAnim JoinIndex=${rdfPlayer.joinIndex}, ${playingAnimName} -> ${newAnimName}`);
@@ -148,11 +132,11 @@ cc.Class({
     }
     // The "playTimes" counterpart is managed by each "cc.AnimationClip.wrapMode", already preset in the editor.
     const targetClip = this.animComp.getClips()[newCharacterState]; // The clips follow the exact order in ATK_CHARACTER_STATE
-    let fromTime = (targetClip.duration - rdfPlayer.FramesToRecover / targetClip.sample); // TODO: Anyway to avoid using division here?
-    if (fromTime < 0) {
-      // For Atk1 or Atk2, it's possible that the "meleeBullet.recoveryFrames" is configured to be slightly larger than corresponding animation duration frames
-      fromTime = 0;
-    }
+    let frameIdxInAnim = rdfPlayer.FramesInChState;
+    if (window.ATK_CHARACTER_STATE.InAirIdle1ByJump == newCharacterState && null != chConfig) {
+      frameIdxInAnim = chConfig.InAirIdleFrameIdxTurningPoint + (frameIdxInAnim - chConfig.InAirIdleFrameIdxTurningPoint) % chConfig.InAirIdleFrameIdxTurnedCycle; // TODO: Anyway to avoid using division here?
+    } 
+    let fromTime = (frameIdxInAnim / targetClip.sample); // TODO: Anyway to avoid using division here?
     this.animComp.play(newAnimName, fromTime);
   },
 

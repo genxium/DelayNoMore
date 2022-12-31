@@ -590,7 +590,7 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.inAir, pbPlayer.colliderRadius);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.inAir, pbPlayer.colliderRadius);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
@@ -638,6 +638,7 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
+    self.chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(pbRdf.speciesIdList);
     self.playerOpPatternToSkillId = pbRdf.playerOpPatternToSkillId;
     self._initPlayerRichInfoDict(rdf.PlayersArr);
 
@@ -694,18 +695,19 @@ cc.Class({
 
   equalPlayers(lhs, rhs) {
     if (null == lhs || null == rhs) return false;
-    if (lhs.virtualGridX != rhs.virtualGridX) return false;
-    if (lhs.virtualGridY != rhs.virtualGridY) return false;
-    if (lhs.dirX != rhs.dirX) return false;
-    if (lhs.dirY != rhs.dirY) return false;
-    if (lhs.velX != rhs.velX) return false;
-    if (lhs.velY != rhs.velY) return false;
-    if (lhs.speed != rhs.speed) return false;
-    if (lhs.framesToRecover != rhs.framesToRecover) return false;
-    if (lhs.hp != rhs.hp) return false;
-    if (lhs.maxHp != rhs.maxHp) return false;
-    if (lhs.characterState != rhs.characterState) return false;
-    if (lhs.inAir != rhs.inAir) return false;
+    if (lhs.VirtualGridX != rhs.VirtualGridX) return false;
+    if (lhs.VirtualGridY != rhs.VirtualGridY) return false;
+    if (lhs.DirX != rhs.DirX) return false;
+    if (lhs.DirY != rhs.DirY) return false;
+    if (lhs.VelX != rhs.VelX) return false;
+    if (lhs.VelY != rhs.VelY) return false;
+    if (lhs.Speed != rhs.Speed) return false;
+    if (lhs.Hp != rhs.Hp) return false;
+    if (lhs.MaxHp != rhs.MaxHp) return false;
+    if (lhs.CharacterState != rhs.CharacterState) return false;
+    if (lhs.InAir != rhs.InAir) return false;
+    if (lhs.FramesToRecover != rhs.FramesToRecover) return false;
+    if (lhs.FramesInChState != rhs.FramesInChState) return false;
     return true;
   },
 
@@ -1063,12 +1065,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const playersArr = rdf.PlayersArr;
     for (let k in playersArr) {
       const currPlayerDownsync = playersArr[k];
+      const chConfig = self.chConfigsOrderedByJoinIndex[k];
       const prevRdfPlayer = (null == prevRdf ? null : prevRdf.PlayersArr[k]);
       const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
       const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
-      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
+      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false, chConfig);
     }
 
     // Update countdown
@@ -1104,7 +1107,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
       }
-      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio, self.playerOpPatternToSkillId);
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.playerOpPatternToSkillId, self.chConfigsOrderedByJoinIndex);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!

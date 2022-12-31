@@ -13,6 +13,19 @@ const (
 
 	PATTERN_ID_UNABLE_TO_OP = -2
 	PATTERN_ID_NO_OP        = -1
+
+	WORLD_TO_VIRTUAL_GRID_RATIO = float64(100)
+	VIRTUAL_GRID_TO_WORLD_RATIO = float64(1.0) / WORLD_TO_VIRTUAL_GRID_RATIO
+
+	GRAVITY_X = int32(0)
+	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
+
+	INPUT_DELAY_FRAMES = int32(8)
+	NST_DELAY_FRAMES   = int32(16)
+	INPUT_SCALE_FRAMES = uint32(2)
+
+	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
+	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -28,41 +41,27 @@ var DIRECTION_DECODER = [][]int32{
 	{-1, +1},
 }
 
-var skillIdToBullet = map[int]interface{}{
-	1: &MeleeBullet{
-		Bullet: Bullet{
-			// for offender
-			StartupFrames:         int32(5),
-			ActiveFrames:          int32(10),
-			RecoveryFrames:        int32(34),
-			RecoveryFramesOnBlock: int32(34),
-			RecoveryFramesOnHit:   int32(34),
-			HitboxOffset:          float64(12.0), // should be about the radius of the PlayerCollider
-
-			// for defender
-			HitStunFrames:      int32(18),
-			BlockStunFrames:    int32(9),
-			Pushback:           float64(8.0),
-			ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
-			Damage:             int32(5),
-
-			SelfMoveforwardX: 0,
-			SelfMoveforwardY: 0,
-			HitboxSizeX:      24.0,
-			HitboxSizeY:      32.0,
-		},
-	},
-}
-
 const (
-	ATK_CHARACTER_STATE_IDLE1        = int32(0)
-	ATK_CHARACTER_STATE_WALKING      = int32(1)
-	ATK_CHARACTER_STATE_ATK1         = int32(2)
-	ATK_CHARACTER_STATE_ATKED1       = int32(3)
-	ATK_CHARACTER_STATE_INAIR_IDLE1  = int32(4)
-	ATK_CHARACTER_STATE_INAIR_ATK1   = int32(5)
-	ATK_CHARACTER_STATE_INAIR_ATKED1 = int32(6)
+	ATK_CHARACTER_STATE_IDLE1               = int32(0)
+	ATK_CHARACTER_STATE_WALKING             = int32(1)
+	ATK_CHARACTER_STATE_ATK1                = int32(2)
+	ATK_CHARACTER_STATE_ATKED1              = int32(3)
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP = int32(4)
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP = int32(5)
+	ATK_CHARACTER_STATE_INAIR_ATK1          = int32(6)
+	ATK_CHARACTER_STATE_INAIR_ATKED1        = int32(7)
+	ATK_CHARACTER_STATE_BLOWN_UP1           = int32(8)
+	ATK_CHARACTER_STATE_LAY_DOWN1           = int32(9)
+	ATK_CHARACTER_STATE_GET_UP1             = int32(10)
 )
+
+var inAirSet = map[int32]bool{
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_ATK1:          true,
+	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
+	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
+}
 
 func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputScaleFrames uint32) int32 {
 	if renderFrameId < inputDelayFrames {
@@ -351,22 +350,18 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	}
 
 	if decodedInput.BtnBLevel > prevBtnBLevel {
-		characStateAlreadyInAir := false
-		if ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATK1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATKED1 == currPlayerDownsync.CharacterState {
-			characStateAlreadyInAir = true
-		}
-		characStateIsInterruptWaivable := false
-		if ATK_CHARACTER_STATE_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_WALKING == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState {
-			characStateIsInterruptWaivable = true
-		}
-		if !characStateAlreadyInAir && characStateIsInterruptWaivable {
+		if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
 			jumpedOrNot = true
 		}
 	}
 
 	patternId := PATTERN_ID_NO_OP
 	if decodedInput.BtnALevel > prevBtnALevel {
-		patternId = 0
+        if currPlayerDownsync.InAir {
+		    patternId = 1
+        } else {
+		    patternId = 0
+        }
 		effDx, effDy = 0, 0 // Most patterns/skills should not allow simultaneous movement
 	}
 
@@ -374,7 +369,7 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 }
 
 // [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64, playerOpPatternToSkillId map[int]int) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, playerOpPatternToSkillId map[int]int, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
@@ -395,9 +390,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			Score:           currPlayerDownsync.Score,
 			Removed:         currPlayerDownsync.Removed,
 			JoinIndex:       currPlayerDownsync.JoinIndex,
-			FramesToRecover: currPlayerDownsync.FramesToRecover - 1,
 			Hp:              currPlayerDownsync.Hp,
 			MaxHp:           currPlayerDownsync.MaxHp,
+			FramesToRecover: currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState: currPlayerDownsync.FramesInChState + 1,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -407,18 +403,20 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	effPushbacks := make([]Vec2D, roomCapacity)
 	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
+	jumpedOrNotList := make([]bool, roomCapacity)
 
 	// 1. Process player inputs
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
+		jumpedOrNotList[i] = false
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, inputDelayFrames, inputScaleFrames)
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, INPUT_DELAY_FRAMES, INPUT_SCALE_FRAMES)
 		if PATTERN_ID_UNABLE_TO_OP == patternId {
 			continue
 		}
 
 		if jumpedOrNot {
-			thatPlayerInNextFrame.VelY = jumpingInitVelY
-			thatPlayerInNextFrame.VirtualGridY += jumpingInitVelY // Immediately gets out of any snapping
+			thatPlayerInNextFrame.VelY = int32(chConfigsOrderedByJoinIndex[i].JumpingInitVelY)
+			jumpedOrNotList[i] = true
 		}
 		joinIndex := currPlayerDownsync.JoinIndex
 		if PATTERN_ID_NO_OP != patternId {
@@ -457,14 +455,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
+		if jumpedOrNotList[i] {
+			newVy += int32(chConfigsOrderedByJoinIndex[i].JumpingInitVelY) // Immediately gets out of any snapping
+		}
 
-		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, virtualGridToWorldRatio)
+		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, VIRTUAL_GRID_TO_WORLD_RATIO)
 		// Update in the collision system
 		playerCollider.Update()
 
 		if currPlayerDownsync.InAir {
-			thatPlayerInNextFrame.VelX += gravityX
-			thatPlayerInNextFrame.VelY += gravityY
+			thatPlayerInNextFrame.VelX += GRAVITY_X
+			thatPlayerInNextFrame.VelY += GRAVITY_Y
 		}
 	}
 
@@ -478,9 +479,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			if 0 > offender.DirX {
 				xfac = float64(-1.0)
 			}
-			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, virtualGridToWorldRatio)
+			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, VIRTUAL_GRID_TO_WORLD_RATIO)
 			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
 		} else {
@@ -494,7 +495,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
 		playerCollider := collisionSysMap[collisionPlayerIndex]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
+		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		landedOnGravityPushback := false
 		if collision := playerCollider.Check(0, 0); nil != collision {
@@ -521,7 +522,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				normAlignmentWithGravity := (overlapResult.OverlapX*float64(0) + overlapResult.OverlapY*float64(-1.0))
 				if isAnotherPlayer {
 					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
-					pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapY
+					pushbackX, pushbackY = (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapX, (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapY
 				}
 				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
 					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
@@ -533,7 +534,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				effPushbacks[joinIndex-1].X += pushbackX
 				effPushbacks[joinIndex-1].Y += pushbackY
 
-				if snapIntoPlatformThreshold < normAlignmentWithGravity {
+				if SNAP_INTO_PLATFORM_THRESHOLD < normAlignmentWithGravity {
 					landedOnGravityPushback = true
 					//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
 					//fmt.Printf("joinIndex=%d landedOnGravityPushback\n{renderFrame.id: %d, isBarrier: %v, isAnotherPlayer: %v}\nhardPushbackNormsOfThisPlayer=%v, playerColliderPos=(%.2f,%.2f), immediatePushback={%.3f, %.3f}, effPushback={%.3f, %.3f}, overlapMag=%.4f\n", joinIndex, currRenderFrame.Id, isBarrier, isAnotherPlayer, *hardPushbackNorms[joinIndex-1], playerColliderCenterX, playerColliderCenterY, pushbackX, pushbackY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap)
@@ -550,11 +551,15 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				thatPlayerInNextFrame.FramesToRecover = 0
 			}
 		}
-		if currPlayerDownsync.InAir {
+		if thatPlayerInNextFrame.InAir {
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
 			switch oldNextCharacterState {
 			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1
+				if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP
+				}
 			case ATK_CHARACTER_STATE_ATK1:
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATK1
 			case ATK_CHARACTER_STATE_ATKED1:
@@ -624,7 +629,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		playerCollider := collisionSysMap[collisionPlayerIndex]
 		// Update "virtual grid position"
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, worldToVirtualGridRatio)
+		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, WORLD_TO_VIRTUAL_GRID_RATIO)
+		if thatPlayerInNextFrame.CharacterState != currPlayerDownsync.CharacterState {
+			thatPlayerInNextFrame.FramesInChState = 0
+		}
 	}
 
 	return &RoomDownsyncFrame{

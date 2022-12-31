@@ -1,0 +1,85 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Idle1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.45,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 2,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "104ab450-fec3-4ea8-b6c0-aca74a826f5a"
+            }
+          },
+          {
+            "frame": 0.016666666666666666,
+            "value": {
+              "__uuid__": "4bad7430-7b43-47ae-9d65-ef3a2b88f450"
+            }
+          },
+          {
+            "frame": 0.03333333333333333,
+            "value": {
+              "__uuid__": "c3675bd6-4aa6-4ec5-80d5-ef35862d15b9"
+            }
+          },
+          {
+            "frame": 0.08333333333333333,
+            "value": {
+              "__uuid__": "23446a26-dadf-4d7d-9dd3-4ca3f8f6b7a5"
+            }
+          },
+          {
+            "frame": 0.13333333333333333,
+            "value": {
+              "__uuid__": "47628469-7775-4daf-b321-74fac947ce60"
+            }
+          },
+          {
+            "frame": 0.18333333333333332,
+            "value": {
+              "__uuid__": "1c37ea82-6700-4bea-9265-c70a16d2187c"
+            }
+          },
+          {
+            "frame": 0.23333333333333334,
+            "value": {
+              "__uuid__": "c4fb2fc2-7a04-4219-b129-77249f33426b"
+            }
+          },
+          {
+            "frame": 0.2833333333333333,
+            "value": {
+              "__uuid__": "0ecf4a0c-0f13-42fa-a214-b4826acd8556"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "cabf9cb6-99ca-426d-9a23-95cdec6f06b9"
+            }
+          },
+          {
+            "frame": 0.38333333333333336,
+            "value": {
+              "__uuid__": "94d073e8-f17f-4a66-be72-2b8cf3347ea4"
+            }
+          },
+          {
+            "frame": 0.43333333333333335,
+            "value": {
+              "__uuid__": "3a435737-51d0-4f31-ad2b-838d9d98bad3"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

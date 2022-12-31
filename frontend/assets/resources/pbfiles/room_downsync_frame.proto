@@ -24,10 +24,11 @@ message PlayerDownsync {
   int32 maxHp = 17;
   int32 characterState = 18;
   bool inAir = 19; // by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "inAir (prev -> curr)"  
+  int32 framesInChState = 20; // number of frames elapsed in the current character state   
 
-  string name = 20;
-  string displayName = 21;
-  string avatar = 22;
+  string name = 997;
+  string displayName = 998;
+  string avatar = 999;
 }
 
 message InputFrameDecoded {

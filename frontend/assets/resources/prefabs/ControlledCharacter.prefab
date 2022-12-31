@@ -33,14 +33,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 23
+        "__id__": 27
       },
       {
-        "__id__": 24
+        "__id__": 28
       }
     ],
     "_prefab": {
-      "__id__": 25
+      "__id__": 29
     },
     "_opacity": 255,
     "_color": {
@@ -493,12 +493,15 @@
       },
       {
         "__id__": 18
+      },
+      {
+        "__id__": 22
       }
     ],
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 22
+      "__id__": 26
     },
     "_opacity": 255,
     "_color": {
@@ -920,6 +923,163 @@
       "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
     },
     "fileId": "17JdhftghBYr81MfV9i6cy",
+    "sync": false
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "MonkGirl",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 11
+    },
+    "_children": [],
+    "_active": false,
+    "_components": [
+      {
+        "__id__": 23
+      },
+      {
+        "__id__": 24
+      }
+    ],
+    "_prefab": {
+      "__id__": 25
+    },
+    "_opacity": 255,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 1425,
+      "height": 1024
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0.7,
+        0.7,
+        1
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Animation",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 22
+    },
+    "_enabled": true,
+    "_defaultClip": null,
+    "_clips": [
+      {
+        "__uuid__": "a0d8b9a6-7bf7-4cf5-aecb-54b2908cbfb3"
+      },
+      {
+        "__uuid__": "768d591b-4467-4a8f-95bf-4f7fcc3835b6"
+      },
+      {
+        "__uuid__": "c3d4f508-b3a9-4deb-b2d1-8ddc7bf22e0c"
+      },
+      {
+        "__uuid__": "1ec27664-cd2a-4c7a-838f-953a7713ceca"
+      },
+      {
+        "__uuid__": "996c218a-9e18-441e-b0f8-e61c5c991b9e"
+      },
+      {
+        "__uuid__": "170bbc56-3cff-4a81-b48f-a037b9418758"
+      },
+      {
+        "__uuid__": "555d837b-4a68-4a28-b9ff-e97e393d1a05"
+      },
+      {
+        "__uuid__": "ee0b89e9-89f0-451e-a6ef-d41d64d3d67a"
+      },
+      {
+        "__uuid__": "f87054fd-328f-4001-a8ff-b4c049cc1e6d"
+      },
+      {
+        "__uuid__": "0978395c-8947-4830-9f68-58fadcbe5c63"
+      },
+      {
+        "__uuid__": "7cb4d395-c68f-4643-9e2e-8cb8e200d3a5"
+      }
+    ],
+    "playOnLoad": false,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Sprite",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 22
+    },
+    "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_spriteFrame": null,
+    "_type": 0,
+    "_sizeMode": 1,
+    "_fillType": 0,
+    "_fillCenter": {
+      "__type__": "cc.Vec2",
+      "x": 0,
+      "y": 0
+    },
+    "_fillStart": 0,
+    "_fillRange": 0,
+    "_isTrimmedMode": true,
+    "_atlas": {
+      "__uuid__": "725c90f9-56f8-48ea-9159-4d2949cd3ce0"
+    },
+    "_id": ""
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {
+      "__id__": 1
+    },
+    "asset": {
+      "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
+    },
+    "fileId": "6cGpRwF5ZPjpJdtoqbrnta",
     "sync": false
   },
   {

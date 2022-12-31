@@ -353,7 +353,7 @@ func (pR *Room) playerDownsyncStr(player *battle.PlayerDownsync) string {
 	if player.InAir {
 		inAirInt = 1
 	}
-	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, player.FramesToRecover,inAirInt)
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, player.FramesToRecover, inAirInt)
 
 	return s
 }
@@ -744,7 +744,7 @@ func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.BulletBattleLocalIdCounter = 0
-	pR.WorldToVirtualGridRatio = float64(100)
+	pR.WorldToVirtualGridRatio = battle.WORLD_TO_VIRTUAL_GRID_RATIO
 	pR.VirtualGridToWorldRatio = float64(1.0) / pR.WorldToVirtualGridRatio // this is a one-off computation, should avoid division in iterations
 	pR.SpAtkLookupFrames = 5
 	pR.PlayerDefaultSpeed = int32(float64(1) * pR.WorldToVirtualGridRatio)                        // in virtual grids per frame
@@ -791,11 +791,6 @@ func (pR *Room) OnDismissed() {
 
 	pR.BackendDynamicsEnabled = true              // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
-	pR.SnapIntoPlatformOverlap = float64(0.1)
-	pR.SnapIntoPlatformThreshold = float64(0.5)
-	pR.JumpingInitVelY = int32(float64(7) * pR.WorldToVirtualGridRatio)
-	pR.GravityX = 0
-	pR.GravityY = -int32(float64(0.5) * pR.WorldToVirtualGridRatio) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
 	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
 
@@ -1275,7 +1270,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.GravityX, pR.GravityY, pR.JumpingInitVelY, pR.InputDelayFrames, pR.InputScaleFrames, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformThreshold, pR.WorldToVirtualGridRatio, pR.VirtualGridToWorldRatio, pR.playerOpPatternToSkillId)
+		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.InputDelayFrames, pR.InputScaleFrames, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformThreshold, pR.WorldToVirtualGridRatio, pR.VirtualGridToWorldRatio, pR.playerOpPatternToSkillId)
 		pR.RenderFrameBuffer.Put(nextRenderFrame)
 		pR.CurDynamicsRenderFrameId++
 	}

@@ -1210,6 +1210,7 @@ $root.protos = (function() {
          * @property {number|null} [maxHp] PlayerDownsync maxHp
          * @property {number|null} [characterState] PlayerDownsync characterState
          * @property {boolean|null} [inAir] PlayerDownsync inAir
+         * @property {number|null} [framesInChState] PlayerDownsync framesInChState
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1383,6 +1384,14 @@ $root.protos = (function() {
         PlayerDownsync.prototype.inAir = false;
 
         /**
+         * PlayerDownsync framesInChState.
+         * @member {number} framesInChState
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.framesInChState = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1468,12 +1477,14 @@ $root.protos = (function() {
                 writer.uint32(/* id 18, wireType 0 =*/144).int32(message.characterState);
             if (message.inAir != null && Object.hasOwnProperty.call(message, "inAir"))
                 writer.uint32(/* id 19, wireType 0 =*/152).bool(message.inAir);
+            if (message.framesInChState != null && Object.hasOwnProperty.call(message, "framesInChState"))
+                writer.uint32(/* id 20, wireType 0 =*/160).int32(message.framesInChState);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                writer.uint32(/* id 20, wireType 2 =*/162).string(message.name);
+                writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
-                writer.uint32(/* id 21, wireType 2 =*/170).string(message.displayName);
+                writer.uint32(/* id 998, wireType 2 =*/7986).string(message.displayName);
             if (message.avatar != null && Object.hasOwnProperty.call(message, "avatar"))
-                writer.uint32(/* id 22, wireType 2 =*/178).string(message.avatar);
+                writer.uint32(/* id 999, wireType 2 =*/7994).string(message.avatar);
             return writer;
         };
 
@@ -1585,14 +1596,18 @@ $root.protos = (function() {
                         break;
                     }
                 case 20: {
+                        message.framesInChState = reader.int32();
+                        break;
+                    }
+                case 997: {
                         message.name = reader.string();
                         break;
                     }
-                case 21: {
+                case 998: {
                         message.displayName = reader.string();
                         break;
                     }
-                case 22: {
+                case 999: {
                         message.avatar = reader.string();
                         break;
                     }
@@ -1688,6 +1703,9 @@ $root.protos = (function() {
             if (message.inAir != null && message.hasOwnProperty("inAir"))
                 if (typeof message.inAir !== "boolean")
                     return "inAir: boolean expected";
+            if (message.framesInChState != null && message.hasOwnProperty("framesInChState"))
+                if (!$util.isInteger(message.framesInChState))
+                    return "framesInChState: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1750,6 +1768,8 @@ $root.protos = (function() {
                 message.characterState = object.characterState | 0;
             if (object.inAir != null)
                 message.inAir = Boolean(object.inAir);
+            if (object.framesInChState != null)
+                message.framesInChState = object.framesInChState | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1792,6 +1812,7 @@ $root.protos = (function() {
                 object.maxHp = 0;
                 object.characterState = 0;
                 object.inAir = false;
+                object.framesInChState = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1834,6 +1855,8 @@ $root.protos = (function() {
                 object.characterState = message.characterState;
             if (message.inAir != null && message.hasOwnProperty("inAir"))
                 object.inAir = message.inAir;
+            if (message.framesInChState != null && message.hasOwnProperty("framesInChState"))
+                object.framesInChState = message.framesInChState;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))

@@ -28,6 +28,7 @@ type PlayerDownsync struct {
 	Score             int32
 	LastMoveGmtMillis int32
 	FramesToRecover   int32
+	FramesInChState   int32
 	Hp                int32
 	MaxHp             int32
 	CharacterState    int32
@@ -60,6 +61,7 @@ type Bullet struct {
 	RecoveryFramesOnHit     int32
 	HitboxOffset            float64
 	OriginatedRenderFrameId int32
+
 	// for defender
 	HitStunFrames      int32
 	BlockStunFrames    int32
@@ -73,6 +75,8 @@ type Bullet struct {
 	SelfMoveforwardY float64
 	HitboxSizeX      float64
 	HitboxSizeY      float64
+
+	BlowUpVelY int32
 }
 
 type MeleeBullet struct {
@@ -90,6 +94,10 @@ type FireballBullet struct {
 	Bullet
 }
 
+type Skill struct {
+	Hits []Bullet // Hits within a "Skill" are automatically triggered
+}
+
 type RoomDownsyncFrame struct {
 	Id                       int32
 	PlayersArr               []*PlayerDownsync
@@ -105,4 +113,22 @@ type InputFrameDownsync struct {
 	InputFrameId  int32
 	InputList     []uint64
 	ConfirmedList uint64
+}
+
+type CharacterConfig struct {
+	SpeciesId   int
+	SpeciesName string
+
+	InAirIdleFrameIdxTurningPoint int
+	InAirIdleFrameIdxTurnedCycle  int
+
+	LayDownFrames          int
+	LayDownFramesToRecover int
+
+	GetUpFrames          int
+	GetUpFramesToRecover int
+
+	JumpingInitVelY int
+
+	PatternIdToSkillId map[int]int
 }

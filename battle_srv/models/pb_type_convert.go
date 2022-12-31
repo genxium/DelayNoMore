@@ -35,10 +35,11 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			JoinIndex:       last.JoinIndex,
 			ColliderRadius:  last.ColliderRadius,
 			Score:           last.Score,
-			FramesToRecover: last.FramesToRecover,
 			Hp:              last.Hp,
 			MaxHp:           last.MaxHp,
 			Removed:         last.Removed,
+			FramesToRecover: last.FramesToRecover,
+			FramesInChState: last.FramesInChState,
 		}
 		ret.PlayersArr[i] = pbPlayer
 	}
@@ -100,6 +101,7 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 			Score:           last.Score,
 			Removed:         last.Removed,
 			FramesToRecover: last.FramesToRecover,
+			FramesInChState: last.FramesInChState,
 		}
 		if withMetaInfo {
 			pbPlayer.Name = last.Name
