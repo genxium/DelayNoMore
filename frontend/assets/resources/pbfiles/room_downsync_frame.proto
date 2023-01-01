@@ -97,9 +97,9 @@ message MeleeBullet {
   // for defender
   int32 hitStunFrames = 9; 
   int32 blockStunFrames = 10; 
-  double pushback = 11;  
+  double pushbackX = 11;  
+  double pushbackY = 12;  
 
-  int32 releaseTriggerType = 12; // 1: rising-edge, 2: falling-edge  
   int32 damage = 13;   
 
   int32 offenderJoinIndex = 14;    
@@ -108,44 +108,28 @@ message MeleeBullet {
   double hitboxSizeX = 16; 
   double hitboxSizeY = 17;
 
-  double selfMoveforwardX = 18;  
-  double selfMoveforwardY = 19;  
+  double selfLockVelX = 18;  
+  double selfLockVelY = 19;  
+
+  int32 releaseTriggerType = 999; // 1: rising-edge, 2: falling-edge  
 } 
 
 message BattleColliderInfo {
   string stageName = 1;
-  int32 stageDiscreteW = 2;
-  int32 stageDiscreteH = 3;
-  int32 stageTileW = 4;
-  int32 stageTileH = 5;
 
-  int32 intervalToPing        = 6;
-  int32 willKickIfInactiveFor = 7;
-  int32 boundRoomId           = 8;
-  int32 battleDurationFrames  = 9;
-  int64 battleDurationNanos   = 10;
-  int32 serverFps             = 11;
-  int32 inputDelayFrames      = 12; // in the count of render frames
-  uint32 inputScaleFrames     = 13; // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
-  int32 nstDelayFrames        = 14; // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
-  int32 inputFrameUpsyncDelayTolerance = 15;  
-  int32 maxChasingRenderFramesPerUpdate = 16;
-  int32 playerBattleState = 17;
-  double rollbackEstimatedDtMillis = 18;
-  int64 rollbackEstimatedDtNanos = 19;
+  int32 intervalToPing        = 2;
+  int32 willKickIfInactiveFor = 3;
+  int32 boundRoomId           = 4;
+  int64 battleDurationNanos   = 5;
+  int32 inputFrameUpsyncDelayTolerance = 6;  
+  int32 maxChasingRenderFramesPerUpdate = 7;
+  double rollbackEstimatedDtMillis = 8;
+  int64 rollbackEstimatedDtNanos = 9;
  
-  double worldToVirtualGridRatio = 20;
-  double virtualGridToWorldRatio = 21;
-
-  int32 spAtkLookupFrames = 22;
-  int32 renderCacheSize = 23;
-
-  double snapIntoPlatformOverlap = 24; 
-  double snapIntoPlatformThreshold = 25; 
-  int32 jumpingInitVelY = 26;
-  int32 gravityX = 27;
-  int32 gravityY = 28;
-  int32 collisionMinStep = 29;
+  int32 renderCacheSize = 10;
+  int32 spaceOffsetX = 11;
+  int32 spaceOffsetY = 12;
+  int32 collisionMinStep = 13;
 
   bool frameDataLoggingEnabled = 999;
 }

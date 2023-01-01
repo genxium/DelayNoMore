@@ -40,24 +40,6 @@ cc.Class({
     self.rollbackEstimatedDtNanos = 16666666;
     self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
-    self.worldToVirtualGridRatio = 100;
-    self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
-
-    const opJoinIndexPrefix1 = (1 << 8);
-    const playerOpPatternToSkillId = {};
-    playerOpPatternToSkillId[opJoinIndexPrefix1 + 0] = 1;
-    playerOpPatternToSkillId[opJoinIndexPrefix1 + 1] = 2;
-
-    /* 
-    [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
-
-    Moreover, "snapIntoPlatformOverlap" should be small enough such that the walking "velX" or jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
-    */
-    self.snapIntoPlatformOverlap = 0.1;
-    self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
-    self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -0.5 * self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
-
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
     const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", "dungeon");
@@ -86,10 +68,8 @@ cc.Class({
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
 
-      self.stageDiscreteW = newMapSize.width;
-      self.stageDiscreteH = newMapSize.height;
-      self.stageTileW = newTileSize.width;
-      self.stageTileH = newTileSize.height;
+      self.spaceOffsetX = ((newMapSize.width * newTileSize.width) >> 1);
+      self.spaceOffsetY = ((newMapSize.height * newTileSize.height) >> 1);
 
       self._resetCurrentMatch();
       let barrierIdCounter = 0;
@@ -142,15 +122,18 @@ cc.Class({
         self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
 
+      const p1Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y);
+      const speedV = gopkgs.WorldToVirtualGridPos(1.0, 0);
+
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
         playersArr: [
           window.pb.protos.PlayerDownsync.create({
             id: 10,
             joinIndex: 1,
-            virtualGridX: boundaryObjs.playerStartingPositions[0].x * self.worldToVirtualGridRatio,
-            virtualGridY: boundaryObjs.playerStartingPositions[0].y * self.worldToVirtualGridRatio,
-            speed: 1 * self.worldToVirtualGridRatio,
+            virtualGridX: p1Vpos[0],
+            virtualGridY: p1Vpos[1],
+            speed: speedV[0],
             colliderRadius: 12,
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
@@ -162,7 +145,6 @@ cc.Class({
           }),
         ],
         speciesIdList: [0],
-        playerOpPatternToSkillId: playerOpPatternToSkillId,
       });
 
       self.selfPlayerInfo = {
@@ -208,48 +190,4 @@ cc.Class({
     }
   },
 
-  spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
-    const self = this;
-    const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
-    const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
-    if (1 == joinIndex) {
-      playerScriptIns.setSpecies("MonkGirl");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("UltramanTiga");
-    }
-
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
-    newPlayerNode.setPosition(wx, wy);
-    playerScriptIns.mapNode = self.node;
-    const colliderRadius = playerDownsyncInfo.ColliderRadius;
-    const halfColliderWidth = colliderRadius,
-      halfColliderHeight = colliderRadius + colliderRadius; // avoid multiplying
-    const colliderWidth = halfColliderWidth + halfColliderWidth,
-      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
-
-    const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY);
-    const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(cx, cy);
-    const gopkgsBoundaryPts = [
-      gopkgs.NewVec2DJs(0, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap),
-      gopkgs.NewVec2DJs(0, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap)
-    ];
-    const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
-    const newPlayerCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    //const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    self.gopkgsCollisionSys.Add(newPlayerCollider);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
-
-    safelyAddChild(self.node, newPlayerNode);
-    setLocalZOrder(newPlayerNode, 5);
-
-    newPlayerNode.active = true;
-    playerScriptIns.updateCharacterAnim(playerDownsyncInfo, null, true);
-
-    return [newPlayerNode, playerScriptIns];
-  },
 });

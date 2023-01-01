@@ -53,30 +53,29 @@ type Barrier struct {
 
 type Bullet struct {
 	// for offender
-	BattleLocalId           int32
-	StartupFrames           int32
+	OriginatedRenderFrameId int32 // Copied from the first bullet for all subsequent bullets
+	OffenderJoinIndex       int32 // Copied to favor collision handling of the dispatched bullet
+	StartupFrames           int32 // from "OriginatedRenderFrameId"
+	CancellableStFrame      int32 // from "OriginatedRenderFrameId"
+	CancellableEdFrame      int32 // from "OriginatedRenderFrameId"
 	ActiveFrames            int32
-	RecoveryFrames          int32
-	RecoveryFramesOnBlock   int32
-	RecoveryFramesOnHit     int32
-	HitboxOffset            float64
-	OriginatedRenderFrameId int32
 
 	// for defender
-	HitStunFrames      int32
-	BlockStunFrames    int32
-	Pushback           float64
-	ReleaseTriggerType int32
-	Damage             int32
-	OffenderJoinIndex  int32
-	OffenderPlayerId   int32
+	HitStunFrames   int32
+	BlockStunFrames int32
+	PushbackX       int32
+	PushbackY       int32
+	Damage          int32
 
-	SelfMoveforwardX float64
-	SelfMoveforwardY float64
-	HitboxSizeX      float64
-	HitboxSizeY      float64
+	SelfLockVelX int32
+	SelfLockVelY int32
 
-	BlowUpVelY int32
+	HitboxOffsetX int32
+	HitboxOffsetY int32
+	HitboxSizeX   int32
+	HitboxSizeY   int32
+
+	BlowUp bool
 }
 
 type MeleeBullet struct {
@@ -95,7 +94,12 @@ type FireballBullet struct {
 }
 
 type Skill struct {
-	Hits []Bullet // Hits within a "Skill" are automatically triggered
+	BattleLocalId         int32
+	RecoveryFrames        int32
+	RecoveryFramesOnBlock int32
+	RecoveryFramesOnHit   int32
+	ReleaseTriggerType    int32         // 1: rising-edge, 2: falling-edge
+	Hits                  []interface{} // Hits within a "Skill" are automatically triggered
 }
 
 type RoomDownsyncFrame struct {
@@ -113,22 +117,4 @@ type InputFrameDownsync struct {
 	InputFrameId  int32
 	InputList     []uint64
 	ConfirmedList uint64
-}
-
-type CharacterConfig struct {
-	SpeciesId   int
-	SpeciesName string
-
-	InAirIdleFrameIdxTurningPoint int
-	InAirIdleFrameIdxTurnedCycle  int
-
-	LayDownFrames          int
-	LayDownFramesToRecover int
-
-	GetUpFrames          int
-	GetUpFramesToRecover int
-
-	JumpingInitVelY int
-
-	PatternIdToSkillId map[int]int
 }
