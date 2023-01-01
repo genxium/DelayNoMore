@@ -123,7 +123,9 @@ cc.Class({
       }
 
       const p1Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y);
+      const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
       const speedV = gopkgs.WorldToVirtualGridPos(1.0, 0);
+      const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
@@ -134,17 +136,32 @@ cc.Class({
             virtualGridX: p1Vpos[0],
             virtualGridY: p1Vpos[1],
             speed: speedV[0],
-            colliderRadius: 12,
+            colliderRadius: colliderRadiusV[0],
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
-            dirX: 0,
+            dirX: +2,
+            dirY: 0,
+            velX: 0,
+            velY: 0,
+            inAir: true,
+          }),
+          window.pb.protos.PlayerDownsync.create({
+            id: 11,
+            joinIndex: 2,
+            virtualGridX: p2Vpos[0],
+            virtualGridY: p2Vpos[1],
+            speed: speedV[0],
+            colliderRadius: colliderRadiusV[0],
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
+            framesToRecover: 0,
+            dirX: -2,
             dirY: 0,
             velX: 0,
             velY: 0,
             inAir: true,
           }),
         ],
-        speciesIdList: [0],
+        speciesIdList: [0, 0],
       });
 
       self.selfPlayerInfo = {

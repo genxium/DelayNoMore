@@ -23,7 +23,7 @@ type PlayerDownsync struct {
 	Speed             int32
 	BattleState       int32
 	JoinIndex         int32
-	ColliderRadius    float64
+	ColliderRadius    int32
 	Removed           bool
 	Score             int32
 	LastMoveGmtMillis int32
@@ -33,6 +33,9 @@ type PlayerDownsync struct {
 	MaxHp             int32
 	CharacterState    int32
 	InAir             bool
+
+	ActiveSkillId  int32
+	ActiveSkillHit int32
 }
 
 type InputFrameDecoded struct {
@@ -63,8 +66,8 @@ type Bullet struct {
 	// for defender
 	HitStunFrames   int32
 	BlockStunFrames int32
-	PushbackX       int32
-	PushbackY       int32
+	PushbackVelX    int32
+	PushbackVelY    int32
 	Damage          int32
 
 	SelfLockVelX int32

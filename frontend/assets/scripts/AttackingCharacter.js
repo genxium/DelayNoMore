@@ -12,6 +12,8 @@ window.ATK_CHARACTER_STATE = {
   BlownUp1: [8, "BlownUp1"],
   LayDown1: [9, "LayDown1"],
   GetUp1: [10, "GetUp1"],
+  Atk2:   [11, "Atk2"],
+  Atk3:   [12, "Atk3"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];

@@ -586,13 +586,13 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.inAir, pbPlayer.colliderRadius);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
     for (let k in pbRdf.meleeBullets) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackX, pbBullet.pushbackY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
       jsMeleeBulletsArr.push(jsBullet);
     }
 
@@ -832,12 +832,17 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     const chConfig = self.chConfigsOrderedByJoinIndex[joinIndex - 1];
     playerScriptIns.setSpecies(chConfig.SpeciesName);
 
+    if (1 == joinIndex) {
+        newPlayerNode.color = cc.Color.RED;
+    } else {
+        newPlayerNode.color = cc.Color.BLUE;
+    }
+
     const [wx, wy] = gopkgs.VirtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
     const colliderRadius = playerDownsyncInfo.ColliderRadius;
-    const halfColliderWidth = colliderRadius,
-      halfColliderHeight = colliderRadius + colliderRadius; // avoid multiplying
+    const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos(colliderRadius, colliderRadius + colliderRadius); // avoid multiplying 
     const colliderWidth = halfColliderWidth + halfColliderWidth,
       colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
 
@@ -846,7 +851,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
     self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
 
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
+    console.log(`Created new player collider: joinIndex=${joinIndex}`);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);

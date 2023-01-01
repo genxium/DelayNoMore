@@ -9,10 +9,10 @@
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
-  <object id="135" x="901" y="1579">
+  <object id="135" x="865" y="1447">
    <point/>
   </object>
-  <object id="137" x="861" y="1540">
+  <object id="137" x="909" y="1447">
    <point/>
   </object>
  </objectgroup>
