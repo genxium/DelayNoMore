@@ -92,7 +92,6 @@ type Room struct {
 	Capacity                 int
 	collisionSpaceOffsetX    float64
 	collisionSpaceOffsetY    float64
-	playerOpPatternToSkillId map[int]int
 	Players                  map[int32]*Player
 	PlayersArr               []*Player // ordered by joinIndex
 	Space                    *resolv.Space
@@ -397,18 +396,11 @@ func (pR *Room) StartBattle() {
 
 	pR.RenderFrameId = 0
 
-	// [WARNING] Only since battle starts do we have all players bound to certain joinIndexes.
-	for _, player := range pR.Players {
-		opJoinIndexPrefix := (int(player.JoinIndex) << uint(8))
-		pR.playerOpPatternToSkillId[opJoinIndexPrefix+0] = 1 // Hardcoded for now
-	}
-
 	// Initialize the "collisionSys" as well as "RenderFrameBuffer"
 	pR.CurDynamicsRenderFrameId = 0
 	kickoffFrameJs := &battle.RoomDownsyncFrame{
 		Id:                       pR.RenderFrameId,
 		PlayersArr:               toJsPlayers(pR.Players),
-		PlayerOpPatternToSkillId: pR.playerOpPatternToSkillId,
 		CountdownNanos:           pR.BattleDurationNanos,
 	}
 	pR.RenderFrameBuffer.Put(kickoffFrameJs)
@@ -1270,7 +1262,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.InputDelayFrames, pR.InputScaleFrames, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformThreshold, pR.WorldToVirtualGridRatio, pR.VirtualGridToWorldRatio, pR.playerOpPatternToSkillId)
+		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY)
 		pR.RenderFrameBuffer.Put(nextRenderFrame)
 		pR.CurDynamicsRenderFrameId++
 	}
@@ -1467,7 +1459,6 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 		}
 
 		refRenderFrame := tmp.(*battle.RoomDownsyncFrame)
-		refRenderFrame.PlayerOpPatternToSkillId = pR.playerOpPatternToSkillId
 		for i, player := range pR.PlayersArr {
 			refRenderFrame.PlayersArr[i].ColliderRadius = player.ColliderRadius // hardcoded for now
 		}

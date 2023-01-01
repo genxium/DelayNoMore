@@ -28,8 +28,8 @@ const (
 	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
 	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
 
-	NO_SKILL     = int32(-1)
-	NO_SKILL_HIT = int32(-1)
+	NO_SKILL     = -1
+	NO_SKILL_HIT = -1
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -383,30 +383,9 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		}
 	}
 
-	/*
-	   As long as the current "CharacterState" is not in "noOpSet", we have 2 cases where attacking is allowed:
-	   1. it happens when the player is IDLE or Walking, i.e. "0 == currPlayerDownsync.FramesToRecover", which is just the normal case
-	   2. it happens when the player is having non-empty "ActiveSkillId" which might be cancellable
-	*/
 	patternId := PATTERN_ID_NO_OP
 	if decodedInput.BtnALevel > prevBtnALevel {
-		if currPlayerDownsync.InAir {
-			patternId = 255
-		} else {
-			patternId = 1
-		}
-	}
-
-	if PATTERN_ID_NO_OP != patternId && 0 < currPlayerDownsync.FramesToRecover {
-		// [WARN] Handle skill cancellation
-		patternId = PATTERN_ID_NO_OP // First, reset the patternId to no-op as it should be by default not cancelling anything
-		skillConfig := skills[int(currPlayerDownsync.ActiveSkillId)]
-		switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
-		case *MeleeBullet:
-			if v.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.CancellableEdFrame {
-				patternId = int(currPlayerDownsync.ActiveSkillId + 1) // if "currPlayerDownsync.InAir", it won't map to a valid skill in the next step and thus act as PATTERN_ID_NO_OP
-			}
-		}
+		patternId = 1
 	}
 
 	return patternId, jumpedOrNot, effDx, effDy
@@ -463,38 +442,28 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			jumpedOrNotList[i] = true
 		}
 		joinIndex := currPlayerDownsync.JoinIndex
-		if PATTERN_ID_NO_OP != patternId {
-			if skillId, existent := chConfig.PatternIdToSkillId[patternId]; existent {
-				skillConfig := skills[skillId]
-				thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
-				thatPlayerInNextFrame.ActiveSkillHit = 0
+		skillId := chConfig.SkillMapper(patternId, currPlayerDownsync)
+		if skillConfig, existent := skills[skillId]; existent {
+			thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
+			thatPlayerInNextFrame.ActiveSkillHit = 0
 
-				// TODO: Respect non-zero "selfLockVel"
+			// TODO: Respect non-zero "selfLockVel"
 
-				// Hardcoded to use only the first hit for now
-				switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
-				case *MeleeBullet:
-					var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
-					newBullet.OriginatedRenderFrameId = currRenderFrame.Id
-					newBullet.OffenderJoinIndex = joinIndex
-					nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
-					thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
-				}
-
-				// TODO: How to differentiate skill cancellable among different characters, e.g. some characters might be allowed to have 4-cancellation-combo or more?
-				switch skillId {
-				case 1:
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
-				case 2:
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK2
-				case 3:
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK3
-				}
-				if false == currPlayerDownsync.InAir {
-					thatPlayerInNextFrame.VelX = 0
-				}
-				continue // Don't allow movement if skill is used
+			// Hardcoded to use only the first hit for now
+			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
+			case *MeleeBullet:
+				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
+				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				newBullet.OffenderJoinIndex = joinIndex
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
+				thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
 			}
+
+			thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState
+			if false == currPlayerDownsync.InAir {
+				thatPlayerInNextFrame.VelX = 0
+			}
+			continue // Don't allow movement if skill is used
 		}
 
 		if 0 == currPlayerDownsync.FramesToRecover {
@@ -720,8 +689,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 
 		// Remove any active skill if not attacking
 		if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
-			thatPlayerInNextFrame.ActiveSkillId = NO_SKILL
-			thatPlayerInNextFrame.ActiveSkillHit = NO_SKILL_HIT
+			thatPlayerInNextFrame.ActiveSkillId = int32(NO_SKILL)
+			thatPlayerInNextFrame.ActiveSkillHit = int32(NO_SKILL_HIT)
 		}
 	}
 

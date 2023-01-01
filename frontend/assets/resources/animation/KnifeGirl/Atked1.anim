@@ -1,0 +1,43 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Atked1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.26666666666666666,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "9b90ae89-7fbe-4bb6-ab15-fc08462f54c5"
+            }
+          },
+          {
+            "frame": 0.1,
+            "value": {
+              "__uuid__": "aeb3553a-6de4-4197-9f06-d7cc3fa7c4cf"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "07650461-a7c0-4638-92fc-fa436752c045"
+            }
+          },
+          {
+            "frame": 0.25,
+            "value": {
+              "__uuid__": "ca22d473-83aa-4146-b732-89d0246a2968"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

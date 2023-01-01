@@ -33,14 +33,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 27
+        "__id__": 21
       },
       {
-        "__id__": 28
+        "__id__": 22
       }
     ],
     "_prefab": {
-      "__id__": 29
+      "__id__": 23
     },
     "_opacity": 255,
     "_color": {
@@ -489,19 +489,13 @@
         "__id__": 12
       },
       {
-        "__id__": 15
-      },
-      {
-        "__id__": 18
-      },
-      {
-        "__id__": 22
+        "__id__": 16
       }
     ],
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 26
+      "__id__": 20
     },
     "_opacity": 255,
     "_color": {
@@ -549,381 +543,6 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "_id": ""
-  },
-  {
-    "__type__": "cc.Node",
-    "_name": "SoldierWaterGhost",
-    "_objFlags": 0,
-    "_parent": {
-      "__id__": 11
-    },
-    "_children": [],
-    "_active": false,
-    "_components": [
-      {
-        "__id__": 13
-      }
-    ],
-    "_prefab": {
-      "__id__": 14
-    },
-    "_opacity": 255,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_contentSize": {
-      "__type__": "cc.Size",
-      "width": 0,
-      "height": 0
-    },
-    "_anchorPoint": {
-      "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
-    },
-    "_trs": {
-      "__type__": "TypedArray",
-      "ctor": "Float64Array",
-      "array": [
-        0,
-        -24,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1
-      ]
-    },
-    "_eulerAngles": {
-      "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "_skewX": 0,
-    "_skewY": 0,
-    "_is3DNode": false,
-    "_groupIndex": 0,
-    "groupIndex": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "dragonBones.ArmatureDisplay",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 12
-    },
-    "_enabled": true,
-    "_materials": [
-      {
-        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
-      }
-    ],
-    "_armatureName": "SoldierWaterGhost",
-    "_animationName": "Idle1",
-    "_preCacheMode": 0,
-    "_cacheMode": 0,
-    "playTimes": -1,
-    "premultipliedAlpha": false,
-    "_armatureKey": "2ae76843-1f61-48cf-bbfb-384c0dcf77e1#e9e703e9-3589-4713-b889-28b23406d220",
-    "_accTime": 0,
-    "_playCount": 0,
-    "_frameCache": null,
-    "_curFrame": null,
-    "_playing": false,
-    "_armatureCache": null,
-    "_N$dragonAsset": {
-      "__uuid__": "2ae76843-1f61-48cf-bbfb-384c0dcf77e1"
-    },
-    "_N$dragonAtlasAsset": {
-      "__uuid__": "e9e703e9-3589-4713-b889-28b23406d220"
-    },
-    "_N$_defaultArmatureIndex": 0,
-    "_N$_animationIndex": 8,
-    "_N$_defaultCacheMode": 0,
-    "_N$timeScale": 1,
-    "_N$debugBones": false,
-    "_N$enableBatch": false,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.PrefabInfo",
-    "root": {
-      "__id__": 1
-    },
-    "asset": {
-      "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
-    },
-    "fileId": "42Rmp/YOdMOYWzJwr3ET1h",
-    "sync": false
-  },
-  {
-    "__type__": "cc.Node",
-    "_name": "SoldierFireGhost",
-    "_objFlags": 0,
-    "_parent": {
-      "__id__": 11
-    },
-    "_children": [],
-    "_active": false,
-    "_components": [
-      {
-        "__id__": 16
-      }
-    ],
-    "_prefab": {
-      "__id__": 17
-    },
-    "_opacity": 255,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_contentSize": {
-      "__type__": "cc.Size",
-      "width": 0,
-      "height": 0
-    },
-    "_anchorPoint": {
-      "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
-    },
-    "_trs": {
-      "__type__": "TypedArray",
-      "ctor": "Float64Array",
-      "array": [
-        0,
-        -24,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1
-      ]
-    },
-    "_eulerAngles": {
-      "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "_skewX": 0,
-    "_skewY": 0,
-    "_is3DNode": false,
-    "_groupIndex": 0,
-    "groupIndex": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "dragonBones.ArmatureDisplay",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 15
-    },
-    "_enabled": true,
-    "_materials": [
-      {
-        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
-      }
-    ],
-    "_armatureName": "SoldierFireGhost",
-    "_animationName": "Idle1",
-    "_preCacheMode": 0,
-    "_cacheMode": 0,
-    "playTimes": -1,
-    "premultipliedAlpha": false,
-    "_armatureKey": "36230012-8df3-4e85-afad-76ec47d0e4d7#4a9187d5-a9ad-4464-a03c-d2f3cc277051",
-    "_accTime": 0,
-    "_playCount": 0,
-    "_frameCache": null,
-    "_curFrame": null,
-    "_playing": false,
-    "_armatureCache": null,
-    "_N$dragonAsset": {
-      "__uuid__": "36230012-8df3-4e85-afad-76ec47d0e4d7"
-    },
-    "_N$dragonAtlasAsset": {
-      "__uuid__": "4a9187d5-a9ad-4464-a03c-d2f3cc277051"
-    },
-    "_N$_defaultArmatureIndex": 0,
-    "_N$_animationIndex": 8,
-    "_N$_defaultCacheMode": 0,
-    "_N$timeScale": 1,
-    "_N$debugBones": false,
-    "_N$enableBatch": false,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.PrefabInfo",
-    "root": {
-      "__id__": 1
-    },
-    "asset": {
-      "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
-    },
-    "fileId": "3b2LJFABVL7ozO2U81FC4U",
-    "sync": false
-  },
-  {
-    "__type__": "cc.Node",
-    "_name": "UltramanTiga",
-    "_objFlags": 0,
-    "_parent": {
-      "__id__": 11
-    },
-    "_children": [],
-    "_active": false,
-    "_components": [
-      {
-        "__id__": 19
-      },
-      {
-        "__id__": 20
-      }
-    ],
-    "_prefab": {
-      "__id__": 21
-    },
-    "_opacity": 255,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_contentSize": {
-      "__type__": "cc.Size",
-      "width": 1425,
-      "height": 1024
-    },
-    "_anchorPoint": {
-      "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
-    },
-    "_trs": {
-      "__type__": "TypedArray",
-      "ctor": "Float64Array",
-      "array": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0.7,
-        0.7,
-        1
-      ]
-    },
-    "_eulerAngles": {
-      "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "_skewX": 0,
-    "_skewY": 0,
-    "_is3DNode": false,
-    "_groupIndex": 0,
-    "groupIndex": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.Animation",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 18
-    },
-    "_enabled": true,
-    "_defaultClip": null,
-    "_clips": [
-      {
-        "__uuid__": "252b321f-81f4-485c-85bd-ea44d298cb76"
-      },
-      {
-        "__uuid__": "f51bb583-0010-48f3-a6a1-451a78ac2d65"
-      },
-      {
-        "__uuid__": "c738236a-0702-45f8-aa38-99457b051997"
-      },
-      {
-        "__uuid__": "c69bcceb-d7d1-4e33-9623-e2a374a0a6b6"
-      },
-      {
-        "__uuid__": "43dbf141-be76-48c3-bdef-29233ccbe30d"
-      },
-      {
-        "__uuid__": "8710591c-3f5e-4911-83e7-42cc18be6af9"
-      },
-      {
-        "__uuid__": "c69bcceb-d7d1-4e33-9623-e2a374a0a6b6"
-      }
-    ],
-    "playOnLoad": false,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.Sprite",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 18
-    },
-    "_enabled": true,
-    "_materials": [
-      {
-        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
-      }
-    ],
-    "_srcBlendFactor": 770,
-    "_dstBlendFactor": 771,
-    "_spriteFrame": null,
-    "_type": 0,
-    "_sizeMode": 1,
-    "_fillType": 0,
-    "_fillCenter": {
-      "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
-    },
-    "_fillStart": 0,
-    "_fillRange": 0,
-    "_isTrimmedMode": true,
-    "_atlas": {
-      "__uuid__": "5d522f7b-359b-4f38-ac35-55fdbee56cae"
-    },
-    "_id": ""
-  },
-  {
-    "__type__": "cc.PrefabInfo",
-    "root": {
-      "__id__": 1
-    },
-    "asset": {
-      "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
-    },
-    "fileId": "17JdhftghBYr81MfV9i6cy",
-    "sync": false
   },
   {
     "__type__": "cc.Node",
@@ -933,17 +552,17 @@
       "__id__": 11
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
-        "__id__": 23
+        "__id__": 13
       },
       {
-        "__id__": 24
+        "__id__": 14
       }
     ],
     "_prefab": {
-      "__id__": 25
+      "__id__": 15
     },
     "_opacity": 255,
     "_color": {
@@ -997,7 +616,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 22
+      "__id__": 12
     },
     "_enabled": true,
     "_defaultClip": null,
@@ -1050,7 +669,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 22
+      "__id__": 12
     },
     "_enabled": true,
     "_materials": [
@@ -1086,6 +705,169 @@
       "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
     },
     "fileId": "6cGpRwF5ZPjpJdtoqbrnta",
+    "sync": false
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "KnifeGirl",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 11
+    },
+    "_children": [],
+    "_active": false,
+    "_components": [
+      {
+        "__id__": 17
+      },
+      {
+        "__id__": 18
+      }
+    ],
+    "_prefab": {
+      "__id__": 19
+    },
+    "_opacity": 255,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 1425,
+      "height": 1024
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0.7,
+        0.7,
+        1
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Animation",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 16
+    },
+    "_enabled": true,
+    "_defaultClip": null,
+    "_clips": [
+      {
+        "__uuid__": "5afe50e0-d03f-4d48-a7c0-a350c36e14d4"
+      },
+      {
+        "__uuid__": "f7f60d3f-32c0-4b56-901e-6eec9f73fa83"
+      },
+      {
+        "__uuid__": "829b17c6-9365-4e97-b14f-fa266bd5ecbe"
+      },
+      {
+        "__uuid__": "2a50c853-000b-46f3-ae59-1dfb793de814"
+      },
+      {
+        "__uuid__": "bc461a02-4d1a-46a4-9f3c-7370adc6c1c8"
+      },
+      {
+        "__uuid__": "c4ddf3ea-2292-4511-a320-5486934ac361"
+      },
+      {
+        "__uuid__": "0e7468cc-b90d-4f68-91ce-0be126b406dd"
+      },
+      {
+        "__uuid__": "c86debde-118b-46b8-b483-f5ccec337315"
+      },
+      {
+        "__uuid__": "0892a3ea-9da1-4157-825b-0c8ef1c73eeb"
+      },
+      {
+        "__uuid__": "0a6478a6-f4cc-47cb-a1c6-761cf9141eb2"
+      },
+      {
+        "__uuid__": "7d69868f-d474-4d86-a262-01f1cdd49021"
+      },
+      {
+        "__uuid__": "52b8e47d-715c-4c12-a2c9-6f553e14dc42"
+      },
+      {
+        "__uuid__": "9b500cb0-8048-4715-81db-cc975c914225"
+      }
+    ],
+    "playOnLoad": false,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Sprite",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 16
+    },
+    "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_spriteFrame": null,
+    "_type": 0,
+    "_sizeMode": 1,
+    "_fillType": 0,
+    "_fillCenter": {
+      "__type__": "cc.Vec2",
+      "x": 0,
+      "y": 0
+    },
+    "_fillStart": 0,
+    "_fillRange": 0,
+    "_isTrimmedMode": true,
+    "_atlas": {
+      "__uuid__": "579bc0c1-f5e2-4a5d-889b-9d567e53b0e6"
+    },
+    "_id": ""
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {
+      "__id__": 1
+    },
+    "asset": {
+      "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
+    },
+    "fileId": "bdCx1wrTtJ1KaGHUmgL7iA",
     "sync": false
   },
   {

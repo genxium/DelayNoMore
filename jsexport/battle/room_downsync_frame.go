@@ -79,6 +79,8 @@ type Bullet struct {
 	HitboxSizeY   int32
 
 	BlowUp bool
+
+	CancelTransit map[int]int
 }
 
 type MeleeBullet struct {
@@ -101,7 +103,8 @@ type Skill struct {
 	RecoveryFrames        int32
 	RecoveryFramesOnBlock int32
 	RecoveryFramesOnHit   int32
-	ReleaseTriggerType    int32         // 1: rising-edge, 2: falling-edge
+	ReleaseTriggerType    int32 // 1: rising-edge, 2: falling-edge
+	BoundChState          int32
 	Hits                  []interface{} // Hits within a "Skill" are automatically triggered
 }
 

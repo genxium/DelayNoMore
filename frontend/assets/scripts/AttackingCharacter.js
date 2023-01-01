@@ -80,9 +80,9 @@ cc.Class({
     // Update directions
     if (this.animComp && this.animComp.node) {
       if (0 > rdfPlayer.DirX) {
-        this.animComp.node.scaleX = (-1.0);
+        this.animNode.scaleX = (-1.0);
       } else if (0 < rdfPlayer.DirX) {
-        this.animComp.node.scaleX = (1.0);
+        this.animNode.scaleX = (1.0);
       }
     }
 
