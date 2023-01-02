@@ -3,7 +3,7 @@
   "_name": "BlownUp1",
   "_objFlags": 0,
   "_native": "",
-  "_duration": 0.45,
+  "_duration": 0.4166666666666667,
   "sample": 60,
   "speed": 1,
   "wrapMode": 2,
@@ -14,25 +14,25 @@
           {
             "frame": 0,
             "value": {
-              "__uuid__": "8e2e03e0-7e2f-4bbb-b039-e232ef586232"
-            }
-          },
-          {
-            "frame": 0.15,
-            "value": {
               "__uuid__": "0ea84f61-4a2f-4ca2-a0b8-b580e027c142"
             }
           },
           {
-            "frame": 0.3,
+            "frame": 0.11666666666666667,
             "value": {
               "__uuid__": "a3a31fcd-a162-456a-9c26-1f32413f87f3"
             }
           },
           {
-            "frame": 0.43333333333333335,
+            "frame": 0.25,
             "value": {
               "__uuid__": "da4ee0a0-ba66-455c-99d3-9c803a3d0f17"
+            }
+          },
+          {
+            "frame": 0.4,
+            "value": {
+              "__uuid__": "4c058d60-e727-4438-b058-6e51969df458"
             }
           }
         ]
