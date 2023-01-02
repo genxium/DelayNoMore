@@ -10,12 +10,12 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 		return nil
 	}
 	ret := &pb.RoomDownsyncFrame{
-		Id:                       rdf.Id,
-		PlayersArr:               make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
-		MeleeBullets:             make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
-		CountdownNanos:           rdf.CountdownNanos,
-		BackendUnconfirmedMask:   rdf.BackendUnconfirmedMask,
-		ShouldForceResync:        rdf.ShouldForceResync,
+		Id:                     rdf.Id,
+		PlayersArr:             make([]*pb.PlayerDownsync, len(rdf.PlayersArr), len(rdf.PlayersArr)),
+		MeleeBullets:           make([]*pb.MeleeBullet, len(rdf.MeleeBullets), len(rdf.MeleeBullets)),
+		CountdownNanos:         rdf.CountdownNanos,
+		BackendUnconfirmedMask: rdf.BackendUnconfirmedMask,
+		ShouldForceResync:      rdf.ShouldForceResync,
 	}
 
 	for i, last := range rdf.PlayersArr {
@@ -29,8 +29,8 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			VelY:            last.VelY,
 			FramesToRecover: last.FramesToRecover,
 			FramesInChState: last.FramesInChState,
-            ActiveSkillId:   last.ActiveSkillId,
-            ActiveSkillHit:  last.ActiveSkillHit,
+			ActiveSkillId:   last.ActiveSkillId,
+			ActiveSkillHit:  last.ActiveSkillHit,
 			Speed:           last.Speed,
 			BattleState:     last.BattleState,
 			CharacterState:  last.CharacterState,
@@ -47,29 +47,29 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 	for i, last := range rdf.MeleeBullets {
 		pbBullet := &pb.MeleeBullet{
-            OriginatedRenderFrameId: last.OriginatedRenderFrameId,
-			OffenderJoinIndex: last.OffenderJoinIndex,
+			OriginatedRenderFrameId: last.OriginatedRenderFrameId,
+			OffenderJoinIndex:       last.OffenderJoinIndex,
 
-			StartupFrames:         last.StartupFrames,
-			CancellableStFrame:    last.CancellableStFrame,
-			CancellableEdFrame:    last.CancellableEdFrame,
-			ActiveFrames:          last.ActiveFrames,
+			StartupFrames:      last.StartupFrames,
+			CancellableStFrame: last.CancellableStFrame,
+			CancellableEdFrame: last.CancellableEdFrame,
+			ActiveFrames:       last.ActiveFrames,
 
-			HitStunFrames:         last.HitStunFrames,
-			BlockStunFrames:       last.BlockStunFrames,
-			PushbackVelX:          last.PushbackVelX,
-			PushbackVelY:          last.PushbackVelY,
-			Damage:                last.Damage,
+			HitStunFrames:   last.HitStunFrames,
+			BlockStunFrames: last.BlockStunFrames,
+			PushbackVelX:    last.PushbackVelX,
+			PushbackVelY:    last.PushbackVelY,
+			Damage:          last.Damage,
 
 			SelfLockVelX: last.SelfLockVelX,
 			SelfLockVelY: last.SelfLockVelY,
 
-			HitboxOffsetX:          last.HitboxOffsetX,
-			HitboxOffsetY:          last.HitboxOffsetY,
-			HitboxSizeX:            last.HitboxSizeX,
-			HitboxSizeY:            last.HitboxSizeY,
+			HitboxOffsetX: last.HitboxOffsetX,
+			HitboxOffsetY: last.HitboxOffsetY,
+			HitboxSizeX:   last.HitboxSizeX,
+			HitboxSizeY:   last.HitboxSizeY,
 
-			BlowUp:    last.BlowUp,
+			BlowUp: last.BlowUp,
 		}
 		ret.MeleeBullets[i] = pbBullet
 	}
@@ -77,7 +77,6 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 	return ret
 }
 
-/*
 func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.PlayerDownsync {
 	toRet := make([]*pb.PlayerDownsync, len(modelInstances), len(modelInstances))
 	if nil == modelInstances {
@@ -93,6 +92,10 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 			DirY:            last.DirY,
 			VelX:            last.VelX,
 			VelY:            last.VelY,
+			FramesToRecover: last.FramesToRecover,
+			FramesInChState: last.FramesInChState,
+			ActiveSkillId:   last.ActiveSkillId,
+			ActiveSkillHit:  last.ActiveSkillHit,
 			Speed:           last.Speed,
 			BattleState:     last.BattleState,
 			CharacterState:  last.CharacterState,
@@ -101,8 +104,6 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 			ColliderRadius:  last.ColliderRadius,
 			Score:           last.Score,
 			Removed:         last.Removed,
-			FramesToRecover: last.FramesToRecover,
-			FramesInChState: last.FramesInChState,
 		}
 		if withMetaInfo {
 			pbPlayer.Name = last.Name
@@ -114,7 +115,6 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 
 	return toRet
 }
-*/
 
 func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 	toRet := make([]*battle.PlayerDownsync, len(modelInstances), len(modelInstances))
@@ -124,27 +124,27 @@ func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 
 	for _, last := range modelInstances {
 		toRet[last.JoinIndex-1] = &battle.PlayerDownsync{
-			Id:             last.Id,
-			VirtualGridX:   last.VirtualGridX,
-			VirtualGridY:   last.VirtualGridY,
-			DirX:           last.DirX,
-			DirY:           last.DirY,
-			VelX:           last.VelX,
-			VelY:           last.VelY,
-            FramesToRecover: last.FramesToRecover,
-            FramesInChState: last.FramesInChState,
-            ActiveSkillId:   last.ActiveSkillId,
-            ActiveSkillHit:  last.ActiveSkillHit,
-			Speed:          last.Speed,
-			BattleState:    last.BattleState,
-			CharacterState: last.CharacterState,
-			JoinIndex:      last.JoinIndex,
-            Hp:             last.Hp,
-            MaxHp:          last.MaxHp,
-			ColliderRadius: last.ColliderRadius,
-			InAir:          last.InAir,
-			Score:          last.Score,
-			Removed:        last.Removed,
+			Id:              last.Id,
+			VirtualGridX:    last.VirtualGridX,
+			VirtualGridY:    last.VirtualGridY,
+			DirX:            last.DirX,
+			DirY:            last.DirY,
+			VelX:            last.VelX,
+			VelY:            last.VelY,
+			FramesToRecover: last.FramesToRecover,
+			FramesInChState: last.FramesInChState,
+			ActiveSkillId:   last.ActiveSkillId,
+			ActiveSkillHit:  last.ActiveSkillHit,
+			Speed:           last.Speed,
+			BattleState:     last.BattleState,
+			CharacterState:  last.CharacterState,
+			JoinIndex:       last.JoinIndex,
+			Hp:              last.Hp,
+			MaxHp:           last.MaxHp,
+			ColliderRadius:  last.ColliderRadius,
+			InAir:           last.InAir,
+			Score:           last.Score,
+			Removed:         last.Removed,
 		}
 	}
 

@@ -4968,7 +4968,7 @@ $packages["jsexport/battle"] = (function() {
 		this.Eles = Eles_;
 	});
 	SkillMapperType = $pkg.SkillMapperType = $newType(4, $kindFunc, "battle.SkillMapperType", true, "jsexport/battle", true, null);
-	CharacterConfig = $pkg.CharacterConfig = $newType(0, $kindStruct, "battle.CharacterConfig", true, "jsexport/battle", true, function(SpeciesId_, SpeciesName_, InAirIdleFrameIdxTurningPoint_, InAirIdleFrameIdxTurnedCycle_, LayDownFrames_, LayDownFramesToRecover_, GetUpFrames_, GetUpFramesToRecover_, JumpingInitVelY_, SkillMapper_) {
+	CharacterConfig = $pkg.CharacterConfig = $newType(0, $kindStruct, "battle.CharacterConfig", true, "jsexport/battle", true, function(SpeciesId_, SpeciesName_, InAirIdleFrameIdxTurningPoint_, InAirIdleFrameIdxTurnedCycle_, LayDownFrames_, LayDownFramesToRecover_, GetUpFrames_, GetUpFramesToRecover_, Speed_, JumpingInitVelY_, SkillMapper_) {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.SpeciesId = 0;
@@ -4979,6 +4979,7 @@ $packages["jsexport/battle"] = (function() {
 			this.LayDownFramesToRecover = 0;
 			this.GetUpFrames = 0;
 			this.GetUpFramesToRecover = 0;
+			this.Speed = 0;
 			this.JumpingInitVelY = 0;
 			this.SkillMapper = $throwNilPointerError;
 			return;
@@ -4991,6 +4992,7 @@ $packages["jsexport/battle"] = (function() {
 		this.LayDownFramesToRecover = LayDownFramesToRecover_;
 		this.GetUpFrames = GetUpFrames_;
 		this.GetUpFramesToRecover = GetUpFramesToRecover_;
+		this.Speed = Speed_;
 		this.JumpingInitVelY = JumpingInitVelY_;
 		this.SkillMapper = SkillMapper_;
 	});
@@ -6006,7 +6008,7 @@ $packages["jsexport/battle"] = (function() {
 	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$5, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
 	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
 	SkillMapperType.init([$Int, ptrType$5], [$Int], false);
-	CharacterConfig.init("", [{prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "SpeciesName", name: "SpeciesName", embedded: false, exported: true, typ: $String, tag: ""}, {prop: "InAirIdleFrameIdxTurningPoint", name: "InAirIdleFrameIdxTurningPoint", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "InAirIdleFrameIdxTurnedCycle", name: "InAirIdleFrameIdxTurnedCycle", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "LayDownFrames", name: "LayDownFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LayDownFramesToRecover", name: "LayDownFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFrames", name: "GetUpFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFramesToRecover", name: "GetUpFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JumpingInitVelY", name: "JumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SkillMapper", name: "SkillMapper", embedded: false, exported: true, typ: SkillMapperType, tag: ""}]);
+	CharacterConfig.init("", [{prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "SpeciesName", name: "SpeciesName", embedded: false, exported: true, typ: $String, tag: ""}, {prop: "InAirIdleFrameIdxTurningPoint", name: "InAirIdleFrameIdxTurningPoint", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "InAirIdleFrameIdxTurnedCycle", name: "InAirIdleFrameIdxTurnedCycle", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "LayDownFrames", name: "LayDownFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LayDownFramesToRecover", name: "LayDownFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFrames", name: "GetUpFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFramesToRecover", name: "GetUpFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JumpingInitVelY", name: "JumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SkillMapper", name: "SkillMapper", embedded: false, exported: true, typ: SkillMapperType, tag: ""}]);
 	SatResult.init("", [{prop: "Overlap", name: "Overlap", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapX", name: "OverlapX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapY", name: "OverlapY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "AContainedInB", name: "AContainedInB", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BContainedInA", name: "BContainedInA", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Axis", name: "Axis", embedded: false, exported: true, typ: resolv.Vector, tag: ""}]);
 	$init = function() {
 		$pkg.$init = function() {};
@@ -6015,7 +6017,7 @@ $packages["jsexport/battle"] = (function() {
 		$r = resolv.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$pkg.DIRECTION_DECODER = new sliceType$1([new sliceType([0, 0]), new sliceType([0, 2]), new sliceType([0, -2]), new sliceType([2, 0]), new sliceType([-2, 0]), new sliceType([1, 1]), new sliceType([-1, -1]), new sliceType([1, -1]), new sliceType([-1, 1])]);
 		skills = $makeMap($Int.keyFor, [{ k: 1, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 0, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 2 }])))])) }, { k: 2, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 0, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 3 }])))])) }, { k: 3, v: new Skill.ptr(0, 60, 60, 60, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 40, 999999999, 9, 200, 700, 10, 0, 0, 2400, 0, 3200, 3200, true, false))])) }, { k: 4, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 0, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 5 }])))])) }, { k: 5, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 0, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 6 }])))])) }, { k: 6, v: new Skill.ptr(0, 60, 60, 60, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 40, 999999999, 9, 200, 700, 10, 0, 0, 2400, 0, 3200, 3200, true, false))])) }, { k: 255, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, 0, 0, 1200, 0, 3200, 2400, false, false))])) }, { k: 256, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, 0, 0, 1200, 0, 3200, 2400, false, false))])) }]);
-		$pkg.Characters = $makeMap($Int.keyFor, [{ k: 0, v: new CharacterConfig.ptr(0, "MonkGirl", 11, 1, 16, 16, 33, 30, 800, (function(patternId, currPlayerDownsync) {
+		$pkg.Characters = $makeMap($Int.keyFor, [{ k: 0, v: new CharacterConfig.ptr(0, "MonkGirl", 11, 1, 16, 16, 33, 30, 120, 800, (function(patternId, currPlayerDownsync) {
 			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
 			if (1 === patternId) {
 				if (0 === currPlayerDownsync.FramesToRecover) {
@@ -6045,7 +6047,7 @@ $packages["jsexport/battle"] = (function() {
 				}
 			}
 			return -1;
-		})) }, { k: 1, v: new CharacterConfig.ptr(1, "KnifeGirl", 9, 1, 16, 16, 30, 27, 750, (function(patternId, currPlayerDownsync) {
+		})) }, { k: 1, v: new CharacterConfig.ptr(1, "KnifeGirl", 9, 1, 16, 16, 30, 27, 140, 750, (function(patternId, currPlayerDownsync) {
 			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
 			if (1 === patternId) {
 				if (0 === currPlayerDownsync.FramesToRecover) {

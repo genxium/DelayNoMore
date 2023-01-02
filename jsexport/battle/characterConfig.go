@@ -15,6 +15,7 @@ type CharacterConfig struct {
 	GetUpFrames          int32
 	GetUpFramesToRecover int32
 
+	Speed           int32
 	JumpingInitVelY int32
 
 	SkillMapper SkillMapperType
@@ -34,6 +35,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpFrames:          int32(33),
 		GetUpFramesToRecover: int32(30), // 3 invinsible frames for just-blown-up character to make a comeback
 
+		Speed:           int32(float64(1.2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
@@ -76,6 +78,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpFrames:          int32(30),
 		GetUpFramesToRecover: int32(27), // 3 invinsible frames for just-blown-up character to make a comeback
 
+		Speed:           int32(float64(1.4) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {

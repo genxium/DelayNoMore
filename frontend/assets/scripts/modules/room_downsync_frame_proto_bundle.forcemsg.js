@@ -5161,6 +5161,7 @@ $root.protos = (function() {
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
+         * @property {Array.<number>|null} [speciesIdList] RoomDownsyncFrame speciesIdList
          */
 
         /**
@@ -5174,6 +5175,7 @@ $root.protos = (function() {
         function RoomDownsyncFrame(properties) {
             this.playersArr = [];
             this.meleeBullets = [];
+            this.speciesIdList = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -5229,6 +5231,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.shouldForceResync = false;
 
         /**
+         * RoomDownsyncFrame speciesIdList.
+         * @member {Array.<number>} speciesIdList
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.speciesIdList = $util.emptyArray;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5266,6 +5276,12 @@ $root.protos = (function() {
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
+            if (message.speciesIdList != null && message.speciesIdList.length) {
+                writer.uint32(/* id 7, wireType 2 =*/58).fork();
+                for (var i = 0; i < message.speciesIdList.length; ++i)
+                    writer.int32(message.speciesIdList[i]);
+                writer.ldelim();
+            }
             return writer;
         };
 
@@ -5326,6 +5342,17 @@ $root.protos = (function() {
                     }
                 case 6: {
                         message.shouldForceResync = reader.bool();
+                        break;
+                    }
+                case 7: {
+                        if (!(message.speciesIdList && message.speciesIdList.length))
+                            message.speciesIdList = [];
+                        if ((tag & 7) === 2) {
+                            var end2 = reader.uint32() + reader.pos;
+                            while (reader.pos < end2)
+                                message.speciesIdList.push(reader.int32());
+                        } else
+                            message.speciesIdList.push(reader.int32());
                         break;
                     }
                 default:
@@ -5393,6 +5420,13 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
+            if (message.speciesIdList != null && message.hasOwnProperty("speciesIdList")) {
+                if (!Array.isArray(message.speciesIdList))
+                    return "speciesIdList: array expected";
+                for (var i = 0; i < message.speciesIdList.length; ++i)
+                    if (!$util.isInteger(message.speciesIdList[i]))
+                        return "speciesIdList: integer[] expected";
+            }
             return null;
         };
 
@@ -5450,6 +5484,13 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
+            if (object.speciesIdList) {
+                if (!Array.isArray(object.speciesIdList))
+                    throw TypeError(".protos.RoomDownsyncFrame.speciesIdList: array expected");
+                message.speciesIdList = [];
+                for (var i = 0; i < object.speciesIdList.length; ++i)
+                    message.speciesIdList[i] = object.speciesIdList[i] | 0;
+            }
             return message;
         };
 
@@ -5469,6 +5510,7 @@ $root.protos = (function() {
             if (options.arrays || options.defaults) {
                 object.playersArr = [];
                 object.meleeBullets = [];
+                object.speciesIdList = [];
             }
             if (options.defaults) {
                 object.id = 0;
@@ -5508,6 +5550,11 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
+            if (message.speciesIdList && message.speciesIdList.length) {
+                object.speciesIdList = [];
+                for (var j = 0; j < message.speciesIdList.length; ++j)
+                    object.speciesIdList[j] = message.speciesIdList[j];
+            }
             return object;
         };
 

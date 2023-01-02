@@ -240,24 +240,23 @@ func Serve(c *gin.Context) {
 
 		// Construct "battleColliderInfo" to downsync
 		bciFrame := &pb.BattleColliderInfo{
-			BoundRoomId:    pRoom.Id,
-			StageName:      pRoom.StageName,
+			BoundRoomId: pRoom.Id,
+			StageName:   pRoom.StageName,
 
-			IntervalToPing:                  int32(Constants.Ws.IntervalToPing),
-			WillKickIfInactiveFor:           int32(Constants.Ws.WillKickIfInactiveFor),
-			BattleDurationNanos:             pRoom.BattleDurationNanos,
+			IntervalToPing:        int32(Constants.Ws.IntervalToPing),
+			WillKickIfInactiveFor: int32(Constants.Ws.WillKickIfInactiveFor),
+			BattleDurationNanos:   pRoom.BattleDurationNanos,
 
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
-			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
 			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
 			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
 
-			InputDelayFrames:                pRoom.InputDelayFrames,
-			InputScaleFrames:                pRoom.InputScaleFrames,
+            SpaceOffsetX: pRoom.SpaceOffsetX,
+            SpaceOffsetY: pRoom.SpaceOffsetY,
 
-			RenderCacheSize:           pRoom.RenderCacheSize,
-			CollisionMinStep:          pRoom.CollisionMinStep,
+			RenderCacheSize:  pRoom.RenderCacheSize,
+			CollisionMinStep: pRoom.CollisionMinStep,
 
 			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
 		}

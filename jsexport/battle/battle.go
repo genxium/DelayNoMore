@@ -25,6 +25,8 @@ const (
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
+	SP_ATK_LOOKUP_FRAMES = int32(5)
+
 	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
 	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
 
@@ -96,7 +98,7 @@ func ShouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFrameId int32
 }
 
 func ShouldGenerateInputFrameUpsync(renderFrameId int32) bool {
-    return ((renderFrameId & ((1 << INPUT_SCALE_FRAMES) - 1)) == 0)
+	return ((renderFrameId & ((1 << INPUT_SCALE_FRAMES) - 1)) == 0)
 }
 
 func ConvertToDelayedInputFrameId(renderFrameId int32) int32 {
@@ -371,7 +373,7 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
 	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
-	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id-1)
+	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id - 1)
 
 	if 0 >= delayedInputFrameId {
 		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0

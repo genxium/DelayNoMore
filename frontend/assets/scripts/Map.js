@@ -279,7 +279,7 @@ cc.Class({
     self.collisionPlayerIndexPrefix = (1 << 17); // For tracking the movements of players 
     if (null != self.playerRichInfoDict) {
       self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-        if (playerRichInfo.node.parent) {
+        if (playerRichInfo.node && playerRichInfo.node.parent) {
           playerRichInfo.node.parent.removeChild(playerRichInfo.node);
         }
       });
