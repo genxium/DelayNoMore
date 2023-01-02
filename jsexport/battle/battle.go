@@ -419,6 +419,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			FramesInChState: currPlayerDownsync.FramesInChState + 1,
 			ActiveSkillId:   currPlayerDownsync.ActiveSkillId,
 			ActiveSkillHit:  currPlayerDownsync.ActiveSkillHit,
+			ColliderRadius:  currPlayerDownsync.ColliderRadius,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -479,12 +480,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	// 2. Process player movement
+	playerColliders := make([]*resolv.Object, len(currRenderFrame.PlayersArr), len(currRenderFrame.PlayersArr)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
-		thatPlayerInNextFrame := nextRenderFramePlayers[i]
+
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
@@ -492,10 +492,24 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			newVy += chConfig.JumpingInitVelY // Immediately gets out of any snapping
 		}
 
-		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY)
-		// Update in the collision system
-		playerCollider.Update()
+		wx, wy := VirtualGridToWorldPos(newVx, newVy)
+		colliderWidth, colliderHeight := currPlayerDownsync.ColliderRadius*2, currPlayerDownsync.ColliderRadius*4
+		switch currPlayerDownsync.CharacterState {
+		case ATK_CHARACTER_STATE_LAY_DOWN1:
+			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*4, currPlayerDownsync.ColliderRadius*2
+		case ATK_CHARACTER_STATE_BLOWN_UP1, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP:
+			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*2, currPlayerDownsync.ColliderRadius*2
+		}
 
+		colliderWorldWidth, colliderWorldHeight := VirtualGridToWorldPos(colliderWidth, colliderHeight)
+
+		playerCollider := GenerateRectCollider(wx, wy, colliderWorldWidth, colliderWorldHeight, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
+		playerColliders[i] = playerCollider
+
+		// Add to collision system
+		collisionSys.Add(playerCollider)
+
+		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		if currPlayerDownsync.InAir {
 			thatPlayerInNextFrame.VelX += GRAVITY_X
 			thatPlayerInNextFrame.VelY += GRAVITY_Y
@@ -525,8 +539,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 4. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerCollider := playerColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
@@ -586,6 +599,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
 					thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
 				} else {
+					halfColliderWidthDiff, halfColliderHeightDiff := int32(0), currPlayerDownsync.ColliderRadius
+					_, halfColliderWorldHeightDiff := VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff)
+					effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff // To prevent bouncing due to abrupt change of collider shape
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
 					thatPlayerInNextFrame.FramesToRecover = 0
 				}
@@ -658,8 +674,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 6. Get players out of stuck barriers if there's any
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerCollider := playerColliders[i]
 		// Update "virtual grid position"
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY)
@@ -692,6 +707,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			thatPlayerInNextFrame.ActiveSkillId = int32(NO_SKILL)
 			thatPlayerInNextFrame.ActiveSkillHit = int32(NO_SKILL_HIT)
 		}
+	}
+
+	for _, playerCollider := range playerColliders {
+		playerCollider.Space.Remove(playerCollider)
 	}
 
 	return &RoomDownsyncFrame{

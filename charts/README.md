@@ -21,3 +21,8 @@ ffmpeg -vsync vfr -i LayDown1.gif -vf "scale=iw:188:force_original_aspect_ratio=
 ```
 
 The command above uses same input-output width, but pads the output height with a top transparent section such that the output height is fixed to 188px. 
+
+Similarly to crop a gif into pngs.
+```
+ffmpeg -vsync vfr -i Idle1.gif -vf "crop=70:ih:(iw-ow-10):0" pngs/Idle1_%d.png
+```

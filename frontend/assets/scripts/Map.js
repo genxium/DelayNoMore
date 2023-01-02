@@ -833,25 +833,16 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     playerScriptIns.setSpecies(chConfig.SpeciesName);
 
     if (1 == joinIndex) {
-        newPlayerNode.color = cc.Color.RED;
+      newPlayerNode.color = cc.Color.RED;
     } else {
-        newPlayerNode.color = cc.Color.BLUE;
+      newPlayerNode.color = cc.Color.BLUE;
     }
 
     const [wx, wy] = gopkgs.VirtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const colliderRadius = playerDownsyncInfo.ColliderRadius;
-    const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos(colliderRadius, colliderRadius + colliderRadius); // avoid multiplying 
-    const colliderWidth = halfColliderWidth + halfColliderWidth,
-      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
 
-    const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    self.gopkgsCollisionSys.Add(newPlayerCollider);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}`);
+    console.log(`Created new player node: joinIndex=${joinIndex}`);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);
@@ -1228,10 +1219,11 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
 
   showDebugBoundaries(rdf) {
     const self = this;
-    const leftPadding = self.snapIntoPlatformOverlap,
-      rightPadding = self.snapIntoPlatformOverlap,
-      topPadding = self.snapIntoPlatformOverlap,
-      bottomPadding = self.snapIntoPlatformOverlap;
+    // Hardcoded paddings for now
+    const leftPadding = 0.1,
+      rightPadding = 0.1,
+      topPadding = 0.1,
+      bottomPadding = 0.1;
     if (self.showCriticalCoordinateLabels) {
       let g = self.g;
       g.clear();
@@ -1263,6 +1255,72 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
         }
         g.lineTo(wpos[0], wpos[1]);
         g.stroke();
+      }
+
+      for (let k in rdf.PlayersArr) {
+        const player = rdf.PlayersArr[k];
+        if (1 == player.JoinIndex) {
+          g.strokeColor = cc.Color.BLUE;
+        } else {
+          g.strokeColor = cc.Color.RED;
+        }
+
+		let [colliderWidth, colliderHeight] = [player.ColliderRadius*2, player.ColliderRadius*4];
+		switch (player.CharacterState) {
+		case ATK_CHARACTER_STATE.LayDown1[0]:
+			[colliderWidth, colliderHeight] = [player.ColliderRadius*4, player.ColliderRadius*2];
+            break;
+		case ATK_CHARACTER_STATE.BlownUp1[0]: 
+        case ATK_CHARACTER_STATE.InAirIdle1NoJump[0]: 
+        case ATK_CHARACTER_STATE.InAirIdle1ByJump[0]:
+			[colliderWidth, colliderHeight] = [player.ColliderRadius*2, player.ColliderRadius*2];
+            break;
+		}
+
+		const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((colliderWidth >> 1), (colliderHeight >> 1));
+
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY);
+        const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
+        const pts = [[0, 0], [leftPadding + halfColliderWidth*2 + rightPadding, 0], [leftPadding + halfColliderWidth*2 + rightPadding, bottomPadding + halfColliderHeight*2 + topPadding], [0, bottomPadding + halfColliderHeight*2 + topPadding]];
+
+        g.moveTo(cx, cy);
+        for (let j = 0; j < pts.length; j += 1) {
+          g.lineTo(pts[j][0] + cx, pts[j][1] + cy);
+        }
+        g.lineTo(cx, cy);
+        g.stroke();
+      }
+
+      for (let k in rdf.MeleeBullets) {
+        const meleeBullet = rdf.MeleeBullets[k];
+        if (
+          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames <= rdf.Id
+          &&
+          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
+        ) {
+          const offender = rdf.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex-1];
+          if (1 == offender.JoinIndex) {
+            g.strokeColor = cc.Color.BLUE;
+          } else {
+            g.strokeColor = cc.Color.RED;
+          }
+
+          let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
+          if (0 > offender.DirX) {
+            xfac = -1;
+          }
+          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
+          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.Bullet.HitboxSizeX >> 1), (meleeBullet.Bullet.HitboxSizeY >> 1));
+          const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
+          const pts = [[0, 0], [leftPadding + halfColliderWidth*2 + rightPadding, 0], [leftPadding + halfColliderWidth*2 + rightPadding, bottomPadding + halfColliderHeight*2 + topPadding], [0, bottomPadding + halfColliderHeight*2 + topPadding]];
+
+          g.moveTo(bulletCx, bulletCy);
+          for (let j = 0; j < pts.length; j += 1) {
+            g.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
+          }
+          g.lineTo(bulletCx, bulletCy);
+          g.stroke();
+        }
       }
     }
   },

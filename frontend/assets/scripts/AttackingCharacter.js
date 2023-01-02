@@ -10,7 +10,7 @@ window.ATK_CHARACTER_STATE = {
   InAirAtk1: [6, "InAirAtk1"],
   InAirAtked1: [7, "InAirAtked1"],
   BlownUp1: [8, "BlownUp1"],
-  LayDown1: [9, "LayDown1"],
+  LayDown1: [9, "LayDown1"], // The last frame of "LayDown1" should have a simliar boundingbox with the first frame of "GetUp1", otherwise the animation would seem odd
   GetUp1: [10, "GetUp1"],
   Atk2:   [11, "Atk2"],
   Atk3:   [12, "Atk3"],

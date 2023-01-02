@@ -1274,17 +1274,6 @@ func (pR *Room) refreshColliders(spaceW, spaceH int32) {
 	topPadding, bottomPadding, leftPadding, rightPadding := pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap, pR.SnapIntoPlatformOverlap
 
 	pR.Space = resolv.NewSpace(int(spaceW), int(spaceH), int(pR.CollisionMinStep), int(pR.CollisionMinStep)) // allocate a new collision space everytime after a battle is settled
-	jsPlayers := toJsPlayers(pR.Players)
-	for _, player := range jsPlayers {
-		wx, wy := battle.VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY, pR.VirtualGridToWorldRatio)
-		colliderWidth, colliderHeight := player.ColliderRadius*2, player.ColliderRadius*4
-		playerCollider := battle.GenerateRectCollider(wx, wy, colliderWidth, colliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, pR.collisionSpaceOffsetX, pR.collisionSpaceOffsetY, player, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
-		pR.Space.Add(playerCollider)
-		// Keep track of the collider in "pR.CollisionSysMap"
-		joinIndex := player.JoinIndex
-		collisionPlayerIndex := battle.COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		pR.CollisionSysMap[collisionPlayerIndex] = playerCollider
-	}
 
 	for _, player := range pR.Players {
 		joinIndex := player.JoinIndex
