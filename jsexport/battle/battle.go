@@ -86,11 +86,36 @@ var invinsibleSet = map[int32]bool{
 
 var nonAttackingSet = map[int32]bool{}
 
-func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputScaleFrames uint32) int32 {
-	if renderFrameId < inputDelayFrames {
+func ShouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFrameId int32) (bool, int32) {
+	for i := prevRenderFrameId + 1; i <= renderFrameId; i++ {
+		if (0 <= i) && (0 == (i & ((1 << INPUT_SCALE_FRAMES) - 1))) {
+			return true, i
+		}
+	}
+	return false, -1
+}
+
+func ShouldGenerateInputFrameUpsync(renderFrameId int32) bool {
+    return ((renderFrameId & ((1 << INPUT_SCALE_FRAMES) - 1)) == 0)
+}
+
+func ConvertToDelayedInputFrameId(renderFrameId int32) int32 {
+	if renderFrameId < INPUT_DELAY_FRAMES {
 		return 0
 	}
-	return ((renderFrameId - inputDelayFrames) >> inputScaleFrames)
+	return ((renderFrameId - INPUT_DELAY_FRAMES) >> INPUT_SCALE_FRAMES)
+}
+
+func ConvertToNoDelayInputFrameId(renderFrameId int32) int32 {
+	return (renderFrameId >> INPUT_SCALE_FRAMES)
+}
+
+func ConvertToFirstUsedRenderFrameId(inputFrameId int32) int32 {
+	return ((inputFrameId << INPUT_SCALE_FRAMES) + INPUT_DELAY_FRAMES)
+}
+
+func ConvertToLastUsedRenderFrameId(inputFrameId int32) int32 {
+	return ((inputFrameId << INPUT_SCALE_FRAMES) + INPUT_DELAY_FRAMES + (1 << INPUT_SCALE_FRAMES) - 1)
 }
 
 func decodeInput(encodedInput uint64) *InputFrameDecoded {
@@ -343,10 +368,10 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 	return &ret
 }
 
-func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer, inputDelayFrames int32, inputScaleFrames uint32) (int, bool, int32, int32) {
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
-	delayedInputFrameId := ConvertToInputFrameId(currRenderFrame.Id, inputDelayFrames, inputScaleFrames)
-	delayedInputFrameIdForPrevRdf := ConvertToInputFrameId(currRenderFrame.Id-1, inputDelayFrames, inputScaleFrames)
+	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
+	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id-1)
 
 	if 0 >= delayedInputFrameId {
 		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
@@ -436,7 +461,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		jumpedOrNotList[i] = false
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, INPUT_DELAY_FRAMES, INPUT_SCALE_FRAMES)
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer)
 
 		if jumpedOrNot {
 			thatPlayerInNextFrame.VelY = int32(chConfig.JumpingInitVelY)

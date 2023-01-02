@@ -242,34 +242,21 @@ func Serve(c *gin.Context) {
 		bciFrame := &pb.BattleColliderInfo{
 			BoundRoomId:    pRoom.Id,
 			StageName:      pRoom.StageName,
-			StageDiscreteW: pRoom.StageDiscreteW,
-			StageDiscreteH: pRoom.StageDiscreteH,
-			StageTileW:     pRoom.StageTileW,
-			StageTileH:     pRoom.StageTileH,
 
 			IntervalToPing:                  int32(Constants.Ws.IntervalToPing),
 			WillKickIfInactiveFor:           int32(Constants.Ws.WillKickIfInactiveFor),
 			BattleDurationNanos:             pRoom.BattleDurationNanos,
-			ServerFps:                       pRoom.ServerFps,
-			InputDelayFrames:                pRoom.InputDelayFrames,
-			InputScaleFrames:                pRoom.InputScaleFrames,
-			NstDelayFrames:                  pRoom.NstDelayFrames,
+
 			InputFrameUpsyncDelayTolerance:  pRoom.InputFrameUpsyncDelayTolerance,
 			MaxChasingRenderFramesPerUpdate: pRoom.MaxChasingRenderFramesPerUpdate,
 			PlayerBattleState:               pThePlayer.BattleState, // For frontend to know whether it's rejoining
 			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
 			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
 
-			WorldToVirtualGridRatio: pRoom.WorldToVirtualGridRatio,
-			VirtualGridToWorldRatio: pRoom.VirtualGridToWorldRatio,
+			InputDelayFrames:                pRoom.InputDelayFrames,
+			InputScaleFrames:                pRoom.InputScaleFrames,
 
-			SpAtkLookupFrames:         pRoom.SpAtkLookupFrames,
 			RenderCacheSize:           pRoom.RenderCacheSize,
-			SnapIntoPlatformOverlap:   pRoom.SnapIntoPlatformOverlap,
-			SnapIntoPlatformThreshold: pRoom.SnapIntoPlatformThreshold,
-			JumpingInitVelY:           pRoom.JumpingInitVelY,
-			GravityX:                  pRoom.GravityX,
-			GravityY:                  pRoom.GravityY,
 			CollisionMinStep:          pRoom.CollisionMinStep,
 
 			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,

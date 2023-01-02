@@ -42,7 +42,7 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
 		Id:              id,
 		VirtualGridX:    virtualGridX,
@@ -53,13 +53,15 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 		VelY:            velY,
 		FramesToRecover: framesToRecover,
 		FramesInChState: framesInChState,
+        ActiveSkillId:   activeSkillId,
+        ActiveSkillHit:  activeSkillHit,
 		Speed:           speed,
 		BattleState:     battleState,
+		CharacterState:  characterState,
 		JoinIndex:       joinIndex,
-		ColliderRadius:  colliderRadius,
 		Hp:              hp,
 		MaxHp:           maxHp,
-		CharacterState:  characterState,
+		ColliderRadius:  colliderRadius,
 		InAir:           inAir,
 	})
 }
@@ -167,5 +169,10 @@ func main() {
 		"VirtualGridToWorldPos":                                VirtualGridToWorldPos,
 		"GetCharacterConfigsOrderedByJoinIndex":                GetCharacterConfigsOrderedByJoinIndex,
 		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
+		"ConvertToDelayedInputFrameId": ConvertToDelayedInputFrameId,
+		"ConvertToNoDelayInputFrameId": ConvertToNoDelayInputFrameId,
+        "ConvertToFirstUsedRenderFrameId": ConvertToFirstUsedRenderFrameId, 
+        "ConvertToLastUsedRenderFrameId":  ConvertToLastUsedRenderFrameId, 
+        "ShouldGenerateInputFrameUpsync":  ShouldGenerateInputFrameUpsync,
 	})
 }

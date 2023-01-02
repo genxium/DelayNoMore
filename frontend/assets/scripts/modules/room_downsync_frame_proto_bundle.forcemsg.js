@@ -1211,6 +1211,8 @@ $root.protos = (function() {
          * @property {number|null} [characterState] PlayerDownsync characterState
          * @property {boolean|null} [inAir] PlayerDownsync inAir
          * @property {number|null} [framesInChState] PlayerDownsync framesInChState
+         * @property {number|null} [activeSkillId] PlayerDownsync activeSkillId
+         * @property {number|null} [activeSkillHit] PlayerDownsync activeSkillHit
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1392,6 +1394,22 @@ $root.protos = (function() {
         PlayerDownsync.prototype.framesInChState = 0;
 
         /**
+         * PlayerDownsync activeSkillId.
+         * @member {number} activeSkillId
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.activeSkillId = 0;
+
+        /**
+         * PlayerDownsync activeSkillHit.
+         * @member {number} activeSkillHit
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.activeSkillHit = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1460,7 +1478,7 @@ $root.protos = (function() {
             if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
                 writer.uint32(/* id 10, wireType 0 =*/80).int32(message.joinIndex);
             if (message.colliderRadius != null && Object.hasOwnProperty.call(message, "colliderRadius"))
-                writer.uint32(/* id 11, wireType 1 =*/89).double(message.colliderRadius);
+                writer.uint32(/* id 11, wireType 0 =*/88).int32(message.colliderRadius);
             if (message.removed != null && Object.hasOwnProperty.call(message, "removed"))
                 writer.uint32(/* id 12, wireType 0 =*/96).bool(message.removed);
             if (message.score != null && Object.hasOwnProperty.call(message, "score"))
@@ -1479,6 +1497,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 19, wireType 0 =*/152).bool(message.inAir);
             if (message.framesInChState != null && Object.hasOwnProperty.call(message, "framesInChState"))
                 writer.uint32(/* id 20, wireType 0 =*/160).int32(message.framesInChState);
+            if (message.activeSkillId != null && Object.hasOwnProperty.call(message, "activeSkillId"))
+                writer.uint32(/* id 21, wireType 0 =*/168).int32(message.activeSkillId);
+            if (message.activeSkillHit != null && Object.hasOwnProperty.call(message, "activeSkillHit"))
+                writer.uint32(/* id 22, wireType 0 =*/176).int32(message.activeSkillHit);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1560,7 +1582,7 @@ $root.protos = (function() {
                         break;
                     }
                 case 11: {
-                        message.colliderRadius = reader.double();
+                        message.colliderRadius = reader.int32();
                         break;
                     }
                 case 12: {
@@ -1597,6 +1619,14 @@ $root.protos = (function() {
                     }
                 case 20: {
                         message.framesInChState = reader.int32();
+                        break;
+                    }
+                case 21: {
+                        message.activeSkillId = reader.int32();
+                        break;
+                    }
+                case 22: {
+                        message.activeSkillHit = reader.int32();
                         break;
                     }
                 case 997: {
@@ -1677,8 +1707,8 @@ $root.protos = (function() {
                 if (!$util.isInteger(message.joinIndex))
                     return "joinIndex: integer expected";
             if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
-                if (typeof message.colliderRadius !== "number")
-                    return "colliderRadius: number expected";
+                if (!$util.isInteger(message.colliderRadius))
+                    return "colliderRadius: integer expected";
             if (message.removed != null && message.hasOwnProperty("removed"))
                 if (typeof message.removed !== "boolean")
                     return "removed: boolean expected";
@@ -1706,6 +1736,12 @@ $root.protos = (function() {
             if (message.framesInChState != null && message.hasOwnProperty("framesInChState"))
                 if (!$util.isInteger(message.framesInChState))
                     return "framesInChState: integer expected";
+            if (message.activeSkillId != null && message.hasOwnProperty("activeSkillId"))
+                if (!$util.isInteger(message.activeSkillId))
+                    return "activeSkillId: integer expected";
+            if (message.activeSkillHit != null && message.hasOwnProperty("activeSkillHit"))
+                if (!$util.isInteger(message.activeSkillHit))
+                    return "activeSkillHit: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1751,7 +1787,7 @@ $root.protos = (function() {
             if (object.joinIndex != null)
                 message.joinIndex = object.joinIndex | 0;
             if (object.colliderRadius != null)
-                message.colliderRadius = Number(object.colliderRadius);
+                message.colliderRadius = object.colliderRadius | 0;
             if (object.removed != null)
                 message.removed = Boolean(object.removed);
             if (object.score != null)
@@ -1770,6 +1806,10 @@ $root.protos = (function() {
                 message.inAir = Boolean(object.inAir);
             if (object.framesInChState != null)
                 message.framesInChState = object.framesInChState | 0;
+            if (object.activeSkillId != null)
+                message.activeSkillId = object.activeSkillId | 0;
+            if (object.activeSkillHit != null)
+                message.activeSkillHit = object.activeSkillHit | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1813,6 +1853,8 @@ $root.protos = (function() {
                 object.characterState = 0;
                 object.inAir = false;
                 object.framesInChState = 0;
+                object.activeSkillId = 0;
+                object.activeSkillHit = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1838,7 +1880,7 @@ $root.protos = (function() {
             if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
                 object.joinIndex = message.joinIndex;
             if (message.colliderRadius != null && message.hasOwnProperty("colliderRadius"))
-                object.colliderRadius = options.json && !isFinite(message.colliderRadius) ? String(message.colliderRadius) : message.colliderRadius;
+                object.colliderRadius = message.colliderRadius;
             if (message.removed != null && message.hasOwnProperty("removed"))
                 object.removed = message.removed;
             if (message.score != null && message.hasOwnProperty("score"))
@@ -1857,6 +1899,10 @@ $root.protos = (function() {
                 object.inAir = message.inAir;
             if (message.framesInChState != null && message.hasOwnProperty("framesInChState"))
                 object.framesInChState = message.framesInChState;
+            if (message.activeSkillId != null && message.hasOwnProperty("activeSkillId"))
+                object.activeSkillId = message.activeSkillId;
+            if (message.activeSkillHit != null && message.hasOwnProperty("activeSkillHit"))
+                object.activeSkillHit = message.activeSkillHit;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))
@@ -3983,25 +4029,24 @@ $root.protos = (function() {
          * Properties of a MeleeBullet.
          * @memberof protos
          * @interface IMeleeBullet
-         * @property {number|null} [battleLocalId] MeleeBullet battleLocalId
-         * @property {number|null} [startupFrames] MeleeBullet startupFrames
-         * @property {number|null} [activeFrames] MeleeBullet activeFrames
-         * @property {number|null} [recoveryFrames] MeleeBullet recoveryFrames
-         * @property {number|null} [recoveryFramesOnBlock] MeleeBullet recoveryFramesOnBlock
-         * @property {number|null} [recoveryFramesOnHit] MeleeBullet recoveryFramesOnHit
-         * @property {number|null} [hitboxOffset] MeleeBullet hitboxOffset
          * @property {number|null} [originatedRenderFrameId] MeleeBullet originatedRenderFrameId
+         * @property {number|null} [offenderJoinIndex] MeleeBullet offenderJoinIndex
+         * @property {number|null} [startupFrames] MeleeBullet startupFrames
+         * @property {number|null} [cancellableStFrame] MeleeBullet cancellableStFrame
+         * @property {number|null} [cancellableEdFrame] MeleeBullet cancellableEdFrame
+         * @property {number|null} [activeFrames] MeleeBullet activeFrames
          * @property {number|null} [hitStunFrames] MeleeBullet hitStunFrames
          * @property {number|null} [blockStunFrames] MeleeBullet blockStunFrames
-         * @property {number|null} [pushback] MeleeBullet pushback
-         * @property {number|null} [releaseTriggerType] MeleeBullet releaseTriggerType
+         * @property {number|null} [pushbackVelX] MeleeBullet pushbackVelX
+         * @property {number|null} [pushbackVelY] MeleeBullet pushbackVelY
          * @property {number|null} [damage] MeleeBullet damage
-         * @property {number|null} [offenderJoinIndex] MeleeBullet offenderJoinIndex
-         * @property {number|null} [offenderPlayerId] MeleeBullet offenderPlayerId
+         * @property {number|null} [selfLockVelX] MeleeBullet selfLockVelX
+         * @property {number|null} [selfLockVelY] MeleeBullet selfLockVelY
+         * @property {number|null} [hitboxOffsetX] MeleeBullet hitboxOffsetX
+         * @property {number|null} [hitboxOffsetY] MeleeBullet hitboxOffsetY
          * @property {number|null} [hitboxSizeX] MeleeBullet hitboxSizeX
          * @property {number|null} [hitboxSizeY] MeleeBullet hitboxSizeY
-         * @property {number|null} [selfMoveforwardX] MeleeBullet selfMoveforwardX
-         * @property {number|null} [selfMoveforwardY] MeleeBullet selfMoveforwardY
+         * @property {boolean|null} [blowUp] MeleeBullet blowUp
          */
 
         /**
@@ -4020,12 +4065,20 @@ $root.protos = (function() {
         }
 
         /**
-         * MeleeBullet battleLocalId.
-         * @member {number} battleLocalId
+         * MeleeBullet originatedRenderFrameId.
+         * @member {number} originatedRenderFrameId
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.battleLocalId = 0;
+        MeleeBullet.prototype.originatedRenderFrameId = 0;
+
+        /**
+         * MeleeBullet offenderJoinIndex.
+         * @member {number} offenderJoinIndex
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.offenderJoinIndex = 0;
 
         /**
          * MeleeBullet startupFrames.
@@ -4036,52 +4089,28 @@ $root.protos = (function() {
         MeleeBullet.prototype.startupFrames = 0;
 
         /**
+         * MeleeBullet cancellableStFrame.
+         * @member {number} cancellableStFrame
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.cancellableStFrame = 0;
+
+        /**
+         * MeleeBullet cancellableEdFrame.
+         * @member {number} cancellableEdFrame
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.cancellableEdFrame = 0;
+
+        /**
          * MeleeBullet activeFrames.
          * @member {number} activeFrames
          * @memberof protos.MeleeBullet
          * @instance
          */
         MeleeBullet.prototype.activeFrames = 0;
-
-        /**
-         * MeleeBullet recoveryFrames.
-         * @member {number} recoveryFrames
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.recoveryFrames = 0;
-
-        /**
-         * MeleeBullet recoveryFramesOnBlock.
-         * @member {number} recoveryFramesOnBlock
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.recoveryFramesOnBlock = 0;
-
-        /**
-         * MeleeBullet recoveryFramesOnHit.
-         * @member {number} recoveryFramesOnHit
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.recoveryFramesOnHit = 0;
-
-        /**
-         * MeleeBullet hitboxOffset.
-         * @member {number} hitboxOffset
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.hitboxOffset = 0;
-
-        /**
-         * MeleeBullet originatedRenderFrameId.
-         * @member {number} originatedRenderFrameId
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.originatedRenderFrameId = 0;
 
         /**
          * MeleeBullet hitStunFrames.
@@ -4100,20 +4129,20 @@ $root.protos = (function() {
         MeleeBullet.prototype.blockStunFrames = 0;
 
         /**
-         * MeleeBullet pushback.
-         * @member {number} pushback
+         * MeleeBullet pushbackVelX.
+         * @member {number} pushbackVelX
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.pushback = 0;
+        MeleeBullet.prototype.pushbackVelX = 0;
 
         /**
-         * MeleeBullet releaseTriggerType.
-         * @member {number} releaseTriggerType
+         * MeleeBullet pushbackVelY.
+         * @member {number} pushbackVelY
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.releaseTriggerType = 0;
+        MeleeBullet.prototype.pushbackVelY = 0;
 
         /**
          * MeleeBullet damage.
@@ -4124,20 +4153,36 @@ $root.protos = (function() {
         MeleeBullet.prototype.damage = 0;
 
         /**
-         * MeleeBullet offenderJoinIndex.
-         * @member {number} offenderJoinIndex
+         * MeleeBullet selfLockVelX.
+         * @member {number} selfLockVelX
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.offenderJoinIndex = 0;
+        MeleeBullet.prototype.selfLockVelX = 0;
 
         /**
-         * MeleeBullet offenderPlayerId.
-         * @member {number} offenderPlayerId
+         * MeleeBullet selfLockVelY.
+         * @member {number} selfLockVelY
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.offenderPlayerId = 0;
+        MeleeBullet.prototype.selfLockVelY = 0;
+
+        /**
+         * MeleeBullet hitboxOffsetX.
+         * @member {number} hitboxOffsetX
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.hitboxOffsetX = 0;
+
+        /**
+         * MeleeBullet hitboxOffsetY.
+         * @member {number} hitboxOffsetY
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.hitboxOffsetY = 0;
 
         /**
          * MeleeBullet hitboxSizeX.
@@ -4156,20 +4201,12 @@ $root.protos = (function() {
         MeleeBullet.prototype.hitboxSizeY = 0;
 
         /**
-         * MeleeBullet selfMoveforwardX.
-         * @member {number} selfMoveforwardX
+         * MeleeBullet blowUp.
+         * @member {boolean} blowUp
          * @memberof protos.MeleeBullet
          * @instance
          */
-        MeleeBullet.prototype.selfMoveforwardX = 0;
-
-        /**
-         * MeleeBullet selfMoveforwardY.
-         * @member {number} selfMoveforwardY
-         * @memberof protos.MeleeBullet
-         * @instance
-         */
-        MeleeBullet.prototype.selfMoveforwardY = 0;
+        MeleeBullet.prototype.blowUp = false;
 
         /**
          * Creates a new MeleeBullet instance using the specified properties.
@@ -4195,44 +4232,42 @@ $root.protos = (function() {
         MeleeBullet.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.battleLocalId != null && Object.hasOwnProperty.call(message, "battleLocalId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.battleLocalId);
-            if (message.startupFrames != null && Object.hasOwnProperty.call(message, "startupFrames"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.startupFrames);
-            if (message.activeFrames != null && Object.hasOwnProperty.call(message, "activeFrames"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.activeFrames);
-            if (message.recoveryFrames != null && Object.hasOwnProperty.call(message, "recoveryFrames"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.recoveryFrames);
-            if (message.recoveryFramesOnBlock != null && Object.hasOwnProperty.call(message, "recoveryFramesOnBlock"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.recoveryFramesOnBlock);
-            if (message.recoveryFramesOnHit != null && Object.hasOwnProperty.call(message, "recoveryFramesOnHit"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.recoveryFramesOnHit);
-            if (message.hitboxOffset != null && Object.hasOwnProperty.call(message, "hitboxOffset"))
-                writer.uint32(/* id 7, wireType 1 =*/57).double(message.hitboxOffset);
             if (message.originatedRenderFrameId != null && Object.hasOwnProperty.call(message, "originatedRenderFrameId"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.originatedRenderFrameId);
-            if (message.hitStunFrames != null && Object.hasOwnProperty.call(message, "hitStunFrames"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.hitStunFrames);
-            if (message.blockStunFrames != null && Object.hasOwnProperty.call(message, "blockStunFrames"))
-                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.blockStunFrames);
-            if (message.pushback != null && Object.hasOwnProperty.call(message, "pushback"))
-                writer.uint32(/* id 11, wireType 1 =*/89).double(message.pushback);
-            if (message.releaseTriggerType != null && Object.hasOwnProperty.call(message, "releaseTriggerType"))
-                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.releaseTriggerType);
-            if (message.damage != null && Object.hasOwnProperty.call(message, "damage"))
-                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.damage);
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.originatedRenderFrameId);
             if (message.offenderJoinIndex != null && Object.hasOwnProperty.call(message, "offenderJoinIndex"))
-                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.offenderJoinIndex);
-            if (message.offenderPlayerId != null && Object.hasOwnProperty.call(message, "offenderPlayerId"))
-                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.offenderPlayerId);
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.offenderJoinIndex);
+            if (message.startupFrames != null && Object.hasOwnProperty.call(message, "startupFrames"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.startupFrames);
+            if (message.cancellableStFrame != null && Object.hasOwnProperty.call(message, "cancellableStFrame"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.cancellableStFrame);
+            if (message.cancellableEdFrame != null && Object.hasOwnProperty.call(message, "cancellableEdFrame"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.cancellableEdFrame);
+            if (message.activeFrames != null && Object.hasOwnProperty.call(message, "activeFrames"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.activeFrames);
+            if (message.hitStunFrames != null && Object.hasOwnProperty.call(message, "hitStunFrames"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.hitStunFrames);
+            if (message.blockStunFrames != null && Object.hasOwnProperty.call(message, "blockStunFrames"))
+                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.blockStunFrames);
+            if (message.pushbackVelX != null && Object.hasOwnProperty.call(message, "pushbackVelX"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.pushbackVelX);
+            if (message.pushbackVelY != null && Object.hasOwnProperty.call(message, "pushbackVelY"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.pushbackVelY);
+            if (message.damage != null && Object.hasOwnProperty.call(message, "damage"))
+                writer.uint32(/* id 11, wireType 0 =*/88).int32(message.damage);
+            if (message.selfLockVelX != null && Object.hasOwnProperty.call(message, "selfLockVelX"))
+                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.selfLockVelX);
+            if (message.selfLockVelY != null && Object.hasOwnProperty.call(message, "selfLockVelY"))
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.selfLockVelY);
+            if (message.hitboxOffsetX != null && Object.hasOwnProperty.call(message, "hitboxOffsetX"))
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.hitboxOffsetX);
+            if (message.hitboxOffsetY != null && Object.hasOwnProperty.call(message, "hitboxOffsetY"))
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.hitboxOffsetY);
             if (message.hitboxSizeX != null && Object.hasOwnProperty.call(message, "hitboxSizeX"))
-                writer.uint32(/* id 16, wireType 1 =*/129).double(message.hitboxSizeX);
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.hitboxSizeX);
             if (message.hitboxSizeY != null && Object.hasOwnProperty.call(message, "hitboxSizeY"))
-                writer.uint32(/* id 17, wireType 1 =*/137).double(message.hitboxSizeY);
-            if (message.selfMoveforwardX != null && Object.hasOwnProperty.call(message, "selfMoveforwardX"))
-                writer.uint32(/* id 18, wireType 1 =*/145).double(message.selfMoveforwardX);
-            if (message.selfMoveforwardY != null && Object.hasOwnProperty.call(message, "selfMoveforwardY"))
-                writer.uint32(/* id 19, wireType 1 =*/153).double(message.selfMoveforwardY);
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.hitboxSizeY);
+            if (message.blowUp != null && Object.hasOwnProperty.call(message, "blowUp"))
+                writer.uint32(/* id 18, wireType 0 =*/144).bool(message.blowUp);
             return writer;
         };
 
@@ -4268,79 +4303,75 @@ $root.protos = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.battleLocalId = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.startupFrames = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.activeFrames = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.recoveryFrames = reader.int32();
-                        break;
-                    }
-                case 5: {
-                        message.recoveryFramesOnBlock = reader.int32();
-                        break;
-                    }
-                case 6: {
-                        message.recoveryFramesOnHit = reader.int32();
-                        break;
-                    }
-                case 7: {
-                        message.hitboxOffset = reader.double();
-                        break;
-                    }
-                case 8: {
                         message.originatedRenderFrameId = reader.int32();
                         break;
                     }
-                case 9: {
-                        message.hitStunFrames = reader.int32();
-                        break;
-                    }
-                case 10: {
-                        message.blockStunFrames = reader.int32();
-                        break;
-                    }
-                case 11: {
-                        message.pushback = reader.double();
-                        break;
-                    }
-                case 12: {
-                        message.releaseTriggerType = reader.int32();
-                        break;
-                    }
-                case 13: {
-                        message.damage = reader.int32();
-                        break;
-                    }
-                case 14: {
+                case 2: {
                         message.offenderJoinIndex = reader.int32();
                         break;
                     }
+                case 3: {
+                        message.startupFrames = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.cancellableStFrame = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.cancellableEdFrame = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.activeFrames = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        message.hitStunFrames = reader.int32();
+                        break;
+                    }
+                case 8: {
+                        message.blockStunFrames = reader.int32();
+                        break;
+                    }
+                case 9: {
+                        message.pushbackVelX = reader.int32();
+                        break;
+                    }
+                case 10: {
+                        message.pushbackVelY = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.damage = reader.int32();
+                        break;
+                    }
+                case 12: {
+                        message.selfLockVelX = reader.int32();
+                        break;
+                    }
+                case 13: {
+                        message.selfLockVelY = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.hitboxOffsetX = reader.int32();
+                        break;
+                    }
                 case 15: {
-                        message.offenderPlayerId = reader.int32();
+                        message.hitboxOffsetY = reader.int32();
                         break;
                     }
                 case 16: {
-                        message.hitboxSizeX = reader.double();
+                        message.hitboxSizeX = reader.int32();
                         break;
                     }
                 case 17: {
-                        message.hitboxSizeY = reader.double();
+                        message.hitboxSizeY = reader.int32();
                         break;
                     }
                 case 18: {
-                        message.selfMoveforwardX = reader.double();
-                        break;
-                    }
-                case 19: {
-                        message.selfMoveforwardY = reader.double();
+                        message.blowUp = reader.bool();
                         break;
                     }
                 default:
@@ -4378,63 +4409,60 @@ $root.protos = (function() {
         MeleeBullet.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.battleLocalId != null && message.hasOwnProperty("battleLocalId"))
-                if (!$util.isInteger(message.battleLocalId))
-                    return "battleLocalId: integer expected";
-            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
-                if (!$util.isInteger(message.startupFrames))
-                    return "startupFrames: integer expected";
-            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
-                if (!$util.isInteger(message.activeFrames))
-                    return "activeFrames: integer expected";
-            if (message.recoveryFrames != null && message.hasOwnProperty("recoveryFrames"))
-                if (!$util.isInteger(message.recoveryFrames))
-                    return "recoveryFrames: integer expected";
-            if (message.recoveryFramesOnBlock != null && message.hasOwnProperty("recoveryFramesOnBlock"))
-                if (!$util.isInteger(message.recoveryFramesOnBlock))
-                    return "recoveryFramesOnBlock: integer expected";
-            if (message.recoveryFramesOnHit != null && message.hasOwnProperty("recoveryFramesOnHit"))
-                if (!$util.isInteger(message.recoveryFramesOnHit))
-                    return "recoveryFramesOnHit: integer expected";
-            if (message.hitboxOffset != null && message.hasOwnProperty("hitboxOffset"))
-                if (typeof message.hitboxOffset !== "number")
-                    return "hitboxOffset: number expected";
             if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
                 if (!$util.isInteger(message.originatedRenderFrameId))
                     return "originatedRenderFrameId: integer expected";
+            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
+                if (!$util.isInteger(message.offenderJoinIndex))
+                    return "offenderJoinIndex: integer expected";
+            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
+                if (!$util.isInteger(message.startupFrames))
+                    return "startupFrames: integer expected";
+            if (message.cancellableStFrame != null && message.hasOwnProperty("cancellableStFrame"))
+                if (!$util.isInteger(message.cancellableStFrame))
+                    return "cancellableStFrame: integer expected";
+            if (message.cancellableEdFrame != null && message.hasOwnProperty("cancellableEdFrame"))
+                if (!$util.isInteger(message.cancellableEdFrame))
+                    return "cancellableEdFrame: integer expected";
+            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
+                if (!$util.isInteger(message.activeFrames))
+                    return "activeFrames: integer expected";
             if (message.hitStunFrames != null && message.hasOwnProperty("hitStunFrames"))
                 if (!$util.isInteger(message.hitStunFrames))
                     return "hitStunFrames: integer expected";
             if (message.blockStunFrames != null && message.hasOwnProperty("blockStunFrames"))
                 if (!$util.isInteger(message.blockStunFrames))
                     return "blockStunFrames: integer expected";
-            if (message.pushback != null && message.hasOwnProperty("pushback"))
-                if (typeof message.pushback !== "number")
-                    return "pushback: number expected";
-            if (message.releaseTriggerType != null && message.hasOwnProperty("releaseTriggerType"))
-                if (!$util.isInteger(message.releaseTriggerType))
-                    return "releaseTriggerType: integer expected";
+            if (message.pushbackVelX != null && message.hasOwnProperty("pushbackVelX"))
+                if (!$util.isInteger(message.pushbackVelX))
+                    return "pushbackVelX: integer expected";
+            if (message.pushbackVelY != null && message.hasOwnProperty("pushbackVelY"))
+                if (!$util.isInteger(message.pushbackVelY))
+                    return "pushbackVelY: integer expected";
             if (message.damage != null && message.hasOwnProperty("damage"))
                 if (!$util.isInteger(message.damage))
                     return "damage: integer expected";
-            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
-                if (!$util.isInteger(message.offenderJoinIndex))
-                    return "offenderJoinIndex: integer expected";
-            if (message.offenderPlayerId != null && message.hasOwnProperty("offenderPlayerId"))
-                if (!$util.isInteger(message.offenderPlayerId))
-                    return "offenderPlayerId: integer expected";
+            if (message.selfLockVelX != null && message.hasOwnProperty("selfLockVelX"))
+                if (!$util.isInteger(message.selfLockVelX))
+                    return "selfLockVelX: integer expected";
+            if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
+                if (!$util.isInteger(message.selfLockVelY))
+                    return "selfLockVelY: integer expected";
+            if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
+                if (!$util.isInteger(message.hitboxOffsetX))
+                    return "hitboxOffsetX: integer expected";
+            if (message.hitboxOffsetY != null && message.hasOwnProperty("hitboxOffsetY"))
+                if (!$util.isInteger(message.hitboxOffsetY))
+                    return "hitboxOffsetY: integer expected";
             if (message.hitboxSizeX != null && message.hasOwnProperty("hitboxSizeX"))
-                if (typeof message.hitboxSizeX !== "number")
-                    return "hitboxSizeX: number expected";
+                if (!$util.isInteger(message.hitboxSizeX))
+                    return "hitboxSizeX: integer expected";
             if (message.hitboxSizeY != null && message.hasOwnProperty("hitboxSizeY"))
-                if (typeof message.hitboxSizeY !== "number")
-                    return "hitboxSizeY: number expected";
-            if (message.selfMoveforwardX != null && message.hasOwnProperty("selfMoveforwardX"))
-                if (typeof message.selfMoveforwardX !== "number")
-                    return "selfMoveforwardX: number expected";
-            if (message.selfMoveforwardY != null && message.hasOwnProperty("selfMoveforwardY"))
-                if (typeof message.selfMoveforwardY !== "number")
-                    return "selfMoveforwardY: number expected";
+                if (!$util.isInteger(message.hitboxSizeY))
+                    return "hitboxSizeY: integer expected";
+            if (message.blowUp != null && message.hasOwnProperty("blowUp"))
+                if (typeof message.blowUp !== "boolean")
+                    return "blowUp: boolean expected";
             return null;
         };
 
@@ -4450,44 +4478,42 @@ $root.protos = (function() {
             if (object instanceof $root.protos.MeleeBullet)
                 return object;
             var message = new $root.protos.MeleeBullet();
-            if (object.battleLocalId != null)
-                message.battleLocalId = object.battleLocalId | 0;
-            if (object.startupFrames != null)
-                message.startupFrames = object.startupFrames | 0;
-            if (object.activeFrames != null)
-                message.activeFrames = object.activeFrames | 0;
-            if (object.recoveryFrames != null)
-                message.recoveryFrames = object.recoveryFrames | 0;
-            if (object.recoveryFramesOnBlock != null)
-                message.recoveryFramesOnBlock = object.recoveryFramesOnBlock | 0;
-            if (object.recoveryFramesOnHit != null)
-                message.recoveryFramesOnHit = object.recoveryFramesOnHit | 0;
-            if (object.hitboxOffset != null)
-                message.hitboxOffset = Number(object.hitboxOffset);
             if (object.originatedRenderFrameId != null)
                 message.originatedRenderFrameId = object.originatedRenderFrameId | 0;
+            if (object.offenderJoinIndex != null)
+                message.offenderJoinIndex = object.offenderJoinIndex | 0;
+            if (object.startupFrames != null)
+                message.startupFrames = object.startupFrames | 0;
+            if (object.cancellableStFrame != null)
+                message.cancellableStFrame = object.cancellableStFrame | 0;
+            if (object.cancellableEdFrame != null)
+                message.cancellableEdFrame = object.cancellableEdFrame | 0;
+            if (object.activeFrames != null)
+                message.activeFrames = object.activeFrames | 0;
             if (object.hitStunFrames != null)
                 message.hitStunFrames = object.hitStunFrames | 0;
             if (object.blockStunFrames != null)
                 message.blockStunFrames = object.blockStunFrames | 0;
-            if (object.pushback != null)
-                message.pushback = Number(object.pushback);
-            if (object.releaseTriggerType != null)
-                message.releaseTriggerType = object.releaseTriggerType | 0;
+            if (object.pushbackVelX != null)
+                message.pushbackVelX = object.pushbackVelX | 0;
+            if (object.pushbackVelY != null)
+                message.pushbackVelY = object.pushbackVelY | 0;
             if (object.damage != null)
                 message.damage = object.damage | 0;
-            if (object.offenderJoinIndex != null)
-                message.offenderJoinIndex = object.offenderJoinIndex | 0;
-            if (object.offenderPlayerId != null)
-                message.offenderPlayerId = object.offenderPlayerId | 0;
+            if (object.selfLockVelX != null)
+                message.selfLockVelX = object.selfLockVelX | 0;
+            if (object.selfLockVelY != null)
+                message.selfLockVelY = object.selfLockVelY | 0;
+            if (object.hitboxOffsetX != null)
+                message.hitboxOffsetX = object.hitboxOffsetX | 0;
+            if (object.hitboxOffsetY != null)
+                message.hitboxOffsetY = object.hitboxOffsetY | 0;
             if (object.hitboxSizeX != null)
-                message.hitboxSizeX = Number(object.hitboxSizeX);
+                message.hitboxSizeX = object.hitboxSizeX | 0;
             if (object.hitboxSizeY != null)
-                message.hitboxSizeY = Number(object.hitboxSizeY);
-            if (object.selfMoveforwardX != null)
-                message.selfMoveforwardX = Number(object.selfMoveforwardX);
-            if (object.selfMoveforwardY != null)
-                message.selfMoveforwardY = Number(object.selfMoveforwardY);
+                message.hitboxSizeY = object.hitboxSizeY | 0;
+            if (object.blowUp != null)
+                message.blowUp = Boolean(object.blowUp);
             return message;
         };
 
@@ -4505,64 +4531,61 @@ $root.protos = (function() {
                 options = {};
             var object = {};
             if (options.defaults) {
-                object.battleLocalId = 0;
-                object.startupFrames = 0;
-                object.activeFrames = 0;
-                object.recoveryFrames = 0;
-                object.recoveryFramesOnBlock = 0;
-                object.recoveryFramesOnHit = 0;
-                object.hitboxOffset = 0;
                 object.originatedRenderFrameId = 0;
+                object.offenderJoinIndex = 0;
+                object.startupFrames = 0;
+                object.cancellableStFrame = 0;
+                object.cancellableEdFrame = 0;
+                object.activeFrames = 0;
                 object.hitStunFrames = 0;
                 object.blockStunFrames = 0;
-                object.pushback = 0;
-                object.releaseTriggerType = 0;
+                object.pushbackVelX = 0;
+                object.pushbackVelY = 0;
                 object.damage = 0;
-                object.offenderJoinIndex = 0;
-                object.offenderPlayerId = 0;
+                object.selfLockVelX = 0;
+                object.selfLockVelY = 0;
+                object.hitboxOffsetX = 0;
+                object.hitboxOffsetY = 0;
                 object.hitboxSizeX = 0;
                 object.hitboxSizeY = 0;
-                object.selfMoveforwardX = 0;
-                object.selfMoveforwardY = 0;
+                object.blowUp = false;
             }
-            if (message.battleLocalId != null && message.hasOwnProperty("battleLocalId"))
-                object.battleLocalId = message.battleLocalId;
-            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
-                object.startupFrames = message.startupFrames;
-            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
-                object.activeFrames = message.activeFrames;
-            if (message.recoveryFrames != null && message.hasOwnProperty("recoveryFrames"))
-                object.recoveryFrames = message.recoveryFrames;
-            if (message.recoveryFramesOnBlock != null && message.hasOwnProperty("recoveryFramesOnBlock"))
-                object.recoveryFramesOnBlock = message.recoveryFramesOnBlock;
-            if (message.recoveryFramesOnHit != null && message.hasOwnProperty("recoveryFramesOnHit"))
-                object.recoveryFramesOnHit = message.recoveryFramesOnHit;
-            if (message.hitboxOffset != null && message.hasOwnProperty("hitboxOffset"))
-                object.hitboxOffset = options.json && !isFinite(message.hitboxOffset) ? String(message.hitboxOffset) : message.hitboxOffset;
             if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
                 object.originatedRenderFrameId = message.originatedRenderFrameId;
+            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
+                object.offenderJoinIndex = message.offenderJoinIndex;
+            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
+                object.startupFrames = message.startupFrames;
+            if (message.cancellableStFrame != null && message.hasOwnProperty("cancellableStFrame"))
+                object.cancellableStFrame = message.cancellableStFrame;
+            if (message.cancellableEdFrame != null && message.hasOwnProperty("cancellableEdFrame"))
+                object.cancellableEdFrame = message.cancellableEdFrame;
+            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
+                object.activeFrames = message.activeFrames;
             if (message.hitStunFrames != null && message.hasOwnProperty("hitStunFrames"))
                 object.hitStunFrames = message.hitStunFrames;
             if (message.blockStunFrames != null && message.hasOwnProperty("blockStunFrames"))
                 object.blockStunFrames = message.blockStunFrames;
-            if (message.pushback != null && message.hasOwnProperty("pushback"))
-                object.pushback = options.json && !isFinite(message.pushback) ? String(message.pushback) : message.pushback;
-            if (message.releaseTriggerType != null && message.hasOwnProperty("releaseTriggerType"))
-                object.releaseTriggerType = message.releaseTriggerType;
+            if (message.pushbackVelX != null && message.hasOwnProperty("pushbackVelX"))
+                object.pushbackVelX = message.pushbackVelX;
+            if (message.pushbackVelY != null && message.hasOwnProperty("pushbackVelY"))
+                object.pushbackVelY = message.pushbackVelY;
             if (message.damage != null && message.hasOwnProperty("damage"))
                 object.damage = message.damage;
-            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
-                object.offenderJoinIndex = message.offenderJoinIndex;
-            if (message.offenderPlayerId != null && message.hasOwnProperty("offenderPlayerId"))
-                object.offenderPlayerId = message.offenderPlayerId;
+            if (message.selfLockVelX != null && message.hasOwnProperty("selfLockVelX"))
+                object.selfLockVelX = message.selfLockVelX;
+            if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
+                object.selfLockVelY = message.selfLockVelY;
+            if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
+                object.hitboxOffsetX = message.hitboxOffsetX;
+            if (message.hitboxOffsetY != null && message.hasOwnProperty("hitboxOffsetY"))
+                object.hitboxOffsetY = message.hitboxOffsetY;
             if (message.hitboxSizeX != null && message.hasOwnProperty("hitboxSizeX"))
-                object.hitboxSizeX = options.json && !isFinite(message.hitboxSizeX) ? String(message.hitboxSizeX) : message.hitboxSizeX;
+                object.hitboxSizeX = message.hitboxSizeX;
             if (message.hitboxSizeY != null && message.hasOwnProperty("hitboxSizeY"))
-                object.hitboxSizeY = options.json && !isFinite(message.hitboxSizeY) ? String(message.hitboxSizeY) : message.hitboxSizeY;
-            if (message.selfMoveforwardX != null && message.hasOwnProperty("selfMoveforwardX"))
-                object.selfMoveforwardX = options.json && !isFinite(message.selfMoveforwardX) ? String(message.selfMoveforwardX) : message.selfMoveforwardX;
-            if (message.selfMoveforwardY != null && message.hasOwnProperty("selfMoveforwardY"))
-                object.selfMoveforwardY = options.json && !isFinite(message.selfMoveforwardY) ? String(message.selfMoveforwardY) : message.selfMoveforwardY;
+                object.hitboxSizeY = message.hitboxSizeY;
+            if (message.blowUp != null && message.hasOwnProperty("blowUp"))
+                object.blowUp = message.blowUp;
             return object;
         };
 
@@ -4602,33 +4625,17 @@ $root.protos = (function() {
          * @memberof protos
          * @interface IBattleColliderInfo
          * @property {string|null} [stageName] BattleColliderInfo stageName
-         * @property {number|null} [stageDiscreteW] BattleColliderInfo stageDiscreteW
-         * @property {number|null} [stageDiscreteH] BattleColliderInfo stageDiscreteH
-         * @property {number|null} [stageTileW] BattleColliderInfo stageTileW
-         * @property {number|null} [stageTileH] BattleColliderInfo stageTileH
          * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
          * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
          * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
-         * @property {number|null} [battleDurationFrames] BattleColliderInfo battleDurationFrames
          * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
-         * @property {number|null} [serverFps] BattleColliderInfo serverFps
-         * @property {number|null} [inputDelayFrames] BattleColliderInfo inputDelayFrames
-         * @property {number|null} [inputScaleFrames] BattleColliderInfo inputScaleFrames
-         * @property {number|null} [nstDelayFrames] BattleColliderInfo nstDelayFrames
          * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
          * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
-         * @property {number|null} [playerBattleState] BattleColliderInfo playerBattleState
          * @property {number|null} [rollbackEstimatedDtMillis] BattleColliderInfo rollbackEstimatedDtMillis
          * @property {number|Long|null} [rollbackEstimatedDtNanos] BattleColliderInfo rollbackEstimatedDtNanos
-         * @property {number|null} [worldToVirtualGridRatio] BattleColliderInfo worldToVirtualGridRatio
-         * @property {number|null} [virtualGridToWorldRatio] BattleColliderInfo virtualGridToWorldRatio
-         * @property {number|null} [spAtkLookupFrames] BattleColliderInfo spAtkLookupFrames
          * @property {number|null} [renderCacheSize] BattleColliderInfo renderCacheSize
-         * @property {number|null} [snapIntoPlatformOverlap] BattleColliderInfo snapIntoPlatformOverlap
-         * @property {number|null} [snapIntoPlatformThreshold] BattleColliderInfo snapIntoPlatformThreshold
-         * @property {number|null} [jumpingInitVelY] BattleColliderInfo jumpingInitVelY
-         * @property {number|null} [gravityX] BattleColliderInfo gravityX
-         * @property {number|null} [gravityY] BattleColliderInfo gravityY
+         * @property {number|null} [spaceOffsetX] BattleColliderInfo spaceOffsetX
+         * @property {number|null} [spaceOffsetY] BattleColliderInfo spaceOffsetY
          * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
          * @property {boolean|null} [frameDataLoggingEnabled] BattleColliderInfo frameDataLoggingEnabled
          */
@@ -4657,38 +4664,6 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.stageName = "";
 
         /**
-         * BattleColliderInfo stageDiscreteW.
-         * @member {number} stageDiscreteW
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.stageDiscreteW = 0;
-
-        /**
-         * BattleColliderInfo stageDiscreteH.
-         * @member {number} stageDiscreteH
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.stageDiscreteH = 0;
-
-        /**
-         * BattleColliderInfo stageTileW.
-         * @member {number} stageTileW
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.stageTileW = 0;
-
-        /**
-         * BattleColliderInfo stageTileH.
-         * @member {number} stageTileH
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.stageTileH = 0;
-
-        /**
          * BattleColliderInfo intervalToPing.
          * @member {number} intervalToPing
          * @memberof protos.BattleColliderInfo
@@ -4713,52 +4688,12 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.boundRoomId = 0;
 
         /**
-         * BattleColliderInfo battleDurationFrames.
-         * @member {number} battleDurationFrames
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.battleDurationFrames = 0;
-
-        /**
          * BattleColliderInfo battleDurationNanos.
          * @member {number|Long} battleDurationNanos
          * @memberof protos.BattleColliderInfo
          * @instance
          */
         BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * BattleColliderInfo serverFps.
-         * @member {number} serverFps
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.serverFps = 0;
-
-        /**
-         * BattleColliderInfo inputDelayFrames.
-         * @member {number} inputDelayFrames
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.inputDelayFrames = 0;
-
-        /**
-         * BattleColliderInfo inputScaleFrames.
-         * @member {number} inputScaleFrames
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.inputScaleFrames = 0;
-
-        /**
-         * BattleColliderInfo nstDelayFrames.
-         * @member {number} nstDelayFrames
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.nstDelayFrames = 0;
 
         /**
          * BattleColliderInfo inputFrameUpsyncDelayTolerance.
@@ -4777,14 +4712,6 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
 
         /**
-         * BattleColliderInfo playerBattleState.
-         * @member {number} playerBattleState
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.playerBattleState = 0;
-
-        /**
          * BattleColliderInfo rollbackEstimatedDtMillis.
          * @member {number} rollbackEstimatedDtMillis
          * @memberof protos.BattleColliderInfo
@@ -4801,30 +4728,6 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.rollbackEstimatedDtNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * BattleColliderInfo worldToVirtualGridRatio.
-         * @member {number} worldToVirtualGridRatio
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.worldToVirtualGridRatio = 0;
-
-        /**
-         * BattleColliderInfo virtualGridToWorldRatio.
-         * @member {number} virtualGridToWorldRatio
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.virtualGridToWorldRatio = 0;
-
-        /**
-         * BattleColliderInfo spAtkLookupFrames.
-         * @member {number} spAtkLookupFrames
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.spAtkLookupFrames = 0;
-
-        /**
          * BattleColliderInfo renderCacheSize.
          * @member {number} renderCacheSize
          * @memberof protos.BattleColliderInfo
@@ -4833,44 +4736,20 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.renderCacheSize = 0;
 
         /**
-         * BattleColliderInfo snapIntoPlatformOverlap.
-         * @member {number} snapIntoPlatformOverlap
+         * BattleColliderInfo spaceOffsetX.
+         * @member {number} spaceOffsetX
          * @memberof protos.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.snapIntoPlatformOverlap = 0;
+        BattleColliderInfo.prototype.spaceOffsetX = 0;
 
         /**
-         * BattleColliderInfo snapIntoPlatformThreshold.
-         * @member {number} snapIntoPlatformThreshold
+         * BattleColliderInfo spaceOffsetY.
+         * @member {number} spaceOffsetY
          * @memberof protos.BattleColliderInfo
          * @instance
          */
-        BattleColliderInfo.prototype.snapIntoPlatformThreshold = 0;
-
-        /**
-         * BattleColliderInfo jumpingInitVelY.
-         * @member {number} jumpingInitVelY
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.jumpingInitVelY = 0;
-
-        /**
-         * BattleColliderInfo gravityX.
-         * @member {number} gravityX
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.gravityX = 0;
-
-        /**
-         * BattleColliderInfo gravityY.
-         * @member {number} gravityY
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.gravityY = 0;
+        BattleColliderInfo.prototype.spaceOffsetY = 0;
 
         /**
          * BattleColliderInfo collisionMinStep.
@@ -4914,62 +4793,30 @@ $root.protos = (function() {
                 writer = $Writer.create();
             if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
-            if (message.stageDiscreteW != null && Object.hasOwnProperty.call(message, "stageDiscreteW"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.stageDiscreteW);
-            if (message.stageDiscreteH != null && Object.hasOwnProperty.call(message, "stageDiscreteH"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.stageDiscreteH);
-            if (message.stageTileW != null && Object.hasOwnProperty.call(message, "stageTileW"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.stageTileW);
-            if (message.stageTileH != null && Object.hasOwnProperty.call(message, "stageTileH"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.stageTileH);
             if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.intervalToPing);
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.intervalToPing);
             if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.willKickIfInactiveFor);
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.willKickIfInactiveFor);
             if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
-                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.boundRoomId);
-            if (message.battleDurationFrames != null && Object.hasOwnProperty.call(message, "battleDurationFrames"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.battleDurationFrames);
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.boundRoomId);
             if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
-                writer.uint32(/* id 10, wireType 0 =*/80).int64(message.battleDurationNanos);
-            if (message.serverFps != null && Object.hasOwnProperty.call(message, "serverFps"))
-                writer.uint32(/* id 11, wireType 0 =*/88).int32(message.serverFps);
-            if (message.inputDelayFrames != null && Object.hasOwnProperty.call(message, "inputDelayFrames"))
-                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.inputDelayFrames);
-            if (message.inputScaleFrames != null && Object.hasOwnProperty.call(message, "inputScaleFrames"))
-                writer.uint32(/* id 13, wireType 0 =*/104).uint32(message.inputScaleFrames);
-            if (message.nstDelayFrames != null && Object.hasOwnProperty.call(message, "nstDelayFrames"))
-                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.nstDelayFrames);
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.battleDurationNanos);
             if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
-                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.inputFrameUpsyncDelayTolerance);
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.inputFrameUpsyncDelayTolerance);
             if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
-                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.maxChasingRenderFramesPerUpdate);
-            if (message.playerBattleState != null && Object.hasOwnProperty.call(message, "playerBattleState"))
-                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.playerBattleState);
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.maxChasingRenderFramesPerUpdate);
             if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
-                writer.uint32(/* id 18, wireType 1 =*/145).double(message.rollbackEstimatedDtMillis);
+                writer.uint32(/* id 8, wireType 1 =*/65).double(message.rollbackEstimatedDtMillis);
             if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
-                writer.uint32(/* id 19, wireType 0 =*/152).int64(message.rollbackEstimatedDtNanos);
-            if (message.worldToVirtualGridRatio != null && Object.hasOwnProperty.call(message, "worldToVirtualGridRatio"))
-                writer.uint32(/* id 20, wireType 1 =*/161).double(message.worldToVirtualGridRatio);
-            if (message.virtualGridToWorldRatio != null && Object.hasOwnProperty.call(message, "virtualGridToWorldRatio"))
-                writer.uint32(/* id 21, wireType 1 =*/169).double(message.virtualGridToWorldRatio);
-            if (message.spAtkLookupFrames != null && Object.hasOwnProperty.call(message, "spAtkLookupFrames"))
-                writer.uint32(/* id 22, wireType 0 =*/176).int32(message.spAtkLookupFrames);
+                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.rollbackEstimatedDtNanos);
             if (message.renderCacheSize != null && Object.hasOwnProperty.call(message, "renderCacheSize"))
-                writer.uint32(/* id 23, wireType 0 =*/184).int32(message.renderCacheSize);
-            if (message.snapIntoPlatformOverlap != null && Object.hasOwnProperty.call(message, "snapIntoPlatformOverlap"))
-                writer.uint32(/* id 24, wireType 1 =*/193).double(message.snapIntoPlatformOverlap);
-            if (message.snapIntoPlatformThreshold != null && Object.hasOwnProperty.call(message, "snapIntoPlatformThreshold"))
-                writer.uint32(/* id 25, wireType 1 =*/201).double(message.snapIntoPlatformThreshold);
-            if (message.jumpingInitVelY != null && Object.hasOwnProperty.call(message, "jumpingInitVelY"))
-                writer.uint32(/* id 26, wireType 0 =*/208).int32(message.jumpingInitVelY);
-            if (message.gravityX != null && Object.hasOwnProperty.call(message, "gravityX"))
-                writer.uint32(/* id 27, wireType 0 =*/216).int32(message.gravityX);
-            if (message.gravityY != null && Object.hasOwnProperty.call(message, "gravityY"))
-                writer.uint32(/* id 28, wireType 0 =*/224).int32(message.gravityY);
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.renderCacheSize);
+            if (message.spaceOffsetX != null && Object.hasOwnProperty.call(message, "spaceOffsetX"))
+                writer.uint32(/* id 11, wireType 1 =*/89).double(message.spaceOffsetX);
+            if (message.spaceOffsetY != null && Object.hasOwnProperty.call(message, "spaceOffsetY"))
+                writer.uint32(/* id 12, wireType 1 =*/97).double(message.spaceOffsetY);
             if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
-                writer.uint32(/* id 29, wireType 0 =*/232).int32(message.collisionMinStep);
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.collisionMinStep);
             if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
                 writer.uint32(/* id 999, wireType 0 =*/7992).bool(message.frameDataLoggingEnabled);
             return writer;
@@ -5011,114 +4858,50 @@ $root.protos = (function() {
                         break;
                     }
                 case 2: {
-                        message.stageDiscreteW = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.stageDiscreteH = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.stageTileW = reader.int32();
-                        break;
-                    }
-                case 5: {
-                        message.stageTileH = reader.int32();
-                        break;
-                    }
-                case 6: {
                         message.intervalToPing = reader.int32();
                         break;
                     }
-                case 7: {
+                case 3: {
                         message.willKickIfInactiveFor = reader.int32();
                         break;
                     }
-                case 8: {
+                case 4: {
                         message.boundRoomId = reader.int32();
                         break;
                     }
-                case 9: {
-                        message.battleDurationFrames = reader.int32();
-                        break;
-                    }
-                case 10: {
+                case 5: {
                         message.battleDurationNanos = reader.int64();
                         break;
                     }
-                case 11: {
-                        message.serverFps = reader.int32();
-                        break;
-                    }
-                case 12: {
-                        message.inputDelayFrames = reader.int32();
-                        break;
-                    }
-                case 13: {
-                        message.inputScaleFrames = reader.uint32();
-                        break;
-                    }
-                case 14: {
-                        message.nstDelayFrames = reader.int32();
-                        break;
-                    }
-                case 15: {
+                case 6: {
                         message.inputFrameUpsyncDelayTolerance = reader.int32();
                         break;
                     }
-                case 16: {
+                case 7: {
                         message.maxChasingRenderFramesPerUpdate = reader.int32();
                         break;
                     }
-                case 17: {
-                        message.playerBattleState = reader.int32();
-                        break;
-                    }
-                case 18: {
+                case 8: {
                         message.rollbackEstimatedDtMillis = reader.double();
                         break;
                     }
-                case 19: {
+                case 9: {
                         message.rollbackEstimatedDtNanos = reader.int64();
                         break;
                     }
-                case 20: {
-                        message.worldToVirtualGridRatio = reader.double();
-                        break;
-                    }
-                case 21: {
-                        message.virtualGridToWorldRatio = reader.double();
-                        break;
-                    }
-                case 22: {
-                        message.spAtkLookupFrames = reader.int32();
-                        break;
-                    }
-                case 23: {
+                case 10: {
                         message.renderCacheSize = reader.int32();
                         break;
                     }
-                case 24: {
-                        message.snapIntoPlatformOverlap = reader.double();
+                case 11: {
+                        message.spaceOffsetX = reader.double();
                         break;
                     }
-                case 25: {
-                        message.snapIntoPlatformThreshold = reader.double();
+                case 12: {
+                        message.spaceOffsetY = reader.double();
                         break;
                     }
-                case 26: {
-                        message.jumpingInitVelY = reader.int32();
-                        break;
-                    }
-                case 27: {
-                        message.gravityX = reader.int32();
-                        break;
-                    }
-                case 28: {
-                        message.gravityY = reader.int32();
-                        break;
-                    }
-                case 29: {
+                case 13: {
                         message.collisionMinStep = reader.int32();
                         break;
                     }
@@ -5164,18 +4947,6 @@ $root.protos = (function() {
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 if (!$util.isString(message.stageName))
                     return "stageName: string expected";
-            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
-                if (!$util.isInteger(message.stageDiscreteW))
-                    return "stageDiscreteW: integer expected";
-            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
-                if (!$util.isInteger(message.stageDiscreteH))
-                    return "stageDiscreteH: integer expected";
-            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
-                if (!$util.isInteger(message.stageTileW))
-                    return "stageTileW: integer expected";
-            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
-                if (!$util.isInteger(message.stageTileH))
-                    return "stageTileH: integer expected";
             if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
                 if (!$util.isInteger(message.intervalToPing))
                     return "intervalToPing: integer expected";
@@ -5185,66 +4956,30 @@ $root.protos = (function() {
             if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
                 if (!$util.isInteger(message.boundRoomId))
                     return "boundRoomId: integer expected";
-            if (message.battleDurationFrames != null && message.hasOwnProperty("battleDurationFrames"))
-                if (!$util.isInteger(message.battleDurationFrames))
-                    return "battleDurationFrames: integer expected";
             if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
                 if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
                     return "battleDurationNanos: integer|Long expected";
-            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
-                if (!$util.isInteger(message.serverFps))
-                    return "serverFps: integer expected";
-            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
-                if (!$util.isInteger(message.inputDelayFrames))
-                    return "inputDelayFrames: integer expected";
-            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
-                if (!$util.isInteger(message.inputScaleFrames))
-                    return "inputScaleFrames: integer expected";
-            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
-                if (!$util.isInteger(message.nstDelayFrames))
-                    return "nstDelayFrames: integer expected";
             if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
                 if (!$util.isInteger(message.inputFrameUpsyncDelayTolerance))
                     return "inputFrameUpsyncDelayTolerance: integer expected";
             if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
                 if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
                     return "maxChasingRenderFramesPerUpdate: integer expected";
-            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
-                if (!$util.isInteger(message.playerBattleState))
-                    return "playerBattleState: integer expected";
             if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
                 if (typeof message.rollbackEstimatedDtMillis !== "number")
                     return "rollbackEstimatedDtMillis: number expected";
             if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
                 if (!$util.isInteger(message.rollbackEstimatedDtNanos) && !(message.rollbackEstimatedDtNanos && $util.isInteger(message.rollbackEstimatedDtNanos.low) && $util.isInteger(message.rollbackEstimatedDtNanos.high)))
                     return "rollbackEstimatedDtNanos: integer|Long expected";
-            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
-                if (typeof message.worldToVirtualGridRatio !== "number")
-                    return "worldToVirtualGridRatio: number expected";
-            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
-                if (typeof message.virtualGridToWorldRatio !== "number")
-                    return "virtualGridToWorldRatio: number expected";
-            if (message.spAtkLookupFrames != null && message.hasOwnProperty("spAtkLookupFrames"))
-                if (!$util.isInteger(message.spAtkLookupFrames))
-                    return "spAtkLookupFrames: integer expected";
             if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
                 if (!$util.isInteger(message.renderCacheSize))
                     return "renderCacheSize: integer expected";
-            if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
-                if (typeof message.snapIntoPlatformOverlap !== "number")
-                    return "snapIntoPlatformOverlap: number expected";
-            if (message.snapIntoPlatformThreshold != null && message.hasOwnProperty("snapIntoPlatformThreshold"))
-                if (typeof message.snapIntoPlatformThreshold !== "number")
-                    return "snapIntoPlatformThreshold: number expected";
-            if (message.jumpingInitVelY != null && message.hasOwnProperty("jumpingInitVelY"))
-                if (!$util.isInteger(message.jumpingInitVelY))
-                    return "jumpingInitVelY: integer expected";
-            if (message.gravityX != null && message.hasOwnProperty("gravityX"))
-                if (!$util.isInteger(message.gravityX))
-                    return "gravityX: integer expected";
-            if (message.gravityY != null && message.hasOwnProperty("gravityY"))
-                if (!$util.isInteger(message.gravityY))
-                    return "gravityY: integer expected";
+            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
+                if (typeof message.spaceOffsetX !== "number")
+                    return "spaceOffsetX: number expected";
+            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
+                if (typeof message.spaceOffsetY !== "number")
+                    return "spaceOffsetY: number expected";
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 if (!$util.isInteger(message.collisionMinStep))
                     return "collisionMinStep: integer expected";
@@ -5268,22 +5003,12 @@ $root.protos = (function() {
             var message = new $root.protos.BattleColliderInfo();
             if (object.stageName != null)
                 message.stageName = String(object.stageName);
-            if (object.stageDiscreteW != null)
-                message.stageDiscreteW = object.stageDiscreteW | 0;
-            if (object.stageDiscreteH != null)
-                message.stageDiscreteH = object.stageDiscreteH | 0;
-            if (object.stageTileW != null)
-                message.stageTileW = object.stageTileW | 0;
-            if (object.stageTileH != null)
-                message.stageTileH = object.stageTileH | 0;
             if (object.intervalToPing != null)
                 message.intervalToPing = object.intervalToPing | 0;
             if (object.willKickIfInactiveFor != null)
                 message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
             if (object.boundRoomId != null)
                 message.boundRoomId = object.boundRoomId | 0;
-            if (object.battleDurationFrames != null)
-                message.battleDurationFrames = object.battleDurationFrames | 0;
             if (object.battleDurationNanos != null)
                 if ($util.Long)
                     (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
@@ -5293,20 +5018,10 @@ $root.protos = (function() {
                     message.battleDurationNanos = object.battleDurationNanos;
                 else if (typeof object.battleDurationNanos === "object")
                     message.battleDurationNanos = new $util.LongBits(object.battleDurationNanos.low >>> 0, object.battleDurationNanos.high >>> 0).toNumber();
-            if (object.serverFps != null)
-                message.serverFps = object.serverFps | 0;
-            if (object.inputDelayFrames != null)
-                message.inputDelayFrames = object.inputDelayFrames | 0;
-            if (object.inputScaleFrames != null)
-                message.inputScaleFrames = object.inputScaleFrames >>> 0;
-            if (object.nstDelayFrames != null)
-                message.nstDelayFrames = object.nstDelayFrames | 0;
             if (object.inputFrameUpsyncDelayTolerance != null)
                 message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
             if (object.maxChasingRenderFramesPerUpdate != null)
                 message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
-            if (object.playerBattleState != null)
-                message.playerBattleState = object.playerBattleState | 0;
             if (object.rollbackEstimatedDtMillis != null)
                 message.rollbackEstimatedDtMillis = Number(object.rollbackEstimatedDtMillis);
             if (object.rollbackEstimatedDtNanos != null)
@@ -5318,24 +5033,12 @@ $root.protos = (function() {
                     message.rollbackEstimatedDtNanos = object.rollbackEstimatedDtNanos;
                 else if (typeof object.rollbackEstimatedDtNanos === "object")
                     message.rollbackEstimatedDtNanos = new $util.LongBits(object.rollbackEstimatedDtNanos.low >>> 0, object.rollbackEstimatedDtNanos.high >>> 0).toNumber();
-            if (object.worldToVirtualGridRatio != null)
-                message.worldToVirtualGridRatio = Number(object.worldToVirtualGridRatio);
-            if (object.virtualGridToWorldRatio != null)
-                message.virtualGridToWorldRatio = Number(object.virtualGridToWorldRatio);
-            if (object.spAtkLookupFrames != null)
-                message.spAtkLookupFrames = object.spAtkLookupFrames | 0;
             if (object.renderCacheSize != null)
                 message.renderCacheSize = object.renderCacheSize | 0;
-            if (object.snapIntoPlatformOverlap != null)
-                message.snapIntoPlatformOverlap = Number(object.snapIntoPlatformOverlap);
-            if (object.snapIntoPlatformThreshold != null)
-                message.snapIntoPlatformThreshold = Number(object.snapIntoPlatformThreshold);
-            if (object.jumpingInitVelY != null)
-                message.jumpingInitVelY = object.jumpingInitVelY | 0;
-            if (object.gravityX != null)
-                message.gravityX = object.gravityX | 0;
-            if (object.gravityY != null)
-                message.gravityY = object.gravityY | 0;
+            if (object.spaceOffsetX != null)
+                message.spaceOffsetX = Number(object.spaceOffsetX);
+            if (object.spaceOffsetY != null)
+                message.spaceOffsetY = Number(object.spaceOffsetY);
             if (object.collisionMinStep != null)
                 message.collisionMinStep = object.collisionMinStep | 0;
             if (object.frameDataLoggingEnabled != null)
@@ -5358,81 +5061,45 @@ $root.protos = (function() {
             var object = {};
             if (options.defaults) {
                 object.stageName = "";
-                object.stageDiscreteW = 0;
-                object.stageDiscreteH = 0;
-                object.stageTileW = 0;
-                object.stageTileH = 0;
                 object.intervalToPing = 0;
                 object.willKickIfInactiveFor = 0;
                 object.boundRoomId = 0;
-                object.battleDurationFrames = 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, false);
                     object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.battleDurationNanos = options.longs === String ? "0" : 0;
-                object.serverFps = 0;
-                object.inputDelayFrames = 0;
-                object.inputScaleFrames = 0;
-                object.nstDelayFrames = 0;
                 object.inputFrameUpsyncDelayTolerance = 0;
                 object.maxChasingRenderFramesPerUpdate = 0;
-                object.playerBattleState = 0;
                 object.rollbackEstimatedDtMillis = 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, false);
                     object.rollbackEstimatedDtNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.rollbackEstimatedDtNanos = options.longs === String ? "0" : 0;
-                object.worldToVirtualGridRatio = 0;
-                object.virtualGridToWorldRatio = 0;
-                object.spAtkLookupFrames = 0;
                 object.renderCacheSize = 0;
-                object.snapIntoPlatformOverlap = 0;
-                object.snapIntoPlatformThreshold = 0;
-                object.jumpingInitVelY = 0;
-                object.gravityX = 0;
-                object.gravityY = 0;
+                object.spaceOffsetX = 0;
+                object.spaceOffsetY = 0;
                 object.collisionMinStep = 0;
                 object.frameDataLoggingEnabled = false;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
                 object.stageName = message.stageName;
-            if (message.stageDiscreteW != null && message.hasOwnProperty("stageDiscreteW"))
-                object.stageDiscreteW = message.stageDiscreteW;
-            if (message.stageDiscreteH != null && message.hasOwnProperty("stageDiscreteH"))
-                object.stageDiscreteH = message.stageDiscreteH;
-            if (message.stageTileW != null && message.hasOwnProperty("stageTileW"))
-                object.stageTileW = message.stageTileW;
-            if (message.stageTileH != null && message.hasOwnProperty("stageTileH"))
-                object.stageTileH = message.stageTileH;
             if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
                 object.intervalToPing = message.intervalToPing;
             if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
                 object.willKickIfInactiveFor = message.willKickIfInactiveFor;
             if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
                 object.boundRoomId = message.boundRoomId;
-            if (message.battleDurationFrames != null && message.hasOwnProperty("battleDurationFrames"))
-                object.battleDurationFrames = message.battleDurationFrames;
             if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
                 if (typeof message.battleDurationNanos === "number")
                     object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;
                 else
                     object.battleDurationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.battleDurationNanos) : options.longs === Number ? new $util.LongBits(message.battleDurationNanos.low >>> 0, message.battleDurationNanos.high >>> 0).toNumber() : message.battleDurationNanos;
-            if (message.serverFps != null && message.hasOwnProperty("serverFps"))
-                object.serverFps = message.serverFps;
-            if (message.inputDelayFrames != null && message.hasOwnProperty("inputDelayFrames"))
-                object.inputDelayFrames = message.inputDelayFrames;
-            if (message.inputScaleFrames != null && message.hasOwnProperty("inputScaleFrames"))
-                object.inputScaleFrames = message.inputScaleFrames;
-            if (message.nstDelayFrames != null && message.hasOwnProperty("nstDelayFrames"))
-                object.nstDelayFrames = message.nstDelayFrames;
             if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
                 object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
             if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
                 object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
-            if (message.playerBattleState != null && message.hasOwnProperty("playerBattleState"))
-                object.playerBattleState = message.playerBattleState;
             if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
                 object.rollbackEstimatedDtMillis = options.json && !isFinite(message.rollbackEstimatedDtMillis) ? String(message.rollbackEstimatedDtMillis) : message.rollbackEstimatedDtMillis;
             if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
@@ -5440,24 +5107,12 @@ $root.protos = (function() {
                     object.rollbackEstimatedDtNanos = options.longs === String ? String(message.rollbackEstimatedDtNanos) : message.rollbackEstimatedDtNanos;
                 else
                     object.rollbackEstimatedDtNanos = options.longs === String ? $util.Long.prototype.toString.call(message.rollbackEstimatedDtNanos) : options.longs === Number ? new $util.LongBits(message.rollbackEstimatedDtNanos.low >>> 0, message.rollbackEstimatedDtNanos.high >>> 0).toNumber() : message.rollbackEstimatedDtNanos;
-            if (message.worldToVirtualGridRatio != null && message.hasOwnProperty("worldToVirtualGridRatio"))
-                object.worldToVirtualGridRatio = options.json && !isFinite(message.worldToVirtualGridRatio) ? String(message.worldToVirtualGridRatio) : message.worldToVirtualGridRatio;
-            if (message.virtualGridToWorldRatio != null && message.hasOwnProperty("virtualGridToWorldRatio"))
-                object.virtualGridToWorldRatio = options.json && !isFinite(message.virtualGridToWorldRatio) ? String(message.virtualGridToWorldRatio) : message.virtualGridToWorldRatio;
-            if (message.spAtkLookupFrames != null && message.hasOwnProperty("spAtkLookupFrames"))
-                object.spAtkLookupFrames = message.spAtkLookupFrames;
             if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
                 object.renderCacheSize = message.renderCacheSize;
-            if (message.snapIntoPlatformOverlap != null && message.hasOwnProperty("snapIntoPlatformOverlap"))
-                object.snapIntoPlatformOverlap = options.json && !isFinite(message.snapIntoPlatformOverlap) ? String(message.snapIntoPlatformOverlap) : message.snapIntoPlatformOverlap;
-            if (message.snapIntoPlatformThreshold != null && message.hasOwnProperty("snapIntoPlatformThreshold"))
-                object.snapIntoPlatformThreshold = options.json && !isFinite(message.snapIntoPlatformThreshold) ? String(message.snapIntoPlatformThreshold) : message.snapIntoPlatformThreshold;
-            if (message.jumpingInitVelY != null && message.hasOwnProperty("jumpingInitVelY"))
-                object.jumpingInitVelY = message.jumpingInitVelY;
-            if (message.gravityX != null && message.hasOwnProperty("gravityX"))
-                object.gravityX = message.gravityX;
-            if (message.gravityY != null && message.hasOwnProperty("gravityY"))
-                object.gravityY = message.gravityY;
+            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
+                object.spaceOffsetX = options.json && !isFinite(message.spaceOffsetX) ? String(message.spaceOffsetX) : message.spaceOffsetX;
+            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
+                object.spaceOffsetY = options.json && !isFinite(message.spaceOffsetY) ? String(message.spaceOffsetY) : message.spaceOffsetY;
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 object.collisionMinStep = message.collisionMinStep;
             if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
@@ -5506,7 +5161,6 @@ $root.protos = (function() {
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
-         * @property {Object.<string,number>|null} [playerOpPatternToSkillId] RoomDownsyncFrame playerOpPatternToSkillId
          */
 
         /**
@@ -5520,7 +5174,6 @@ $root.protos = (function() {
         function RoomDownsyncFrame(properties) {
             this.playersArr = [];
             this.meleeBullets = [];
-            this.playerOpPatternToSkillId = {};
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -5576,14 +5229,6 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.shouldForceResync = false;
 
         /**
-         * RoomDownsyncFrame playerOpPatternToSkillId.
-         * @member {Object.<string,number>} playerOpPatternToSkillId
-         * @memberof protos.RoomDownsyncFrame
-         * @instance
-         */
-        RoomDownsyncFrame.prototype.playerOpPatternToSkillId = $util.emptyObject;
-
-        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -5621,9 +5266,6 @@ $root.protos = (function() {
                 writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
-            if (message.playerOpPatternToSkillId != null && Object.hasOwnProperty.call(message, "playerOpPatternToSkillId"))
-                for (var keys = Object.keys(message.playerOpPatternToSkillId), i = 0; i < keys.length; ++i)
-                    writer.uint32(/* id 7, wireType 2 =*/58).fork().uint32(/* id 1, wireType 0 =*/8).int32(keys[i]).uint32(/* id 2, wireType 0 =*/16).int32(message.playerOpPatternToSkillId[keys[i]]).ldelim();
             return writer;
         };
 
@@ -5654,7 +5296,7 @@ $root.protos = (function() {
         RoomDownsyncFrame.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame(), key, value;
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.RoomDownsyncFrame();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -5684,29 +5326,6 @@ $root.protos = (function() {
                     }
                 case 6: {
                         message.shouldForceResync = reader.bool();
-                        break;
-                    }
-                case 7: {
-                        if (message.playerOpPatternToSkillId === $util.emptyObject)
-                            message.playerOpPatternToSkillId = {};
-                        var end2 = reader.uint32() + reader.pos;
-                        key = 0;
-                        value = 0;
-                        while (reader.pos < end2) {
-                            var tag2 = reader.uint32();
-                            switch (tag2 >>> 3) {
-                            case 1:
-                                key = reader.int32();
-                                break;
-                            case 2:
-                                value = reader.int32();
-                                break;
-                            default:
-                                reader.skipType(tag2 & 7);
-                                break;
-                            }
-                        }
-                        message.playerOpPatternToSkillId[key] = value;
                         break;
                     }
                 default:
@@ -5774,17 +5393,6 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
-            if (message.playerOpPatternToSkillId != null && message.hasOwnProperty("playerOpPatternToSkillId")) {
-                if (!$util.isObject(message.playerOpPatternToSkillId))
-                    return "playerOpPatternToSkillId: object expected";
-                var key = Object.keys(message.playerOpPatternToSkillId);
-                for (var i = 0; i < key.length; ++i) {
-                    if (!$util.key32Re.test(key[i]))
-                        return "playerOpPatternToSkillId: integer key{k:int32} expected";
-                    if (!$util.isInteger(message.playerOpPatternToSkillId[key[i]]))
-                        return "playerOpPatternToSkillId: integer{k:int32} expected";
-                }
-            }
             return null;
         };
 
@@ -5842,13 +5450,6 @@ $root.protos = (function() {
                     message.backendUnconfirmedMask = new $util.LongBits(object.backendUnconfirmedMask.low >>> 0, object.backendUnconfirmedMask.high >>> 0).toNumber(true);
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
-            if (object.playerOpPatternToSkillId) {
-                if (typeof object.playerOpPatternToSkillId !== "object")
-                    throw TypeError(".protos.RoomDownsyncFrame.playerOpPatternToSkillId: object expected");
-                message.playerOpPatternToSkillId = {};
-                for (var keys = Object.keys(object.playerOpPatternToSkillId), i = 0; i < keys.length; ++i)
-                    message.playerOpPatternToSkillId[keys[i]] = object.playerOpPatternToSkillId[keys[i]] | 0;
-            }
             return message;
         };
 
@@ -5869,8 +5470,6 @@ $root.protos = (function() {
                 object.playersArr = [];
                 object.meleeBullets = [];
             }
-            if (options.objects || options.defaults)
-                object.playerOpPatternToSkillId = {};
             if (options.defaults) {
                 object.id = 0;
                 if ($util.Long) {
@@ -5909,12 +5508,6 @@ $root.protos = (function() {
                     object.backendUnconfirmedMask = options.longs === String ? $util.Long.prototype.toString.call(message.backendUnconfirmedMask) : options.longs === Number ? new $util.LongBits(message.backendUnconfirmedMask.low >>> 0, message.backendUnconfirmedMask.high >>> 0).toNumber(true) : message.backendUnconfirmedMask;
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
-            var keys2;
-            if (message.playerOpPatternToSkillId && (keys2 = Object.keys(message.playerOpPatternToSkillId)).length) {
-                object.playerOpPatternToSkillId = {};
-                for (var j = 0; j < keys2.length; ++j)
-                    object.playerOpPatternToSkillId[keys2[j]] = message.playerOpPatternToSkillId[keys2[j]];
-            }
             return object;
         };
 

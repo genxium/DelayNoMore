@@ -4724,7 +4724,7 @@ $packages["resolv"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport/battle"] = (function() {
-	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, Skill, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SkillMapperType, CharacterConfig, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, ptrType$1, ptrType$2, sliceType$3, sliceType$4, ptrType$3, ptrType$4, ptrType$5, ptrType$6, ptrType$7, sliceType$5, sliceType$6, sliceType$7, sliceType$8, sliceType$9, ptrType$8, sliceType$10, ptrType$9, sliceType$11, sliceType$12, ptrType$10, sliceType$13, ptrType$11, mapType, ptrType$12, skills, inAirSet, noOpSet, invinsibleSet, nonAttackingSet, NewRingBuffer, ConvertToInputFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
+	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, Bullet, MeleeBullet, FireballBullet, Skill, RoomDownsyncFrame, InputFrameDownsync, RingBuffer, SkillMapperType, CharacterConfig, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, ptrType$1, ptrType$2, sliceType$3, sliceType$4, ptrType$3, ptrType$4, ptrType$5, ptrType$6, ptrType$7, sliceType$5, sliceType$6, sliceType$7, sliceType$8, sliceType$9, ptrType$8, sliceType$10, ptrType$9, sliceType$11, sliceType$12, ptrType$10, sliceType$13, ptrType$11, mapType, ptrType$12, skills, inAirSet, noOpSet, invinsibleSet, nonAttackingSet, NewRingBuffer, ShouldGenerateInputFrameUpsync, ConvertToDelayedInputFrameId, ConvertToNoDelayInputFrameId, ConvertToFirstUsedRenderFrameId, ConvertToLastUsedRenderFrameId, decodeInput, CalcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox;
 	math = $packages["math"];
 	resolv = $packages["resolv"];
 	Vec2D = $pkg.Vec2D = $newType(0, $kindStruct, "battle.Vec2D", true, "jsexport/battle", true, function(X_, Y_) {
@@ -5152,14 +5152,34 @@ $packages["jsexport/battle"] = (function() {
 		return [ret, oldStFrameId, oldEdFrameId];
 	};
 	RingBuffer.prototype.SetByFrameId = function(pItem, frameId) { return this.$val.SetByFrameId(pItem, frameId); };
-	ConvertToInputFrameId = function(renderFrameId, inputDelayFrames, inputScaleFrames) {
-		var inputDelayFrames, inputScaleFrames, renderFrameId;
-		if (renderFrameId < inputDelayFrames) {
+	ShouldGenerateInputFrameUpsync = function(renderFrameId) {
+		var renderFrameId;
+		return (((renderFrameId & 3)) === 0);
+	};
+	$pkg.ShouldGenerateInputFrameUpsync = ShouldGenerateInputFrameUpsync;
+	ConvertToDelayedInputFrameId = function(renderFrameId) {
+		var renderFrameId;
+		if (renderFrameId < 8) {
 			return 0;
 		}
-		return ((((renderFrameId - inputDelayFrames >> 0)) >> $min(inputScaleFrames, 31)) >> 0);
+		return (((renderFrameId - 8 >> 0)) >> 2 >> 0);
 	};
-	$pkg.ConvertToInputFrameId = ConvertToInputFrameId;
+	$pkg.ConvertToDelayedInputFrameId = ConvertToDelayedInputFrameId;
+	ConvertToNoDelayInputFrameId = function(renderFrameId) {
+		var renderFrameId;
+		return (renderFrameId >> 2 >> 0);
+	};
+	$pkg.ConvertToNoDelayInputFrameId = ConvertToNoDelayInputFrameId;
+	ConvertToFirstUsedRenderFrameId = function(inputFrameId) {
+		var inputFrameId;
+		return (((inputFrameId << 2 >> 0)) + 8 >> 0);
+	};
+	$pkg.ConvertToFirstUsedRenderFrameId = ConvertToFirstUsedRenderFrameId;
+	ConvertToLastUsedRenderFrameId = function(inputFrameId) {
+		var inputFrameId;
+		return (((((inputFrameId << 2 >> 0)) + 8 >> 0) + 4 >> 0) - 1 >> 0);
+	};
+	$pkg.ConvertToLastUsedRenderFrameId = ConvertToLastUsedRenderFrameId;
 	decodeInput = function(encodedInput) {
 		var btnALevel, btnBLevel, encodedDirection, encodedInput, x, x$1, x$2, x$3;
 		encodedDirection = new $Uint64(encodedInput.$high & 0, (encodedInput.$low & 15) >>> 0);
@@ -5408,10 +5428,10 @@ $packages["jsexport/battle"] = (function() {
 		$s = -1; return (ret.$ptr || (ret.$ptr = new ptrType$4(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, ret)));
 		/* */ } return; } var $f = {$blk: calcHardPushbacksNorms, $c: true, $r, _i, _r, _ref, _ref$1, _tmp, _tmp$1, _tuple, barrierShape, collision, isBarrier, joinIndex, obj, overlapResult, overlapped, pEffPushback, playerCollider, playerShape, pushbackX, pushbackY, ret, snapIntoPlatformOverlap, $s};return $f;
 	};
-	deriveOpPattern = function(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, inputDelayFrames, inputScaleFrames) {
-		var _entry, _entry$1, _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tuple, _tuple$1, currPlayerDownsync, currRenderFrame, decodedInput, delayedInputFrameId, delayedInputFrameIdForPrevRdf, delayedInputList, delayedInputListForPrevRdf, effDx, effDy, existent, existent$1, inputDelayFrames, inputScaleFrames, inputsBuffer, joinIndex, jumpedOrNot, patternId, prevBtnALevel, prevBtnBLevel, prevDecodedInput, thatPlayerInNextFrame, x, x$1;
-		delayedInputFrameId = ConvertToInputFrameId(currRenderFrame.Id, inputDelayFrames, inputScaleFrames);
-		delayedInputFrameIdForPrevRdf = ConvertToInputFrameId(currRenderFrame.Id - 1 >> 0, inputDelayFrames, inputScaleFrames);
+	deriveOpPattern = function(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer) {
+		var _entry, _entry$1, _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tuple, _tuple$1, currPlayerDownsync, currRenderFrame, decodedInput, delayedInputFrameId, delayedInputFrameIdForPrevRdf, delayedInputList, delayedInputListForPrevRdf, effDx, effDy, existent, existent$1, inputsBuffer, joinIndex, jumpedOrNot, patternId, prevBtnALevel, prevBtnBLevel, prevDecodedInput, thatPlayerInNextFrame, x, x$1;
+		delayedInputFrameId = ConvertToDelayedInputFrameId(currRenderFrame.Id);
+		delayedInputFrameIdForPrevRdf = ConvertToDelayedInputFrameId(currRenderFrame.Id - 1 >> 0);
 		if (0 >= delayedInputFrameId) {
 			return [-2, false, 0, 0];
 		}
@@ -5491,7 +5511,7 @@ $packages["jsexport/battle"] = (function() {
 			((i$1 < 0 || i$1 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$1] = false);
 			chConfig = ((i$1 < 0 || i$1 >= chConfigsOrderedByJoinIndex.$length) ? ($throwRuntimeError("index out of range"), undefined) : chConfigsOrderedByJoinIndex.$array[chConfigsOrderedByJoinIndex.$offset + i$1]);
 			thatPlayerInNextFrame = ((i$1 < 0 || i$1 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$1]);
-			_tuple = deriveOpPattern(currPlayerDownsync$1, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, 8, 2);
+			_tuple = deriveOpPattern(currPlayerDownsync$1, thatPlayerInNextFrame, currRenderFrame, inputsBuffer);
 			patternId = _tuple[0];
 			jumpedOrNot = _tuple[1];
 			effDx = _tuple[2];
@@ -6066,7 +6086,7 @@ $packages["jsexport/battle"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport"] = (function() {
-	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, ptrType$6, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, ptrType$7, funcType$11, funcType$12, funcType$13, funcType$14, sliceType$6, funcType$15, ptrType$8, ptrType$9, ptrType$10, mapType, sliceType$7, funcType$16, mapType$1, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateRectColliderJs, GenerateConvexPolygonColliderJs, GetCharacterConfigsOrderedByJoinIndex, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, main;
+	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, ptrType$6, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, ptrType$7, funcType$11, funcType$12, funcType$13, funcType$14, sliceType$6, funcType$15, ptrType$8, ptrType$9, ptrType$10, mapType, sliceType$7, funcType$16, funcType$17, funcType$18, mapType$1, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateRectColliderJs, GenerateConvexPolygonColliderJs, GetCharacterConfigsOrderedByJoinIndex, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, main;
 	js = $packages["github.com/gopherjs/gopherjs/js"];
 	battle = $packages["jsexport/battle"];
 	resolv = $packages["resolv"];
@@ -6086,7 +6106,7 @@ $packages["jsexport"] = (function() {
 	funcType = $funcType([$Float64, $Float64], [ptrType$5], false);
 	funcType$1 = $funcType([ptrType, sliceType$1], [ptrType$5], false);
 	funcType$2 = $funcType([ptrType$1], [ptrType$5], false);
-	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
+	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
 	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
 	funcType$5 = $funcType([$Int32, sliceType$2, sliceType$3], [ptrType$5], false);
 	funcType$6 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
@@ -6107,6 +6127,8 @@ $packages["jsexport"] = (function() {
 	mapType = $mapType($Int32, ptrType$10);
 	sliceType$7 = $sliceType(ptrType$6);
 	funcType$16 = $funcType([ptrType$8, ptrType$9, ptrType$7, mapType, $Float64, $Float64, sliceType$7], [ptrType$5], false);
+	funcType$17 = $funcType([$Int32], [$Int32], false);
+	funcType$18 = $funcType([$Int32], [$Bool], false);
 	mapType$1 = $mapType($String, $emptyInterface);
 	NewInputFrameDownsync = function(inputFrameId, inputList, confirmedList) {
 		var {$24r, _r, confirmedList, inputFrameId, inputList, $s, $r, $c} = $restore(this, {inputFrameId, inputList, confirmedList});
@@ -6154,9 +6176,9 @@ $packages["jsexport"] = (function() {
 		return js.MakeWrapper(new battle.Barrier.ptr(boundary));
 	};
 	$pkg.NewBarrierJs = NewBarrierJs;
-	NewPlayerDownsyncJs = function(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir) {
-		var battleState, characterState, colliderRadius, dirX, dirY, framesInChState, framesToRecover, hp, id, inAir, joinIndex, maxHp, speed, velX, velY, virtualGridX, virtualGridY;
-		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, framesToRecover, framesInChState, hp, maxHp, characterState, inAir, 0, 0));
+	NewPlayerDownsyncJs = function(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir) {
+		var activeSkillHit, activeSkillId, battleState, characterState, colliderRadius, dirX, dirY, framesInChState, framesToRecover, hp, id, inAir, joinIndex, maxHp, speed, velX, velY, virtualGridX, virtualGridY;
+		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, framesToRecover, framesInChState, hp, maxHp, characterState, inAir, activeSkillId, activeSkillHit));
 	};
 	$pkg.NewPlayerDownsyncJs = NewPlayerDownsyncJs;
 	NewMeleeBulletJs = function(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp) {
@@ -6250,7 +6272,7 @@ $packages["jsexport"] = (function() {
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs;
 	main = function() {
-		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$5(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$6(NewCollisionSpaceJs) }, { k: "NewInputFrameDownsync", v: new funcType$7(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$8(NewRingBufferJs) }, { k: "GenerateRectColliderJs", v: new funcType$9(GenerateRectColliderJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$10(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$11(GetCollisionSpaceObjsJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$12(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$12(battle.PolygonColliderBLToWorldPos) }, { k: "WorldToVirtualGridPos", v: new funcType$13(battle.WorldToVirtualGridPos) }, { k: "VirtualGridToWorldPos", v: new funcType$14(battle.VirtualGridToWorldPos) }, { k: "GetCharacterConfigsOrderedByJoinIndex", v: new funcType$15(GetCharacterConfigsOrderedByJoinIndex) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$16(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }]), mapType$1);
+		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$5(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$6(NewCollisionSpaceJs) }, { k: "NewInputFrameDownsync", v: new funcType$7(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$8(NewRingBufferJs) }, { k: "GenerateRectColliderJs", v: new funcType$9(GenerateRectColliderJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$10(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$11(GetCollisionSpaceObjsJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$12(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$12(battle.PolygonColliderBLToWorldPos) }, { k: "WorldToVirtualGridPos", v: new funcType$13(battle.WorldToVirtualGridPos) }, { k: "VirtualGridToWorldPos", v: new funcType$14(battle.VirtualGridToWorldPos) }, { k: "GetCharacterConfigsOrderedByJoinIndex", v: new funcType$15(GetCharacterConfigsOrderedByJoinIndex) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$16(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "ConvertToDelayedInputFrameId", v: new funcType$17(battle.ConvertToDelayedInputFrameId) }, { k: "ConvertToNoDelayInputFrameId", v: new funcType$17(battle.ConvertToNoDelayInputFrameId) }, { k: "ConvertToFirstUsedRenderFrameId", v: new funcType$17(battle.ConvertToFirstUsedRenderFrameId) }, { k: "ConvertToLastUsedRenderFrameId", v: new funcType$17(battle.ConvertToLastUsedRenderFrameId) }, { k: "ShouldGenerateInputFrameUpsync", v: new funcType$18(battle.ShouldGenerateInputFrameUpsync) }]), mapType$1);
 	};
 	$init = function() {
 		$pkg.$init = function() {};

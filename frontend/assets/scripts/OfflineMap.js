@@ -28,8 +28,6 @@ cc.Class({
 
     /** Init required prefab ended. */
 
-    self.inputDelayFrames = 8;
-    self.inputScaleFrames = 2;
     self.inputFrameUpsyncDelayTolerance = 2;
     self.collisionMinStep = 8;
 
@@ -188,8 +186,8 @@ cc.Class({
         let st = performance.now();
         let prevSelfInput = null,
           currSelfInput = null;
-        const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-        if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId); // It's important that "inputDelayFrames == 0" here 
+        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];

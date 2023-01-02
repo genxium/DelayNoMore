@@ -107,23 +107,6 @@ cc.Class({
     return (0 == inputFrameId % 10);
   },
 
-  _convertToInputFrameId(renderFrameId, inputDelayFrames) {
-    if (renderFrameId < inputDelayFrames) return 0;
-    return ((renderFrameId - inputDelayFrames) >> this.inputScaleFrames);
-  },
-
-  _convertToFirstUsedRenderFrameId(inputFrameId, inputDelayFrames) {
-    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames);
-  },
-
-  _convertToLastUsedRenderFrameId(inputFrameId, inputDelayFrames) {
-    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames + (1 << this.inputScaleFrames) - 1);
-  },
-
-  shouldGenerateInputFrameUpsync(renderFrameId) {
-    return ((renderFrameId & ((1 << this.inputScaleFrames) - 1)) == 0);
-  },
-
   _allConfirmed(confirmedList) {
     return (confirmedList + 1) == (1 << this.playerRichInfoDict.size);
   },
@@ -586,7 +569,7 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
@@ -770,7 +753,7 @@ cc.Class({
     }
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
-    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId, self.inputDelayFrames) - 1;
+    const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
     /*
@@ -866,8 +849,8 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
         let st = performance.now();
         let prevSelfInput = null,
           currSelfInput = null;
-        const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-        if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);  
+        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
         }
 
@@ -902,7 +885,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
         */
         // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.getByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
         if (self.othersForcedDownsyncRenderFrameDict.has(rdf.id)) {
-          const delayedInputFrameId = self._convertToInputFrameId(rdf.id, 0);
+          const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.id);
           const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.id);
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
             console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}:
@@ -1071,14 +1054,14 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       if (null == currRdf) {
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
-      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      const j = gopkgs.ConvertToDelayedInputFrameId(i);
       const delayedInputFrame = self.recentInputCache.GetByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
       if (null == delayedInputFrame) {
         // Shouldn't happen!
         throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
 
-      const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
+      const jPrev = gopkgs.ConvertToDelayedInputFrameId(i - 1);
       if (self.frameDataLoggingEnabled) {
         const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
         const inputFrameDownsyncClone = {

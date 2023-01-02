@@ -16,7 +16,6 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 		CountdownNanos:           rdf.CountdownNanos,
 		BackendUnconfirmedMask:   rdf.BackendUnconfirmedMask,
 		ShouldForceResync:        rdf.ShouldForceResync,
-		PlayerOpPatternToSkillId: make(map[int32]int32),
 	}
 
 	for i, last := range rdf.PlayersArr {
@@ -28,55 +27,57 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			DirY:            last.DirY,
 			VelX:            last.VelX,
 			VelY:            last.VelY,
+			FramesToRecover: last.FramesToRecover,
+			FramesInChState: last.FramesInChState,
+            ActiveSkillId:   last.ActiveSkillId,
+            ActiveSkillHit:  last.ActiveSkillHit,
 			Speed:           last.Speed,
 			BattleState:     last.BattleState,
 			CharacterState:  last.CharacterState,
 			InAir:           last.InAir,
 			JoinIndex:       last.JoinIndex,
-			ColliderRadius:  last.ColliderRadius,
-			Score:           last.Score,
 			Hp:              last.Hp,
 			MaxHp:           last.MaxHp,
+			ColliderRadius:  last.ColliderRadius,
+			Score:           last.Score,
 			Removed:         last.Removed,
-			FramesToRecover: last.FramesToRecover,
-			FramesInChState: last.FramesInChState,
 		}
 		ret.PlayersArr[i] = pbPlayer
 	}
 
 	for i, last := range rdf.MeleeBullets {
 		pbBullet := &pb.MeleeBullet{
-			BattleLocalId:         last.BattleLocalId,
+            OriginatedRenderFrameId: last.OriginatedRenderFrameId,
+			OffenderJoinIndex: last.OffenderJoinIndex,
+
 			StartupFrames:         last.StartupFrames,
+			CancellableStFrame:    last.CancellableStFrame,
+			CancellableEdFrame:    last.CancellableEdFrame,
 			ActiveFrames:          last.ActiveFrames,
-			RecoveryFrames:        last.RecoveryFrames,
-			RecoveryFramesOnBlock: last.RecoveryFramesOnBlock,
-			RecoveryFramesOnHit:   last.RecoveryFramesOnHit,
-			HitboxOffset:          last.HitboxOffset,
+
 			HitStunFrames:         last.HitStunFrames,
 			BlockStunFrames:       last.BlockStunFrames,
-			Pushback:              last.Pushback,
-			ReleaseTriggerType:    last.ReleaseTriggerType,
+			PushbackVelX:          last.PushbackVelX,
+			PushbackVelY:          last.PushbackVelY,
 			Damage:                last.Damage,
 
-			SelfMoveforwardX: last.SelfMoveforwardX,
-			SelfMoveforwardY: last.SelfMoveforwardY,
-			HitboxSizeX:      last.HitboxSizeX,
-			HitboxSizeY:      last.HitboxSizeY,
+			SelfLockVelX: last.SelfLockVelX,
+			SelfLockVelY: last.SelfLockVelY,
 
-			OffenderJoinIndex: last.OffenderJoinIndex,
-			OffenderPlayerId:  last.OffenderPlayerId,
+			HitboxOffsetX:          last.HitboxOffsetX,
+			HitboxOffsetY:          last.HitboxOffsetY,
+			HitboxSizeX:            last.HitboxSizeX,
+			HitboxSizeY:            last.HitboxSizeY,
+
+			BlowUp:    last.BlowUp,
 		}
 		ret.MeleeBullets[i] = pbBullet
-	}
-
-	for i, last := range rdf.PlayerOpPatternToSkillId {
-		ret.PlayerOpPatternToSkillId[int32(i)] = int32(last)
 	}
 
 	return ret
 }
 
+/*
 func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.PlayerDownsync {
 	toRet := make([]*pb.PlayerDownsync, len(modelInstances), len(modelInstances))
 	if nil == modelInstances {
@@ -113,6 +114,7 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 
 	return toRet
 }
+*/
 
 func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 	toRet := make([]*battle.PlayerDownsync, len(modelInstances), len(modelInstances))
@@ -129,12 +131,18 @@ func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 			DirY:           last.DirY,
 			VelX:           last.VelX,
 			VelY:           last.VelY,
+            FramesToRecover: last.FramesToRecover,
+            FramesInChState: last.FramesInChState,
+            ActiveSkillId:   last.ActiveSkillId,
+            ActiveSkillHit:  last.ActiveSkillHit,
 			Speed:          last.Speed,
 			BattleState:    last.BattleState,
 			CharacterState: last.CharacterState,
-			InAir:          last.InAir,
 			JoinIndex:      last.JoinIndex,
+            Hp:             last.Hp,
+            MaxHp:          last.MaxHp,
 			ColliderRadius: last.ColliderRadius,
+			InAir:          last.InAir,
 			Score:          last.Score,
 			Removed:        last.Removed,
 		}
