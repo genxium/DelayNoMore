@@ -13,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
@@ -83,42 +83,12 @@ cc.Class({
         const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
         self.gopkgsCollisionSys.Add(newBarrierCollider);
 
-        if (false && self.showCriticalCoordinateLabels) {
-          for (let i = 0; i < boundaryObj.length; ++i) {
-            const barrierVertLabelNode = new cc.Node();
-            switch (i % 4) {
-              case 0:
-                barrierVertLabelNode.color = cc.Color.RED;
-                break;
-              case 1:
-                barrierVertLabelNode.color = cc.Color.GRAY;
-                break;
-              case 2:
-                barrierVertLabelNode.color = cc.Color.BLACK;
-                break;
-              default:
-                barrierVertLabelNode.color = cc.Color.MAGENTA;
-                break;
-            }
-            const wx = boundaryObj.anchor.x + boundaryObj[i].x,
-              wy = boundaryObj.anchor.y + boundaryObj[i].y;
-            barrierVertLabelNode.setPosition(cc.v2(wx, wy));
-            const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
-            barrierVertLabel.fontSize = 12;
-            barrierVertLabel.lineHeight = barrierVertLabel.fontSize + 1;
-            barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
-            safelyAddChild(self.node, barrierVertLabelNode);
-            setLocalZOrder(barrierVertLabelNode, 5);
-
-            barrierVertLabelNode.active = true;
-          }
-
-        }
         // console.log("Created barrier: ", newBarrierCollider);
         ++barrierIdCounter;
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
         self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
+      self.initDebugDrawers();
 
       const p1Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y);
       const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
@@ -159,7 +129,7 @@ cc.Class({
             inAir: true,
           }),
         ],
-        speciesIdList: [1, 0],
+        speciesIdList: [0, 1],
       });
 
       self.selfPlayerInfo = {

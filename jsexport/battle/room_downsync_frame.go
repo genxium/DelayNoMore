@@ -36,6 +36,9 @@ type PlayerDownsync struct {
 
 	ActiveSkillId  int32
 	ActiveSkillHit int32
+
+	FramesInvinsible  int32
+	FramesSelfLockVel int32
 }
 
 type InputFrameDecoded struct {
@@ -70,8 +73,9 @@ type Bullet struct {
 	PushbackVelY    int32
 	Damage          int32
 
-	SelfLockVelX int32
-	SelfLockVelY int32
+	SelfLockVelX      int32
+	SelfLockVelY      int32
+	FramesSelfLockVel int32
 
 	HitboxOffsetX int32
 	HitboxOffsetY int32

@@ -12,8 +12,8 @@ type CharacterConfig struct {
 	LayDownFrames          int32
 	LayDownFramesToRecover int32
 
-	GetUpFrames          int32
-	GetUpFramesToRecover int32
+	GetUpInvinsibleFrames int32
+	GetUpFramesToRecover  int32
 
 	Speed           int32
 	JumpingInitVelY int32
@@ -32,8 +32,8 @@ var Characters = map[int]*CharacterConfig{
 		LayDownFrames:          int32(16),
 		LayDownFramesToRecover: int32(16),
 
-		GetUpFrames:          int32(33),
-		GetUpFramesToRecover: int32(30), // 3 invinsible frames for just-blown-up character to make a comeback
+		GetUpInvinsibleFrames: int32(10),
+		GetUpFramesToRecover:  int32(27),
 
 		Speed:           int32(float64(1.2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -75,8 +75,8 @@ var Characters = map[int]*CharacterConfig{
 		LayDownFrames:          int32(16),
 		LayDownFramesToRecover: int32(16),
 
-		GetUpFrames:          int32(30),
-		GetUpFramesToRecover: int32(27), // 3 invinsible frames for just-blown-up character to make a comeback
+		GetUpInvinsibleFrames: int32(10),
+		GetUpFramesToRecover:  int32(27),
 
 		Speed:           int32(float64(1.4) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -125,6 +125,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(13),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
+					SelfLockVelX:       int32(float64(0.05) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
 					HitboxOffsetX:      int32(float64(12) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -156,6 +158,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(18),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
+					SelfLockVelX:       int32(float64(0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
 					HitboxOffsetX:      int32(float64(18) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -172,24 +176,26 @@ var skills = map[int]*Skill{
 		},
 	},
 	3: &Skill{
-		RecoveryFrames:        int32(60),
-		RecoveryFramesOnBlock: int32(60),
-		RecoveryFramesOnHit:   int32(60),
+		RecoveryFrames:        int32(70),
+		RecoveryFramesOnBlock: int32(70),
+		RecoveryFramesOnHit:   int32(70),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
 					StartupFrames:   int32(15),
-					ActiveFrames:    int32(40),
+					ActiveFrames:    int32(30),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(0),
-					HitboxSizeX:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          true,
 				},
@@ -210,6 +216,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(13),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
+					SelfLockVelX:       int32(float64(0.05) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
 					HitboxOffsetX:      int32(float64(12) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -241,6 +249,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(18),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
+					SelfLockVelX:       int32(float64(0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
 					HitboxOffsetX:      int32(float64(18) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -270,6 +280,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
+					SelfLockVelX:    int32(float64(-0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -295,6 +307,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:   int32(18),
 					BlockStunFrames: int32(9),
 					Damage:          int32(5),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
 					HitboxOffsetX:   int32(float64(12) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -319,6 +333,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:   int32(18),
 					BlockStunFrames: int32(9),
 					Damage:          int32(5),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
 					HitboxOffsetX:   int32(float64(12) * WORLD_TO_VIRTUAL_GRID_RATIO),

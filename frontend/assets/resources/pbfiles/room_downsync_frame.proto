@@ -27,6 +27,8 @@ message PlayerDownsync {
   int32 framesInChState = 20; // number of frames elapsed in the current character state   
   int32 activeSkillId = 21;
   int32 activeSkillHit = 22;
+  int32 framesInvinsible = 23;
+  int32 framesSelfLockVel = 24;
 
   string name = 997;
   string displayName = 998;
@@ -103,13 +105,14 @@ message MeleeBullet {
 
   int32 selfLockVelX = 12;  
   int32 selfLockVelY = 13;  
+  int32 framesSelfLockVel = 14;
 
-  int32 hitboxOffsetX = 14;  
-  int32 hitboxOffsetY = 15;  
-  int32 hitboxSizeX = 16; 
-  int32 hitboxSizeY = 17;
+  int32 hitboxOffsetX = 15;  
+  int32 hitboxOffsetY = 16;  
+  int32 hitboxSizeX = 17; 
+  int32 hitboxSizeY = 18;
 
-  bool blowUp = 18;
+  bool blowUp = 19;
 } 
 
 message BattleColliderInfo {

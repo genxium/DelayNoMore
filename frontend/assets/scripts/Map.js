@@ -329,6 +329,56 @@ cc.Class({
     }
   },
 
+  initDebugDrawers() {
+    const self = this;
+    if (self.showCriticalCoordinateLabels) {
+      const drawer1 = new cc.Node();
+      drawer1.setPosition(cc.v2(0, 0))
+      safelyAddChild(self.node, drawer1);
+      setLocalZOrder(drawer1, 999);
+      const g1 = drawer1.addComponent(cc.Graphics);
+      g1.lineWidth = 2;
+      self.g1 = g1;
+
+      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys); // This step is slow according to Chrome profiling, and we only need draw it once for those static barriers
+      for (let k in collisionSpaceObjs) {
+        const body = collisionSpaceObjs[k];
+        let padding = 0;
+        if (null != body.Data && null != body.Data.JoinIndex) {
+          // character
+          if (1 == body.Data.JoinIndex) {
+            g1.strokeColor = cc.Color.BLUE;
+          } else {
+            g1.strokeColor = cc.Color.RED;
+          }
+          padding = self.snapIntoPlatformOverlap;
+        } else {
+          // barrier
+          g1.strokeColor = cc.Color.WHITE;
+        }
+        const points = body.Shape.Points;
+        const wpos = [body.X - self.spaceOffsetX, body.Y - self.spaceOffsetY];
+        g1.moveTo(wpos[0], wpos[1]);
+        const cnt = points.length;
+        for (let j = 0; j < cnt; j += 1) {
+          const x = wpos[0] + points[j][0],
+            y = wpos[1] + points[j][1];
+          g1.lineTo(x, y);
+        }
+        g1.lineTo(wpos[0], wpos[1]);
+        g1.stroke();
+      }
+
+      const drawer2 = new cc.Node();
+      drawer2.setPosition(cc.v2(0, 0))
+      safelyAddChild(self.node, drawer2);
+      setLocalZOrder(drawer2, 999);
+      const g2 = drawer2.addComponent(cc.Graphics);
+      g2.lineWidth = 2;
+      self.g2 = g2;
+    }
+  },
+
   onLoad() {
     const self = this;
     window.mapIns = self;
@@ -418,16 +468,6 @@ cc.Class({
         mapNode.removeAllChildren();
         self._resetCurrentMatch();
 
-        if (self.showCriticalCoordinateLabels) {
-          const drawer = new cc.Node();
-          drawer.setPosition(cc.v2(0, 0))
-          safelyAddChild(self.node, drawer);
-          setLocalZOrder(drawer, 999);
-          const g = drawer.addComponent(cc.Graphics);
-          g.lineWidth = 2;
-          self.g = g;
-        }
-
         tiledMapIns.tmxAsset = tmxAsset;
         const newMapSize = tiledMapIns.getMapSize();
         const newTileSize = tiledMapIns.getTileSize();
@@ -456,37 +496,6 @@ cc.Class({
           const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
           self.gopkgsCollisionSys.Add(newBarrierCollider);
 
-          if (false && self.showCriticalCoordinateLabels) {
-            for (let i = 0; i < boundaryObj.length; ++i) {
-              const barrierVertLabelNode = new cc.Node();
-              switch (i % 4) {
-                case 0:
-                  barrierVertLabelNode.color = cc.Color.RED;
-                  break;
-                case 1:
-                  barrierVertLabelNode.color = cc.Color.GRAY;
-                  break;
-                case 2:
-                  barrierVertLabelNode.color = cc.Color.BLACK;
-                  break;
-                default:
-                  barrierVertLabelNode.color = cc.Color.MAGENTA;
-                  break;
-              }
-              const wx = boundaryObj.anchor.x + boundaryObj[i].x,
-                wy = boundaryObj.anchor.y + boundaryObj[i].y;
-              barrierVertLabelNode.setPosition(cc.v2(wx, wy));
-              const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
-              barrierVertLabel.fontSize = 12;
-              barrierVertLabel.lineHeight = barrierVertLabel.fontSize + 1;
-              barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
-              safelyAddChild(self.node, barrierVertLabelNode);
-              setLocalZOrder(barrierVertLabelNode, 5);
-
-              barrierVertLabelNode.active = true;
-            }
-
-          }
           // console.log("Created barrier: ", newBarrierCollider);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
@@ -496,7 +505,7 @@ cc.Class({
         Object.assign(self.selfPlayerInfo, {
           Id: self.selfPlayerInfo.playerId
         });
-
+        self.initDebugDrawers();
         const reqData = window.pb.protos.WsReq.encode({
           msgId: Date.now(),
           act: window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK,
@@ -569,13 +578,13 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.framesSelfLockVel, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
     for (let k in pbRdf.meleeBullets) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.framesSelfLockVel, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
       jsMeleeBulletsArr.push(jsBullet);
     }
 
@@ -849,7 +858,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
         let st = performance.now();
         let prevSelfInput = null,
           currSelfInput = null;
-        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);  
+        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
         if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
         }
@@ -1207,71 +1216,42 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       rightPadding = 0.1,
       topPadding = 0.1,
       bottomPadding = 0.1;
-    if (self.showCriticalCoordinateLabels) {
-      let g = self.g;
-      g.clear();
-
-      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys);
-      for (let k in collisionSpaceObjs) {
-        const body = collisionSpaceObjs[k];
-        let padding = 0;
-        if (null != body.Data && null != body.Data.JoinIndex) {
-          // character
-          if (1 == body.Data.JoinIndex) {
-            g.strokeColor = cc.Color.BLUE;
-          } else {
-            g.strokeColor = cc.Color.RED;
-          }
-          padding = self.snapIntoPlatformOverlap;
-        } else {
-          // barrier
-          g.strokeColor = cc.Color.WHITE;
-        }
-        const points = body.Shape.Points;
-        const wpos = [body.X - self.spaceOffsetX, body.Y - self.spaceOffsetY];
-        g.moveTo(wpos[0], wpos[1]);
-        const cnt = points.length;
-        for (let j = 0; j < cnt; j += 1) {
-          const x = wpos[0] + points[j][0],
-            y = wpos[1] + points[j][1];
-          g.lineTo(x, y);
-        }
-        g.lineTo(wpos[0], wpos[1]);
-        g.stroke();
-      }
+    if (self.showCriticalCoordinateLabels && self.g2) {
+      let g2 = self.g2;
+      g2.clear();
 
       for (let k in rdf.PlayersArr) {
         const player = rdf.PlayersArr[k];
         if (1 == player.JoinIndex) {
-          g.strokeColor = cc.Color.BLUE;
+          g2.strokeColor = cc.Color.BLUE;
         } else {
-          g.strokeColor = cc.Color.RED;
+          g2.strokeColor = cc.Color.RED;
         }
 
-		let [colliderWidth, colliderHeight] = [player.ColliderRadius*2, player.ColliderRadius*4];
-		switch (player.CharacterState) {
-		case ATK_CHARACTER_STATE.LayDown1[0]:
-			[colliderWidth, colliderHeight] = [player.ColliderRadius*4, player.ColliderRadius*2];
+        let [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 4];
+        switch (player.CharacterState) {
+          case ATK_CHARACTER_STATE.LayDown1[0]:
+            [colliderWidth, colliderHeight] = [player.ColliderRadius * 4, player.ColliderRadius * 2];
             break;
-		case ATK_CHARACTER_STATE.BlownUp1[0]: 
-        case ATK_CHARACTER_STATE.InAirIdle1NoJump[0]: 
-        case ATK_CHARACTER_STATE.InAirIdle1ByJump[0]:
-			[colliderWidth, colliderHeight] = [player.ColliderRadius*2, player.ColliderRadius*2];
+          case ATK_CHARACTER_STATE.BlownUp1[0]:
+          case ATK_CHARACTER_STATE.InAirIdle1NoJump[0]:
+          case ATK_CHARACTER_STATE.InAirIdle1ByJump[0]:
+            [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 2];
             break;
-		}
+        }
 
-		const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((colliderWidth >> 1), (colliderHeight >> 1));
+        const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((colliderWidth >> 1), (colliderHeight >> 1));
 
         const [wx, wy] = gopkgs.VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY);
         const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
-        const pts = [[0, 0], [leftPadding + halfColliderWidth*2 + rightPadding, 0], [leftPadding + halfColliderWidth*2 + rightPadding, bottomPadding + halfColliderHeight*2 + topPadding], [0, bottomPadding + halfColliderHeight*2 + topPadding]];
+        const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 
-        g.moveTo(cx, cy);
+        g2.moveTo(cx, cy);
         for (let j = 0; j < pts.length; j += 1) {
-          g.lineTo(pts[j][0] + cx, pts[j][1] + cy);
+          g2.lineTo(pts[j][0] + cx, pts[j][1] + cy);
         }
-        g.lineTo(cx, cy);
-        g.stroke();
+        g2.lineTo(cx, cy);
+        g2.stroke();
       }
 
       for (let k in rdf.MeleeBullets) {
@@ -1281,11 +1261,11 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
           &&
           meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
         ) {
-          const offender = rdf.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex-1];
+          const offender = rdf.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex - 1];
           if (1 == offender.JoinIndex) {
-            g.strokeColor = cc.Color.BLUE;
+            g2.strokeColor = cc.Color.BLUE;
           } else {
-            g.strokeColor = cc.Color.RED;
+            g2.strokeColor = cc.Color.RED;
           }
 
           let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
@@ -1295,14 +1275,14 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
           const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
           const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.Bullet.HitboxSizeX >> 1), (meleeBullet.Bullet.HitboxSizeY >> 1));
           const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
-          const pts = [[0, 0], [leftPadding + halfColliderWidth*2 + rightPadding, 0], [leftPadding + halfColliderWidth*2 + rightPadding, bottomPadding + halfColliderHeight*2 + topPadding], [0, bottomPadding + halfColliderHeight*2 + topPadding]];
+          const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 
-          g.moveTo(bulletCx, bulletCy);
+          g2.moveTo(bulletCx, bulletCy);
           for (let j = 0; j < pts.length; j += 1) {
-            g.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
+            g2.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
           }
-          g.lineTo(bulletCx, bulletCy);
-          g.stroke();
+          g2.lineTo(bulletCx, bulletCy);
+          g2.stroke();
         }
       }
     }

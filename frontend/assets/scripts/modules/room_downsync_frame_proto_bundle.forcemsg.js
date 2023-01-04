@@ -1213,6 +1213,8 @@ $root.protos = (function() {
          * @property {number|null} [framesInChState] PlayerDownsync framesInChState
          * @property {number|null} [activeSkillId] PlayerDownsync activeSkillId
          * @property {number|null} [activeSkillHit] PlayerDownsync activeSkillHit
+         * @property {number|null} [framesInvinsible] PlayerDownsync framesInvinsible
+         * @property {number|null} [framesSelfLockVel] PlayerDownsync framesSelfLockVel
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1410,6 +1412,22 @@ $root.protos = (function() {
         PlayerDownsync.prototype.activeSkillHit = 0;
 
         /**
+         * PlayerDownsync framesInvinsible.
+         * @member {number} framesInvinsible
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.framesInvinsible = 0;
+
+        /**
+         * PlayerDownsync framesSelfLockVel.
+         * @member {number} framesSelfLockVel
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.framesSelfLockVel = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1501,6 +1519,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 21, wireType 0 =*/168).int32(message.activeSkillId);
             if (message.activeSkillHit != null && Object.hasOwnProperty.call(message, "activeSkillHit"))
                 writer.uint32(/* id 22, wireType 0 =*/176).int32(message.activeSkillHit);
+            if (message.framesInvinsible != null && Object.hasOwnProperty.call(message, "framesInvinsible"))
+                writer.uint32(/* id 23, wireType 0 =*/184).int32(message.framesInvinsible);
+            if (message.framesSelfLockVel != null && Object.hasOwnProperty.call(message, "framesSelfLockVel"))
+                writer.uint32(/* id 24, wireType 0 =*/192).int32(message.framesSelfLockVel);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1629,6 +1651,14 @@ $root.protos = (function() {
                         message.activeSkillHit = reader.int32();
                         break;
                     }
+                case 23: {
+                        message.framesInvinsible = reader.int32();
+                        break;
+                    }
+                case 24: {
+                        message.framesSelfLockVel = reader.int32();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1742,6 +1772,12 @@ $root.protos = (function() {
             if (message.activeSkillHit != null && message.hasOwnProperty("activeSkillHit"))
                 if (!$util.isInteger(message.activeSkillHit))
                     return "activeSkillHit: integer expected";
+            if (message.framesInvinsible != null && message.hasOwnProperty("framesInvinsible"))
+                if (!$util.isInteger(message.framesInvinsible))
+                    return "framesInvinsible: integer expected";
+            if (message.framesSelfLockVel != null && message.hasOwnProperty("framesSelfLockVel"))
+                if (!$util.isInteger(message.framesSelfLockVel))
+                    return "framesSelfLockVel: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1810,6 +1846,10 @@ $root.protos = (function() {
                 message.activeSkillId = object.activeSkillId | 0;
             if (object.activeSkillHit != null)
                 message.activeSkillHit = object.activeSkillHit | 0;
+            if (object.framesInvinsible != null)
+                message.framesInvinsible = object.framesInvinsible | 0;
+            if (object.framesSelfLockVel != null)
+                message.framesSelfLockVel = object.framesSelfLockVel | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1855,6 +1895,8 @@ $root.protos = (function() {
                 object.framesInChState = 0;
                 object.activeSkillId = 0;
                 object.activeSkillHit = 0;
+                object.framesInvinsible = 0;
+                object.framesSelfLockVel = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1903,6 +1945,10 @@ $root.protos = (function() {
                 object.activeSkillId = message.activeSkillId;
             if (message.activeSkillHit != null && message.hasOwnProperty("activeSkillHit"))
                 object.activeSkillHit = message.activeSkillHit;
+            if (message.framesInvinsible != null && message.hasOwnProperty("framesInvinsible"))
+                object.framesInvinsible = message.framesInvinsible;
+            if (message.framesSelfLockVel != null && message.hasOwnProperty("framesSelfLockVel"))
+                object.framesSelfLockVel = message.framesSelfLockVel;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))
@@ -4042,6 +4088,7 @@ $root.protos = (function() {
          * @property {number|null} [damage] MeleeBullet damage
          * @property {number|null} [selfLockVelX] MeleeBullet selfLockVelX
          * @property {number|null} [selfLockVelY] MeleeBullet selfLockVelY
+         * @property {number|null} [framesSelfLockVel] MeleeBullet framesSelfLockVel
          * @property {number|null} [hitboxOffsetX] MeleeBullet hitboxOffsetX
          * @property {number|null} [hitboxOffsetY] MeleeBullet hitboxOffsetY
          * @property {number|null} [hitboxSizeX] MeleeBullet hitboxSizeX
@@ -4169,6 +4216,14 @@ $root.protos = (function() {
         MeleeBullet.prototype.selfLockVelY = 0;
 
         /**
+         * MeleeBullet framesSelfLockVel.
+         * @member {number} framesSelfLockVel
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.framesSelfLockVel = 0;
+
+        /**
          * MeleeBullet hitboxOffsetX.
          * @member {number} hitboxOffsetX
          * @memberof protos.MeleeBullet
@@ -4258,16 +4313,18 @@ $root.protos = (function() {
                 writer.uint32(/* id 12, wireType 0 =*/96).int32(message.selfLockVelX);
             if (message.selfLockVelY != null && Object.hasOwnProperty.call(message, "selfLockVelY"))
                 writer.uint32(/* id 13, wireType 0 =*/104).int32(message.selfLockVelY);
+            if (message.framesSelfLockVel != null && Object.hasOwnProperty.call(message, "framesSelfLockVel"))
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.framesSelfLockVel);
             if (message.hitboxOffsetX != null && Object.hasOwnProperty.call(message, "hitboxOffsetX"))
-                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.hitboxOffsetX);
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.hitboxOffsetX);
             if (message.hitboxOffsetY != null && Object.hasOwnProperty.call(message, "hitboxOffsetY"))
-                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.hitboxOffsetY);
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.hitboxOffsetY);
             if (message.hitboxSizeX != null && Object.hasOwnProperty.call(message, "hitboxSizeX"))
-                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.hitboxSizeX);
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.hitboxSizeX);
             if (message.hitboxSizeY != null && Object.hasOwnProperty.call(message, "hitboxSizeY"))
-                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.hitboxSizeY);
+                writer.uint32(/* id 18, wireType 0 =*/144).int32(message.hitboxSizeY);
             if (message.blowUp != null && Object.hasOwnProperty.call(message, "blowUp"))
-                writer.uint32(/* id 18, wireType 0 =*/144).bool(message.blowUp);
+                writer.uint32(/* id 19, wireType 0 =*/152).bool(message.blowUp);
             return writer;
         };
 
@@ -4355,22 +4412,26 @@ $root.protos = (function() {
                         break;
                     }
                 case 14: {
-                        message.hitboxOffsetX = reader.int32();
+                        message.framesSelfLockVel = reader.int32();
                         break;
                     }
                 case 15: {
-                        message.hitboxOffsetY = reader.int32();
+                        message.hitboxOffsetX = reader.int32();
                         break;
                     }
                 case 16: {
-                        message.hitboxSizeX = reader.int32();
+                        message.hitboxOffsetY = reader.int32();
                         break;
                     }
                 case 17: {
-                        message.hitboxSizeY = reader.int32();
+                        message.hitboxSizeX = reader.int32();
                         break;
                     }
                 case 18: {
+                        message.hitboxSizeY = reader.int32();
+                        break;
+                    }
+                case 19: {
                         message.blowUp = reader.bool();
                         break;
                     }
@@ -4448,6 +4509,9 @@ $root.protos = (function() {
             if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
                 if (!$util.isInteger(message.selfLockVelY))
                     return "selfLockVelY: integer expected";
+            if (message.framesSelfLockVel != null && message.hasOwnProperty("framesSelfLockVel"))
+                if (!$util.isInteger(message.framesSelfLockVel))
+                    return "framesSelfLockVel: integer expected";
             if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
                 if (!$util.isInteger(message.hitboxOffsetX))
                     return "hitboxOffsetX: integer expected";
@@ -4504,6 +4568,8 @@ $root.protos = (function() {
                 message.selfLockVelX = object.selfLockVelX | 0;
             if (object.selfLockVelY != null)
                 message.selfLockVelY = object.selfLockVelY | 0;
+            if (object.framesSelfLockVel != null)
+                message.framesSelfLockVel = object.framesSelfLockVel | 0;
             if (object.hitboxOffsetX != null)
                 message.hitboxOffsetX = object.hitboxOffsetX | 0;
             if (object.hitboxOffsetY != null)
@@ -4544,6 +4610,7 @@ $root.protos = (function() {
                 object.damage = 0;
                 object.selfLockVelX = 0;
                 object.selfLockVelY = 0;
+                object.framesSelfLockVel = 0;
                 object.hitboxOffsetX = 0;
                 object.hitboxOffsetY = 0;
                 object.hitboxSizeX = 0;
@@ -4576,6 +4643,8 @@ $root.protos = (function() {
                 object.selfLockVelX = message.selfLockVelX;
             if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
                 object.selfLockVelY = message.selfLockVelY;
+            if (message.framesSelfLockVel != null && message.hasOwnProperty("framesSelfLockVel"))
+                object.framesSelfLockVel = message.framesSelfLockVel;
             if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
                 object.hitboxOffsetX = message.hitboxOffsetX;
             if (message.hitboxOffsetY != null && message.hasOwnProperty("hitboxOffsetY"))

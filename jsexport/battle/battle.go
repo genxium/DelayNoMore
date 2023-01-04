@@ -32,6 +32,8 @@ const (
 
 	NO_SKILL     = -1
 	NO_SKILL_HIT = -1
+
+	NO_LOCK_VEL = int32(-1)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -86,7 +88,17 @@ var invinsibleSet = map[int32]bool{
 	ATK_CHARACTER_STATE_GET_UP1:   true,
 }
 
-var nonAttackingSet = map[int32]bool{}
+var nonAttackingSet = map[int32]bool{
+	ATK_CHARACTER_STATE_IDLE1:               true,
+	ATK_CHARACTER_STATE_WALKING:             true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP: true,
+	ATK_CHARACTER_STATE_ATKED1:              true,
+	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
+	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
+	ATK_CHARACTER_STATE_LAY_DOWN1:           true,
+	ATK_CHARACTER_STATE_GET_UP1:             true,
+}
 
 func ShouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFrameId int32) (bool, int32) {
 	for i := prevRenderFrameId + 1; i <= renderFrameId; i++ {
@@ -426,30 +438,38 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:              currPlayerDownsync.Id,
-			VirtualGridX:    currPlayerDownsync.VirtualGridX,
-			VirtualGridY:    currPlayerDownsync.VirtualGridY,
-			DirX:            currPlayerDownsync.DirX,
-			DirY:            currPlayerDownsync.DirY,
-			VelX:            currPlayerDownsync.VelX,
-			VelY:            currPlayerDownsync.VelY,
-			CharacterState:  currPlayerDownsync.CharacterState,
-			InAir:           true,
-			Speed:           currPlayerDownsync.Speed,
-			BattleState:     currPlayerDownsync.BattleState,
-			Score:           currPlayerDownsync.Score,
-			Removed:         currPlayerDownsync.Removed,
-			JoinIndex:       currPlayerDownsync.JoinIndex,
-			Hp:              currPlayerDownsync.Hp,
-			MaxHp:           currPlayerDownsync.MaxHp,
-			FramesToRecover: currPlayerDownsync.FramesToRecover - 1,
-			FramesInChState: currPlayerDownsync.FramesInChState + 1,
-			ActiveSkillId:   currPlayerDownsync.ActiveSkillId,
-			ActiveSkillHit:  currPlayerDownsync.ActiveSkillHit,
-			ColliderRadius:  currPlayerDownsync.ColliderRadius,
+			Id:                currPlayerDownsync.Id,
+			VirtualGridX:      currPlayerDownsync.VirtualGridX,
+			VirtualGridY:      currPlayerDownsync.VirtualGridY,
+			DirX:              currPlayerDownsync.DirX,
+			DirY:              currPlayerDownsync.DirY,
+			VelX:              currPlayerDownsync.VelX,
+			VelY:              currPlayerDownsync.VelY,
+			CharacterState:    currPlayerDownsync.CharacterState,
+			InAir:             true,
+			Speed:             currPlayerDownsync.Speed,
+			BattleState:       currPlayerDownsync.BattleState,
+			Score:             currPlayerDownsync.Score,
+			Removed:           currPlayerDownsync.Removed,
+			JoinIndex:         currPlayerDownsync.JoinIndex,
+			Hp:                currPlayerDownsync.Hp,
+			MaxHp:             currPlayerDownsync.MaxHp,
+			FramesToRecover:   currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState:   currPlayerDownsync.FramesInChState + 1,
+			ActiveSkillId:     currPlayerDownsync.ActiveSkillId,
+			ActiveSkillHit:    currPlayerDownsync.ActiveSkillHit,
+			FramesInvinsible:  currPlayerDownsync.FramesInvinsible - 1,
+			FramesSelfLockVel: currPlayerDownsync.FramesSelfLockVel - 1,
+			ColliderRadius:    currPlayerDownsync.ColliderRadius,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
+		}
+		if nextRenderFramePlayers[i].FramesInvinsible < 0 {
+			nextRenderFramePlayers[i].FramesInvinsible = 0
+		}
+		if nextRenderFramePlayers[i].FramesSelfLockVel < 0 {
+			nextRenderFramePlayers[i].FramesSelfLockVel = 0
 		}
 	}
 
@@ -475,8 +495,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
 			thatPlayerInNextFrame.ActiveSkillHit = 0
 
-			// TODO: Respect non-zero "selfLockVel"
-
 			// Hardcoded to use only the first hit for now
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
@@ -485,12 +503,30 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				newBullet.OffenderJoinIndex = joinIndex
 				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
 				thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
+
+				hasLockVel := false
+				if NO_LOCK_VEL != v.SelfLockVelX {
+					hasLockVel = true
+					xfac := int32(1)
+					if 0 > thatPlayerInNextFrame.DirX {
+						xfac = -xfac
+					}
+					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
+                    thatPlayerInNextFrame.FramesSelfLockVel = v.FramesSelfLockVel
+				}
+				if NO_LOCK_VEL != v.SelfLockVelY {
+					hasLockVel = true
+					thatPlayerInNextFrame.VelY = v.SelfLockVelY
+                    thatPlayerInNextFrame.FramesSelfLockVel = v.FramesSelfLockVel
+				}
+				if false == hasLockVel {
+					if false == currPlayerDownsync.InAir {
+						thatPlayerInNextFrame.VelX = 0
+					}
+				}
 			}
 
 			thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState
-			if false == currPlayerDownsync.InAir {
-				thatPlayerInNextFrame.VelX = 0
-			}
 			continue // Don't allow movement if skill is used
 		}
 
@@ -640,9 +676,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
 					}
 				} else if ATK_CHARACTER_STATE_GET_UP1 == thatPlayerInNextFrame.CharacterState {
-					if thatPlayerInNextFrame.FramesInChState == chConfig.GetUpFrames {
-						// [WARNING] Before reaching here, the player had 3 invinsible frames to either attack or jump, if it ever took any action then this condition wouldn't have been met, thus we hereby only transit it back to IDLE as it took no action
+					if 0 == thatPlayerInNextFrame.FramesToRecover {
 						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+						thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
 					}
 				}
 			}
@@ -669,6 +705,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						continue
 					}
 					if _, existent := invinsibleSet[t.CharacterState]; existent {
+						continue
+					}
+					if 0 < t.FramesInvinsible {
 						continue
 					}
 					overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)

@@ -4747,7 +4747,7 @@ $packages["jsexport/battle"] = (function() {
 		this.Anchor = Anchor_;
 		this.Points = Points_;
 	});
-	PlayerDownsync = $pkg.PlayerDownsync = $newType(0, $kindStruct, "battle.PlayerDownsync", true, "jsexport/battle", true, function(Id_, VirtualGridX_, VirtualGridY_, DirX_, DirY_, VelX_, VelY_, Speed_, BattleState_, JoinIndex_, ColliderRadius_, Removed_, Score_, LastMoveGmtMillis_, FramesToRecover_, FramesInChState_, Hp_, MaxHp_, CharacterState_, InAir_, ActiveSkillId_, ActiveSkillHit_) {
+	PlayerDownsync = $pkg.PlayerDownsync = $newType(0, $kindStruct, "battle.PlayerDownsync", true, "jsexport/battle", true, function(Id_, VirtualGridX_, VirtualGridY_, DirX_, DirY_, VelX_, VelY_, Speed_, BattleState_, JoinIndex_, ColliderRadius_, Removed_, Score_, LastMoveGmtMillis_, FramesToRecover_, FramesInChState_, Hp_, MaxHp_, CharacterState_, InAir_, ActiveSkillId_, ActiveSkillHit_, FramesInvinsible_, FramesSelfLockVel_) {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.Id = 0;
@@ -4772,6 +4772,8 @@ $packages["jsexport/battle"] = (function() {
 			this.InAir = false;
 			this.ActiveSkillId = 0;
 			this.ActiveSkillHit = 0;
+			this.FramesInvinsible = 0;
+			this.FramesSelfLockVel = 0;
 			return;
 		}
 		this.Id = Id_;
@@ -4796,6 +4798,8 @@ $packages["jsexport/battle"] = (function() {
 		this.InAir = InAir_;
 		this.ActiveSkillId = ActiveSkillId_;
 		this.ActiveSkillHit = ActiveSkillHit_;
+		this.FramesInvinsible = FramesInvinsible_;
+		this.FramesSelfLockVel = FramesSelfLockVel_;
 	});
 	InputFrameDecoded = $pkg.InputFrameDecoded = $newType(0, $kindStruct, "battle.InputFrameDecoded", true, "jsexport/battle", true, function(Dx_, Dy_, BtnALevel_, BtnBLevel_) {
 		this.$val = this;
@@ -4819,7 +4823,7 @@ $packages["jsexport/battle"] = (function() {
 		}
 		this.Boundary = Boundary_;
 	});
-	Bullet = $pkg.Bullet = $newType(0, $kindStruct, "battle.Bullet", true, "jsexport/battle", true, function(OriginatedRenderFrameId_, OffenderJoinIndex_, StartupFrames_, CancellableStFrame_, CancellableEdFrame_, ActiveFrames_, HitStunFrames_, BlockStunFrames_, PushbackVelX_, PushbackVelY_, Damage_, SelfLockVelX_, SelfLockVelY_, HitboxOffsetX_, HitboxOffsetY_, HitboxSizeX_, HitboxSizeY_, BlowUp_, CancelTransit_) {
+	Bullet = $pkg.Bullet = $newType(0, $kindStruct, "battle.Bullet", true, "jsexport/battle", true, function(OriginatedRenderFrameId_, OffenderJoinIndex_, StartupFrames_, CancellableStFrame_, CancellableEdFrame_, ActiveFrames_, HitStunFrames_, BlockStunFrames_, PushbackVelX_, PushbackVelY_, Damage_, SelfLockVelX_, SelfLockVelY_, FramesSelfLockVel_, HitboxOffsetX_, HitboxOffsetY_, HitboxSizeX_, HitboxSizeY_, BlowUp_, CancelTransit_) {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.OriginatedRenderFrameId = 0;
@@ -4835,6 +4839,7 @@ $packages["jsexport/battle"] = (function() {
 			this.Damage = 0;
 			this.SelfLockVelX = 0;
 			this.SelfLockVelY = 0;
+			this.FramesSelfLockVel = 0;
 			this.HitboxOffsetX = 0;
 			this.HitboxOffsetY = 0;
 			this.HitboxSizeX = 0;
@@ -4856,6 +4861,7 @@ $packages["jsexport/battle"] = (function() {
 		this.Damage = Damage_;
 		this.SelfLockVelX = SelfLockVelX_;
 		this.SelfLockVelY = SelfLockVelY_;
+		this.FramesSelfLockVel = FramesSelfLockVel_;
 		this.HitboxOffsetX = HitboxOffsetX_;
 		this.HitboxOffsetY = HitboxOffsetY_;
 		this.HitboxSizeX = HitboxSizeX_;
@@ -4866,7 +4872,7 @@ $packages["jsexport/battle"] = (function() {
 	MeleeBullet = $pkg.MeleeBullet = $newType(0, $kindStruct, "battle.MeleeBullet", true, "jsexport/battle", true, function(Bullet_) {
 		this.$val = this;
 		if (arguments.length === 0) {
-			this.Bullet = new Bullet.ptr(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
+			this.Bullet = new Bullet.ptr(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
 			return;
 		}
 		this.Bullet = Bullet_;
@@ -4881,7 +4887,7 @@ $packages["jsexport/battle"] = (function() {
 			this.VelX = 0;
 			this.VelY = 0;
 			this.Speed = 0;
-			this.Bullet = new Bullet.ptr(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
+			this.Bullet = new Bullet.ptr(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false);
 			return;
 		}
 		this.VirtualGridX = VirtualGridX_;
@@ -4968,7 +4974,7 @@ $packages["jsexport/battle"] = (function() {
 		this.Eles = Eles_;
 	});
 	SkillMapperType = $pkg.SkillMapperType = $newType(4, $kindFunc, "battle.SkillMapperType", true, "jsexport/battle", true, null);
-	CharacterConfig = $pkg.CharacterConfig = $newType(0, $kindStruct, "battle.CharacterConfig", true, "jsexport/battle", true, function(SpeciesId_, SpeciesName_, InAirIdleFrameIdxTurningPoint_, InAirIdleFrameIdxTurnedCycle_, LayDownFrames_, LayDownFramesToRecover_, GetUpFrames_, GetUpFramesToRecover_, Speed_, JumpingInitVelY_, SkillMapper_) {
+	CharacterConfig = $pkg.CharacterConfig = $newType(0, $kindStruct, "battle.CharacterConfig", true, "jsexport/battle", true, function(SpeciesId_, SpeciesName_, InAirIdleFrameIdxTurningPoint_, InAirIdleFrameIdxTurnedCycle_, LayDownFrames_, LayDownFramesToRecover_, GetUpInvinsibleFrames_, GetUpFramesToRecover_, Speed_, JumpingInitVelY_, SkillMapper_) {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.SpeciesId = 0;
@@ -4977,7 +4983,7 @@ $packages["jsexport/battle"] = (function() {
 			this.InAirIdleFrameIdxTurnedCycle = 0;
 			this.LayDownFrames = 0;
 			this.LayDownFramesToRecover = 0;
-			this.GetUpFrames = 0;
+			this.GetUpInvinsibleFrames = 0;
 			this.GetUpFramesToRecover = 0;
 			this.Speed = 0;
 			this.JumpingInitVelY = 0;
@@ -4990,7 +4996,7 @@ $packages["jsexport/battle"] = (function() {
 		this.InAirIdleFrameIdxTurnedCycle = InAirIdleFrameIdxTurnedCycle_;
 		this.LayDownFrames = LayDownFrames_;
 		this.LayDownFramesToRecover = LayDownFramesToRecover_;
-		this.GetUpFrames = GetUpFrames_;
+		this.GetUpInvinsibleFrames = GetUpInvinsibleFrames_;
 		this.GetUpFramesToRecover = GetUpFramesToRecover_;
 		this.Speed = Speed_;
 		this.JumpingInitVelY = JumpingInitVelY_;
@@ -5483,7 +5489,7 @@ $packages["jsexport/battle"] = (function() {
 		return [patternId, jumpedOrNot, effDx, effDy];
 	};
 	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = function(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex) {
-		var {_1, _2, _entry, _entry$1, _entry$2, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, existent$1, existent$2, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorms, hitboxSizeWx, hitboxSizeWy, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBulletCollider, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex});
+		var {_1, _2, _entry, _entry$1, _entry$2, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, existent$1, existent$2, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorms, hasLockVel, hitboxSizeWx, hitboxSizeWy, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBulletCollider, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
 		roomCapacity = currRenderFrame.PlayersArr.$length;
 		nextRenderFramePlayers = $makeSlice(sliceType$6, roomCapacity);
@@ -5493,9 +5499,15 @@ $packages["jsexport/battle"] = (function() {
 			if (!(_i < _ref.$length)) { break; }
 			i = _i;
 			currPlayerDownsync = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
-			((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i] = new PlayerDownsync.ptr(currPlayerDownsync.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.DirX, currPlayerDownsync.DirY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, currPlayerDownsync.Speed, currPlayerDownsync.BattleState, currPlayerDownsync.JoinIndex, currPlayerDownsync.ColliderRadius, currPlayerDownsync.Removed, currPlayerDownsync.Score, 0, currPlayerDownsync.FramesToRecover - 1 >> 0, currPlayerDownsync.FramesInChState + 1 >> 0, currPlayerDownsync.Hp, currPlayerDownsync.MaxHp, currPlayerDownsync.CharacterState, true, currPlayerDownsync.ActiveSkillId, currPlayerDownsync.ActiveSkillHit));
+			((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i] = new PlayerDownsync.ptr(currPlayerDownsync.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.DirX, currPlayerDownsync.DirY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, currPlayerDownsync.Speed, currPlayerDownsync.BattleState, currPlayerDownsync.JoinIndex, currPlayerDownsync.ColliderRadius, currPlayerDownsync.Removed, currPlayerDownsync.Score, 0, currPlayerDownsync.FramesToRecover - 1 >> 0, currPlayerDownsync.FramesInChState + 1 >> 0, currPlayerDownsync.Hp, currPlayerDownsync.MaxHp, currPlayerDownsync.CharacterState, true, currPlayerDownsync.ActiveSkillId, currPlayerDownsync.ActiveSkillHit, currPlayerDownsync.FramesInvinsible - 1 >> 0, currPlayerDownsync.FramesSelfLockVel - 1 >> 0));
 			if (((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesToRecover < 0) {
 				((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesToRecover = 0;
+			}
+			if (((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesInvinsible < 0) {
+				((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesInvinsible = 0;
+			}
+			if (((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesSelfLockVel < 0) {
+				((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesSelfLockVel = 0;
 			}
 			_i++;
 		}
@@ -5539,11 +5551,28 @@ $packages["jsexport/battle"] = (function() {
 					newBullet[0].Bullet.OffenderJoinIndex = joinIndex;
 					nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, newBullet[0]);
 					thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames;
+					hasLockVel = false;
+					if (!((-1 === v.Bullet.SelfLockVelX))) {
+						hasLockVel = true;
+						xfac = 1;
+						if (0 > thatPlayerInNextFrame.DirX) {
+							xfac = -xfac;
+						}
+						thatPlayerInNextFrame.VelX = $imul(xfac, v.Bullet.SelfLockVelX);
+						thatPlayerInNextFrame.FramesSelfLockVel = v.Bullet.FramesSelfLockVel;
+					}
+					if (!((-1 === v.Bullet.SelfLockVelY))) {
+						hasLockVel = true;
+						thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY;
+						thatPlayerInNextFrame.FramesSelfLockVel = v.Bullet.FramesSelfLockVel;
+					}
+					if (false === hasLockVel) {
+						if (false === currPlayerDownsync$1.InAir) {
+							thatPlayerInNextFrame.VelX = 0;
+						}
+					}
 				}
 				thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState;
-				if (false === currPlayerDownsync$1.InAir) {
-					thatPlayerInNextFrame.VelX = 0;
-				}
 				_i$1++;
 				/* continue; */ $s = 1; continue;
 			}
@@ -5627,11 +5656,11 @@ $packages["jsexport/battle"] = (function() {
 			/* */ $s = 11; continue;
 			/* if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) <= currRenderFrame.Id) && (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { */ case 10:
 				offender = (x$4 = currRenderFrame.PlayersArr, x$5 = meleeBullet.Bullet.OffenderJoinIndex - 1 >> 0, ((x$5 < 0 || x$5 >= x$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + x$5]));
-				xfac = 1;
+				xfac$1 = 1;
 				if (0 > offender.DirX) {
-					xfac = -xfac;
+					xfac$1 = -xfac$1;
 				}
-				_tuple$4 = VirtualGridToWorldPos(offender.VirtualGridX + ($imul(xfac, meleeBullet.Bullet.HitboxOffsetX)) >> 0, offender.VirtualGridY);
+				_tuple$4 = VirtualGridToWorldPos(offender.VirtualGridX + ($imul(xfac$1, meleeBullet.Bullet.HitboxOffsetX)) >> 0, offender.VirtualGridY);
 				bulletWx = _tuple$4[0];
 				bulletWy = _tuple$4[1];
 				_tuple$5 = VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY);
@@ -5757,8 +5786,9 @@ $packages["jsexport/battle"] = (function() {
 							thatPlayerInNextFrame$2.FramesToRecover = chConfig$2.GetUpFramesToRecover;
 						}
 					} else if (10 === thatPlayerInNextFrame$2.CharacterState) {
-						if (thatPlayerInNextFrame$2.FramesInChState === chConfig$2.GetUpFrames) {
+						if (0 === thatPlayerInNextFrame$2.FramesToRecover) {
 							thatPlayerInNextFrame$2.CharacterState = 0;
+							thatPlayerInNextFrame$2.FramesInvinsible = chConfig$2.GetUpInvinsibleFrames;
 						}
 					}
 				}
@@ -5806,6 +5836,10 @@ $packages["jsexport/battle"] = (function() {
 							_i$8++;
 							/* continue; */ $s = 27; continue;
 						}
+						if (0 < t.FramesInvinsible) {
+							_i$8++;
+							/* continue; */ $s = 27; continue;
+						}
 						_r$5 = CalcPushbacks(0, 0, bulletShape, defenderShape); /* */ $s = 32; case 32: if($c) { $c = false; _r$5 = _r$5.$blk(); } if (_r$5 && _r$5.$blk !== undefined) { break s; }
 						_tuple$9 = _r$5;
 						overlapped$1 = _tuple$9[0];
@@ -5813,11 +5847,11 @@ $packages["jsexport/battle"] = (function() {
 							_i$8++;
 							/* continue; */ $s = 27; continue;
 						}
-						xfac$1 = 1;
+						xfac$2 = 1;
 						if (0 > offender$1.DirX) {
-							xfac$1 = -xfac$1;
+							xfac$2 = -xfac$2;
 						}
-						_tmp$19 = $imul(xfac$1, v$1.Bullet.PushbackVelX);
+						_tmp$19 = $imul(xfac$2, v$1.Bullet.PushbackVelX);
 						_tmp$20 = v$1.Bullet.PushbackVelY;
 						pushbackVelX = _tmp$19;
 						pushbackVelY = _tmp$20;
@@ -5891,7 +5925,7 @@ $packages["jsexport/battle"] = (function() {
 			_i$10++;
 		}
 		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), nextRenderFrameMeleeBullets, sliceType$11.nil, new $Uint64(0, 0), false, false);
-		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _2, _entry, _entry$1, _entry$2, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, existent$1, existent$2, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorms, hitboxSizeWx, hitboxSizeWy, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBulletCollider, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, $s};return $f;
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _2, _entry, _entry$1, _entry$2, _i, _i$1, _i$10, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, atkedPlayerInNextFrame, bShape, bulletCollider, bulletColliders, bulletShape, bulletWx, bulletWy, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, effDx, effDy, effPushbacks, existent, existent$1, existent$2, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorms, hasLockVel, hitboxSizeWx, hitboxSizeWy, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBulletCollider, newVx, newVy, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, obj, obj$1, offender, offender$1, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, $s};return $f;
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame;
 	GenerateRectCollider = function(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag) {
@@ -5997,10 +6031,10 @@ $packages["jsexport/battle"] = (function() {
 	ptrType$12.methods = [{prop: "Put", name: "Put", pkg: "", typ: $funcType([$emptyInterface], [], false)}, {prop: "Pop", name: "Pop", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetArrIdxByOffset", name: "GetArrIdxByOffset", pkg: "", typ: $funcType([$Int32], [$Int32], false)}, {prop: "GetByOffset", name: "GetByOffset", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "GetByFrameId", name: "GetByFrameId", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "SetByFrameId", name: "SetByFrameId", pkg: "", typ: $funcType([$emptyInterface, $Int32], [$Int32, $Int32, $Int32], false)}];
 	Vec2D.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$10, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$13, tag: ""}]);
-	PlayerDownsync.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleState", name: "BattleState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JoinIndex", name: "JoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ColliderRadius", name: "ColliderRadius", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Removed", name: "Removed", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Score", name: "Score", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LastMoveGmtMillis", name: "LastMoveGmtMillis", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesToRecover", name: "FramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInChState", name: "FramesInChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hp", name: "Hp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "MaxHp", name: "MaxHp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CharacterState", name: "CharacterState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InAir", name: "InAir", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "ActiveSkillId", name: "ActiveSkillId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveSkillHit", name: "ActiveSkillHit", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	PlayerDownsync.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleState", name: "BattleState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JoinIndex", name: "JoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ColliderRadius", name: "ColliderRadius", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Removed", name: "Removed", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Score", name: "Score", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LastMoveGmtMillis", name: "LastMoveGmtMillis", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesToRecover", name: "FramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInChState", name: "FramesInChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hp", name: "Hp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "MaxHp", name: "MaxHp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CharacterState", name: "CharacterState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InAir", name: "InAir", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "ActiveSkillId", name: "ActiveSkillId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveSkillHit", name: "ActiveSkillHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInvinsible", name: "FramesInvinsible", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesSelfLockVel", name: "FramesSelfLockVel", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	InputFrameDecoded.init("", [{prop: "Dx", name: "Dx", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Dy", name: "Dy", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnALevel", name: "BtnALevel", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnBLevel", name: "BtnBLevel", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	Barrier.init("", [{prop: "Boundary", name: "Boundary", embedded: false, exported: true, typ: ptrType$11, tag: ""}]);
-	Bullet.init("", [{prop: "OriginatedRenderFrameId", name: "OriginatedRenderFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderJoinIndex", name: "OffenderJoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StartupFrames", name: "StartupFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableStFrame", name: "CancellableStFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableEdFrame", name: "CancellableEdFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveFrames", name: "ActiveFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitStunFrames", name: "HitStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlockStunFrames", name: "BlockStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelX", name: "PushbackVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelY", name: "PushbackVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Damage", name: "Damage", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelX", name: "SelfLockVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelY", name: "SelfLockVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetX", name: "HitboxOffsetX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetY", name: "HitboxOffsetY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeX", name: "HitboxSizeX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeY", name: "HitboxSizeY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlowUp", name: "BlowUp", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "CancelTransit", name: "CancelTransit", embedded: false, exported: true, typ: mapType, tag: ""}]);
+	Bullet.init("", [{prop: "OriginatedRenderFrameId", name: "OriginatedRenderFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderJoinIndex", name: "OffenderJoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StartupFrames", name: "StartupFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableStFrame", name: "CancellableStFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableEdFrame", name: "CancellableEdFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveFrames", name: "ActiveFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitStunFrames", name: "HitStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlockStunFrames", name: "BlockStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelX", name: "PushbackVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelY", name: "PushbackVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Damage", name: "Damage", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelX", name: "SelfLockVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelY", name: "SelfLockVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesSelfLockVel", name: "FramesSelfLockVel", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetX", name: "HitboxOffsetX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetY", name: "HitboxOffsetY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeX", name: "HitboxSizeX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeY", name: "HitboxSizeY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlowUp", name: "BlowUp", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "CancelTransit", name: "CancelTransit", embedded: false, exported: true, typ: mapType, tag: ""}]);
 	MeleeBullet.init("", [{prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
 	FireballBullet.init("", [{prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: true, exported: true, typ: Bullet, tag: ""}]);
 	Skill.init("", [{prop: "BattleLocalId", name: "BattleLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFrames", name: "RecoveryFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnBlock", name: "RecoveryFramesOnBlock", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnHit", name: "RecoveryFramesOnHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ReleaseTriggerType", name: "ReleaseTriggerType", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BoundChState", name: "BoundChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hits", name: "Hits", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
@@ -6008,7 +6042,7 @@ $packages["jsexport/battle"] = (function() {
 	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$5, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
 	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
 	SkillMapperType.init([$Int, ptrType$5], [$Int], false);
-	CharacterConfig.init("", [{prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "SpeciesName", name: "SpeciesName", embedded: false, exported: true, typ: $String, tag: ""}, {prop: "InAirIdleFrameIdxTurningPoint", name: "InAirIdleFrameIdxTurningPoint", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "InAirIdleFrameIdxTurnedCycle", name: "InAirIdleFrameIdxTurnedCycle", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "LayDownFrames", name: "LayDownFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LayDownFramesToRecover", name: "LayDownFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFrames", name: "GetUpFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFramesToRecover", name: "GetUpFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JumpingInitVelY", name: "JumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SkillMapper", name: "SkillMapper", embedded: false, exported: true, typ: SkillMapperType, tag: ""}]);
+	CharacterConfig.init("", [{prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "SpeciesName", name: "SpeciesName", embedded: false, exported: true, typ: $String, tag: ""}, {prop: "InAirIdleFrameIdxTurningPoint", name: "InAirIdleFrameIdxTurningPoint", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "InAirIdleFrameIdxTurnedCycle", name: "InAirIdleFrameIdxTurnedCycle", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "LayDownFrames", name: "LayDownFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LayDownFramesToRecover", name: "LayDownFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpInvinsibleFrames", name: "GetUpInvinsibleFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFramesToRecover", name: "GetUpFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JumpingInitVelY", name: "JumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SkillMapper", name: "SkillMapper", embedded: false, exported: true, typ: SkillMapperType, tag: ""}]);
 	SatResult.init("", [{prop: "Overlap", name: "Overlap", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapX", name: "OverlapX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapY", name: "OverlapY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "AContainedInB", name: "AContainedInB", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BContainedInA", name: "BContainedInA", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Axis", name: "Axis", embedded: false, exported: true, typ: resolv.Vector, tag: ""}]);
 	$init = function() {
 		$pkg.$init = function() {};
@@ -6016,8 +6050,8 @@ $packages["jsexport/battle"] = (function() {
 		$r = math.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$r = resolv.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$pkg.DIRECTION_DECODER = new sliceType$1([new sliceType([0, 0]), new sliceType([0, 2]), new sliceType([0, -2]), new sliceType([2, 0]), new sliceType([-2, 0]), new sliceType([1, 1]), new sliceType([-1, -1]), new sliceType([1, -1]), new sliceType([-1, 1])]);
-		skills = $makeMap($Int.keyFor, [{ k: 1, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 0, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 2 }])))])) }, { k: 2, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 0, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 3 }])))])) }, { k: 3, v: new Skill.ptr(0, 60, 60, 60, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 40, 999999999, 9, 200, 700, 10, 0, 0, 2400, 0, 3200, 3200, true, false))])) }, { k: 4, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 0, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 5 }])))])) }, { k: 5, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 0, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 6 }])))])) }, { k: 6, v: new Skill.ptr(0, 60, 60, 60, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 40, 999999999, 9, 200, 700, 10, 0, 0, 2400, 0, 3200, 3200, true, false))])) }, { k: 255, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, 0, 0, 1200, 0, 3200, 2400, false, false))])) }, { k: 256, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, 0, 0, 1200, 0, 3200, 2400, false, false))])) }]);
-		$pkg.Characters = $makeMap($Int.keyFor, [{ k: 0, v: new CharacterConfig.ptr(0, "MonkGirl", 11, 1, 16, 16, 33, 30, 120, 800, (function(patternId, currPlayerDownsync) {
+		skills = $makeMap($Int.keyFor, [{ k: 1, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 5, -1, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 2 }])))])) }, { k: 2, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 10, -1, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 3 }])))])) }, { k: 3, v: new Skill.ptr(0, 70, 70, 70, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 30, 999999999, 9, 200, 700, 10, -1, -1, 0, 3200, 0, 4800, 3200, true, false))])) }, { k: 4, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 5, -1, 0, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 5 }])))])) }, { k: 5, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 10, -1, 0, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 6 }])))])) }, { k: 6, v: new Skill.ptr(0, 60, 60, 60, 1, 12, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 15, 0, 0, 40, 999999999, 9, 200, 700, 10, -10, -1, 0, 2400, 0, 3200, 3200, true, false))])) }, { k: 255, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, -1, -1, 0, 1200, 0, 3200, 2400, false, false))])) }, { k: 256, v: new Skill.ptr(0, 34, 34, 34, 1, 6, new sliceType$2([new MeleeBullet.ptr(new Bullet.ptr(0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, -1, -1, 0, 1200, 0, 3200, 2400, false, false))])) }]);
+		$pkg.Characters = $makeMap($Int.keyFor, [{ k: 0, v: new CharacterConfig.ptr(0, "MonkGirl", 11, 1, 16, 16, 10, 27, 120, 800, (function(patternId, currPlayerDownsync) {
 			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
 			if (1 === patternId) {
 				if (0 === currPlayerDownsync.FramesToRecover) {
@@ -6047,7 +6081,7 @@ $packages["jsexport/battle"] = (function() {
 				}
 			}
 			return -1;
-		})) }, { k: 1, v: new CharacterConfig.ptr(1, "KnifeGirl", 9, 1, 16, 16, 30, 27, 140, 750, (function(patternId, currPlayerDownsync) {
+		})) }, { k: 1, v: new CharacterConfig.ptr(1, "KnifeGirl", 9, 1, 16, 16, 10, 27, 140, 750, (function(patternId, currPlayerDownsync) {
 			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
 			if (1 === patternId) {
 				if (0 === currPlayerDownsync.FramesToRecover) {
@@ -6081,7 +6115,7 @@ $packages["jsexport/battle"] = (function() {
 		inAirSet = $makeMap($Int32.keyFor, [{ k: 4, v: true }, { k: 5, v: true }, { k: 6, v: true }, { k: 7, v: true }, { k: 8, v: true }]);
 		noOpSet = $makeMap($Int32.keyFor, [{ k: 3, v: true }, { k: 7, v: true }, { k: 8, v: true }, { k: 9, v: true }]);
 		invinsibleSet = $makeMap($Int32.keyFor, [{ k: 8, v: true }, { k: 9, v: true }, { k: 10, v: true }]);
-		nonAttackingSet = $makeMap($Int32.keyFor, []);
+		nonAttackingSet = $makeMap($Int32.keyFor, [{ k: 0, v: true }, { k: 1, v: true }, { k: 4, v: true }, { k: 5, v: true }, { k: 3, v: true }, { k: 7, v: true }, { k: 8, v: true }, { k: 9, v: true }, { k: 10, v: true }]);
 		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
 	};
 	$pkg.$init = $init;
@@ -6108,8 +6142,8 @@ $packages["jsexport"] = (function() {
 	funcType = $funcType([$Float64, $Float64], [ptrType$5], false);
 	funcType$1 = $funcType([ptrType, sliceType$1], [ptrType$5], false);
 	funcType$2 = $funcType([ptrType$1], [ptrType$5], false);
-	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
-	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
+	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
+	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool], [ptrType$5], false);
 	funcType$5 = $funcType([$Int32, sliceType$2, sliceType$3], [ptrType$5], false);
 	funcType$6 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
 	funcType$7 = $funcType([$Int32, sliceType, $Uint64], [ptrType$5], false);
@@ -6178,14 +6212,14 @@ $packages["jsexport"] = (function() {
 		return js.MakeWrapper(new battle.Barrier.ptr(boundary));
 	};
 	$pkg.NewBarrierJs = NewBarrierJs;
-	NewPlayerDownsyncJs = function(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir) {
-		var activeSkillHit, activeSkillId, battleState, characterState, colliderRadius, dirX, dirY, framesInChState, framesToRecover, hp, id, inAir, joinIndex, maxHp, speed, velX, velY, virtualGridX, virtualGridY;
-		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, framesToRecover, framesInChState, hp, maxHp, characterState, inAir, activeSkillId, activeSkillHit));
+	NewPlayerDownsyncJs = function(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, framesSelfLockVel, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir) {
+		var activeSkillHit, activeSkillId, battleState, characterState, colliderRadius, dirX, dirY, framesInChState, framesInvinsible, framesSelfLockVel, framesToRecover, hp, id, inAir, joinIndex, maxHp, speed, velX, velY, virtualGridX, virtualGridY;
+		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, framesToRecover, framesInChState, hp, maxHp, characterState, inAir, activeSkillId, activeSkillHit, framesInvinsible, 0));
 	};
 	$pkg.NewPlayerDownsyncJs = NewPlayerDownsyncJs;
-	NewMeleeBulletJs = function(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp) {
-		var activeFrames, blockStunFrames, blowUp, cancellableEdFrame, cancellableStFrame, damage, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, startupFrames;
-		return js.MakeWrapper(new battle.MeleeBullet.ptr(new battle.Bullet.ptr(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, false)));
+	NewMeleeBulletJs = function(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, framesSelfLockVel, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp) {
+		var activeFrames, blockStunFrames, blowUp, cancellableEdFrame, cancellableStFrame, damage, framesSelfLockVel, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, startupFrames;
+		return js.MakeWrapper(new battle.MeleeBullet.ptr(new battle.Bullet.ptr(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, framesSelfLockVel, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, false)));
 	};
 	$pkg.NewMeleeBulletJs = NewMeleeBulletJs;
 	NewRoomDownsyncFrameJs = function(id, playersArr, meleeBullets) {
