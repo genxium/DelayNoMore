@@ -172,6 +172,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.AckingFrameId = -1
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
+	pPlayerFromDbInit.LastReceivedInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 
 	pPlayerFromDbInit.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
@@ -1033,16 +1034,16 @@ func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputF
 				ConfirmedList: uint64(0),
 			}
 
-			j2 := j - 1
-			tmp2 := pR.InputsBuffer.GetByFrameId(j2)
-			if nil != tmp2 {
-				prevInputFrameDownsync := tmp2.(*battle.InputFrameDownsync)
-				for i, _ := range currInputFrameDownsync.InputList {
+			for i, _ := range currInputFrameDownsync.InputList {
+				j2 := pR.PlayersArr[i].LastReceivedInputFrameId
+				if j2 < pR.InputsBuffer.StFrameId {
+					j2 = pR.InputsBuffer.StFrameId
+				}
+				tmp2 := pR.InputsBuffer.GetByFrameId(j2)
+				if nil != tmp2 {
+					prevInputFrameDownsync := tmp2.(*battle.InputFrameDownsync)
 					currInputFrameDownsync.InputList[i] = prevInputFrameDownsync.InputList[i]
 				}
-			}
-
-			for i, _ := range currInputFrameDownsync.InputList {
 				// Don't predict "btnA & btnB"!
 				currInputFrameDownsync.InputList[i] = (currInputFrameDownsync.InputList[i] & uint64(15))
 			}
@@ -1066,8 +1067,8 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#1: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
-		if clientInputFrameId < pR.LastAllConfirmedInputFrameId {
-			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
+		if clientInputFrameId < player.LastReceivedInputFrameId {
+			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastReceivedInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastReceivedInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
 		if clientInputFrameId > pR.InputsBuffer.EdFrameId {
@@ -1078,6 +1079,8 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		targetInputFrameDownsync := pR.getOrPrefabInputFrameDownsync(clientInputFrameId)
 		targetInputFrameDownsync.InputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
+
+		player.LastReceivedInputFrameId = clientInputFrameId
 
 		if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
 			pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId

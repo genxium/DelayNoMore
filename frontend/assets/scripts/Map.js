@@ -1082,14 +1082,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       }
       const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex);
 
-      if (3 == nextRdf.PlayersArr[0].ActiveSkillId && 3 != currRdf.PlayersArr[0].ActiveSkillId) {
-        console.log(`Started skill 3 at rdf.Id=${nextRdf.Id}`);
-        self.lastSkill3Started = nextRdf.Id;
-      }
-      if (3 != nextRdf.PlayersArr[0].ActiveSkillId && 3 == currRdf.PlayersArr[0].ActiveSkillId) {
-        console.log(`Stopped skill 3 at rdf.Id=${nextRdf.Id}, duration = ${nextRdf.Id-self.lastSkill3Started}`);
-      }
-
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
         self.chaserRenderFrameId = nextRdf.Id;

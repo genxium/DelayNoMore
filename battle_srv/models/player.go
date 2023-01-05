@@ -46,9 +46,10 @@ type Player struct {
 	TutorialStage int       `db:"tutorial_stage"`
 
 	// other in-battle info fields
-	LastSentInputFrameId int32
-	AckingFrameId        int32
-	AckingInputFrameId   int32
+	LastReceivedInputFrameId int32
+	LastSentInputFrameId     int32
+	AckingFrameId            int32
+	AckingInputFrameId       int32
 }
 
 func ExistPlayerByName(name string) (bool, error) {
