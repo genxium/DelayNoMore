@@ -128,7 +128,7 @@ type Room struct {
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
 	InputsBuffer                           *battle.RingBuffer // Indices are STRICTLY consecutive
-	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange]
+	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputList, player.LastReceivedInputFrameId]
 	RenderFrameBuffer                      *battle.RingBuffer // Indices are STRICTLY consecutive
 	LatestPlayerUpsyncedInputFrameId       int32
 	LastAllConfirmedInputFrameId           int32
@@ -148,7 +148,8 @@ type Room struct {
 	TmxPointsMap   StrToVec2DListMap
 	TmxPolygonsMap StrToPolygon2DListMap
 
-	rdfIdToActuallyUsedInput map[int32]*pb.InputFrameDownsync
+	rdfIdToActuallyUsedInput           map[int32]*pb.InputFrameDownsync
+	LastIndividuallyConfirmedInputList []uint64
 }
 
 func (pR *Room) updateScore() {
@@ -741,6 +742,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = battle.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = battle.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
+	pR.LastIndividuallyConfirmedInputList = make([]uint64, pR.Capacity)
 
 	pR.LatestPlayerUpsyncedInputFrameId = -1
 	pR.LastAllConfirmedInputFrameId = -1
@@ -1035,17 +1037,9 @@ func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputF
 			}
 
 			for i, _ := range currInputFrameDownsync.InputList {
-				j2 := pR.PlayersArr[i].LastReceivedInputFrameId
-				if j2 < pR.InputsBuffer.StFrameId {
-					j2 = pR.InputsBuffer.StFrameId
-				}
-				tmp2 := pR.InputsBuffer.GetByFrameId(j2)
-				if nil != tmp2 {
-					prevInputFrameDownsync := tmp2.(*battle.InputFrameDownsync)
-					currInputFrameDownsync.InputList[i] = prevInputFrameDownsync.InputList[i]
-				}
+				// [WARNING] The use of "InputsBufferLock" guarantees that by now "inputFrameId >= pR.InputsBuffer.EdFrameId >= pR.LatestPlayerUpsyncedInputFrameId", thus it's safe to use "pR.LastIndividuallyConfirmedInputList" for prediction.
 				// Don't predict "btnA & btnB"!
-				currInputFrameDownsync.InputList[i] = (currInputFrameDownsync.InputList[i] & uint64(15))
+				currInputFrameDownsync.InputList[i] = (pR.LastIndividuallyConfirmedInputList[i] & uint64(15))
 			}
 
 			pR.InputsBuffer.Put(currInputFrameDownsync)
@@ -1081,6 +1075,7 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
 
 		player.LastReceivedInputFrameId = clientInputFrameId
+		pR.LastIndividuallyConfirmedInputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 
 		if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
 			pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
