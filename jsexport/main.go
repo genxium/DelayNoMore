@@ -42,50 +42,57 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, speed, battleState, characterState, joinIndex, hp, maxHp int32, inAir bool, colliderRadius float64) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
-		Id:              id,
-		VirtualGridX:    virtualGridX,
-		VirtualGridY:    virtualGridY,
-		DirX:            dirX,
-		DirY:            dirY,
-		VelX:            velX,
-		VelY:            velY,
-		FramesToRecover: framesToRecover,
-		Speed:           speed,
-		BattleState:     battleState,
-		JoinIndex:       joinIndex,
-		ColliderRadius:  colliderRadius,
-		Hp:              hp,
-		MaxHp:           maxHp,
-		CharacterState:  characterState,
-		InAir:           inAir,
+		Id:               id,
+		VirtualGridX:     virtualGridX,
+		VirtualGridY:     virtualGridY,
+		DirX:             dirX,
+		DirY:             dirY,
+		VelX:             velX,
+		VelY:             velY,
+		FramesToRecover:  framesToRecover,
+		FramesInChState:  framesInChState,
+		ActiveSkillId:    activeSkillId,
+		ActiveSkillHit:   activeSkillHit,
+		FramesInvinsible: framesInvinsible,
+		Speed:            speed,
+		BattleState:      battleState,
+		CharacterState:   characterState,
+		JoinIndex:        joinIndex,
+		Hp:               hp,
+		MaxHp:            maxHp,
+		ColliderRadius:   colliderRadius,
+		InAir:            inAir,
 	})
 }
 
-func NewMeleeBulletJs(battleLocalId, startupFrames, activeFrames, recoveryFrames, recoveryFramesOnBlock, recoveryFramesOnHit, hitStunFrames, blockStunFrames, releaseTriggerType, damage, offenderJoinIndex, offenderPlayerId int32, pushback, hitboxOffset, selfMoveforwardX, selfMoveforwardY, hitboxSizeX, hitboxSizeY float64) *js.Object {
+func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool) *js.Object {
 	return js.MakeWrapper(&MeleeBullet{
 		Bullet: Bullet{
-			BattleLocalId:         battleLocalId,
-			StartupFrames:         startupFrames,
-			ActiveFrames:          activeFrames,
-			RecoveryFrames:        recoveryFrames,
-			RecoveryFramesOnBlock: recoveryFramesOnBlock,
-			RecoveryFramesOnHit:   recoveryFramesOnHit,
-			HitboxOffset:          hitboxOffset,
-			HitStunFrames:         hitStunFrames,
-			BlockStunFrames:       blockStunFrames,
-			Pushback:              pushback,
-			ReleaseTriggerType:    releaseTriggerType,
-			Damage:                damage,
+			OriginatedRenderFrameId: originatedRenderFrameId,
+			OffenderJoinIndex:       offenderJoinIndex,
 
-			SelfMoveforwardX: selfMoveforwardX,
-			SelfMoveforwardY: selfMoveforwardY,
-			HitboxSizeX:      hitboxSizeX,
-			HitboxSizeY:      hitboxSizeY,
+			StartupFrames:      startupFrames,
+			CancellableStFrame: cancellableStFrame,
+			CancellableEdFrame: cancellableEdFrame,
+			ActiveFrames:       activeFrames,
 
-			OffenderJoinIndex: offenderJoinIndex,
-			OffenderPlayerId:  offenderPlayerId,
+			HitStunFrames:   hitStunFrames,
+			BlockStunFrames: blockStunFrames,
+			PushbackVelX:    pushbackVelX,
+			PushbackVelY:    pushbackVelY,
+			Damage:          damage,
+
+			SelfLockVelX: selfLockVelX,
+			SelfLockVelY: selfLockVelY,
+
+			HitboxOffsetX: hitboxOffsetX,
+			HitboxOffsetY: hitboxOffsetY,
+			HitboxSizeX:   hitboxSizeX,
+			HitboxSizeY:   hitboxSizeY,
+
+			BlowUp: blowUp,
 		},
 	})
 }
@@ -109,18 +116,19 @@ func GetCollisionSpaceObjsJs(space *resolv.Space) []*js.Object {
 	return ret
 }
 
-func GenerateRectColliderJs(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
+func GenerateRectColliderJs(wx, wy, w, h, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
 	/*
 			   [WARNING] It's important to note that we don't need "js.MakeFullWrapper" for a call sequence as follows.
 			   ```
 			       var space = gopkgs.NewCollisionSpaceJs(2048, 2048, 8, 8);
-			       var a = gopkgs.GenerateRectColliderJs(189, 497, 48, 48, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, spaceOffsetX, spaceOffsetY, "Player");
+			       var a = gopkgs.GenerateRectColliderJs(189, 497, 48, 48, spaceOffsetX, spaceOffsetY, "Player");
 			       space.Add(a);
 			   ```
 			   The "space" variable doesn't need access to the field of "a" in JavaScript level to run "space.Add(...)" method, which is good.
 
 		       However, the full wrapper access here is used for updating "collider.X/collider.Y" at JavaScript runtime.
 	*/
+	topPadding, bottomPadding, leftPadding, rightPadding := SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP
 	return js.MakeFullWrapper(GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag))
 
 }
@@ -129,27 +137,43 @@ func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spac
 	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64, playerOpPatternToSkillId map[int]int) *js.Object {
+func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
+	ret := make([]*js.Object, len(speciesIdList), len(speciesIdList))
+	for i, speciesId := range speciesIdList {
+		ret[i] = js.MakeFullWrapper(Characters[speciesId])
+	}
+	return ret
+}
+
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, gravityX, gravityY, jumpingInitVelY, inputDelayFrames, inputScaleFrames, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio, playerOpPatternToSkillId))
+	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex))
 }
 
 func main() {
 	js.Global.Set("gopkgs", map[string]interface{}{
-		"NewVec2DJs":                      NewVec2DJs,
-		"NewPolygon2DJs":                  NewPolygon2DJs,
-		"NewBarrierJs":                    NewBarrierJs,
-		"NewPlayerDownsyncJs":             NewPlayerDownsyncJs,
-		"NewMeleeBulletJs":                NewMeleeBulletJs,
-		"NewRoomDownsyncFrameJs":          NewRoomDownsyncFrameJs,
-		"NewCollisionSpaceJs":             NewCollisionSpaceJs,
-		"NewInputFrameDownsync":           NewInputFrameDownsync,
-		"NewRingBufferJs":                 NewRingBufferJs,
-		"GenerateRectColliderJs":          GenerateRectColliderJs,
-		"GenerateConvexPolygonColliderJs": GenerateConvexPolygonColliderJs,
-		"GetCollisionSpaceObjsJs":         GetCollisionSpaceObjsJs,
-		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
+		"NewVec2DJs":                                           NewVec2DJs,
+		"NewPolygon2DJs":                                       NewPolygon2DJs,
+		"NewBarrierJs":                                         NewBarrierJs,
+		"NewPlayerDownsyncJs":                                  NewPlayerDownsyncJs,
+		"NewMeleeBulletJs":                                     NewMeleeBulletJs,
+		"NewRoomDownsyncFrameJs":                               NewRoomDownsyncFrameJs,
+		"NewCollisionSpaceJs":                                  NewCollisionSpaceJs,
+		"NewInputFrameDownsync":                                NewInputFrameDownsync,
+		"NewRingBufferJs":                                      NewRingBufferJs,
+		"GenerateRectColliderJs":                               GenerateRectColliderJs,
+		"GenerateConvexPolygonColliderJs":                      GenerateConvexPolygonColliderJs,
+		"GetCollisionSpaceObjsJs":                              GetCollisionSpaceObjsJs,
 		"WorldToPolygonColliderBLPos":                          WorldToPolygonColliderBLPos, // No need to wrap primitive return types
 		"PolygonColliderBLToWorldPos":                          PolygonColliderBLToWorldPos,
+		"WorldToVirtualGridPos":                                WorldToVirtualGridPos,
+		"VirtualGridToWorldPos":                                VirtualGridToWorldPos,
+		"GetCharacterConfigsOrderedByJoinIndex":                GetCharacterConfigsOrderedByJoinIndex,
+		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
+		"ConvertToDelayedInputFrameId":                         ConvertToDelayedInputFrameId,
+		"ConvertToNoDelayInputFrameId":                         ConvertToNoDelayInputFrameId,
+		"ConvertToFirstUsedRenderFrameId":                      ConvertToFirstUsedRenderFrameId,
+		"ConvertToLastUsedRenderFrameId":                       ConvertToLastUsedRenderFrameId,
+		"ShouldGenerateInputFrameUpsync":                       ShouldGenerateInputFrameUpsync,
 	})
 }

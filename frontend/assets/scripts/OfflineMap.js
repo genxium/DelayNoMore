@@ -28,8 +28,6 @@ cc.Class({
 
     /** Init required prefab ended. */
 
-    self.inputDelayFrames = 8;
-    self.inputScaleFrames = 2;
     self.inputFrameUpsyncDelayTolerance = 2;
     self.collisionMinStep = 8;
 
@@ -39,24 +37,6 @@ cc.Class({
     self.rollbackEstimatedDtMillis = 16.667;
     self.rollbackEstimatedDtNanos = 16666666;
     self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
-
-    self.worldToVirtualGridRatio = 1000;
-    self.virtualGridToWorldRatio = 1.0 / self.worldToVirtualGridRatio;
-    const opJoinIndexPrefix1 = (1 << 8);
-    const opJoinIndexPrefix2 = (2 << 8);
-    self.playerOpPatternToSkillId = {};
-    self.playerOpPatternToSkillId[opJoinIndexPrefix1 + 0] = 1;
-    self.playerOpPatternToSkillId[opJoinIndexPrefix2 + 0] = 1;
-
-    /* 
-    [WARNING] As when a character is standing on a barrier, if not carefully curated there MIGHT BE a bouncing sequence of "[(inAir -> dropIntoBarrier ->), (notInAir -> pushedOutOfBarrier ->)], [(inAir -> ..."
-
-    Moreover, "snapIntoPlatformOverlap" should be small enough such that the walking "velX" or jumping initial "velY" can escape from it by 1 renderFrame (when jumping is triggered, the character is waived from snappig for 1 renderFrame).
-    */
-    self.snapIntoPlatformOverlap = 0.1;
-    self.snapIntoPlatformThreshold = 0.5; // a platform must be "horizontal enough" for a character to "stand on"
-    self.jumpingInitVelY = 7 * self.worldToVirtualGridRatio; // unit: (virtual grid length/renderFrame)
-    [self.gravityX, self.gravityY] = [0, -0.5 * self.worldToVirtualGridRatio]; // unit: (virtual grid length/renderFrame^2)
 
     const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -86,10 +66,8 @@ cc.Class({
       self.node.setContentSize(newMapSize.width * newTileSize.width, newMapSize.height * newTileSize.height);
       self.node.setPosition(cc.v2(0, 0));
 
-      self.stageDiscreteW = newMapSize.width;
-      self.stageDiscreteH = newMapSize.height;
-      self.stageTileW = newTileSize.width;
-      self.stageTileH = newTileSize.height;
+      self.spaceOffsetX = ((newMapSize.width * newTileSize.width) >> 1);
+      self.spaceOffsetY = ((newMapSize.height * newTileSize.height) >> 1);
 
       self._resetCurrentMatch();
       let barrierIdCounter = 0;
@@ -105,42 +83,17 @@ cc.Class({
         const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
         self.gopkgsCollisionSys.Add(newBarrierCollider);
 
-        if (false && self.showCriticalCoordinateLabels) {
-          for (let i = 0; i < boundaryObj.length; ++i) {
-            const barrierVertLabelNode = new cc.Node();
-            switch (i % 4) {
-              case 0:
-                barrierVertLabelNode.color = cc.Color.RED;
-                break;
-              case 1:
-                barrierVertLabelNode.color = cc.Color.GRAY;
-                break;
-              case 2:
-                barrierVertLabelNode.color = cc.Color.BLACK;
-                break;
-              default:
-                barrierVertLabelNode.color = cc.Color.MAGENTA;
-                break;
-            }
-            const wx = boundaryObj.anchor.x + boundaryObj[i].x,
-              wy = boundaryObj.anchor.y + boundaryObj[i].y;
-            barrierVertLabelNode.setPosition(cc.v2(wx, wy));
-            const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
-            barrierVertLabel.fontSize = 12;
-            barrierVertLabel.lineHeight = barrierVertLabel.fontSize + 1;
-            barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
-            safelyAddChild(self.node, barrierVertLabelNode);
-            setLocalZOrder(barrierVertLabelNode, 5);
-
-            barrierVertLabelNode.active = true;
-          }
-
-        }
         // console.log("Created barrier: ", newBarrierCollider);
         ++barrierIdCounter;
         const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
         self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
       }
+      self.initDebugDrawers();
+
+      const p1Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y);
+      const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
+      const speedV = gopkgs.WorldToVirtualGridPos(1.0, 0);
+      const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
@@ -148,13 +101,13 @@ cc.Class({
           window.pb.protos.PlayerDownsync.create({
             id: 10,
             joinIndex: 1,
-            virtualGridX: boundaryObjs.playerStartingPositions[0].x * self.worldToVirtualGridRatio,
-            virtualGridY: boundaryObjs.playerStartingPositions[0].y * self.worldToVirtualGridRatio,
-            speed: 1 * self.worldToVirtualGridRatio,
-            colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
+            virtualGridX: p1Vpos[0],
+            virtualGridY: p1Vpos[1],
+            speed: speedV[0],
+            colliderRadius: colliderRadiusV[0],
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
-            dirX: 0,
+            dirX: +2,
             dirY: 0,
             velX: 0,
             velY: 0,
@@ -163,19 +116,20 @@ cc.Class({
           window.pb.protos.PlayerDownsync.create({
             id: 11,
             joinIndex: 2,
-            virtualGridX: boundaryObjs.playerStartingPositions[1].x * self.worldToVirtualGridRatio,
-            virtualGridY: boundaryObjs.playerStartingPositions[1].y * self.worldToVirtualGridRatio,
-            speed: 1 * self.worldToVirtualGridRatio,
-            colliderRadius: 12,
-            characterState: window.ATK_CHARACTER_STATE.InAirIdle1[0],
+            virtualGridX: p2Vpos[0],
+            virtualGridY: p2Vpos[1],
+            speed: speedV[0],
+            colliderRadius: colliderRadiusV[0],
+            characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
-            dirX: 0,
+            dirX: -2,
             dirY: 0,
             velX: 0,
             velY: 0,
             inAir: true,
           }),
-        ]
+        ],
+        speciesIdList: [1, 0],
       });
 
       self.selfPlayerInfo = {
@@ -202,8 +156,8 @@ cc.Class({
         let st = performance.now();
         let prevSelfInput = null,
           currSelfInput = null;
-        const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-        if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId); // It's important that "inputDelayFrames == 0" here 
+        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];

@@ -7,12 +7,33 @@ import (
 
 const (
 	MAX_FLOAT64                    = 1.7e+308
+	MAX_INT32                      = int32(999999999)
 	COLLISION_PLAYER_INDEX_PREFIX  = (1 << 17)
 	COLLISION_BARRIER_INDEX_PREFIX = (1 << 16)
 	COLLISION_BULLET_INDEX_PREFIX  = (1 << 15)
 
 	PATTERN_ID_UNABLE_TO_OP = -2
 	PATTERN_ID_NO_OP        = -1
+
+	WORLD_TO_VIRTUAL_GRID_RATIO = float64(100)
+	VIRTUAL_GRID_TO_WORLD_RATIO = float64(1.0) / WORLD_TO_VIRTUAL_GRID_RATIO
+
+	GRAVITY_X = int32(0)
+	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
+
+	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
+	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
+	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
+
+	SP_ATK_LOOKUP_FRAMES = int32(5)
+
+	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
+	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
+
+	NO_SKILL     = -1
+	NO_SKILL_HIT = -1
+
+	NO_LOCK_VEL = int32(-1)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -28,47 +49,87 @@ var DIRECTION_DECODER = [][]int32{
 	{-1, +1},
 }
 
-var skillIdToBullet = map[int]interface{}{
-	1: &MeleeBullet{
-		Bullet: Bullet{
-			// for offender
-			StartupFrames:         int32(5),
-			ActiveFrames:          int32(10),
-			RecoveryFrames:        int32(34),
-			RecoveryFramesOnBlock: int32(34),
-			RecoveryFramesOnHit:   int32(34),
-			HitboxOffset:          float64(12.0), // should be about the radius of the PlayerCollider
-
-			// for defender
-			HitStunFrames:      int32(18),
-			BlockStunFrames:    int32(9),
-			Pushback:           float64(8.0),
-			ReleaseTriggerType: int32(1), // 1: rising-edge, 2: falling-edge
-			Damage:             int32(5),
-
-			SelfMoveforwardX: 0,
-			SelfMoveforwardY: 0,
-			HitboxSizeX:      24.0,
-			HitboxSizeY:      32.0,
-		},
-	},
-}
-
 const (
-	ATK_CHARACTER_STATE_IDLE1        = int32(0)
-	ATK_CHARACTER_STATE_WALKING      = int32(1)
-	ATK_CHARACTER_STATE_ATK1         = int32(2)
-	ATK_CHARACTER_STATE_ATKED1       = int32(3)
-	ATK_CHARACTER_STATE_INAIR_IDLE1  = int32(4)
-	ATK_CHARACTER_STATE_INAIR_ATK1   = int32(5)
-	ATK_CHARACTER_STATE_INAIR_ATKED1 = int32(6)
+	ATK_CHARACTER_STATE_IDLE1               = int32(0)
+	ATK_CHARACTER_STATE_WALKING             = int32(1)
+	ATK_CHARACTER_STATE_ATK1                = int32(2)
+	ATK_CHARACTER_STATE_ATKED1              = int32(3)
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP = int32(4)
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP = int32(5)
+	ATK_CHARACTER_STATE_INAIR_ATK1          = int32(6)
+	ATK_CHARACTER_STATE_INAIR_ATKED1        = int32(7)
+	ATK_CHARACTER_STATE_BLOWN_UP1           = int32(8)
+	ATK_CHARACTER_STATE_LAY_DOWN1           = int32(9)
+	ATK_CHARACTER_STATE_GET_UP1             = int32(10)
+
+	ATK_CHARACTER_STATE_ATK2 = int32(11)
+	ATK_CHARACTER_STATE_ATK3 = int32(12)
 )
 
-func ConvertToInputFrameId(renderFrameId int32, inputDelayFrames int32, inputScaleFrames uint32) int32 {
-	if renderFrameId < inputDelayFrames {
+var inAirSet = map[int32]bool{
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_ATK1:          true,
+	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
+	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
+}
+
+var noOpSet = map[int32]bool{
+	ATK_CHARACTER_STATE_ATKED1:       true,
+	ATK_CHARACTER_STATE_INAIR_ATKED1: true,
+	ATK_CHARACTER_STATE_BLOWN_UP1:    true,
+	ATK_CHARACTER_STATE_LAY_DOWN1:    true,
+	// During the invinsible frames of GET_UP1, the player is allowed to take any action
+}
+
+var invinsibleSet = map[int32]bool{
+	ATK_CHARACTER_STATE_BLOWN_UP1: true,
+	ATK_CHARACTER_STATE_LAY_DOWN1: true,
+	ATK_CHARACTER_STATE_GET_UP1:   true,
+}
+
+var nonAttackingSet = map[int32]bool{
+	ATK_CHARACTER_STATE_IDLE1:               true,
+	ATK_CHARACTER_STATE_WALKING:             true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP: true,
+	ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP: true,
+	ATK_CHARACTER_STATE_ATKED1:              true,
+	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
+	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
+	ATK_CHARACTER_STATE_LAY_DOWN1:           true,
+	ATK_CHARACTER_STATE_GET_UP1:             true,
+}
+
+func ShouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFrameId int32) (bool, int32) {
+	for i := prevRenderFrameId + 1; i <= renderFrameId; i++ {
+		if (0 <= i) && (0 == (i & ((1 << INPUT_SCALE_FRAMES) - 1))) {
+			return true, i
+		}
+	}
+	return false, -1
+}
+
+func ShouldGenerateInputFrameUpsync(renderFrameId int32) bool {
+	return ((renderFrameId & ((1 << INPUT_SCALE_FRAMES) - 1)) == 0)
+}
+
+func ConvertToDelayedInputFrameId(renderFrameId int32) int32 {
+	if renderFrameId < INPUT_DELAY_FRAMES {
 		return 0
 	}
-	return ((renderFrameId - inputDelayFrames) >> inputScaleFrames)
+	return ((renderFrameId - INPUT_DELAY_FRAMES) >> INPUT_SCALE_FRAMES)
+}
+
+func ConvertToNoDelayInputFrameId(renderFrameId int32) int32 {
+	return (renderFrameId >> INPUT_SCALE_FRAMES)
+}
+
+func ConvertToFirstUsedRenderFrameId(inputFrameId int32) int32 {
+	return ((inputFrameId << INPUT_SCALE_FRAMES) + INPUT_DELAY_FRAMES)
+}
+
+func ConvertToLastUsedRenderFrameId(inputFrameId int32) int32 {
+	return ((inputFrameId << INPUT_SCALE_FRAMES) + INPUT_DELAY_FRAMES + (1 << INPUT_SCALE_FRAMES) - 1)
 }
 
 func decodeInput(encodedInput uint64) *InputFrameDecoded {
@@ -250,18 +311,18 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, re
 	return false
 }
 
-func WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio float64) (int32, int32) {
+func WorldToVirtualGridPos(wx, wy float64) (int32, int32) {
 	// [WARNING] Introduces loss of precision!
 	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-	var virtualGridX int32 = int32(math.Floor(wx * worldToVirtualGridRatio))
-	var virtualGridY int32 = int32(math.Floor(wy * worldToVirtualGridRatio))
+	var virtualGridX int32 = int32(math.Floor(wx * WORLD_TO_VIRTUAL_GRID_RATIO))
+	var virtualGridY int32 = int32(math.Floor(wy * WORLD_TO_VIRTUAL_GRID_RATIO))
 	return virtualGridX, virtualGridY
 }
 
-func VirtualGridToWorldPos(vx, vy int32, virtualGridToWorldRatio float64) (float64, float64) {
+func VirtualGridToWorldPos(vx, vy int32) (float64, float64) {
 	// No loss of precision
-	var wx float64 = float64(vx) * virtualGridToWorldRatio
-	var wy float64 = float64(vy) * virtualGridToWorldRatio
+	var wx float64 = float64(vx) * VIRTUAL_GRID_TO_WORLD_RATIO
+	var wy float64 = float64(vy) * VIRTUAL_GRID_TO_WORLD_RATIO
 	return wx, wy
 }
 
@@ -273,13 +334,13 @@ func PolygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPaddin
 	return cx + halfBoundingW + leftPadding - collisionSpaceOffsetX, cy + halfBoundingH + bottomPadding - collisionSpaceOffsetY
 }
 
-func PolygonColliderBLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64, worldToVirtualGridRatio float64) (int32, int32) {
+func PolygonColliderBLToVirtualGridPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (int32, int32) {
 	wx, wy := PolygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
-	return WorldToVirtualGridPos(wx, wy, worldToVirtualGridRatio)
+	return WorldToVirtualGridPos(wx, wy)
 }
 
-func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64, virtualGridToWorldRatio float64) (float64, float64) {
-	wx, wy := VirtualGridToWorldPos(vx, vy, virtualGridToWorldRatio)
+func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY float64) (float64, float64) {
+	wx, wy := VirtualGridToWorldPos(vx, vy)
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
@@ -321,12 +382,16 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 	return &ret
 }
 
-func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer, inputDelayFrames int32, inputScaleFrames uint32) (int, bool, int32, int32) {
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
-	delayedInputFrameId := ConvertToInputFrameId(currRenderFrame.Id, inputDelayFrames, inputScaleFrames)
-	delayedInputFrameIdForPrevRdf := ConvertToInputFrameId(currRenderFrame.Id-1, inputDelayFrames, inputScaleFrames)
+	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
+	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id - 1)
 
 	if 0 >= delayedInputFrameId {
+		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
+	}
+
+	if _, existent := noOpSet[currPlayerDownsync.CharacterState]; existent {
 		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
 	}
 
@@ -338,11 +403,8 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 
 	jumpedOrNot := false
 	joinIndex := currPlayerDownsync.JoinIndex
-	if 0 < currPlayerDownsync.FramesToRecover {
-		return PATTERN_ID_UNABLE_TO_OP, false, 0, 0
-	}
 	decodedInput := decodeInput(delayedInputList[joinIndex-1])
-	effDx, effDy := decodedInput.Dx, decodedInput.Dy
+	effDx, effDy := int32(0), int32(0)
 	prevBtnALevel, prevBtnBLevel := int32(0), int32(0)
 	if nil != delayedInputListForPrevRdf {
 		prevDecodedInput := decodeInput(delayedInputListForPrevRdf[joinIndex-1])
@@ -350,121 +412,164 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		prevBtnBLevel = prevDecodedInput.BtnBLevel
 	}
 
-	if decodedInput.BtnBLevel > prevBtnBLevel {
-		characStateAlreadyInAir := false
-		if ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATK1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_ATKED1 == currPlayerDownsync.CharacterState {
-			characStateAlreadyInAir = true
-		}
-		characStateIsInterruptWaivable := false
-		if ATK_CHARACTER_STATE_IDLE1 == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_WALKING == currPlayerDownsync.CharacterState || ATK_CHARACTER_STATE_INAIR_IDLE1 == currPlayerDownsync.CharacterState {
-			characStateIsInterruptWaivable = true
-		}
-		if !characStateAlreadyInAir && characStateIsInterruptWaivable {
-			jumpedOrNot = true
+	if 0 == currPlayerDownsync.FramesToRecover {
+		// Jumping and moving are only allowed here
+		effDx, effDy = decodedInput.Dx, decodedInput.Dy
+		if decodedInput.BtnBLevel > prevBtnBLevel {
+			if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
+				jumpedOrNot = true
+			}
 		}
 	}
 
 	patternId := PATTERN_ID_NO_OP
 	if decodedInput.BtnALevel > prevBtnALevel {
-		patternId = 0
-		effDx, effDy = 0, 0 // Most patterns/skills should not allow simultaneous movement
+		patternId = 1
 	}
 
 	return patternId, jumpedOrNot, effDx, effDy
 }
 
 // [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, gravityX, gravityY, jumpingInitVelY, inputDelayFrames int32, inputScaleFrames uint32, collisionSpaceOffsetX, collisionSpaceOffsetY, snapIntoPlatformOverlap, snapIntoPlatformThreshold, worldToVirtualGridRatio, virtualGridToWorldRatio float64, playerOpPatternToSkillId map[int]int) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:              currPlayerDownsync.Id,
-			VirtualGridX:    currPlayerDownsync.VirtualGridX,
-			VirtualGridY:    currPlayerDownsync.VirtualGridY,
-			DirX:            currPlayerDownsync.DirX,
-			DirY:            currPlayerDownsync.DirY,
-			VelX:            currPlayerDownsync.VelX,
-			VelY:            currPlayerDownsync.VelY,
-			CharacterState:  currPlayerDownsync.CharacterState,
-			InAir:           true,
-			Speed:           currPlayerDownsync.Speed,
-			BattleState:     currPlayerDownsync.BattleState,
-			Score:           currPlayerDownsync.Score,
-			Removed:         currPlayerDownsync.Removed,
-			JoinIndex:       currPlayerDownsync.JoinIndex,
-			FramesToRecover: currPlayerDownsync.FramesToRecover - 1,
-			Hp:              currPlayerDownsync.Hp,
-			MaxHp:           currPlayerDownsync.MaxHp,
+			Id:               currPlayerDownsync.Id,
+			VirtualGridX:     currPlayerDownsync.VirtualGridX,
+			VirtualGridY:     currPlayerDownsync.VirtualGridY,
+			DirX:             currPlayerDownsync.DirX,
+			DirY:             currPlayerDownsync.DirY,
+			VelX:             currPlayerDownsync.VelX,
+			VelY:             currPlayerDownsync.VelY,
+			CharacterState:   currPlayerDownsync.CharacterState,
+			InAir:            true,
+			Speed:            currPlayerDownsync.Speed,
+			BattleState:      currPlayerDownsync.BattleState,
+			Score:            currPlayerDownsync.Score,
+			Removed:          currPlayerDownsync.Removed,
+			JoinIndex:        currPlayerDownsync.JoinIndex,
+			Hp:               currPlayerDownsync.Hp,
+			MaxHp:            currPlayerDownsync.MaxHp,
+			FramesToRecover:  currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState:  currPlayerDownsync.FramesInChState + 1,
+			ActiveSkillId:    currPlayerDownsync.ActiveSkillId,
+			ActiveSkillHit:   currPlayerDownsync.ActiveSkillHit,
+			FramesInvinsible: currPlayerDownsync.FramesInvinsible - 1,
+			ColliderRadius:   currPlayerDownsync.ColliderRadius,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
+		}
+		if nextRenderFramePlayers[i].FramesInvinsible < 0 {
+			nextRenderFramePlayers[i].FramesInvinsible = 0
 		}
 	}
 
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	effPushbacks := make([]Vec2D, roomCapacity)
 	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
+	jumpedOrNotList := make([]bool, roomCapacity)
 
 	// 1. Process player inputs
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
+		jumpedOrNotList[i] = false
+		chConfig := chConfigsOrderedByJoinIndex[i]
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer, inputDelayFrames, inputScaleFrames)
-		if PATTERN_ID_UNABLE_TO_OP == patternId {
-			continue
-		}
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer)
 
 		if jumpedOrNot {
-			thatPlayerInNextFrame.VelY = jumpingInitVelY
-			thatPlayerInNextFrame.VirtualGridY += jumpingInitVelY // Immediately gets out of any snapping
+			thatPlayerInNextFrame.VelY = int32(chConfig.JumpingInitVelY)
+			jumpedOrNotList[i] = true
 		}
 		joinIndex := currPlayerDownsync.JoinIndex
-		if PATTERN_ID_NO_OP != patternId {
-			if skillId, existent := playerOpPatternToSkillId[(int(joinIndex)<<uint(8))+patternId]; existent {
-				skillConfig := skillIdToBullet[skillId].(*MeleeBullet) // Hardcoded type "MeleeBullet" for now
-				var newMeleeBullet MeleeBullet = *skillConfig
-				newMeleeBullet.OffenderJoinIndex = joinIndex
-				newMeleeBullet.OffenderPlayerId = currPlayerDownsync.Id
-				newMeleeBullet.OriginatedRenderFrameId = currRenderFrame.Id
-				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newMeleeBullet)
-				thatPlayerInNextFrame.FramesToRecover = newMeleeBullet.RecoveryFrames
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATK1
-				if false == currPlayerDownsync.InAir {
-					thatPlayerInNextFrame.VelX = 0
+		skillId := chConfig.SkillMapper(patternId, currPlayerDownsync)
+		if skillConfig, existent := skills[skillId]; existent {
+			thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
+			thatPlayerInNextFrame.ActiveSkillHit = 0
+
+			// Hardcoded to use only the first hit for now
+			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
+			case *MeleeBullet:
+				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
+				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				newBullet.OffenderJoinIndex = joinIndex
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
+				thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
+
+				hasLockVel := false
+				if NO_LOCK_VEL != v.SelfLockVelX {
+					hasLockVel = true
+					xfac := int32(1)
+					if 0 > thatPlayerInNextFrame.DirX {
+						xfac = -xfac
+					}
+					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
+				}
+				if NO_LOCK_VEL != v.SelfLockVelY {
+					hasLockVel = true
+					thatPlayerInNextFrame.VelY = v.SelfLockVelY
+				}
+				if false == hasLockVel {
+					if false == currPlayerDownsync.InAir {
+						thatPlayerInNextFrame.VelX = 0
+					}
 				}
 			}
-			continue
+
+			thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState
+			continue // Don't allow movement if skill is used
 		}
 
-		if 0 != effDx || 0 != effDy {
-			thatPlayerInNextFrame.DirX, thatPlayerInNextFrame.DirY = effDx, effDy
-			thatPlayerInNextFrame.VelX = effDx * currPlayerDownsync.Speed
-			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
-		} else {
-			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-			thatPlayerInNextFrame.VelX = 0
+		if 0 == currPlayerDownsync.FramesToRecover {
+			if 0 != effDx || 0 != effDy {
+				thatPlayerInNextFrame.DirX, thatPlayerInNextFrame.DirY = effDx, effDy
+				thatPlayerInNextFrame.VelX = effDx * currPlayerDownsync.Speed
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+			} else {
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+				thatPlayerInNextFrame.VelX = 0
+			}
 		}
 	}
 
 	// 2. Process player movement
+	playerColliders := make([]*resolv.Object, len(currRenderFrame.PlayersArr), len(currRenderFrame.PlayersArr)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
-		thatPlayerInNextFrame := nextRenderFramePlayers[i]
+
+		chConfig := chConfigsOrderedByJoinIndex[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
+		if jumpedOrNotList[i] {
+			newVy += chConfig.JumpingInitVelY // Immediately gets out of any snapping
+		}
 
-		playerCollider.X, playerCollider.Y = VirtualGridToPolygonColliderBLPos(newVx, newVy, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, virtualGridToWorldRatio)
-		// Update in the collision system
-		playerCollider.Update()
+		wx, wy := VirtualGridToWorldPos(newVx, newVy)
+		colliderWidth, colliderHeight := currPlayerDownsync.ColliderRadius*2, currPlayerDownsync.ColliderRadius*4
+		switch currPlayerDownsync.CharacterState {
+		case ATK_CHARACTER_STATE_LAY_DOWN1:
+			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*4, currPlayerDownsync.ColliderRadius*2
+		case ATK_CHARACTER_STATE_BLOWN_UP1, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP:
+			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*2, currPlayerDownsync.ColliderRadius*2
+		}
 
+		colliderWorldWidth, colliderWorldHeight := VirtualGridToWorldPos(colliderWidth, colliderHeight)
+
+		playerCollider := GenerateRectCollider(wx, wy, colliderWorldWidth, colliderWorldHeight, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
+		playerColliders[i] = playerCollider
+
+		// Add to collision system
+		collisionSys.Add(playerCollider)
+
+		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		if currPlayerDownsync.InAir {
-			thatPlayerInNextFrame.VelX += gravityX
-			thatPlayerInNextFrame.VelY += gravityY
+			thatPlayerInNextFrame.VelX += GRAVITY_X
+			thatPlayerInNextFrame.VelY += GRAVITY_Y
 		}
 	}
 
@@ -474,13 +579,13 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id) {
 			offender := currRenderFrame.PlayersArr[meleeBullet.OffenderJoinIndex-1]
 
-			xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
+			xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
 			if 0 > offender.DirX {
-				xfac = float64(-1.0)
+				xfac = -xfac
 			}
-			offenderWx, offenderWy := VirtualGridToWorldPos(offender.VirtualGridX, offender.VirtualGridY, virtualGridToWorldRatio)
-			bulletWx, bulletWy := offenderWx+xfac*meleeBullet.HitboxOffset, offenderWy
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, snapIntoPlatformOverlap, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+			bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.HitboxOffsetX, offender.VirtualGridY)
+			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY)
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
 		} else {
@@ -491,12 +596,13 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 4. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerCollider := playerColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, snapIntoPlatformOverlap, &(effPushbacks[joinIndex-1]))
+		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
+		chConfig := chConfigsOrderedByJoinIndex[i]
 		landedOnGravityPushback := false
+
 		if collision := playerCollider.Check(0, 0); nil != collision {
 			for _, obj := range collision.Objects {
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
@@ -521,7 +627,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				normAlignmentWithGravity := (overlapResult.OverlapX*float64(0) + overlapResult.OverlapY*float64(-1.0))
 				if isAnotherPlayer {
 					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
-					pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap*2)*overlapResult.OverlapY
+					pushbackX, pushbackY = (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapX, (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapY
 				}
 				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
 					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
@@ -533,7 +639,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				effPushbacks[joinIndex-1].X += pushbackX
 				effPushbacks[joinIndex-1].Y += pushbackY
 
-				if snapIntoPlatformThreshold < normAlignmentWithGravity {
+				if SNAP_INTO_PLATFORM_THRESHOLD < normAlignmentWithGravity {
 					landedOnGravityPushback = true
 					//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
 					//fmt.Printf("joinIndex=%d landedOnGravityPushback\n{renderFrame.id: %d, isBarrier: %v, isAnotherPlayer: %v}\nhardPushbackNormsOfThisPlayer=%v, playerColliderPos=(%.2f,%.2f), immediatePushback={%.3f, %.3f}, effPushback={%.3f, %.3f}, overlapMag=%.4f\n", joinIndex, currRenderFrame.Id, isBarrier, isAnotherPlayer, *hardPushbackNorms[joinIndex-1], playerColliderCenterX, playerColliderCenterY, pushbackX, pushbackY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap)
@@ -544,75 +650,86 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			thatPlayerInNextFrame.InAir = false
 			if currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY {
 				// fallStopping
-				thatPlayerInNextFrame.VelX = 0
 				thatPlayerInNextFrame.VelY = 0
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-				thatPlayerInNextFrame.FramesToRecover = 0
-			}
-		}
-		if currPlayerDownsync.InAir {
-			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
-			switch oldNextCharacterState {
-			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1
-			case ATK_CHARACTER_STATE_ATK1:
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATK1
-			case ATK_CHARACTER_STATE_ATKED1:
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+				thatPlayerInNextFrame.VelX = 0
+				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
+					if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
+						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
+						thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
+					} else {
+						halfColliderWidthDiff, halfColliderHeightDiff := int32(0), currPlayerDownsync.ColliderRadius
+						_, halfColliderWorldHeightDiff := VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff)
+						effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff // To prevent bouncing due to abrupt change of collider shape
+						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+					}
+				}
+			} else {
+				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
+					// not fallStopping, could be in LayDown or GetUp
+					if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
+						if 0 == thatPlayerInNextFrame.FramesToRecover {
+							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
+							thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
+						}
+					} else if ATK_CHARACTER_STATE_GET_UP1 == thatPlayerInNextFrame.CharacterState {
+						if 0 == thatPlayerInNextFrame.FramesToRecover {
+							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+							thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
+						}
+					}
+				}
 			}
 		}
 	}
 
 	// 5. Check bullet-anything collisions
 	for _, bulletCollider := range bulletColliders {
-		meleeBullet := bulletCollider.Data.(*MeleeBullet)
-		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
 		collision := bulletCollider.Check(0, 0)
 		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
-		if nil == collision {
-			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
-			continue
-		}
-		offender := currRenderFrame.PlayersArr[meleeBullet.OffenderJoinIndex-1]
-		for _, obj := range collision.Objects {
-			defenderShape := obj.Shape.(*resolv.ConvexPolygon)
-			switch t := obj.Data.(type) {
-			case *PlayerDownsync:
-				if meleeBullet.OffenderPlayerId == t.Id {
-					continue
-				}
-				overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
-				if !overlapped {
-					continue
-				}
-				joinIndex := t.JoinIndex
-				xfac := float64(1.0) // By now, straight Punch offset doesn't respect "y-axis"
-				if 0 > offender.DirX {
-					xfac = float64(-1.0)
-				}
-				pushbackX, pushbackY := -xfac*meleeBullet.Pushback, float64(0)
-
-				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
-					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
-					if 0 > projectedMagnitude {
-						//fmt.Printf("defenderPlayerId=%d, joinIndex=%d reducing bullet pushback={%.3f, %.3f} by {%.3f, %.3f} where hardPushbackNorm={%.3f, %.3f}, projectedMagnitude=%.3f at renderFrame.id=%d", t.Id, joinIndex, pushbackX, pushbackY, projectedMagnitude*hardPushbackNorm.X, projectedMagnitude*hardPushbackNorm.Y, hardPushbackNorm.X, hardPushbackNorm.Y, projectedMagnitude, currRenderFrame.Id)
-						pushbackX -= projectedMagnitude * hardPushbackNorm.X
-						pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+		switch v := bulletCollider.Data.(type) {
+		case *MeleeBullet:
+			if nil == collision {
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, v)
+				continue
+			}
+			bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+			offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
+			for _, obj := range collision.Objects {
+				defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+				switch t := obj.Data.(type) {
+				case *PlayerDownsync:
+					if v.OffenderJoinIndex == t.JoinIndex {
+						continue
 					}
+					if _, existent := invinsibleSet[t.CharacterState]; existent {
+						continue
+					}
+					if 0 < t.FramesInvinsible {
+						continue
+					}
+					overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+					if !overlapped {
+						continue
+					}
+					xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+					if 0 > offender.DirX {
+						xfac = -xfac
+					}
+					pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
+					atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
+					atkedPlayerInNextFrame.VelX = pushbackVelX
+					atkedPlayerInNextFrame.VelY = pushbackVelY
+					if v.BlowUp {
+						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+					} else {
+						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+					}
+					oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+					if v.HitStunFrames > oldFramesToRecover {
+						atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
+					}
+				default:
 				}
-
-				effPushbacks[joinIndex-1].X += pushbackX
-				effPushbacks[joinIndex-1].Y += pushbackY
-				atkedPlayerInCurFrame, atkedPlayerInNextFrame := currRenderFrame.PlayersArr[t.JoinIndex-1], nextRenderFramePlayers[t.JoinIndex-1]
-				atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-				if atkedPlayerInCurFrame.InAir {
-					atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
-				}
-				oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-				if meleeBullet.HitStunFrames > oldFramesToRecover {
-					atkedPlayerInNextFrame.FramesToRecover = meleeBullet.HitStunFrames
-				}
-			default:
 			}
 		}
 	}
@@ -620,11 +737,43 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 6. Get players out of stuck barriers if there's any
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		collisionPlayerIndex := COLLISION_PLAYER_INDEX_PREFIX + joinIndex
-		playerCollider := collisionSysMap[collisionPlayerIndex]
+		playerCollider := playerColliders[i]
 		// Update "virtual grid position"
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY, worldToVirtualGridRatio)
+		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY)
+
+		// Update "CharacterState"
+		if thatPlayerInNextFrame.InAir {
+			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
+			switch oldNextCharacterState {
+			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
+				if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP
+				}
+			case ATK_CHARACTER_STATE_ATK1:
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATK1
+				// No inAir transition for ATK2/ATK3 for now
+			case ATK_CHARACTER_STATE_ATKED1:
+				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+			}
+		}
+
+		// Reset "FramesInChState" if "CharacterState" is changed
+		if thatPlayerInNextFrame.CharacterState != currPlayerDownsync.CharacterState {
+			thatPlayerInNextFrame.FramesInChState = 0
+		}
+
+		// Remove any active skill if not attacking
+		if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
+			thatPlayerInNextFrame.ActiveSkillId = int32(NO_SKILL)
+			thatPlayerInNextFrame.ActiveSkillHit = int32(NO_SKILL_HIT)
+		}
+	}
+
+	for _, playerCollider := range playerColliders {
+		playerCollider.Space.Remove(playerCollider)
 	}
 
 	return &RoomDownsyncFrame{

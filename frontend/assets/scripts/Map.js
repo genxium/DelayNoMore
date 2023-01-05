@@ -107,23 +107,6 @@ cc.Class({
     return (0 == inputFrameId % 10);
   },
 
-  _convertToInputFrameId(renderFrameId, inputDelayFrames) {
-    if (renderFrameId < inputDelayFrames) return 0;
-    return ((renderFrameId - inputDelayFrames) >> this.inputScaleFrames);
-  },
-
-  _convertToFirstUsedRenderFrameId(inputFrameId, inputDelayFrames) {
-    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames);
-  },
-
-  _convertToLastUsedRenderFrameId(inputFrameId, inputDelayFrames) {
-    return ((inputFrameId << this.inputScaleFrames) + inputDelayFrames + (1 << this.inputScaleFrames) - 1);
-  },
-
-  shouldGenerateInputFrameUpsync(renderFrameId) {
-    return ((renderFrameId & ((1 << this.inputScaleFrames) - 1)) == 0);
-  },
-
   _allConfirmed(confirmedList) {
     return (confirmedList + 1) == (1 << this.playerRichInfoDict.size);
   },
@@ -296,7 +279,7 @@ cc.Class({
     self.collisionPlayerIndexPrefix = (1 << 17); // For tracking the movements of players 
     if (null != self.playerRichInfoDict) {
       self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-        if (playerRichInfo.node.parent) {
+        if (playerRichInfo.node && playerRichInfo.node.parent) {
           playerRichInfo.node.parent.removeChild(playerRichInfo.node);
         }
       });
@@ -315,11 +298,7 @@ cc.Class({
     self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
     self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
 
-    const spaceW = self.stageDiscreteW * self.stageTileW;
-    const spaceH = self.stageDiscreteH * self.stageTileH;
-    self.spaceOffsetX = (spaceW >> 1);
-    self.spaceOffsetY = (spaceH >> 1);
-    self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs(spaceW, spaceH, self.collisionMinStep, self.collisionMinStep);
+    self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs((self.spaceOffsetX << 1), (self.spaceOffsetY << 1), self.collisionMinStep, self.collisionMinStep);
     self.gopkgsCollisionSysMap = {}; // [WARNING] Don't use "JavaScript Map" which could cause loss of type information when passing through Golang transpiled functions!
 
     self.collisionBarrierIndexPrefix = (1 << 16); // For tracking the movements of barriers, though not yet actually used 
@@ -347,6 +326,56 @@ cc.Class({
     }
     if (self.findingPlayerNode) {
       safelyAddChild(self.widgetsAboveAllNode, self.findingPlayerNode);
+    }
+  },
+
+  initDebugDrawers() {
+    const self = this;
+    if (self.showCriticalCoordinateLabels) {
+      const drawer1 = new cc.Node();
+      drawer1.setPosition(cc.v2(0, 0))
+      safelyAddChild(self.node, drawer1);
+      setLocalZOrder(drawer1, 999);
+      const g1 = drawer1.addComponent(cc.Graphics);
+      g1.lineWidth = 2;
+      self.g1 = g1;
+
+      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys); // This step is slow according to Chrome profiling, and we only need draw it once for those static barriers
+      for (let k in collisionSpaceObjs) {
+        const body = collisionSpaceObjs[k];
+        let padding = 0;
+        if (null != body.Data && null != body.Data.JoinIndex) {
+          // character
+          if (1 == body.Data.JoinIndex) {
+            g1.strokeColor = cc.Color.BLUE;
+          } else {
+            g1.strokeColor = cc.Color.RED;
+          }
+          padding = self.snapIntoPlatformOverlap;
+        } else {
+          // barrier
+          g1.strokeColor = cc.Color.WHITE;
+        }
+        const points = body.Shape.Points;
+        const wpos = [body.X - self.spaceOffsetX, body.Y - self.spaceOffsetY];
+        g1.moveTo(wpos[0], wpos[1]);
+        const cnt = points.length;
+        for (let j = 0; j < cnt; j += 1) {
+          const x = wpos[0] + points[j][0],
+            y = wpos[1] + points[j][1];
+          g1.lineTo(x, y);
+        }
+        g1.lineTo(wpos[0], wpos[1]);
+        g1.stroke();
+      }
+
+      const drawer2 = new cc.Node();
+      drawer2.setPosition(cc.v2(0, 0))
+      safelyAddChild(self.node, drawer2);
+      setLocalZOrder(drawer2, 999);
+      const g2 = drawer2.addComponent(cc.Graphics);
+      g2.lineWidth = 2;
+      self.g2 = g2;
     }
   },
 
@@ -439,16 +468,6 @@ cc.Class({
         mapNode.removeAllChildren();
         self._resetCurrentMatch();
 
-        if (self.showCriticalCoordinateLabels) {
-          const drawer = new cc.Node();
-          drawer.setPosition(cc.v2(0, 0))
-          safelyAddChild(self.node, drawer);
-          setLocalZOrder(drawer, 999);
-          const g = drawer.addComponent(cc.Graphics);
-          g.lineWidth = 2;
-          self.g = g;
-        }
-
         tiledMapIns.tmxAsset = tmxAsset;
         const newMapSize = tiledMapIns.getMapSize();
         const newTileSize = tiledMapIns.getTileSize();
@@ -477,37 +496,6 @@ cc.Class({
           const newBarrierCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, gopkgsBarrier, "Barrier");
           self.gopkgsCollisionSys.Add(newBarrierCollider);
 
-          if (false && self.showCriticalCoordinateLabels) {
-            for (let i = 0; i < boundaryObj.length; ++i) {
-              const barrierVertLabelNode = new cc.Node();
-              switch (i % 4) {
-                case 0:
-                  barrierVertLabelNode.color = cc.Color.RED;
-                  break;
-                case 1:
-                  barrierVertLabelNode.color = cc.Color.GRAY;
-                  break;
-                case 2:
-                  barrierVertLabelNode.color = cc.Color.BLACK;
-                  break;
-                default:
-                  barrierVertLabelNode.color = cc.Color.MAGENTA;
-                  break;
-              }
-              const wx = boundaryObj.anchor.x + boundaryObj[i].x,
-                wy = boundaryObj.anchor.y + boundaryObj[i].y;
-              barrierVertLabelNode.setPosition(cc.v2(wx, wy));
-              const barrierVertLabel = barrierVertLabelNode.addComponent(cc.Label);
-              barrierVertLabel.fontSize = 12;
-              barrierVertLabel.lineHeight = barrierVertLabel.fontSize + 1;
-              barrierVertLabel.string = `(${wx.toFixed(1)}, ${wy.toFixed(1)})`;
-              safelyAddChild(self.node, barrierVertLabelNode);
-              setLocalZOrder(barrierVertLabelNode, 5);
-
-              barrierVertLabelNode.active = true;
-            }
-
-          }
           // console.log("Created barrier: ", newBarrierCollider);
           ++barrierIdCounter;
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
@@ -517,7 +505,7 @@ cc.Class({
         Object.assign(self.selfPlayerInfo, {
           Id: self.selfPlayerInfo.playerId
         });
-
+        self.initDebugDrawers();
         const reqData = window.pb.protos.WsReq.encode({
           msgId: Date.now(),
           act: window.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK,
@@ -590,13 +578,13 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.inAir, pbPlayer.colliderRadius);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
     for (let k in pbRdf.meleeBullets) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.battleLocalId, pbBullet.startupFrames, pbBullet.activeFrames, pbBullet.recoveryFrames, pbBullet.recoveryFramesOnBlock, pbBullet.recoveryFramesOnHit, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.releaseTriggerType, pbBullet.damage, pbBullet.offenderJoinIndex, pbBullet.offenderPlayerId, pbBullet.pushback, pbBullet.hitboxOffset, pbBullet.selfMoveforwardX, pbBullet.selfMoveforwardY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY);
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
       jsMeleeBulletsArr.push(jsBullet);
     }
 
@@ -638,7 +626,10 @@ cc.Class({
     }
 
     // The logic below applies to (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdf.id || window.RING_BUFF_NON_CONSECUTIVE_SET == dumpRenderCacheRet)
-    self.playerOpPatternToSkillId = pbRdf.playerOpPatternToSkillId;
+    if (null == pbRdf.speciesIdList) {
+      console.error(`pbRdf.speciesIdList is required for starting or resyncing battle!`);
+    }
+    self.chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(pbRdf.speciesIdList);
     self._initPlayerRichInfoDict(rdf.PlayersArr);
 
     // Show the top status indicators for IN_BATTLE 
@@ -694,18 +685,19 @@ cc.Class({
 
   equalPlayers(lhs, rhs) {
     if (null == lhs || null == rhs) return false;
-    if (lhs.virtualGridX != rhs.virtualGridX) return false;
-    if (lhs.virtualGridY != rhs.virtualGridY) return false;
-    if (lhs.dirX != rhs.dirX) return false;
-    if (lhs.dirY != rhs.dirY) return false;
-    if (lhs.velX != rhs.velX) return false;
-    if (lhs.velY != rhs.velY) return false;
-    if (lhs.speed != rhs.speed) return false;
-    if (lhs.framesToRecover != rhs.framesToRecover) return false;
-    if (lhs.hp != rhs.hp) return false;
-    if (lhs.maxHp != rhs.maxHp) return false;
-    if (lhs.characterState != rhs.characterState) return false;
-    if (lhs.inAir != rhs.inAir) return false;
+    if (lhs.VirtualGridX != rhs.VirtualGridX) return false;
+    if (lhs.VirtualGridY != rhs.VirtualGridY) return false;
+    if (lhs.DirX != rhs.DirX) return false;
+    if (lhs.DirY != rhs.DirY) return false;
+    if (lhs.VelX != rhs.VelX) return false;
+    if (lhs.VelY != rhs.VelY) return false;
+    if (lhs.Speed != rhs.Speed) return false;
+    if (lhs.Hp != rhs.Hp) return false;
+    if (lhs.MaxHp != rhs.MaxHp) return false;
+    if (lhs.CharacterState != rhs.CharacterState) return false;
+    if (lhs.InAir != rhs.InAir) return false;
+    if (lhs.FramesToRecover != rhs.FramesToRecover) return false;
+    if (lhs.FramesInChState != rhs.FramesInChState) return false;
     return true;
   },
 
@@ -770,7 +762,7 @@ cc.Class({
     }
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
-    const renderFrameId1 = self._convertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId, self.inputDelayFrames) - 1;
+    const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
     /*
@@ -829,37 +821,20 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     const self = this;
     const newPlayerNode = cc.instantiate(self.controlledCharacterPrefab)
     const playerScriptIns = newPlayerNode.getComponent("ControlledCharacter");
+    const chConfig = self.chConfigsOrderedByJoinIndex[joinIndex - 1];
+    playerScriptIns.setSpecies(chConfig.SpeciesName);
+
     if (1 == joinIndex) {
-      playerScriptIns.setSpecies("SoldierWaterGhost");
-    } else if (2 == joinIndex) {
-      playerScriptIns.setSpecies("UltramanTiga");
+      newPlayerNode.color = cc.Color.RED;
+    } else {
+      newPlayerNode.color = cc.Color.BLUE;
     }
 
-    const [wx, wy] = self.virtualGridToWorldPos(vx, vy);
+    const [wx, wy] = gopkgs.VirtualGridToWorldPos(vx, vy);
     newPlayerNode.setPosition(wx, wy);
     playerScriptIns.mapNode = self.node;
-    const colliderRadius = playerDownsyncInfo.ColliderRadius;
-    const halfColliderWidth = colliderRadius,
-      halfColliderHeight = colliderRadius + colliderRadius; // avoid multiplying
-    const colliderWidth = halfColliderWidth + halfColliderWidth,
-      colliderHeight = halfColliderHeight + halfColliderHeight; // avoid multiplying
 
-    const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY);
-    const gopkgsBoundaryAnchor = gopkgs.NewVec2DJs(cx, cy);
-    const gopkgsBoundaryPts = [
-      gopkgs.NewVec2DJs(0, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, 0),
-      gopkgs.NewVec2DJs(self.snapIntoPlatformOverlap + colliderWidth + self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap),
-      gopkgs.NewVec2DJs(0, self.snapIntoPlatformOverlap + colliderHeight + self.snapIntoPlatformOverlap)
-    ];
-    const gopkgsBoundary = gopkgs.NewPolygon2DJs(gopkgsBoundaryAnchor, gopkgsBoundaryPts);
-    const newPlayerCollider = gopkgs.GenerateConvexPolygonColliderJs(gopkgsBoundary, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    //const newPlayerCollider = gopkgs.GenerateRectColliderJs(wx, wy, colliderWidth, colliderHeight, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.snapIntoPlatformOverlap, self.spaceOffsetX, self.spaceOffsetY, playerDownsyncInfo, "Player");
-    self.gopkgsCollisionSys.Add(newPlayerCollider);
-    const collisionPlayerIndex = self.collisionPlayerIndexPrefix + joinIndex;
-    self.gopkgsCollisionSysMap[collisionPlayerIndex] = newPlayerCollider;
-
-    console.log(`Created new player collider: joinIndex=${joinIndex}, colliderRadius=${playerDownsyncInfo.ColliderRadius}`);
+    console.log(`Created new player node: joinIndex=${joinIndex}`);
 
     safelyAddChild(self.node, newPlayerNode);
     setLocalZOrder(newPlayerNode, 5);
@@ -883,8 +858,8 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
         let st = performance.now();
         let prevSelfInput = null,
           currSelfInput = null;
-        const noDelayInputFrameId = self._convertToInputFrameId(self.renderFrameId, 0); // It's important that "inputDelayFrames == 0" here 
-        if (self.shouldGenerateInputFrameUpsync(self.renderFrameId)) {
+        const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
+        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
         }
 
@@ -919,7 +894,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
         */
         // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.getByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
         if (self.othersForcedDownsyncRenderFrameDict.has(rdf.id)) {
-          const delayedInputFrameId = self._convertToInputFrameId(rdf.id, 0);
+          const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.id);
           const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.id);
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
             console.warn(`Mismatched render frame@rdf.id=${rdf.id} w/ inputFrameId=${delayedInputFrameId}:
@@ -1063,12 +1038,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const playersArr = rdf.PlayersArr;
     for (let k in playersArr) {
       const currPlayerDownsync = playersArr[k];
+      const chConfig = self.chConfigsOrderedByJoinIndex[k];
       const prevRdfPlayer = (null == prevRdf ? null : prevRdf.PlayersArr[k]);
-      const [wx, wy] = self.virtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
+      const [wx, wy] = gopkgs.VirtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
       const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
-      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false);
+      playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false, chConfig);
     }
 
     // Update countdown
@@ -1087,14 +1063,14 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       if (null == currRdf) {
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
-      const j = self._convertToInputFrameId(i, self.inputDelayFrames);
+      const j = gopkgs.ConvertToDelayedInputFrameId(i);
       const delayedInputFrame = self.recentInputCache.GetByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
       if (null == delayedInputFrame) {
         // Shouldn't happen!
         throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
 
-      const jPrev = self._convertToInputFrameId(i - 1, self.inputDelayFrames);
+      const jPrev = gopkgs.ConvertToDelayedInputFrameId(i - 1);
       if (self.frameDataLoggingEnabled) {
         const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
         const inputFrameDownsyncClone = {
@@ -1104,7 +1080,15 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
       }
-      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.gravityX, self.gravityY, self.jumpingInitVelY, self.inputDelayFrames, self.inputScaleFrames, self.spaceOffsetX, self.spaceOffsetY, self.snapIntoPlatformOverlap, self.snapIntoPlatformThreshold, self.worldToVirtualGridRatio, self.virtualGridToWorldRatio, self.playerOpPatternToSkillId);
+      const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex);
+
+      if (3 == nextRdf.PlayersArr[0].ActiveSkillId && 3 != currRdf.PlayersArr[0].ActiveSkillId) {
+        console.log(`Started skill 3 at rdf.Id=${nextRdf.Id}`);
+        self.lastSkill3Started = nextRdf.Id;
+      }
+      if (3 != nextRdf.PlayersArr[0].ActiveSkillId && 3 == currRdf.PlayersArr[0].ActiveSkillId) {
+        console.log(`Stopped skill 3 at rdf.Id=${nextRdf.Id}, duration = ${nextRdf.Id-self.lastSkill3Started}`);
+      }
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
@@ -1233,49 +1217,81 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
     return `{${(playerCollider.x + leftPadding + halfBoundingW).toFixed(2)}, ${(playerCollider.y + bottomPadding + halfBoundingH).toFixed(2)}}`;
   },
 
-  virtualGridToWorldPos(vx, vy) {
-    // No loss of precision
-    const self = this;
-    return [vx * self.virtualGridToWorldRatio, vy * self.virtualGridToWorldRatio];
-  },
-
   showDebugBoundaries(rdf) {
     const self = this;
-    const leftPadding = self.snapIntoPlatformOverlap,
-      rightPadding = self.snapIntoPlatformOverlap,
-      topPadding = self.snapIntoPlatformOverlap,
-      bottomPadding = self.snapIntoPlatformOverlap;
-    if (self.showCriticalCoordinateLabels) {
-      let g = self.g;
-      g.clear();
+    // Hardcoded paddings for now
+    const leftPadding = 0.1,
+      rightPadding = 0.1,
+      topPadding = 0.1,
+      bottomPadding = 0.1;
+    if (self.showCriticalCoordinateLabels && self.g2) {
+      let g2 = self.g2;
+      g2.clear();
 
-      const collisionSpaceObjs = gopkgs.GetCollisionSpaceObjsJs(self.gopkgsCollisionSys);
-      for (let k in collisionSpaceObjs) {
-        const body = collisionSpaceObjs[k];
-        let padding = 0;
-        if (null != body.Data && null != body.Data.JoinIndex) {
-          // character
-          if (1 == body.Data.JoinIndex) {
-            g.strokeColor = cc.Color.BLUE;
-          } else {
-            g.strokeColor = cc.Color.RED;
-          }
-          padding = self.snapIntoPlatformOverlap;
+      for (let k in rdf.PlayersArr) {
+        const player = rdf.PlayersArr[k];
+        if (1 == player.JoinIndex) {
+          g2.strokeColor = cc.Color.BLUE;
         } else {
-          // barrier
-          g.strokeColor = cc.Color.WHITE;
+          g2.strokeColor = cc.Color.RED;
         }
-        const points = body.Shape.Points;
-        const wpos = [body.X - self.spaceOffsetX, body.Y - self.spaceOffsetY];
-        g.moveTo(wpos[0], wpos[1]);
-        const cnt = points.length;
-        for (let j = 0; j < cnt; j += 1) {
-          const x = wpos[0] + points[j][0],
-            y = wpos[1] + points[j][1];
-          g.lineTo(x, y);
+
+        let [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 4];
+        switch (player.CharacterState) {
+          case ATK_CHARACTER_STATE.LayDown1[0]:
+            [colliderWidth, colliderHeight] = [player.ColliderRadius * 4, player.ColliderRadius * 2];
+            break;
+          case ATK_CHARACTER_STATE.BlownUp1[0]:
+          case ATK_CHARACTER_STATE.InAirIdle1NoJump[0]:
+          case ATK_CHARACTER_STATE.InAirIdle1ByJump[0]:
+            [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 2];
+            break;
         }
-        g.lineTo(wpos[0], wpos[1]);
-        g.stroke();
+
+        const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((colliderWidth >> 1), (colliderHeight >> 1));
+
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY);
+        const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
+        const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
+
+        g2.moveTo(cx, cy);
+        for (let j = 0; j < pts.length; j += 1) {
+          g2.lineTo(pts[j][0] + cx, pts[j][1] + cy);
+        }
+        g2.lineTo(cx, cy);
+        g2.stroke();
+      }
+
+      for (let k in rdf.MeleeBullets) {
+        const meleeBullet = rdf.MeleeBullets[k];
+        if (
+          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames <= rdf.Id
+          &&
+          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
+        ) {
+          const offender = rdf.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex - 1];
+          if (1 == offender.JoinIndex) {
+            g2.strokeColor = cc.Color.BLUE;
+          } else {
+            g2.strokeColor = cc.Color.RED;
+          }
+
+          let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
+          if (0 > offender.DirX) {
+            xfac = -1;
+          }
+          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
+          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.Bullet.HitboxSizeX >> 1), (meleeBullet.Bullet.HitboxSizeY >> 1));
+          const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
+          const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
+
+          g2.moveTo(bulletCx, bulletCy);
+          for (let j = 0; j < pts.length; j += 1) {
+            g2.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
+          }
+          g2.lineTo(bulletCx, bulletCy);
+          g2.stroke();
+        }
       }
     }
   },

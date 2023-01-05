@@ -1,0 +1,49 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "LayDown1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.08333333333333333,
+  "sample": 60,
+  "speed": 0.3,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "e1f19129-8517-47fa-814d-b79c8abcd549"
+            }
+          },
+          {
+            "frame": 0.016666666666666666,
+            "value": {
+              "__uuid__": "b4127445-a13e-4244-9656-92033a5abcca"
+            }
+          },
+          {
+            "frame": 0.03333333333333333,
+            "value": {
+              "__uuid__": "64a8e39c-95ed-4181-b777-b05434d1fa6d"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "5d1458ae-8812-4c4a-a01f-0a2b901ed3f3"
+            }
+          },
+          {
+            "frame": 0.06666666666666667,
+            "value": {
+              "__uuid__": "ac0b9039-5caf-4bc1-bf29-2a733fbb7898"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

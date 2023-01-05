@@ -15,7 +15,7 @@ message PlayerDownsync {
   int32 speed = 8; // this is the instantaneous scalar attribute of a character, different from but will be accounted in "velX" and "velY" 
   int32 battleState = 9;
   int32 joinIndex = 10;
-  double colliderRadius = 11;
+  int32 colliderRadius = 11;
   bool removed = 12;
   int32 score = 13;
   int32 lastMoveGmtMillis = 14;
@@ -24,10 +24,14 @@ message PlayerDownsync {
   int32 maxHp = 17;
   int32 characterState = 18;
   bool inAir = 19; // by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "inAir (prev -> curr)"  
+  int32 framesInChState = 20; // number of frames elapsed in the current character state   
+  int32 activeSkillId = 21;
+  int32 activeSkillHit = 22;
+  int32 framesInvinsible = 23;
 
-  string name = 20;
-  string displayName = 21;
-  string avatar = 22;
+  string name = 997;
+  string displayName = 998;
+  string avatar = 999;
 }
 
 message InputFrameDecoded {
@@ -84,67 +88,47 @@ message MeleeBullet {
   // ALL lengths are in world coordinate
 
   // for offender  
-  int32 battleLocalId = 1;
-  int32 startupFrames = 2; 
-  int32 activeFrames = 3;  
-  int32 recoveryFrames = 4;
-  int32 recoveryFramesOnBlock = 5; 
-  int32 recoveryFramesOnHit = 6;  
-  double hitboxOffset = 7;  
-  int32 originatedRenderFrameId = 8; 
+  int32 originatedRenderFrameId = 1; 
+  int32 offenderJoinIndex = 2;    
 
-  // for defender
-  int32 hitStunFrames = 9; 
-  int32 blockStunFrames = 10; 
-  double pushback = 11;  
+  int32 startupFrames = 3; 
+  int32 cancellableStFrame = 4;
+  int32 cancellableEdFrame = 5;
+  int32 activeFrames = 6;  
 
-  int32 releaseTriggerType = 12; // 1: rising-edge, 2: falling-edge  
-  int32 damage = 13;   
+  int32 hitStunFrames = 7; 
+  int32 blockStunFrames = 8; 
+  int32 pushbackVelX = 9;  
+  int32 pushbackVelY = 10;  
+  int32 damage = 11;   
 
-  int32 offenderJoinIndex = 14;    
-  int32 offenderPlayerId = 15;    
+  int32 selfLockVelX = 12;  
+  int32 selfLockVelY = 13;  
 
-  double hitboxSizeX = 16; 
-  double hitboxSizeY = 17;
+  int32 hitboxOffsetX = 14;  
+  int32 hitboxOffsetY = 15;  
+  int32 hitboxSizeX = 16; 
+  int32 hitboxSizeY = 17;
 
-  double selfMoveforwardX = 18;  
-  double selfMoveforwardY = 19;  
+  bool blowUp = 18;
 } 
 
 message BattleColliderInfo {
   string stageName = 1;
-  int32 stageDiscreteW = 2;
-  int32 stageDiscreteH = 3;
-  int32 stageTileW = 4;
-  int32 stageTileH = 5;
 
-  int32 intervalToPing        = 6;
-  int32 willKickIfInactiveFor = 7;
-  int32 boundRoomId           = 8;
-  int32 battleDurationFrames  = 9;
-  int64 battleDurationNanos   = 10;
-  int32 serverFps             = 11;
-  int32 inputDelayFrames      = 12; // in the count of render frames
-  uint32 inputScaleFrames     = 13; // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
-  int32 nstDelayFrames        = 14; // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
-  int32 inputFrameUpsyncDelayTolerance = 15;  
-  int32 maxChasingRenderFramesPerUpdate = 16;
-  int32 playerBattleState = 17;
-  double rollbackEstimatedDtMillis = 18;
-  int64 rollbackEstimatedDtNanos = 19;
+  int32 intervalToPing        = 2;
+  int32 willKickIfInactiveFor = 3;
+  int32 boundRoomId           = 4;
+  int64 battleDurationNanos   = 5;
+  int32 inputFrameUpsyncDelayTolerance = 6;  
+  int32 maxChasingRenderFramesPerUpdate = 7;
+  double rollbackEstimatedDtMillis = 8;
+  int64 rollbackEstimatedDtNanos = 9;
  
-  double worldToVirtualGridRatio = 20;
-  double virtualGridToWorldRatio = 21;
-
-  int32 spAtkLookupFrames = 22;
-  int32 renderCacheSize = 23;
-
-  double snapIntoPlatformOverlap = 24; 
-  double snapIntoPlatformThreshold = 25; 
-  int32 jumpingInitVelY = 26;
-  int32 gravityX = 27;
-  int32 gravityY = 28;
-  int32 collisionMinStep = 29;
+  int32 renderCacheSize = 10;
+  double spaceOffsetX = 11;
+  double spaceOffsetY = 12;
+  int32 collisionMinStep = 13;
 
   bool frameDataLoggingEnabled = 999;
 }
@@ -156,5 +140,5 @@ message RoomDownsyncFrame {
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
   uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
   bool shouldForceResync = 6;
-  map<int32, int32> playerOpPatternToSkillId = 7; 
+  repeated int32 speciesIdList = 7;
 }

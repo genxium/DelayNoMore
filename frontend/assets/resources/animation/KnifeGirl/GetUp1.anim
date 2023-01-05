@@ -1,0 +1,61 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "GetUp1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.5166666666666667,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "3f26b0a4-db13-4a14-b885-5a812073eccf"
+            }
+          },
+          {
+            "frame": 0.08333333333333333,
+            "value": {
+              "__uuid__": "23eb42d6-52a2-458d-98a3-2f692dd79398"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "7bd4428c-44f9-4ff8-8d00-d3448a27a0c4"
+            }
+          },
+          {
+            "frame": 0.25,
+            "value": {
+              "__uuid__": "57640cd8-17eb-4279-a118-1ea40174da3c"
+            }
+          },
+          {
+            "frame": 0.35,
+            "value": {
+              "__uuid__": "56a2c954-6d04-433c-8ae4-f1bc7a0e9469"
+            }
+          },
+          {
+            "frame": 0.43333333333333335,
+            "value": {
+              "__uuid__": "b4dc81a3-eb90-4722-9296-5158f004fd4c"
+            }
+          },
+          {
+            "frame": 0.5,
+            "value": {
+              "__uuid__": "c156fa2c-0c4e-4413-80c1-accf8fea4779"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
