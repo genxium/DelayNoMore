@@ -438,38 +438,34 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:                currPlayerDownsync.Id,
-			VirtualGridX:      currPlayerDownsync.VirtualGridX,
-			VirtualGridY:      currPlayerDownsync.VirtualGridY,
-			DirX:              currPlayerDownsync.DirX,
-			DirY:              currPlayerDownsync.DirY,
-			VelX:              currPlayerDownsync.VelX,
-			VelY:              currPlayerDownsync.VelY,
-			CharacterState:    currPlayerDownsync.CharacterState,
-			InAir:             true,
-			Speed:             currPlayerDownsync.Speed,
-			BattleState:       currPlayerDownsync.BattleState,
-			Score:             currPlayerDownsync.Score,
-			Removed:           currPlayerDownsync.Removed,
-			JoinIndex:         currPlayerDownsync.JoinIndex,
-			Hp:                currPlayerDownsync.Hp,
-			MaxHp:             currPlayerDownsync.MaxHp,
-			FramesToRecover:   currPlayerDownsync.FramesToRecover - 1,
-			FramesInChState:   currPlayerDownsync.FramesInChState + 1,
-			ActiveSkillId:     currPlayerDownsync.ActiveSkillId,
-			ActiveSkillHit:    currPlayerDownsync.ActiveSkillHit,
-			FramesInvinsible:  currPlayerDownsync.FramesInvinsible - 1,
-			FramesSelfLockVel: currPlayerDownsync.FramesSelfLockVel - 1,
-			ColliderRadius:    currPlayerDownsync.ColliderRadius,
+			Id:               currPlayerDownsync.Id,
+			VirtualGridX:     currPlayerDownsync.VirtualGridX,
+			VirtualGridY:     currPlayerDownsync.VirtualGridY,
+			DirX:             currPlayerDownsync.DirX,
+			DirY:             currPlayerDownsync.DirY,
+			VelX:             currPlayerDownsync.VelX,
+			VelY:             currPlayerDownsync.VelY,
+			CharacterState:   currPlayerDownsync.CharacterState,
+			InAir:            true,
+			Speed:            currPlayerDownsync.Speed,
+			BattleState:      currPlayerDownsync.BattleState,
+			Score:            currPlayerDownsync.Score,
+			Removed:          currPlayerDownsync.Removed,
+			JoinIndex:        currPlayerDownsync.JoinIndex,
+			Hp:               currPlayerDownsync.Hp,
+			MaxHp:            currPlayerDownsync.MaxHp,
+			FramesToRecover:  currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState:  currPlayerDownsync.FramesInChState + 1,
+			ActiveSkillId:    currPlayerDownsync.ActiveSkillId,
+			ActiveSkillHit:   currPlayerDownsync.ActiveSkillHit,
+			FramesInvinsible: currPlayerDownsync.FramesInvinsible - 1,
+			ColliderRadius:   currPlayerDownsync.ColliderRadius,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
 		}
 		if nextRenderFramePlayers[i].FramesInvinsible < 0 {
 			nextRenderFramePlayers[i].FramesInvinsible = 0
-		}
-		if nextRenderFramePlayers[i].FramesSelfLockVel < 0 {
-			nextRenderFramePlayers[i].FramesSelfLockVel = 0
 		}
 	}
 
@@ -512,12 +508,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						xfac = -xfac
 					}
 					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
-                    thatPlayerInNextFrame.FramesSelfLockVel = v.FramesSelfLockVel
 				}
 				if NO_LOCK_VEL != v.SelfLockVelY {
 					hasLockVel = true
 					thatPlayerInNextFrame.VelY = v.SelfLockVelY
-                    thatPlayerInNextFrame.FramesSelfLockVel = v.FramesSelfLockVel
 				}
 				if false == hasLockVel {
 					if false == currPlayerDownsync.InAir {
@@ -656,29 +650,32 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			thatPlayerInNextFrame.InAir = false
 			if currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY {
 				// fallStopping
-				thatPlayerInNextFrame.VelX = 0
 				thatPlayerInNextFrame.VelY = 0
-				if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
-					thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
-				} else {
-					halfColliderWidthDiff, halfColliderHeightDiff := int32(0), currPlayerDownsync.ColliderRadius
-					_, halfColliderWorldHeightDiff := VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff)
-					effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff // To prevent bouncing due to abrupt change of collider shape
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-					thatPlayerInNextFrame.FramesToRecover = 0
+				thatPlayerInNextFrame.VelX = 0
+				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
+					if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
+						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
+						thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
+					} else {
+						halfColliderWidthDiff, halfColliderHeightDiff := int32(0), currPlayerDownsync.ColliderRadius
+						_, halfColliderWorldHeightDiff := VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff)
+						effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff // To prevent bouncing due to abrupt change of collider shape
+						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+					}
 				}
 			} else {
-				// not fallStopping, could be in LayDown or GetUp
-				if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
-					if 0 == thatPlayerInNextFrame.FramesToRecover {
-						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
-						thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
-					}
-				} else if ATK_CHARACTER_STATE_GET_UP1 == thatPlayerInNextFrame.CharacterState {
-					if 0 == thatPlayerInNextFrame.FramesToRecover {
-						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-						thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
+				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
+					// not fallStopping, could be in LayDown or GetUp
+					if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
+						if 0 == thatPlayerInNextFrame.FramesToRecover {
+							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
+							thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
+						}
+					} else if ATK_CHARACTER_STATE_GET_UP1 == thatPlayerInNextFrame.CharacterState {
+						if 0 == thatPlayerInNextFrame.FramesToRecover {
+							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+							thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
+						}
 					}
 				}
 			}

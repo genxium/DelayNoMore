@@ -13,7 +13,7 @@ cc.Class({
   onLoad() {
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
@@ -129,7 +129,7 @@ cc.Class({
             inAir: true,
           }),
         ],
-        speciesIdList: [0, 1],
+        speciesIdList: [1, 0],
       });
 
       self.selfPlayerInfo = {

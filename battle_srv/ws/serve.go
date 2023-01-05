@@ -252,8 +252,8 @@ func Serve(c *gin.Context) {
 			RollbackEstimatedDtMillis:       pRoom.RollbackEstimatedDtMillis,
 			RollbackEstimatedDtNanos:        pRoom.RollbackEstimatedDtNanos,
 
-            SpaceOffsetX: pRoom.SpaceOffsetX,
-            SpaceOffsetY: pRoom.SpaceOffsetY,
+			SpaceOffsetX: pRoom.SpaceOffsetX,
+			SpaceOffsetY: pRoom.SpaceOffsetY,
 
 			RenderCacheSize:  pRoom.RenderCacheSize,
 			CollisionMinStep: pRoom.CollisionMinStep,

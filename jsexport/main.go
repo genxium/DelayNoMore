@@ -42,7 +42,7 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, framesSelfLockVel, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
 		Id:               id,
 		VirtualGridX:     virtualGridX,
@@ -67,7 +67,7 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
-func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, framesSelfLockVel, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool) *js.Object {
+func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool) *js.Object {
 	return js.MakeWrapper(&MeleeBullet{
 		Bullet: Bullet{
 			OriginatedRenderFrameId: originatedRenderFrameId,
@@ -84,9 +84,8 @@ func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames,
 			PushbackVelY:    pushbackVelY,
 			Damage:          damage,
 
-			SelfLockVelX:      selfLockVelX,
-			SelfLockVelY:      selfLockVelY,
-			FramesSelfLockVel: framesSelfLockVel,
+			SelfLockVelX: selfLockVelX,
+			SelfLockVelY: selfLockVelY,
 
 			HitboxOffsetX: hitboxOffsetX,
 			HitboxOffsetY: hitboxOffsetY,

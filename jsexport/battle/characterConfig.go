@@ -176,9 +176,9 @@ var skills = map[int]*Skill{
 		},
 	},
 	3: &Skill{
-		RecoveryFrames:        int32(70),
-		RecoveryFramesOnBlock: int32(70),
-		RecoveryFramesOnHit:   int32(70),
+		RecoveryFrames:        int32(50),
+		RecoveryFramesOnBlock: int32(50),
+		RecoveryFramesOnHit:   int32(50),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
@@ -189,8 +189,8 @@ var skills = map[int]*Skill{
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
-					SelfLockVelX:    NO_LOCK_VEL,
-					SelfLockVelY:    NO_LOCK_VEL,
+					SelfLockVelX:    int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -267,16 +267,16 @@ var skills = map[int]*Skill{
 		},
 	},
 	6: &Skill{
-		RecoveryFrames:        int32(60),
-		RecoveryFramesOnBlock: int32(60),
-		RecoveryFramesOnHit:   int32(60),
+		RecoveryFrames:        int32(45),
+		RecoveryFramesOnBlock: int32(45),
+		RecoveryFramesOnHit:   int32(45),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
 					StartupFrames:   int32(15),
-					ActiveFrames:    int32(40),
+					ActiveFrames:    int32(28),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
@@ -294,9 +294,9 @@ var skills = map[int]*Skill{
 		},
 	},
 	255: &Skill{
-		RecoveryFrames:        int32(34),
-		RecoveryFramesOnBlock: int32(34),
-		RecoveryFramesOnHit:   int32(34),
+		RecoveryFrames:        int32(30),
+		RecoveryFramesOnBlock: int32(30),
+		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
 		Hits: []interface{}{
@@ -320,17 +320,17 @@ var skills = map[int]*Skill{
 		},
 	},
 	256: &Skill{
-		RecoveryFrames:        int32(34),
-		RecoveryFramesOnBlock: int32(34),
-		RecoveryFramesOnHit:   int32(34),
+		RecoveryFrames:        int32(20),
+		RecoveryFramesOnBlock: int32(20),
+		RecoveryFramesOnHit:   int32(20),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
 					StartupFrames:   int32(3),
-					ActiveFrames:    int32(20),
-					HitStunFrames:   int32(18),
+					ActiveFrames:    int32(10),
+					HitStunFrames:   int32(15),
 					BlockStunFrames: int32(9),
 					Damage:          int32(5),
 					SelfLockVelX:    NO_LOCK_VEL,

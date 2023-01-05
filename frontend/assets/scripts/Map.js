@@ -578,13 +578,13 @@ cc.Class({
     const jsPlayersArr = new Array().fill(null);
     for (let k in pbRdf.playersArr) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.framesSelfLockVel, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = [];
     for (let k in pbRdf.meleeBullets) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.framesSelfLockVel, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
+      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
       jsMeleeBulletsArr.push(jsBullet);
     }
 
@@ -1081,6 +1081,14 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         self.rdfIdToActuallyUsedInput.set(currRdf.Id, inputFrameDownsyncClone);
       }
       const nextRdf = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, currRdf, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex);
+
+      if (3 == nextRdf.PlayersArr[0].ActiveSkillId && 3 != currRdf.PlayersArr[0].ActiveSkillId) {
+        console.log(`Started skill 3 at rdf.Id=${nextRdf.Id}`);
+        self.lastSkill3Started = nextRdf.Id;
+      }
+      if (3 != nextRdf.PlayersArr[0].ActiveSkillId && 3 == currRdf.PlayersArr[0].ActiveSkillId) {
+        console.log(`Stopped skill 3 at rdf.Id=${nextRdf.Id}, duration = ${nextRdf.Id-self.lastSkill3Started}`);
+      }
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!

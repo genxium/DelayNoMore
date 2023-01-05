@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="104">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="107">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
  <layer id="2" name="Ground" width="128" height="128">
   <data encoding="base64" compression="zlib">
-   eJzt3MFq1EAcwOFli5ceikUU9NyD4Et47qle9OapLyB60ZMgvoIH776nWUggxkySnZ1kksx3+KC0S2jn9082E5ZeHQ6HKwAAAAAAAAAAAAAAAAAAiHBdy/17sJzHlqb/Y4Fyd8jZ/1hr+n+s3Accd0j/f/uH6L8/7f73I/2vV9BK//n699F/305/+/Na39p0rwm5W+m/bP8S6K9/7g45+z+LkLuZ/nn772kG9Nc/d4ct9l8T/cvs7/wvu3+KGdB/u5z/+utfbv8UM6B/+rVtnin+uNDc577++uu/jf4va/qX07/du/21/vrrn6//0xEp+7fpn7f/WPe+/r8q78/U9Hf/t57+U9s/HNz/b8XU/lPbH/XflLH+fY3fVG4C7bv9ux7OpH++/n3tb1q63efo/6Jyp/9q+g9d99v9U9N/vf1j7hHPpf/y/afMQHctU/Ydk7L/cQUt1tg/1RoPiWmv/376nzMjcxxb/23MwFz0L3sG9Ne/5P651z+30vd/udc/N/3Lpn/Z9C+b/mXTv2z6l03/sulfNv3Lpn/Z9C+b/mXTv2z6l03/9boL0H8d/ef6nFCo+xxzoP96+t+OeBKg/z7656B/fG/9t23t93/6769/6L29+fm7hNrHDF2ffP573Ida93rffD/3OXzp+a//sKH3/C3177tG6D8stOc6Gduv3U44fs72Tf/cHdbav+n8+gKX7s/nbK///Guf4hnNXO31T/88LdQ/xwxM2SOU3n+p87+x1HOiqXtE/Zft38zAnP/v5ZxnBPr/L+X9/ND+IeR7hJj2+o/3u3QOYvrHzMDPSPpPEzsHrw5x/f9UvgRaN75VPtWv1X/e/rGq/m9j+598PoT7f2297tTyd03/6f3J3wEAAAAAAAAAAAAAAABY3l9OOPTh
+   eJzt3LGK1EAcwOGwYnPF4SEKWl8h+BLWV52Ndlb3AqKNVoL4ADYW9r6nu5BAXHeS7OwkM8l8xQfH3RLu8vtPLhOWfdQ0zSMAAAAAAAAAAAAAAAAAAIhw1cr9e7Cch56u/0OFcnfI2X/X6vp/2LsL2G2Q/v/2D9F/e/r970b6XxXQSv/5+p+i/7Yd/vZnrVPn5viakLuV/sv2r4H++ufukLP/0wi5m+mft/+WZkB//XN3WGP/kuhfZ3/rv+7+KWZA//Wy/vXXv97+KWZA//Tntnum+P1Cc699/fXXfx39X7T0r6d/v3f/a/311z9f/ycjUvbv0z9v/7Hup/r/2nt3pq6/+79y+k9tf9+4/1+Lqf2ntt/pvypj/U81fr13HWh/3P/Y/Zn0z9f/VPvrnuPuc/R/vnerfzH9h677/f6p6V9u/5h7xHPpv3z/KTNwfC5T9h2Tsv+ugBYl9k91jofEtNd/O/3PmZE5jq3/5TPwJ1GLVMfRP13/KTOg/zrpr39J3XL1z91Bf/3X3P9nQvqvr/+a6V83/eumf930r5v+ddO/bvrXTf+66V83/eumf930r5v+5boN0L+M/nO9XzTUfY450L+c/jcjHgfov43+Oegf31v/dSv9/k//7fUP/W/vfv42of4xQ9cn7/8e9751fL3vvp97DV+6/vUfNvQ/f039T10j9B8W2nMdjO3XbiYcP2f7rn/uDqX27zq/usCl+/M52+s//7lP8Yxmrvb6p3+eFuqfYwam7BFq77/U+u8s9Zxo6h5R/2X7dzMw5+e9nPOMQP//pbyfH9o/hHyLENNe//F+l85BTP+YGfgRSf9pYufgZRPX//BZAJ8DrTtf9z62r9V/3v6x9v3fxPY/+NSE+3/pve7Q8ndL/+n9yd8BAAAAAAAAAAAAAAAAWN5f3AoF6w==
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
-  <object id="135" x="943" y="1605">
+  <object id="135" x="1040.33" y="1081">
    <point/>
   </object>
-  <object id="137" x="1000" y="1591">
+  <object id="137" x="1134.67" y="1081.67">
    <point/>
   </object>
  </objectgroup>
@@ -196,6 +196,21 @@
    </properties>
   </object>
   <object id="103" x="1600" y="1440" width="80" height="16">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="104" x="928" y="1088" width="304" height="16">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="105" x="928" y="1008" width="16" height="96">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="106" x="1216" y="1008" width="16" height="96">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
