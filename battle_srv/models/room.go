@@ -1019,12 +1019,7 @@ func (pR *Room) sendSafely(roomDownsyncFrame *pb.RoomDownsyncFrame, toSendInputF
 func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputFrameDownsync {
 	/*
 	   [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked.
-
-	   Kindly note that on backend the prefab is much simpler than its frontend counterpart, because frontend will upsync its latest command immediately if there's any change w.r.t. its own prev cmd, thus if no upsync received from a frontend,
-	   - EITHER it's due to local lag and bad network,
-	   - OR there's no change w.r.t. to its prev cmd.
 	*/
-
 	var currInputFrameDownsync *battle.InputFrameDownsync = nil
 	tmp1 := pR.InputsBuffer.GetByFrameId(inputFrameId) // Would be nil if "pR.InputsBuffer.EdFrameId <= inputFrameId", else if "pR.InputsBuffer.EdFrameId > inputFrameId" is already met, then by now we can just return "tmp1.(*InputFrameDownsync)"
 	if nil == tmp1 {
@@ -1035,6 +1030,22 @@ func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputF
 				InputList:     make([]uint64, pR.Capacity),
 				ConfirmedList: uint64(0),
 			}
+
+			/*
+			   [WARNING] Don't reference "pR.InputsBuffer.GetByFrameId(j-1)" to prefab here!
+
+			    Otherwise if an ActiveSlowTicker got a forced confirmation sequence like
+			    ```
+			    inputFrame#42    {dx: -2} upsynced;
+			    inputFrame#43-50 {dx: +2} ignored by [type#1 forceConfirmation];
+			    inputFrame#51    {dx: +2} upsynced;
+			    inputFrame#52-60 {dx: +2} ignored by [type#1 forceConfirmation];
+			    inputFrame#61    {dx: +2} upsynced;
+
+			    ...there would be more [type#1 forceConfirmation]s for this ActiveSlowTicker if it doesn't catch up the upsync pace...
+			    ```
+			    , the backend might've been prefabbing TOO QUICKLY and thus still replicating "inputFrame#42" by now for this ActiveSlowTicker, making its graphics inconsistent upon "[type#1 forceConfirmation] at inputFrame#52-60", i.e. as if always dragged to the left while having been controlled to the right for a few frames -- what's worse, the same graphical inconsistence could even impact later "[type#1 forceConfirmation]s" if this ActiveSlowTicker doesn't catch up with the upsync pace!
+			*/
 
 			for i, _ := range currInputFrameDownsync.InputList {
 				// [WARNING] The use of "InputsBufferLock" guarantees that by now "inputFrameId >= pR.InputsBuffer.EdFrameId >= pR.LatestPlayerUpsyncedInputFrameId", thus it's safe to use "pR.LastIndividuallyConfirmedInputList" for prediction.
