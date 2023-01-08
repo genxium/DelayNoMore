@@ -1,0 +1,49 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "InAirAtked1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.25,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "39c94369-a78d-459d-9305-13a2b9c15225"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "c85b7940-7bb2-4597-a309-155b7a116f94"
+            }
+          },
+          {
+            "frame": 0.11666666666666667,
+            "value": {
+              "__uuid__": "78f498f8-6517-4e28-91f9-b70ee87beff9"
+            }
+          },
+          {
+            "frame": 0.18333333333333332,
+            "value": {
+              "__uuid__": "02247899-3345-411a-aaa3-65e2f5e0b3e6"
+            }
+          },
+          {
+            "frame": 0.23333333333333334,
+            "value": {
+              "__uuid__": "bec5291d-8f6e-426c-8e16-1d0239a69bad"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

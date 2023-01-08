@@ -1214,6 +1214,8 @@ $root.protos = (function() {
          * @property {number|null} [activeSkillId] PlayerDownsync activeSkillId
          * @property {number|null} [activeSkillHit] PlayerDownsync activeSkillHit
          * @property {number|null} [framesInvinsible] PlayerDownsync framesInvinsible
+         * @property {number|null} [bulletTeamId] PlayerDownsync bulletTeamId
+         * @property {number|null} [chCollisionTeamId] PlayerDownsync chCollisionTeamId
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1419,6 +1421,22 @@ $root.protos = (function() {
         PlayerDownsync.prototype.framesInvinsible = 0;
 
         /**
+         * PlayerDownsync bulletTeamId.
+         * @member {number} bulletTeamId
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.bulletTeamId = 0;
+
+        /**
+         * PlayerDownsync chCollisionTeamId.
+         * @member {number} chCollisionTeamId
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.chCollisionTeamId = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1512,6 +1530,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 22, wireType 0 =*/176).int32(message.activeSkillHit);
             if (message.framesInvinsible != null && Object.hasOwnProperty.call(message, "framesInvinsible"))
                 writer.uint32(/* id 23, wireType 0 =*/184).int32(message.framesInvinsible);
+            if (message.bulletTeamId != null && Object.hasOwnProperty.call(message, "bulletTeamId"))
+                writer.uint32(/* id 24, wireType 0 =*/192).int32(message.bulletTeamId);
+            if (message.chCollisionTeamId != null && Object.hasOwnProperty.call(message, "chCollisionTeamId"))
+                writer.uint32(/* id 25, wireType 0 =*/200).int32(message.chCollisionTeamId);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1644,6 +1666,14 @@ $root.protos = (function() {
                         message.framesInvinsible = reader.int32();
                         break;
                     }
+                case 24: {
+                        message.bulletTeamId = reader.int32();
+                        break;
+                    }
+                case 25: {
+                        message.chCollisionTeamId = reader.int32();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1760,6 +1790,12 @@ $root.protos = (function() {
             if (message.framesInvinsible != null && message.hasOwnProperty("framesInvinsible"))
                 if (!$util.isInteger(message.framesInvinsible))
                     return "framesInvinsible: integer expected";
+            if (message.bulletTeamId != null && message.hasOwnProperty("bulletTeamId"))
+                if (!$util.isInteger(message.bulletTeamId))
+                    return "bulletTeamId: integer expected";
+            if (message.chCollisionTeamId != null && message.hasOwnProperty("chCollisionTeamId"))
+                if (!$util.isInteger(message.chCollisionTeamId))
+                    return "chCollisionTeamId: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1830,6 +1866,10 @@ $root.protos = (function() {
                 message.activeSkillHit = object.activeSkillHit | 0;
             if (object.framesInvinsible != null)
                 message.framesInvinsible = object.framesInvinsible | 0;
+            if (object.bulletTeamId != null)
+                message.bulletTeamId = object.bulletTeamId | 0;
+            if (object.chCollisionTeamId != null)
+                message.chCollisionTeamId = object.chCollisionTeamId | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1876,6 +1916,8 @@ $root.protos = (function() {
                 object.activeSkillId = 0;
                 object.activeSkillHit = 0;
                 object.framesInvinsible = 0;
+                object.bulletTeamId = 0;
+                object.chCollisionTeamId = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1926,6 +1968,10 @@ $root.protos = (function() {
                 object.activeSkillHit = message.activeSkillHit;
             if (message.framesInvinsible != null && message.hasOwnProperty("framesInvinsible"))
                 object.framesInvinsible = message.framesInvinsible;
+            if (message.bulletTeamId != null && message.hasOwnProperty("bulletTeamId"))
+                object.bulletTeamId = message.bulletTeamId;
+            if (message.chCollisionTeamId != null && message.hasOwnProperty("chCollisionTeamId"))
+                object.chCollisionTeamId = message.chCollisionTeamId;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))

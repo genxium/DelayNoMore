@@ -42,32 +42,34 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir bool, bulletTeamId, chCollisionTeamId int32) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
-		Id:               id,
-		VirtualGridX:     virtualGridX,
-		VirtualGridY:     virtualGridY,
-		DirX:             dirX,
-		DirY:             dirY,
-		VelX:             velX,
-		VelY:             velY,
-		FramesToRecover:  framesToRecover,
-		FramesInChState:  framesInChState,
-		ActiveSkillId:    activeSkillId,
-		ActiveSkillHit:   activeSkillHit,
-		FramesInvinsible: framesInvinsible,
-		Speed:            speed,
-		BattleState:      battleState,
-		CharacterState:   characterState,
-		JoinIndex:        joinIndex,
-		Hp:               hp,
-		MaxHp:            maxHp,
-		ColliderRadius:   colliderRadius,
-		InAir:            inAir,
+		Id:                id,
+		VirtualGridX:      virtualGridX,
+		VirtualGridY:      virtualGridY,
+		DirX:              dirX,
+		DirY:              dirY,
+		VelX:              velX,
+		VelY:              velY,
+		FramesToRecover:   framesToRecover,
+		FramesInChState:   framesInChState,
+		ActiveSkillId:     activeSkillId,
+		ActiveSkillHit:    activeSkillHit,
+		FramesInvinsible:  framesInvinsible,
+		Speed:             speed,
+		BattleState:       battleState,
+		CharacterState:    characterState,
+		JoinIndex:         joinIndex,
+		Hp:                hp,
+		MaxHp:             maxHp,
+		ColliderRadius:    colliderRadius,
+		InAir:             inAir,
+		BulletTeamId:      bulletTeamId,
+		ChCollisionTeamId: chCollisionTeamId,
 	})
 }
 
-func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool) *js.Object {
+func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *js.Object {
 	return js.MakeWrapper(&MeleeBullet{
 		Bullet: Bullet{
 			OriginatedRenderFrameId: originatedRenderFrameId,
@@ -93,7 +95,18 @@ func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames,
 			HitboxSizeY:   hitboxSizeY,
 
 			BlowUp: blowUp,
+
+			TeamId: teamId,
 		},
+	})
+}
+
+func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
+	return js.MakeFullWrapper(&NpcPatrolCue{
+		FlAct: flAct,
+		FrAct: frAct,
+		X:     x,
+		Y:     y,
 	})
 }
 
@@ -157,6 +170,7 @@ func main() {
 		"NewBarrierJs":                                         NewBarrierJs,
 		"NewPlayerDownsyncJs":                                  NewPlayerDownsyncJs,
 		"NewMeleeBulletJs":                                     NewMeleeBulletJs,
+		"NewNpcPatrolCue":                                      NewNpcPatrolCue,
 		"NewRoomDownsyncFrameJs":                               NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":                                  NewCollisionSpaceJs,
 		"NewInputFrameDownsync":                                NewInputFrameDownsync,

@@ -1,0 +1,31 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Atked1",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.06666666666666667,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "7ceb8a79-f5bf-4918-afa1-d76a85a571b0"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "23ce7632-8b44-4138-b3b2-3e296ba9184c"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

@@ -64,6 +64,7 @@ const (
 
 	ATK_CHARACTER_STATE_ATK2 = int32(11)
 	ATK_CHARACTER_STATE_ATK3 = int32(12)
+	ATK_CHARACTER_STATE_ATK4 = int32(13)
 )
 
 var inAirSet = map[int32]bool{

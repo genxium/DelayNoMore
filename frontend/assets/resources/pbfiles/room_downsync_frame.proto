@@ -29,6 +29,9 @@ message PlayerDownsync {
   int32 activeSkillHit = 22;
   int32 framesInvinsible = 23;
 
+  int32 bulletTeamId = 24;
+  int32 chCollisionTeamId = 25;
+
   string name = 997;
   string displayName = 998;
   string avatar = 999;

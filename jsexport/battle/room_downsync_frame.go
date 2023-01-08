@@ -38,6 +38,9 @@ type PlayerDownsync struct {
 	ActiveSkillHit int32
 
 	FramesInvinsible int32
+
+	BulletTeamId      int32
+	ChCollisionTeamId int32 // not the same as "BulletTeamId", because even in the same team, we should allow inter-character collisions
 }
 
 type InputFrameDecoded struct {
@@ -83,6 +86,8 @@ type Bullet struct {
 	BlowUp bool
 
 	CancelTransit map[int]int
+
+	TeamId int32
 }
 
 type MeleeBullet struct {
@@ -125,4 +130,11 @@ type InputFrameDownsync struct {
 	InputFrameId  int32
 	InputList     []uint64
 	ConfirmedList uint64
+}
+
+type NpcPatrolCue struct {
+	FlAct uint64 // Encoded input when collided with this cue & facing left
+	FrAct uint64 // Encoded input when collided with this cue & facing right
+	X     float64
+	Y     float64
 }
