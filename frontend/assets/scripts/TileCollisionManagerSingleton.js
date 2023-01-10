@@ -110,6 +110,8 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
   let toRet = {
     playerStartingPositions: [],
     barriers: [],
+    npcStartingPositions: [],
+    npcPatrolCues: [],
   };
   const tiledMapIns = withTiledMapNode.getComponent(cc.TiledMap); // This is a magic name.
 
@@ -126,6 +128,38 @@ TileCollisionManager.prototype.extractBoundaryObjects = function(withTiledMapNod
             origY = withTiledMapNode.getContentSize().height - cccMaskedY; // FIXME: I don't know why CocosCreator did this, it's stupid and MIGHT NOT WORK IN ISOMETRIC orientation!   
           let wpos = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, cc.v2(origX, origY));
           toRet.playerStartingPositions.push(wpos);
+        }
+        break;
+      case "NpcPatrolCue":
+        for (let j = 0; j < allObjects.length; ++j) {
+          const cccMaskedX = allObjects[j].x,
+            cccMaskedY = allObjects[j].y;
+          const origX = cccMaskedX,
+            origY = withTiledMapNode.getContentSize().height - cccMaskedY;
+          let wpos = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, cc.v2(origX, origY));
+          const cue = {
+            x: wpos.x,
+            y: wpos.y,
+            flAct: parseInt(allObjects[j].flAct),
+            frAct: parseInt(allObjects[j].frAct),
+          };
+          toRet.npcPatrolCues.push(cue);
+        }
+        break;
+      case "NpcStartingPos":
+        for (let j = 0; j < allObjects.length; ++j) {
+          const cccMaskedX = allObjects[j].x,
+            cccMaskedY = allObjects[j].y;
+          const origX = cccMaskedX,
+            origY = withTiledMapNode.getContentSize().height - cccMaskedY;
+          let wpos = this.continuousObjLayerOffsetToContinuousMapNodePos(withTiledMapNode, cc.v2(origX, origY));
+          const npc = {
+            x: wpos.x,
+            y: wpos.y,
+            speciesId: parseInt(allObjects[j].speciesId),
+            dirX: parseInt(allObjects[j].dirX),
+          };
+          toRet.npcStartingPositions.push(npc);
         }
         break;
       case "Barrier":
@@ -204,30 +238,6 @@ TileCollisionManager.prototype.initMapNodeByTiledBoundaries = function(mapScript
     }
     mapScriptIns.barrierColliders.push(newBarrierColliderIns);
     mapScriptIns.node.addChild(newBarrier);
-  }
-
-  const allLayers = tiledMapIns.getLayers();
-  for (let layer of allLayers) {
-    const layerType = layer.getProperty("type");
-    switch (layerType) {
-      case "barrier_and_shelter":
-        setLocalZOrder(layer.node, 3);
-        break;
-      default:
-        break;
-    }
-  }
-
-  const allObjectGroups = tiledMapIns.getObjectGroups();
-  for (let objectGroup of allObjectGroups) {
-    const objectGroupType = objectGroup.getProperty("type");
-    switch (objectGroupType) {
-      case "barrier_and_shelter":
-        setLocalZOrder(objectGroup.node, 3);
-        break;
-      default:
-        break;
-    }
   }
 }
 

@@ -384,7 +384,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
 
     console.warn("+++++++ Map onLoad()");
 
@@ -575,21 +575,27 @@ cc.Class({
   },
 
   onRoomDownsyncFrame(pbRdf /* pb.RoomDownsyncFrame */ , accompaniedInputFrameDownsyncBatch /* pb.InputFrameDownsyncBatch */ ) {
-    const jsPlayersArr = new Array().fill(null);
-    for (let k in pbRdf.playersArr) {
+    const jsPlayersArr = new Array(pbRdf.playersArr.length).fill(null);
+    for (let k = 0; k < pbRdf.playersArr.length; ++k) {
       const pbPlayer = pbRdf.playersArr[k];
       const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir);
       jsPlayersArr[k] = jsPlayer;
     }
-    const jsMeleeBulletsArr = [];
-    for (let k in pbRdf.meleeBullets) {
+    const jsMeleeBulletsArr = new Array(pbRdf.meleeBullets.length).fill(null);
+    for (let k = 0; k < pbRdf.meleeBullets.length; ++k) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsBullet = gopkgs.NewMeleeBulletJs(pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
-      jsMeleeBulletsArr.push(jsBullet);
+      const jsMeleeBullet = gopkgs.NewMeleeBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp);
+      jsMeleeBulletsArr[k] = jsMeleeBullet;
+    }
+    const jsFireballBulletsArr = new Array(pbRdf.fireballBullets.length).fill(null);
+    for (let k = 0; k < pbRdf.fireballBullets.length; ++k) {
+      const pbBullet = pbRdf.fireballBullets[k];
+      const jsFireballBullet = gopkgs.NewFireballBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.virtualGridX, pbBullet.virtualGridY, pbBullet.dirX, pbBullet.dirY, pbBullet.velX, pbBullet.velY, pbBullet.speed);
+      jsFireballBulletsArr[k] = jsFireballBullet;
     }
 
     // This function is also applicable to "re-joining".
-    const rdf = gopkgs.NewRoomDownsyncFrameJs(pbRdf.id, jsPlayersArr, jsMeleeBulletsArr);
+    const rdf = gopkgs.NewRoomDownsyncFrameJs(pbRdf.id, jsPlayersArr, pbRdf.bulletLocalIdCounter, jsMeleeBulletsArr, jsFireballBulletsArr);
     const self = window.mapIns;
     self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
     if (!self.recentRenderCache) {
@@ -1274,6 +1280,34 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
           }
           const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
           const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.Bullet.HitboxSizeX >> 1), (meleeBullet.Bullet.HitboxSizeY >> 1));
+          const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
+          const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
+
+          g2.moveTo(bulletCx, bulletCy);
+          for (let j = 0; j < pts.length; j += 1) {
+            g2.lineTo(pts[j][0] + bulletCx, pts[j][1] + bulletCy);
+          }
+          g2.lineTo(bulletCx, bulletCy);
+          g2.stroke();
+        }
+      }
+
+      for (let k in rdf.FireballBullets) {
+        const fireballBullet = rdf.FireballBullets[k];
+        if (
+          fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
+          &&
+          fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
+        ) {
+          const offender = rdf.PlayersArr[fireballBullet.Bullet.OffenderJoinIndex - 1];
+          if (1 == offender.JoinIndex) {
+            g2.strokeColor = cc.Color.BLUE;
+          } else {
+            g2.strokeColor = cc.Color.RED;
+          }
+
+          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
+          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((fireballBullet.Bullet.HitboxSizeX >> 1), (fireballBullet.Bullet.HitboxSizeY >> 1));
           const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
           const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 

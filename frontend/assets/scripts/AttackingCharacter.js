@@ -14,6 +14,7 @@ window.ATK_CHARACTER_STATE = {
   GetUp1: [10, "GetUp1"],
   Atk2:   [11, "Atk2"],
   Atk3:   [12, "Atk3"],
+  Atk4:   [13, "Atk4"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];

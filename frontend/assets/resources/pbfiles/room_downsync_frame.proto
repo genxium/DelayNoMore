@@ -29,6 +29,9 @@ message PlayerDownsync {
   int32 activeSkillHit = 22;
   int32 framesInvinsible = 23;
 
+  int32 bulletTeamId = 24;
+  int32 chCollisionTeamId = 25;
+
   string name = 997;
   string displayName = 998;
   string avatar = 999;
@@ -111,6 +114,46 @@ message MeleeBullet {
   int32 hitboxSizeY = 17;
 
   bool blowUp = 18;
+  int32 teamId = 19;
+
+  int32 bulletLocalId = 20; 
+} 
+
+message FireballBullet { 
+  int32 originatedRenderFrameId = 1; 
+  int32 offenderJoinIndex = 2;    
+
+  int32 startupFrames = 3; 
+  int32 cancellableStFrame = 4;
+  int32 cancellableEdFrame = 5;
+  int32 activeFrames = 6;  
+
+  int32 hitStunFrames = 7; 
+  int32 blockStunFrames = 8; 
+  int32 pushbackVelX = 9;  
+  int32 pushbackVelY = 10;  
+  int32 damage = 11;   
+
+  int32 selfLockVelX = 12;  
+  int32 selfLockVelY = 13;  
+
+  int32 hitboxOffsetX = 14;  
+  int32 hitboxOffsetY = 15;  
+  int32 hitboxSizeX = 16; 
+  int32 hitboxSizeY = 17;
+
+  bool blowUp = 18;
+  int32 teamId = 19;
+
+  int32 bulletLocalId = 20; 
+
+  int32 virtualGridX = 999;
+  int32 virtualGridY = 1000;
+  int32 dirX = 1001;
+  int32 dirY = 1002;
+  int32 velX = 1003;
+  int32 velY = 1004;
+  int32 speed = 1005;
 } 
 
 message BattleColliderInfo {
@@ -130,7 +173,7 @@ message BattleColliderInfo {
   double spaceOffsetY = 12;
   int32 collisionMinStep = 13;
 
-  bool frameDataLoggingEnabled = 999;
+  bool frameDataLoggingEnabled = 1024;
 }
 
 message RoomDownsyncFrame {
@@ -138,7 +181,11 @@ message RoomDownsyncFrame {
   repeated PlayerDownsync playersArr = 2;
   int64 countdownNanos = 3;
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
-  uint64 backendUnconfirmedMask = 5; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
-  bool shouldForceResync = 6;
-  repeated int32 speciesIdList = 7;
+  repeated FireballBullet fireballBullets = 5; 
+
+  uint64 backendUnconfirmedMask = 1024; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
+  bool shouldForceResync = 1025;
+  repeated int32 speciesIdList = 1026;
+
+  int32 bulletLocalIdCounter = 1027;
 }
