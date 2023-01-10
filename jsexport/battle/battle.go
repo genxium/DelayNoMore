@@ -358,9 +358,9 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 		isBarrier := false
 		switch obj.Data.(type) {
 		case *PlayerDownsync:
-		case *MeleeBullet:
+		case *MeleeBullet, *FireballBullet:
 		default:
-			// By default it's a regular barrier, even if data is nil, note that Golang syntax of switch-case is kind of confusing, this "default" condition is met only if "!*PlayerDownsync && !*MeleeBullet".
+			// By default it's a regular barrier, even if data is nil, note that Golang syntax of switch-case is kind of confusing, this "default" condition is met only if "!*PlayerDownsync && !*MeleeBullet && !*FireballBullet".
 			isBarrier = true
 		}
 
@@ -471,10 +471,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
+	nextRenderFrameFireballBullets := make([]*FireballBullet, 0, len(currRenderFrame.FireballBullets))
 	effPushbacks := make([]Vec2D, roomCapacity)
 	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
 	jumpedOrNotList := make([]bool, roomCapacity)
 
+	bulletLocalId := currRenderFrame.BulletLocalIdCounter
 	// 1. Process player inputs
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		jumpedOrNotList[i] = false
@@ -491,36 +493,57 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if skillConfig, existent := skills[skillId]; existent {
 			thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
 			thatPlayerInNextFrame.ActiveSkillHit = 0
+			thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
+			xfac := int32(1)
+			if 0 > thatPlayerInNextFrame.DirX {
+				xfac = -xfac
+			}
+			hasLockVel := false
 
 			// Hardcoded to use only the first hit for now
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
 				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
+				newBullet.BulletLocalId = bulletLocalId
+				bulletLocalId++
 				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
 				newBullet.OffenderJoinIndex = joinIndex
 				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
-				thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames
-
-				hasLockVel := false
 				if NO_LOCK_VEL != v.SelfLockVelX {
 					hasLockVel = true
-					xfac := int32(1)
-					if 0 > thatPlayerInNextFrame.DirX {
-						xfac = -xfac
-					}
 					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
 				}
 				if NO_LOCK_VEL != v.SelfLockVelY {
 					hasLockVel = true
 					thatPlayerInNextFrame.VelY = v.SelfLockVelY
 				}
-				if false == hasLockVel {
-					if false == currPlayerDownsync.InAir {
-						thatPlayerInNextFrame.VelX = 0
-					}
+			case *FireballBullet:
+				var newBullet FireballBullet = *v // Copied primitive fields into an onstack variable
+				newBullet.BulletLocalId = bulletLocalId
+				bulletLocalId++
+				xfac := int32(1)
+				if 0 > thatPlayerInNextFrame.DirX {
+					xfac = -xfac
+				}
+				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY
+				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
+				newBullet.OffenderJoinIndex = joinIndex
+				newBullet.VelX = newBullet.Speed * xfac
+				newBullet.VelY = 0
+				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, &newBullet)
+				if NO_LOCK_VEL != v.SelfLockVelX {
+					hasLockVel = true
+					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
+				}
+				if NO_LOCK_VEL != v.SelfLockVelY {
+					hasLockVel = true
+					thatPlayerInNextFrame.VelY = v.SelfLockVelY
 				}
 			}
 
+			if false == hasLockVel && false == currPlayerDownsync.InAir {
+				thatPlayerInNextFrame.VelX = 0
+			}
 			thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState
 			continue // Don't allow movement if skill is used
 		}
@@ -589,8 +612,20 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else {
+		} else if meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id {
 			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
+		}
+	}
+
+	for _, fireballBullet := range currRenderFrame.FireballBullets {
+		if (fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames+fireballBullet.ActiveFrames > currRenderFrame.Id) {
+			bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
+			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.HitboxSizeX, fireballBullet.HitboxSizeY)
+			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
+			collisionSys.Add(newBulletCollider)
+			bulletColliders = append(bulletColliders, newBulletCollider)
+		} else if fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames+fireballBullet.ActiveFrames > currRenderFrame.Id {
+			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
 		}
 	}
 
@@ -610,7 +645,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				switch obj.Data.(type) {
 				case *PlayerDownsync:
 					isAnotherPlayer = true
-				case *MeleeBullet:
+				case *MeleeBullet, *FireballBullet:
 					isBullet = true
 				default:
 					// By default it's a regular barrier, even if data is nil
@@ -687,50 +722,102 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	for _, bulletCollider := range bulletColliders {
 		collision := bulletCollider.Check(0, 0)
 		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
-		switch v := bulletCollider.Data.(type) {
-		case *MeleeBullet:
-			if nil == collision {
-				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, v)
-				continue
-			}
-			bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-			offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
-			for _, obj := range collision.Objects {
-				defenderShape := obj.Shape.(*resolv.ConvexPolygon)
-				switch t := obj.Data.(type) {
-				case *PlayerDownsync:
-					if v.OffenderJoinIndex == t.JoinIndex {
-						continue
+		addToNextRenderFrame := true
+		if nil != collision {
+			switch v := bulletCollider.Data.(type) {
+			case *MeleeBullet:
+				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+				offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
+				for _, obj := range collision.Objects {
+					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+					switch t := obj.Data.(type) {
+					case *PlayerDownsync:
+						if v.OffenderJoinIndex == t.JoinIndex {
+							continue
+						}
+						overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+						if !overlapped {
+							continue
+						}
+						addToNextRenderFrame = false
+						if _, existent := invinsibleSet[t.CharacterState]; existent {
+							continue
+						}
+						if 0 < t.FramesInvinsible {
+							continue
+						}
+						xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+						if 0 > offender.DirX {
+							xfac = -xfac
+						}
+						pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
+						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
+						atkedPlayerInNextFrame.VelX = pushbackVelX
+						atkedPlayerInNextFrame.VelY = pushbackVelY
+						if v.BlowUp {
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+						} else {
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+						}
+						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+						if v.HitStunFrames > oldFramesToRecover {
+							atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
+						}
+					default:
+						addToNextRenderFrame = false
 					}
-					if _, existent := invinsibleSet[t.CharacterState]; existent {
-						continue
-					}
-					if 0 < t.FramesInvinsible {
-						continue
-					}
-					overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
-					if !overlapped {
-						continue
-					}
-					xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
-					if 0 > offender.DirX {
-						xfac = -xfac
-					}
-					pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
-					atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
-					atkedPlayerInNextFrame.VelX = pushbackVelX
-					atkedPlayerInNextFrame.VelY = pushbackVelY
-					if v.BlowUp {
-						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
-					} else {
-						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-					}
-					oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-					if v.HitStunFrames > oldFramesToRecover {
-						atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
-					}
-				default:
 				}
+			case *FireballBullet:
+				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+				offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
+				for _, obj := range collision.Objects {
+					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+					switch t := obj.Data.(type) {
+					case *PlayerDownsync:
+						if v.OffenderJoinIndex == t.JoinIndex {
+							continue
+						}
+						overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+						if !overlapped {
+							continue
+						}
+						addToNextRenderFrame = false
+						if _, existent := invinsibleSet[t.CharacterState]; existent {
+							continue
+						}
+						if 0 < t.FramesInvinsible {
+							continue
+						}
+						xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+						if 0 > offender.DirX {
+							xfac = -xfac
+						}
+						pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
+						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
+						atkedPlayerInNextFrame.VelX = pushbackVelX
+						atkedPlayerInNextFrame.VelY = pushbackVelY
+						if v.BlowUp {
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+						} else {
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+						}
+						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+						if v.HitStunFrames > oldFramesToRecover {
+							atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
+						}
+					default:
+						addToNextRenderFrame = false
+					}
+				}
+			}
+		}
+		if addToNextRenderFrame {
+			switch v := bulletCollider.Data.(type) {
+			case *MeleeBullet:
+				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, v)
+			case *FireballBullet:
+				v.VirtualGridX, v.VirtualGridY = v.VirtualGridX+v.VelX, v.VirtualGridY+v.VelY
+				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, v)
 			}
 		}
 	}
@@ -778,9 +865,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	return &RoomDownsyncFrame{
-		Id:           currRenderFrame.Id + 1,
-		PlayersArr:   nextRenderFramePlayers,
-		MeleeBullets: nextRenderFrameMeleeBullets,
+		Id:              currRenderFrame.Id + 1,
+		PlayersArr:      nextRenderFramePlayers,
+		MeleeBullets:    nextRenderFrameMeleeBullets,
+		FireballBullets: nextRenderFrameFireballBullets,
 	}
 }
 

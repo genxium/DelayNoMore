@@ -60,6 +60,8 @@ type Barrier struct {
 }
 
 type Bullet struct {
+	BulletLocalId int32 // for referencing cached nodes in frontend rendering
+
 	// for offender
 	OriginatedRenderFrameId int32 // Copied from the first bullet for all subsequent bullets
 	OffenderJoinIndex       int32 // Copied to favor collision handling of the dispatched bullet
@@ -116,14 +118,15 @@ type Skill struct {
 }
 
 type RoomDownsyncFrame struct {
-	Id                       int32
-	PlayersArr               []*PlayerDownsync
-	CountdownNanos           int64
-	MeleeBullets             []*MeleeBullet
-	FireballBullets          []*FireballBullet
-	BackendUnconfirmedMask   uint64
-	ShouldForceResync        bool
-	PlayerOpPatternToSkillId map[int]int
+	Id                     int32
+	PlayersArr             []*PlayerDownsync
+	CountdownNanos         int64
+	MeleeBullets           []*MeleeBullet
+	FireballBullets        []*FireballBullet
+	BackendUnconfirmedMask uint64
+	ShouldForceResync      bool
+
+	BulletLocalIdCounter int32
 }
 
 type InputFrameDownsync struct {

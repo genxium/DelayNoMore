@@ -69,9 +69,50 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
-func NewMeleeBulletJs(originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *js.Object {
+func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *js.Object {
 	return js.MakeWrapper(&MeleeBullet{
 		Bullet: Bullet{
+			BulletLocalId:           bulletLocalId,
+			OriginatedRenderFrameId: originatedRenderFrameId,
+			OffenderJoinIndex:       offenderJoinIndex,
+
+			StartupFrames:      startupFrames,
+			CancellableStFrame: cancellableStFrame,
+			CancellableEdFrame: cancellableEdFrame,
+			ActiveFrames:       activeFrames,
+
+			HitStunFrames:   hitStunFrames,
+			BlockStunFrames: blockStunFrames,
+			PushbackVelX:    pushbackVelX,
+			PushbackVelY:    pushbackVelY,
+			Damage:          damage,
+
+			SelfLockVelX: selfLockVelX,
+			SelfLockVelY: selfLockVelY,
+
+			HitboxOffsetX: hitboxOffsetX,
+			HitboxOffsetY: hitboxOffsetY,
+			HitboxSizeX:   hitboxSizeX,
+			HitboxSizeY:   hitboxSizeY,
+
+			BlowUp: blowUp,
+
+			TeamId: teamId,
+		},
+	})
+}
+
+func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed int32) *js.Object {
+	return js.MakeWrapper(&FireballBullet{
+		VirtualGridX: virtualGridX,
+		VirtualGridY: virtualGridY,
+		DirX:         dirX,
+		DirY:         dirY,
+		VelX:         velX,
+		VelY:         velY,
+		Speed:        speed,
+		Bullet: Bullet{
+			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
 			OffenderJoinIndex:       offenderJoinIndex,
 
@@ -110,12 +151,14 @@ func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
 	})
 }
 
-func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, meleeBullets []*MeleeBullet) *js.Object {
+func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, bulletLocalIdCounter int32, meleeBullets []*MeleeBullet, fireballBullets []*FireballBullet) *js.Object {
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
-		Id:           id,
-		PlayersArr:   playersArr,
-		MeleeBullets: meleeBullets,
+		Id:                   id,
+		PlayersArr:           playersArr,
+		BulletLocalIdCounter: bulletLocalIdCounter,
+		MeleeBullets:         meleeBullets,
+		FireballBullets:      fireballBullets,
 	})
 }
 
@@ -170,6 +213,7 @@ func main() {
 		"NewBarrierJs":                                         NewBarrierJs,
 		"NewPlayerDownsyncJs":                                  NewPlayerDownsyncJs,
 		"NewMeleeBulletJs":                                     NewMeleeBulletJs,
+		"NewFireballBulletJs":                                  NewFireballBulletJs,
 		"NewNpcPatrolCue":                                      NewNpcPatrolCue,
 		"NewRoomDownsyncFrameJs":                               NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":                                  NewCollisionSpaceJs,

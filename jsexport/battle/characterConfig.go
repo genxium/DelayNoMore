@@ -108,8 +108,8 @@ var Characters = map[int]*CharacterConfig{
 			return NO_SKILL
 		},
 	},
-	4196: &CharacterConfig{
-		SpeciesId:   4196,
+	4096: &CharacterConfig{
+		SpeciesId:   4096,
 		SpeciesName: "Monk",
 
 		InAirIdleFrameIdxTurningPoint: 42,
@@ -437,14 +437,14 @@ var skills = map[int]*Skill{
 				Speed: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: Bullet{
 					StartupFrames:   int32(15),
-					ActiveFrames:    int32(30),
+					ActiveFrames:    MAX_INT32,
 					HitStunFrames:   int32(15),
 					BlockStunFrames: int32(9),
 					Damage:          int32(20),
-					SelfLockVelX:    int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					SelfLockVelY:    int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    int32(0),
 					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(0),
 					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),

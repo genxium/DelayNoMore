@@ -4116,6 +4116,8 @@ $root.protos = (function() {
          * @property {number|null} [hitboxSizeX] MeleeBullet hitboxSizeX
          * @property {number|null} [hitboxSizeY] MeleeBullet hitboxSizeY
          * @property {boolean|null} [blowUp] MeleeBullet blowUp
+         * @property {number|null} [teamId] MeleeBullet teamId
+         * @property {number|null} [bulletLocalId] MeleeBullet bulletLocalId
          */
 
         /**
@@ -4278,6 +4280,22 @@ $root.protos = (function() {
         MeleeBullet.prototype.blowUp = false;
 
         /**
+         * MeleeBullet teamId.
+         * @member {number} teamId
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.teamId = 0;
+
+        /**
+         * MeleeBullet bulletLocalId.
+         * @member {number} bulletLocalId
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.bulletLocalId = 0;
+
+        /**
          * Creates a new MeleeBullet instance using the specified properties.
          * @function create
          * @memberof protos.MeleeBullet
@@ -4337,6 +4355,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 17, wireType 0 =*/136).int32(message.hitboxSizeY);
             if (message.blowUp != null && Object.hasOwnProperty.call(message, "blowUp"))
                 writer.uint32(/* id 18, wireType 0 =*/144).bool(message.blowUp);
+            if (message.teamId != null && Object.hasOwnProperty.call(message, "teamId"))
+                writer.uint32(/* id 19, wireType 0 =*/152).int32(message.teamId);
+            if (message.bulletLocalId != null && Object.hasOwnProperty.call(message, "bulletLocalId"))
+                writer.uint32(/* id 20, wireType 0 =*/160).int32(message.bulletLocalId);
             return writer;
         };
 
@@ -4443,6 +4465,14 @@ $root.protos = (function() {
                         message.blowUp = reader.bool();
                         break;
                     }
+                case 19: {
+                        message.teamId = reader.int32();
+                        break;
+                    }
+                case 20: {
+                        message.bulletLocalId = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4532,6 +4562,12 @@ $root.protos = (function() {
             if (message.blowUp != null && message.hasOwnProperty("blowUp"))
                 if (typeof message.blowUp !== "boolean")
                     return "blowUp: boolean expected";
+            if (message.teamId != null && message.hasOwnProperty("teamId"))
+                if (!$util.isInteger(message.teamId))
+                    return "teamId: integer expected";
+            if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
+                if (!$util.isInteger(message.bulletLocalId))
+                    return "bulletLocalId: integer expected";
             return null;
         };
 
@@ -4583,6 +4619,10 @@ $root.protos = (function() {
                 message.hitboxSizeY = object.hitboxSizeY | 0;
             if (object.blowUp != null)
                 message.blowUp = Boolean(object.blowUp);
+            if (object.teamId != null)
+                message.teamId = object.teamId | 0;
+            if (object.bulletLocalId != null)
+                message.bulletLocalId = object.bulletLocalId | 0;
             return message;
         };
 
@@ -4618,6 +4658,8 @@ $root.protos = (function() {
                 object.hitboxSizeX = 0;
                 object.hitboxSizeY = 0;
                 object.blowUp = false;
+                object.teamId = 0;
+                object.bulletLocalId = 0;
             }
             if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
                 object.originatedRenderFrameId = message.originatedRenderFrameId;
@@ -4655,6 +4697,10 @@ $root.protos = (function() {
                 object.hitboxSizeY = message.hitboxSizeY;
             if (message.blowUp != null && message.hasOwnProperty("blowUp"))
                 object.blowUp = message.blowUp;
+            if (message.teamId != null && message.hasOwnProperty("teamId"))
+                object.teamId = message.teamId;
+            if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
+                object.bulletLocalId = message.bulletLocalId;
             return object;
         };
 
@@ -4685,6 +4731,808 @@ $root.protos = (function() {
         };
 
         return MeleeBullet;
+    })();
+
+    protos.FireballBullet = (function() {
+
+        /**
+         * Properties of a FireballBullet.
+         * @memberof protos
+         * @interface IFireballBullet
+         * @property {number|null} [originatedRenderFrameId] FireballBullet originatedRenderFrameId
+         * @property {number|null} [offenderJoinIndex] FireballBullet offenderJoinIndex
+         * @property {number|null} [startupFrames] FireballBullet startupFrames
+         * @property {number|null} [cancellableStFrame] FireballBullet cancellableStFrame
+         * @property {number|null} [cancellableEdFrame] FireballBullet cancellableEdFrame
+         * @property {number|null} [activeFrames] FireballBullet activeFrames
+         * @property {number|null} [hitStunFrames] FireballBullet hitStunFrames
+         * @property {number|null} [blockStunFrames] FireballBullet blockStunFrames
+         * @property {number|null} [pushbackVelX] FireballBullet pushbackVelX
+         * @property {number|null} [pushbackVelY] FireballBullet pushbackVelY
+         * @property {number|null} [damage] FireballBullet damage
+         * @property {number|null} [selfLockVelX] FireballBullet selfLockVelX
+         * @property {number|null} [selfLockVelY] FireballBullet selfLockVelY
+         * @property {number|null} [hitboxOffsetX] FireballBullet hitboxOffsetX
+         * @property {number|null} [hitboxOffsetY] FireballBullet hitboxOffsetY
+         * @property {number|null} [hitboxSizeX] FireballBullet hitboxSizeX
+         * @property {number|null} [hitboxSizeY] FireballBullet hitboxSizeY
+         * @property {boolean|null} [blowUp] FireballBullet blowUp
+         * @property {number|null} [teamId] FireballBullet teamId
+         * @property {number|null} [bulletLocalId] FireballBullet bulletLocalId
+         * @property {number|null} [virtualGridX] FireballBullet virtualGridX
+         * @property {number|null} [virtualGridY] FireballBullet virtualGridY
+         * @property {number|null} [dirX] FireballBullet dirX
+         * @property {number|null} [dirY] FireballBullet dirY
+         * @property {number|null} [velX] FireballBullet velX
+         * @property {number|null} [velY] FireballBullet velY
+         * @property {number|null} [speed] FireballBullet speed
+         */
+
+        /**
+         * Constructs a new FireballBullet.
+         * @memberof protos
+         * @classdesc Represents a FireballBullet.
+         * @implements IFireballBullet
+         * @constructor
+         * @param {protos.IFireballBullet=} [properties] Properties to set
+         */
+        function FireballBullet(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * FireballBullet originatedRenderFrameId.
+         * @member {number} originatedRenderFrameId
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.originatedRenderFrameId = 0;
+
+        /**
+         * FireballBullet offenderJoinIndex.
+         * @member {number} offenderJoinIndex
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.offenderJoinIndex = 0;
+
+        /**
+         * FireballBullet startupFrames.
+         * @member {number} startupFrames
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.startupFrames = 0;
+
+        /**
+         * FireballBullet cancellableStFrame.
+         * @member {number} cancellableStFrame
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.cancellableStFrame = 0;
+
+        /**
+         * FireballBullet cancellableEdFrame.
+         * @member {number} cancellableEdFrame
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.cancellableEdFrame = 0;
+
+        /**
+         * FireballBullet activeFrames.
+         * @member {number} activeFrames
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.activeFrames = 0;
+
+        /**
+         * FireballBullet hitStunFrames.
+         * @member {number} hitStunFrames
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.hitStunFrames = 0;
+
+        /**
+         * FireballBullet blockStunFrames.
+         * @member {number} blockStunFrames
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.blockStunFrames = 0;
+
+        /**
+         * FireballBullet pushbackVelX.
+         * @member {number} pushbackVelX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.pushbackVelX = 0;
+
+        /**
+         * FireballBullet pushbackVelY.
+         * @member {number} pushbackVelY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.pushbackVelY = 0;
+
+        /**
+         * FireballBullet damage.
+         * @member {number} damage
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.damage = 0;
+
+        /**
+         * FireballBullet selfLockVelX.
+         * @member {number} selfLockVelX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.selfLockVelX = 0;
+
+        /**
+         * FireballBullet selfLockVelY.
+         * @member {number} selfLockVelY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.selfLockVelY = 0;
+
+        /**
+         * FireballBullet hitboxOffsetX.
+         * @member {number} hitboxOffsetX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.hitboxOffsetX = 0;
+
+        /**
+         * FireballBullet hitboxOffsetY.
+         * @member {number} hitboxOffsetY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.hitboxOffsetY = 0;
+
+        /**
+         * FireballBullet hitboxSizeX.
+         * @member {number} hitboxSizeX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.hitboxSizeX = 0;
+
+        /**
+         * FireballBullet hitboxSizeY.
+         * @member {number} hitboxSizeY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.hitboxSizeY = 0;
+
+        /**
+         * FireballBullet blowUp.
+         * @member {boolean} blowUp
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.blowUp = false;
+
+        /**
+         * FireballBullet teamId.
+         * @member {number} teamId
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.teamId = 0;
+
+        /**
+         * FireballBullet bulletLocalId.
+         * @member {number} bulletLocalId
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.bulletLocalId = 0;
+
+        /**
+         * FireballBullet virtualGridX.
+         * @member {number} virtualGridX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.virtualGridX = 0;
+
+        /**
+         * FireballBullet virtualGridY.
+         * @member {number} virtualGridY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.virtualGridY = 0;
+
+        /**
+         * FireballBullet dirX.
+         * @member {number} dirX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.dirX = 0;
+
+        /**
+         * FireballBullet dirY.
+         * @member {number} dirY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.dirY = 0;
+
+        /**
+         * FireballBullet velX.
+         * @member {number} velX
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.velX = 0;
+
+        /**
+         * FireballBullet velY.
+         * @member {number} velY
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.velY = 0;
+
+        /**
+         * FireballBullet speed.
+         * @member {number} speed
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.speed = 0;
+
+        /**
+         * Creates a new FireballBullet instance using the specified properties.
+         * @function create
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {protos.IFireballBullet=} [properties] Properties to set
+         * @returns {protos.FireballBullet} FireballBullet instance
+         */
+        FireballBullet.create = function create(properties) {
+            return new FireballBullet(properties);
+        };
+
+        /**
+         * Encodes the specified FireballBullet message. Does not implicitly {@link protos.FireballBullet.verify|verify} messages.
+         * @function encode
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {protos.FireballBullet} message FireballBullet message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        FireballBullet.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.originatedRenderFrameId != null && Object.hasOwnProperty.call(message, "originatedRenderFrameId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.originatedRenderFrameId);
+            if (message.offenderJoinIndex != null && Object.hasOwnProperty.call(message, "offenderJoinIndex"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.offenderJoinIndex);
+            if (message.startupFrames != null && Object.hasOwnProperty.call(message, "startupFrames"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.startupFrames);
+            if (message.cancellableStFrame != null && Object.hasOwnProperty.call(message, "cancellableStFrame"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.cancellableStFrame);
+            if (message.cancellableEdFrame != null && Object.hasOwnProperty.call(message, "cancellableEdFrame"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.cancellableEdFrame);
+            if (message.activeFrames != null && Object.hasOwnProperty.call(message, "activeFrames"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.activeFrames);
+            if (message.hitStunFrames != null && Object.hasOwnProperty.call(message, "hitStunFrames"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.hitStunFrames);
+            if (message.blockStunFrames != null && Object.hasOwnProperty.call(message, "blockStunFrames"))
+                writer.uint32(/* id 8, wireType 0 =*/64).int32(message.blockStunFrames);
+            if (message.pushbackVelX != null && Object.hasOwnProperty.call(message, "pushbackVelX"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.pushbackVelX);
+            if (message.pushbackVelY != null && Object.hasOwnProperty.call(message, "pushbackVelY"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.pushbackVelY);
+            if (message.damage != null && Object.hasOwnProperty.call(message, "damage"))
+                writer.uint32(/* id 11, wireType 0 =*/88).int32(message.damage);
+            if (message.selfLockVelX != null && Object.hasOwnProperty.call(message, "selfLockVelX"))
+                writer.uint32(/* id 12, wireType 0 =*/96).int32(message.selfLockVelX);
+            if (message.selfLockVelY != null && Object.hasOwnProperty.call(message, "selfLockVelY"))
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.selfLockVelY);
+            if (message.hitboxOffsetX != null && Object.hasOwnProperty.call(message, "hitboxOffsetX"))
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.hitboxOffsetX);
+            if (message.hitboxOffsetY != null && Object.hasOwnProperty.call(message, "hitboxOffsetY"))
+                writer.uint32(/* id 15, wireType 0 =*/120).int32(message.hitboxOffsetY);
+            if (message.hitboxSizeX != null && Object.hasOwnProperty.call(message, "hitboxSizeX"))
+                writer.uint32(/* id 16, wireType 0 =*/128).int32(message.hitboxSizeX);
+            if (message.hitboxSizeY != null && Object.hasOwnProperty.call(message, "hitboxSizeY"))
+                writer.uint32(/* id 17, wireType 0 =*/136).int32(message.hitboxSizeY);
+            if (message.blowUp != null && Object.hasOwnProperty.call(message, "blowUp"))
+                writer.uint32(/* id 18, wireType 0 =*/144).bool(message.blowUp);
+            if (message.teamId != null && Object.hasOwnProperty.call(message, "teamId"))
+                writer.uint32(/* id 19, wireType 0 =*/152).int32(message.teamId);
+            if (message.bulletLocalId != null && Object.hasOwnProperty.call(message, "bulletLocalId"))
+                writer.uint32(/* id 20, wireType 0 =*/160).int32(message.bulletLocalId);
+            if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
+                writer.uint32(/* id 999, wireType 0 =*/7992).int32(message.virtualGridX);
+            if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
+                writer.uint32(/* id 1000, wireType 0 =*/8000).int32(message.virtualGridY);
+            if (message.dirX != null && Object.hasOwnProperty.call(message, "dirX"))
+                writer.uint32(/* id 1001, wireType 0 =*/8008).int32(message.dirX);
+            if (message.dirY != null && Object.hasOwnProperty.call(message, "dirY"))
+                writer.uint32(/* id 1002, wireType 0 =*/8016).int32(message.dirY);
+            if (message.velX != null && Object.hasOwnProperty.call(message, "velX"))
+                writer.uint32(/* id 1003, wireType 0 =*/8024).int32(message.velX);
+            if (message.velY != null && Object.hasOwnProperty.call(message, "velY"))
+                writer.uint32(/* id 1004, wireType 0 =*/8032).int32(message.velY);
+            if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
+                writer.uint32(/* id 1005, wireType 0 =*/8040).int32(message.speed);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified FireballBullet message, length delimited. Does not implicitly {@link protos.FireballBullet.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {protos.FireballBullet} message FireballBullet message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        FireballBullet.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a FireballBullet message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.FireballBullet} FireballBullet
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        FireballBullet.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FireballBullet();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.originatedRenderFrameId = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.offenderJoinIndex = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.startupFrames = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.cancellableStFrame = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.cancellableEdFrame = reader.int32();
+                        break;
+                    }
+                case 6: {
+                        message.activeFrames = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        message.hitStunFrames = reader.int32();
+                        break;
+                    }
+                case 8: {
+                        message.blockStunFrames = reader.int32();
+                        break;
+                    }
+                case 9: {
+                        message.pushbackVelX = reader.int32();
+                        break;
+                    }
+                case 10: {
+                        message.pushbackVelY = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.damage = reader.int32();
+                        break;
+                    }
+                case 12: {
+                        message.selfLockVelX = reader.int32();
+                        break;
+                    }
+                case 13: {
+                        message.selfLockVelY = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.hitboxOffsetX = reader.int32();
+                        break;
+                    }
+                case 15: {
+                        message.hitboxOffsetY = reader.int32();
+                        break;
+                    }
+                case 16: {
+                        message.hitboxSizeX = reader.int32();
+                        break;
+                    }
+                case 17: {
+                        message.hitboxSizeY = reader.int32();
+                        break;
+                    }
+                case 18: {
+                        message.blowUp = reader.bool();
+                        break;
+                    }
+                case 19: {
+                        message.teamId = reader.int32();
+                        break;
+                    }
+                case 20: {
+                        message.bulletLocalId = reader.int32();
+                        break;
+                    }
+                case 999: {
+                        message.virtualGridX = reader.int32();
+                        break;
+                    }
+                case 1000: {
+                        message.virtualGridY = reader.int32();
+                        break;
+                    }
+                case 1001: {
+                        message.dirX = reader.int32();
+                        break;
+                    }
+                case 1002: {
+                        message.dirY = reader.int32();
+                        break;
+                    }
+                case 1003: {
+                        message.velX = reader.int32();
+                        break;
+                    }
+                case 1004: {
+                        message.velY = reader.int32();
+                        break;
+                    }
+                case 1005: {
+                        message.speed = reader.int32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a FireballBullet message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.FireballBullet} FireballBullet
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        FireballBullet.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a FireballBullet message.
+         * @function verify
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        FireballBullet.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
+                if (!$util.isInteger(message.originatedRenderFrameId))
+                    return "originatedRenderFrameId: integer expected";
+            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
+                if (!$util.isInteger(message.offenderJoinIndex))
+                    return "offenderJoinIndex: integer expected";
+            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
+                if (!$util.isInteger(message.startupFrames))
+                    return "startupFrames: integer expected";
+            if (message.cancellableStFrame != null && message.hasOwnProperty("cancellableStFrame"))
+                if (!$util.isInteger(message.cancellableStFrame))
+                    return "cancellableStFrame: integer expected";
+            if (message.cancellableEdFrame != null && message.hasOwnProperty("cancellableEdFrame"))
+                if (!$util.isInteger(message.cancellableEdFrame))
+                    return "cancellableEdFrame: integer expected";
+            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
+                if (!$util.isInteger(message.activeFrames))
+                    return "activeFrames: integer expected";
+            if (message.hitStunFrames != null && message.hasOwnProperty("hitStunFrames"))
+                if (!$util.isInteger(message.hitStunFrames))
+                    return "hitStunFrames: integer expected";
+            if (message.blockStunFrames != null && message.hasOwnProperty("blockStunFrames"))
+                if (!$util.isInteger(message.blockStunFrames))
+                    return "blockStunFrames: integer expected";
+            if (message.pushbackVelX != null && message.hasOwnProperty("pushbackVelX"))
+                if (!$util.isInteger(message.pushbackVelX))
+                    return "pushbackVelX: integer expected";
+            if (message.pushbackVelY != null && message.hasOwnProperty("pushbackVelY"))
+                if (!$util.isInteger(message.pushbackVelY))
+                    return "pushbackVelY: integer expected";
+            if (message.damage != null && message.hasOwnProperty("damage"))
+                if (!$util.isInteger(message.damage))
+                    return "damage: integer expected";
+            if (message.selfLockVelX != null && message.hasOwnProperty("selfLockVelX"))
+                if (!$util.isInteger(message.selfLockVelX))
+                    return "selfLockVelX: integer expected";
+            if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
+                if (!$util.isInteger(message.selfLockVelY))
+                    return "selfLockVelY: integer expected";
+            if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
+                if (!$util.isInteger(message.hitboxOffsetX))
+                    return "hitboxOffsetX: integer expected";
+            if (message.hitboxOffsetY != null && message.hasOwnProperty("hitboxOffsetY"))
+                if (!$util.isInteger(message.hitboxOffsetY))
+                    return "hitboxOffsetY: integer expected";
+            if (message.hitboxSizeX != null && message.hasOwnProperty("hitboxSizeX"))
+                if (!$util.isInteger(message.hitboxSizeX))
+                    return "hitboxSizeX: integer expected";
+            if (message.hitboxSizeY != null && message.hasOwnProperty("hitboxSizeY"))
+                if (!$util.isInteger(message.hitboxSizeY))
+                    return "hitboxSizeY: integer expected";
+            if (message.blowUp != null && message.hasOwnProperty("blowUp"))
+                if (typeof message.blowUp !== "boolean")
+                    return "blowUp: boolean expected";
+            if (message.teamId != null && message.hasOwnProperty("teamId"))
+                if (!$util.isInteger(message.teamId))
+                    return "teamId: integer expected";
+            if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
+                if (!$util.isInteger(message.bulletLocalId))
+                    return "bulletLocalId: integer expected";
+            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
+                if (!$util.isInteger(message.virtualGridX))
+                    return "virtualGridX: integer expected";
+            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
+                if (!$util.isInteger(message.virtualGridY))
+                    return "virtualGridY: integer expected";
+            if (message.dirX != null && message.hasOwnProperty("dirX"))
+                if (!$util.isInteger(message.dirX))
+                    return "dirX: integer expected";
+            if (message.dirY != null && message.hasOwnProperty("dirY"))
+                if (!$util.isInteger(message.dirY))
+                    return "dirY: integer expected";
+            if (message.velX != null && message.hasOwnProperty("velX"))
+                if (!$util.isInteger(message.velX))
+                    return "velX: integer expected";
+            if (message.velY != null && message.hasOwnProperty("velY"))
+                if (!$util.isInteger(message.velY))
+                    return "velY: integer expected";
+            if (message.speed != null && message.hasOwnProperty("speed"))
+                if (!$util.isInteger(message.speed))
+                    return "speed: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a FireballBullet message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.FireballBullet} FireballBullet
+         */
+        FireballBullet.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.FireballBullet)
+                return object;
+            var message = new $root.protos.FireballBullet();
+            if (object.originatedRenderFrameId != null)
+                message.originatedRenderFrameId = object.originatedRenderFrameId | 0;
+            if (object.offenderJoinIndex != null)
+                message.offenderJoinIndex = object.offenderJoinIndex | 0;
+            if (object.startupFrames != null)
+                message.startupFrames = object.startupFrames | 0;
+            if (object.cancellableStFrame != null)
+                message.cancellableStFrame = object.cancellableStFrame | 0;
+            if (object.cancellableEdFrame != null)
+                message.cancellableEdFrame = object.cancellableEdFrame | 0;
+            if (object.activeFrames != null)
+                message.activeFrames = object.activeFrames | 0;
+            if (object.hitStunFrames != null)
+                message.hitStunFrames = object.hitStunFrames | 0;
+            if (object.blockStunFrames != null)
+                message.blockStunFrames = object.blockStunFrames | 0;
+            if (object.pushbackVelX != null)
+                message.pushbackVelX = object.pushbackVelX | 0;
+            if (object.pushbackVelY != null)
+                message.pushbackVelY = object.pushbackVelY | 0;
+            if (object.damage != null)
+                message.damage = object.damage | 0;
+            if (object.selfLockVelX != null)
+                message.selfLockVelX = object.selfLockVelX | 0;
+            if (object.selfLockVelY != null)
+                message.selfLockVelY = object.selfLockVelY | 0;
+            if (object.hitboxOffsetX != null)
+                message.hitboxOffsetX = object.hitboxOffsetX | 0;
+            if (object.hitboxOffsetY != null)
+                message.hitboxOffsetY = object.hitboxOffsetY | 0;
+            if (object.hitboxSizeX != null)
+                message.hitboxSizeX = object.hitboxSizeX | 0;
+            if (object.hitboxSizeY != null)
+                message.hitboxSizeY = object.hitboxSizeY | 0;
+            if (object.blowUp != null)
+                message.blowUp = Boolean(object.blowUp);
+            if (object.teamId != null)
+                message.teamId = object.teamId | 0;
+            if (object.bulletLocalId != null)
+                message.bulletLocalId = object.bulletLocalId | 0;
+            if (object.virtualGridX != null)
+                message.virtualGridX = object.virtualGridX | 0;
+            if (object.virtualGridY != null)
+                message.virtualGridY = object.virtualGridY | 0;
+            if (object.dirX != null)
+                message.dirX = object.dirX | 0;
+            if (object.dirY != null)
+                message.dirY = object.dirY | 0;
+            if (object.velX != null)
+                message.velX = object.velX | 0;
+            if (object.velY != null)
+                message.velY = object.velY | 0;
+            if (object.speed != null)
+                message.speed = object.speed | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a FireballBullet message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {protos.FireballBullet} message FireballBullet
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        FireballBullet.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.originatedRenderFrameId = 0;
+                object.offenderJoinIndex = 0;
+                object.startupFrames = 0;
+                object.cancellableStFrame = 0;
+                object.cancellableEdFrame = 0;
+                object.activeFrames = 0;
+                object.hitStunFrames = 0;
+                object.blockStunFrames = 0;
+                object.pushbackVelX = 0;
+                object.pushbackVelY = 0;
+                object.damage = 0;
+                object.selfLockVelX = 0;
+                object.selfLockVelY = 0;
+                object.hitboxOffsetX = 0;
+                object.hitboxOffsetY = 0;
+                object.hitboxSizeX = 0;
+                object.hitboxSizeY = 0;
+                object.blowUp = false;
+                object.teamId = 0;
+                object.bulletLocalId = 0;
+                object.virtualGridX = 0;
+                object.virtualGridY = 0;
+                object.dirX = 0;
+                object.dirY = 0;
+                object.velX = 0;
+                object.velY = 0;
+                object.speed = 0;
+            }
+            if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
+                object.originatedRenderFrameId = message.originatedRenderFrameId;
+            if (message.offenderJoinIndex != null && message.hasOwnProperty("offenderJoinIndex"))
+                object.offenderJoinIndex = message.offenderJoinIndex;
+            if (message.startupFrames != null && message.hasOwnProperty("startupFrames"))
+                object.startupFrames = message.startupFrames;
+            if (message.cancellableStFrame != null && message.hasOwnProperty("cancellableStFrame"))
+                object.cancellableStFrame = message.cancellableStFrame;
+            if (message.cancellableEdFrame != null && message.hasOwnProperty("cancellableEdFrame"))
+                object.cancellableEdFrame = message.cancellableEdFrame;
+            if (message.activeFrames != null && message.hasOwnProperty("activeFrames"))
+                object.activeFrames = message.activeFrames;
+            if (message.hitStunFrames != null && message.hasOwnProperty("hitStunFrames"))
+                object.hitStunFrames = message.hitStunFrames;
+            if (message.blockStunFrames != null && message.hasOwnProperty("blockStunFrames"))
+                object.blockStunFrames = message.blockStunFrames;
+            if (message.pushbackVelX != null && message.hasOwnProperty("pushbackVelX"))
+                object.pushbackVelX = message.pushbackVelX;
+            if (message.pushbackVelY != null && message.hasOwnProperty("pushbackVelY"))
+                object.pushbackVelY = message.pushbackVelY;
+            if (message.damage != null && message.hasOwnProperty("damage"))
+                object.damage = message.damage;
+            if (message.selfLockVelX != null && message.hasOwnProperty("selfLockVelX"))
+                object.selfLockVelX = message.selfLockVelX;
+            if (message.selfLockVelY != null && message.hasOwnProperty("selfLockVelY"))
+                object.selfLockVelY = message.selfLockVelY;
+            if (message.hitboxOffsetX != null && message.hasOwnProperty("hitboxOffsetX"))
+                object.hitboxOffsetX = message.hitboxOffsetX;
+            if (message.hitboxOffsetY != null && message.hasOwnProperty("hitboxOffsetY"))
+                object.hitboxOffsetY = message.hitboxOffsetY;
+            if (message.hitboxSizeX != null && message.hasOwnProperty("hitboxSizeX"))
+                object.hitboxSizeX = message.hitboxSizeX;
+            if (message.hitboxSizeY != null && message.hasOwnProperty("hitboxSizeY"))
+                object.hitboxSizeY = message.hitboxSizeY;
+            if (message.blowUp != null && message.hasOwnProperty("blowUp"))
+                object.blowUp = message.blowUp;
+            if (message.teamId != null && message.hasOwnProperty("teamId"))
+                object.teamId = message.teamId;
+            if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
+                object.bulletLocalId = message.bulletLocalId;
+            if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
+                object.virtualGridX = message.virtualGridX;
+            if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))
+                object.virtualGridY = message.virtualGridY;
+            if (message.dirX != null && message.hasOwnProperty("dirX"))
+                object.dirX = message.dirX;
+            if (message.dirY != null && message.hasOwnProperty("dirY"))
+                object.dirY = message.dirY;
+            if (message.velX != null && message.hasOwnProperty("velX"))
+                object.velX = message.velX;
+            if (message.velY != null && message.hasOwnProperty("velY"))
+                object.velY = message.velY;
+            if (message.speed != null && message.hasOwnProperty("speed"))
+                object.speed = message.speed;
+            return object;
+        };
+
+        /**
+         * Converts this FireballBullet to JSON.
+         * @function toJSON
+         * @memberof protos.FireballBullet
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        FireballBullet.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for FireballBullet
+         * @function getTypeUrl
+         * @memberof protos.FireballBullet
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        FireballBullet.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.FireballBullet";
+        };
+
+        return FireballBullet;
     })();
 
     protos.BattleColliderInfo = (function() {
@@ -4887,7 +5735,7 @@ $root.protos = (function() {
             if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
                 writer.uint32(/* id 13, wireType 0 =*/104).int32(message.collisionMinStep);
             if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
-                writer.uint32(/* id 999, wireType 0 =*/7992).bool(message.frameDataLoggingEnabled);
+                writer.uint32(/* id 1024, wireType 0 =*/8192).bool(message.frameDataLoggingEnabled);
             return writer;
         };
 
@@ -4974,7 +5822,7 @@ $root.protos = (function() {
                         message.collisionMinStep = reader.int32();
                         break;
                     }
-                case 999: {
+                case 1024: {
                         message.frameDataLoggingEnabled = reader.bool();
                         break;
                     }
@@ -5228,9 +6076,11 @@ $root.protos = (function() {
          * @property {Array.<protos.PlayerDownsync>|null} [playersArr] RoomDownsyncFrame playersArr
          * @property {number|Long|null} [countdownNanos] RoomDownsyncFrame countdownNanos
          * @property {Array.<protos.MeleeBullet>|null} [meleeBullets] RoomDownsyncFrame meleeBullets
+         * @property {Array.<protos.FireballBullet>|null} [fireballBullets] RoomDownsyncFrame fireballBullets
          * @property {number|Long|null} [backendUnconfirmedMask] RoomDownsyncFrame backendUnconfirmedMask
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
          * @property {Array.<number>|null} [speciesIdList] RoomDownsyncFrame speciesIdList
+         * @property {number|null} [bulletLocalIdCounter] RoomDownsyncFrame bulletLocalIdCounter
          */
 
         /**
@@ -5244,6 +6094,7 @@ $root.protos = (function() {
         function RoomDownsyncFrame(properties) {
             this.playersArr = [];
             this.meleeBullets = [];
+            this.fireballBullets = [];
             this.speciesIdList = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -5284,6 +6135,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.meleeBullets = $util.emptyArray;
 
         /**
+         * RoomDownsyncFrame fireballBullets.
+         * @member {Array.<protos.FireballBullet>} fireballBullets
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.fireballBullets = $util.emptyArray;
+
+        /**
          * RoomDownsyncFrame backendUnconfirmedMask.
          * @member {number|Long} backendUnconfirmedMask
          * @memberof protos.RoomDownsyncFrame
@@ -5306,6 +6165,14 @@ $root.protos = (function() {
          * @instance
          */
         RoomDownsyncFrame.prototype.speciesIdList = $util.emptyArray;
+
+        /**
+         * RoomDownsyncFrame bulletLocalIdCounter.
+         * @member {number} bulletLocalIdCounter
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.bulletLocalIdCounter = 0;
 
         /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
@@ -5341,16 +6208,21 @@ $root.protos = (function() {
             if (message.meleeBullets != null && message.meleeBullets.length)
                 for (var i = 0; i < message.meleeBullets.length; ++i)
                     $root.protos.MeleeBullet.encode(message.meleeBullets[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.fireballBullets != null && message.fireballBullets.length)
+                for (var i = 0; i < message.fireballBullets.length; ++i)
+                    $root.protos.FireballBullet.encode(message.fireballBullets[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.backendUnconfirmedMask != null && Object.hasOwnProperty.call(message, "backendUnconfirmedMask"))
-                writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.backendUnconfirmedMask);
+                writer.uint32(/* id 1024, wireType 0 =*/8192).uint64(message.backendUnconfirmedMask);
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
-                writer.uint32(/* id 6, wireType 0 =*/48).bool(message.shouldForceResync);
+                writer.uint32(/* id 1025, wireType 0 =*/8200).bool(message.shouldForceResync);
             if (message.speciesIdList != null && message.speciesIdList.length) {
-                writer.uint32(/* id 7, wireType 2 =*/58).fork();
+                writer.uint32(/* id 1026, wireType 2 =*/8210).fork();
                 for (var i = 0; i < message.speciesIdList.length; ++i)
                     writer.int32(message.speciesIdList[i]);
                 writer.ldelim();
             }
+            if (message.bulletLocalIdCounter != null && Object.hasOwnProperty.call(message, "bulletLocalIdCounter"))
+                writer.uint32(/* id 1027, wireType 0 =*/8216).int32(message.bulletLocalIdCounter);
             return writer;
         };
 
@@ -5406,14 +6278,20 @@ $root.protos = (function() {
                         break;
                     }
                 case 5: {
+                        if (!(message.fireballBullets && message.fireballBullets.length))
+                            message.fireballBullets = [];
+                        message.fireballBullets.push($root.protos.FireballBullet.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 1024: {
                         message.backendUnconfirmedMask = reader.uint64();
                         break;
                     }
-                case 6: {
+                case 1025: {
                         message.shouldForceResync = reader.bool();
                         break;
                     }
-                case 7: {
+                case 1026: {
                         if (!(message.speciesIdList && message.speciesIdList.length))
                             message.speciesIdList = [];
                         if ((tag & 7) === 2) {
@@ -5422,6 +6300,10 @@ $root.protos = (function() {
                                 message.speciesIdList.push(reader.int32());
                         } else
                             message.speciesIdList.push(reader.int32());
+                        break;
+                    }
+                case 1027: {
+                        message.bulletLocalIdCounter = reader.int32();
                         break;
                     }
                 default:
@@ -5483,6 +6365,15 @@ $root.protos = (function() {
                         return "meleeBullets." + error;
                 }
             }
+            if (message.fireballBullets != null && message.hasOwnProperty("fireballBullets")) {
+                if (!Array.isArray(message.fireballBullets))
+                    return "fireballBullets: array expected";
+                for (var i = 0; i < message.fireballBullets.length; ++i) {
+                    var error = $root.protos.FireballBullet.verify(message.fireballBullets[i]);
+                    if (error)
+                        return "fireballBullets." + error;
+                }
+            }
             if (message.backendUnconfirmedMask != null && message.hasOwnProperty("backendUnconfirmedMask"))
                 if (!$util.isInteger(message.backendUnconfirmedMask) && !(message.backendUnconfirmedMask && $util.isInteger(message.backendUnconfirmedMask.low) && $util.isInteger(message.backendUnconfirmedMask.high)))
                     return "backendUnconfirmedMask: integer|Long expected";
@@ -5496,6 +6387,9 @@ $root.protos = (function() {
                     if (!$util.isInteger(message.speciesIdList[i]))
                         return "speciesIdList: integer[] expected";
             }
+            if (message.bulletLocalIdCounter != null && message.hasOwnProperty("bulletLocalIdCounter"))
+                if (!$util.isInteger(message.bulletLocalIdCounter))
+                    return "bulletLocalIdCounter: integer expected";
             return null;
         };
 
@@ -5542,6 +6436,16 @@ $root.protos = (function() {
                     message.meleeBullets[i] = $root.protos.MeleeBullet.fromObject(object.meleeBullets[i]);
                 }
             }
+            if (object.fireballBullets) {
+                if (!Array.isArray(object.fireballBullets))
+                    throw TypeError(".protos.RoomDownsyncFrame.fireballBullets: array expected");
+                message.fireballBullets = [];
+                for (var i = 0; i < object.fireballBullets.length; ++i) {
+                    if (typeof object.fireballBullets[i] !== "object")
+                        throw TypeError(".protos.RoomDownsyncFrame.fireballBullets: object expected");
+                    message.fireballBullets[i] = $root.protos.FireballBullet.fromObject(object.fireballBullets[i]);
+                }
+            }
             if (object.backendUnconfirmedMask != null)
                 if ($util.Long)
                     (message.backendUnconfirmedMask = $util.Long.fromValue(object.backendUnconfirmedMask)).unsigned = true;
@@ -5560,6 +6464,8 @@ $root.protos = (function() {
                 for (var i = 0; i < object.speciesIdList.length; ++i)
                     message.speciesIdList[i] = object.speciesIdList[i] | 0;
             }
+            if (object.bulletLocalIdCounter != null)
+                message.bulletLocalIdCounter = object.bulletLocalIdCounter | 0;
             return message;
         };
 
@@ -5579,6 +6485,7 @@ $root.protos = (function() {
             if (options.arrays || options.defaults) {
                 object.playersArr = [];
                 object.meleeBullets = [];
+                object.fireballBullets = [];
                 object.speciesIdList = [];
             }
             if (options.defaults) {
@@ -5594,6 +6501,7 @@ $root.protos = (function() {
                 } else
                     object.backendUnconfirmedMask = options.longs === String ? "0" : 0;
                 object.shouldForceResync = false;
+                object.bulletLocalIdCounter = 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -5612,6 +6520,11 @@ $root.protos = (function() {
                 for (var j = 0; j < message.meleeBullets.length; ++j)
                     object.meleeBullets[j] = $root.protos.MeleeBullet.toObject(message.meleeBullets[j], options);
             }
+            if (message.fireballBullets && message.fireballBullets.length) {
+                object.fireballBullets = [];
+                for (var j = 0; j < message.fireballBullets.length; ++j)
+                    object.fireballBullets[j] = $root.protos.FireballBullet.toObject(message.fireballBullets[j], options);
+            }
             if (message.backendUnconfirmedMask != null && message.hasOwnProperty("backendUnconfirmedMask"))
                 if (typeof message.backendUnconfirmedMask === "number")
                     object.backendUnconfirmedMask = options.longs === String ? String(message.backendUnconfirmedMask) : message.backendUnconfirmedMask;
@@ -5624,6 +6537,8 @@ $root.protos = (function() {
                 for (var j = 0; j < message.speciesIdList.length; ++j)
                     object.speciesIdList[j] = message.speciesIdList[j];
             }
+            if (message.bulletLocalIdCounter != null && message.hasOwnProperty("bulletLocalIdCounter"))
+                object.bulletLocalIdCounter = message.bulletLocalIdCounter;
             return object;
         };
 
