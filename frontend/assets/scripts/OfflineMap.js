@@ -129,7 +129,7 @@ cc.Class({
             inAir: true,
           }),
         ],
-        speciesIdList: [4096, 0],
+        speciesIdList: [1, 4096],
       });
 
       self.selfPlayerInfo = {

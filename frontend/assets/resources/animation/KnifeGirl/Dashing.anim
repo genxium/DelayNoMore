@@ -1,0 +1,61 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Dashing",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.35,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "cf396dac-50c9-4389-90c0-55f49fd3276d"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "b9e4b5d5-c296-48c8-aa60-d22db0e5a632"
+            }
+          },
+          {
+            "frame": 0.11666666666666667,
+            "value": {
+              "__uuid__": "e456c710-69f5-4dcc-9f5d-dd486a9198a1"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "ec6df76f-0004-4216-9b83-449487fe0cda"
+            }
+          },
+          {
+            "frame": 0.23333333333333334,
+            "value": {
+              "__uuid__": "26032d0f-845c-4b96-89a6-d88113ed7827"
+            }
+          },
+          {
+            "frame": 0.2833333333333333,
+            "value": {
+              "__uuid__": "e3e0169c-3c56-4206-a20e-35e4d0471873"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "80b98036-c5de-492b-b0e8-f1703f3a7d20"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

@@ -195,15 +195,31 @@ cc.Class({
     cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, function(evt) {
       switch (evt.keyCode) {
         case cc.macro.KEY.w:
+          self.cachedBtnUpLevel = 0;
+          self.cachedBtnDownLevel = 0;
+          self.cachedBtnLeftLevel = 0;
+          self.cachedBtnRightLevel = 0;
           self.cachedBtnUpLevel = 1;
           break;
         case cc.macro.KEY.s:
+          self.cachedBtnUpLevel = 0;
+          self.cachedBtnDownLevel = 0;
+          self.cachedBtnLeftLevel = 0;
+          self.cachedBtnRightLevel = 0;
           self.cachedBtnDownLevel = 1;
           break;
         case cc.macro.KEY.a:
+          self.cachedBtnUpLevel = 0;
+          self.cachedBtnDownLevel = 0;
+          self.cachedBtnLeftLevel = 0;
+          self.cachedBtnRightLevel = 0;
           self.cachedBtnLeftLevel = 1;
           break;
         case cc.macro.KEY.d:
+          self.cachedBtnUpLevel = 0;
+          self.cachedBtnDownLevel = 0;
+          self.cachedBtnLeftLevel = 0;
+          self.cachedBtnRightLevel = 0;
           self.cachedBtnRightLevel = 1;
           break;
         case cc.macro.KEY.h:

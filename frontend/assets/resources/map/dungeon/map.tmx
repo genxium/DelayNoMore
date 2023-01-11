@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="113">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="134">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
- <layer id="2" name="Ground" width="128" height="128">
+ <layer id="6" name="Ground" width="128" height="64">
   <data encoding="base64" compression="zlib">
-   eJzt3LFu00AcwOEoFUuHigqBBANTByRegrlTWWBj6gsgWGBCqngAFgZ23hNHsiXj5mLncs6dfd/wSVUbWa1/f199VpSLzWZzAQAAAAAAAAAAAAAAAAAAES5buX8Pzue+p+t/X6HcHXL237a6/p8atwHbFdL///4h+q9Pv//tSP/LAlrpP1//ffRft93f/ry179wM14TcrfQ/b/8a6K9/7g45+z+LkLuZ/nn7r2kG9Nc/d4cl9i+J/nX2d/3X3T/FDOi/XK5//fWvt3+KGdA//bntnik+nGjua19//fVfRv+XLf3r6d/v3f9af/31z9f/6YiU/fv0z9t/rPu+/r8bH47U9Xf/V07/qe3vNu7/l2Jq/6ntt/ovylj/fY3fNq4C7Yf9h+6OpH++/vvaX/UMu8/R/0XjRv9i+h9a9/v9U9O/3P4x94jH0v/8/afMwPBcpuw7JmX/bQEtSuyf6hwfEtNe//X0P2ZG5ji2/qfPwN9ELVIdR/90/afMgP7LpL/+JXXL1T93B/31X3L/Xwnpv7z+S6Z/3fSvm/51079u+tdN/7rpXzf966Z/3fSvm/51079u+pfrJkD/MvrP9X7RUPc55kD/cvpfj3gSoP86+uegf3xv/Zet9Ps//dfXP/S/vfv5+4T6xwytT97/Pe5ja7jed9/PfQ2fev3rf9ih//nD/q8LaBqyb43QP2zXMrTn2hnbr12PHD93+65/7g6l9u86vznBqfvzOdvr/3i9Tr1+p3hGM1d7/dM/Twv1zzEDU/YItfefu8Fwts71nGjqHlH/8/bvZmDOz3s55hmB/o+lvJ8/tH8I+REhpr3+4/1OnYOY/jEz8DOS/tPEzsGrTVz/3WcBfA207nxvfG5fq/+8/WM1/d/F9t/5sgn3/9Z73a7ln5b+0/uTvwMAAAAAAAAAAAAAAABwfv8AQJoGWw==
+   eJzt27tSwzAQRmFNMm7SwQA9z5KhSccL8P6Pwc1uTFaS7ZVWw3+KryAXJ9ojKxXnlNIZAAAAAAAAAAAAADp4w4/oDpH9o79DNOUZKK+dGWivnRlor50ZlNc+OX2O13XoH9//qdK969Tug0en19B/39pzvY70z+0r+sf3r+nk0b+mba5v6Xn6+6y9Zf+aMyCn1wz+s2XtVovJ0ZY9FjEDRaOv/cGgNIOe/aPuxfXnWt1b7AP6j6W2vdc+GHEGkf1LZ8BrxXVrXtNy79B/+9ovM4+2Uf2PzkDN99qvd0zG49e5bQ3r/aNZZhDdIqr/abbc/x9fboaTA+s3vPT8XqXvo37/r/svptXfXv1HQ/9ft/R3D6x5z/6lga1nD/1tF2NmXudvqdee/bSlPf1Tep7lZnbk/s/tgV73f25/0t/u7yF3DvToXzqf1PsjvkNk/3dx9NdGf23010Z/bfTXRn9t9NdGf23010Z/bfTXRn9t9NdGf23010Z/bfTXRn9t9NdGf23010Z/bcv/QEW3oD/96U//3v3Rrv8nrcyzFQ==
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
-  <object id="135" x="1040.33" y="1081">
+  <object id="135" x="830.33" y="535.67">
    <point/>
   </object>
-  <object id="137" x="1134.67" y="1081.67">
+  <object id="137" x="888.003" y="535.67">
    <point/>
   </object>
  </objectgroup>
  <objectgroup id="4" name="NpcStartingPos">
-  <object id="108" x="926" y="1447">
+  <object id="108" x="927.333" y="535">
    <properties>
     <property name="dirX" value="-2"/>
     <property name="speciesId" value="4196"/>
@@ -26,28 +26,28 @@
   </object>
  </objectgroup>
  <objectgroup id="5" name="NpcPatrolCue">
-  <object id="109" x="773.337" y="1468.67">
+  <object id="109" x="774.67" y="556.67">
    <properties>
     <property name="flAct" value="36"/>
     <property name="frAct" value="35"/>
    </properties>
    <point/>
   </object>
-  <object id="110" x="728" y="1500">
+  <object id="110" x="729.333" y="588">
    <properties>
     <property name="flAct" value="4"/>
     <property name="frAct" value="35"/>
    </properties>
    <point/>
   </object>
-  <object id="111" x="668" y="1500">
+  <object id="111" x="669.333" y="588">
    <properties>
     <property name="flAct" value="3"/>
     <property name="frAct" value="3"/>
    </properties>
    <point/>
   </object>
-  <object id="112" x="984" y="1447">
+  <object id="112" x="985.333" y="535">
    <properties>
     <property name="flAct" value="4"/>
     <property name="frAct" value="4"/>
@@ -59,197 +59,177 @@
   <properties>
    <property name="type" value="barrier_and_shelter"/>
   </properties>
-  <object id="54" x="656" y="1504" width="80" height="16">
+  <object id="57" x="768" y="560" width="32" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="55" x="736" y="1552" width="112" height="16">
+  <object id="60" x="1232" y="432" width="208" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="57" x="768" y="1472" width="32" height="16">
+  <object id="65" x="1040" y="576" width="32" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="58" x="1040" y="1536" width="80" height="16">
+  <object id="66" x="1040" y="560" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="59" x="1040" y="1568" width="224" height="48">
+  <object id="67" x="784" y="544" width="256" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="60" x="1216" y="1344" width="224" height="16">
+  <object id="84" x="640" y="224" width="16" height="800">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="62" x="1040" y="1552" width="208" height="16">
+  <object id="85" x="1680" y="224" width="16" height="800">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="63" x="1040" y="1504" width="48" height="16">
+  <object id="86" x="1104" y="496" width="96" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="64" x="1040" y="1520" width="64" height="16">
+  <object id="90" x="1232" y="496" width="320" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="65" x="1040" y="1488" width="32" height="16">
+  <object id="97" x="1248" y="416" width="158" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="66" x="1040" y="1472" width="16" height="16">
+  <object id="98" x="1280" y="400" width="96" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="67" x="784" y="1456" width="256" height="16">
+  <object id="100" x="1552" y="576" width="128" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="73" x="784" y="1568" width="96" height="16">
+  <object id="101" x="1568" y="560" width="112" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="74" x="816" y="1584" width="96" height="16">
+  <object id="102" x="1584" y="544" width="96" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="79" x="640" y="1616" width="1056" height="16">
+  <object id="103" x="1600" y="528" width="80" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="83" x="640" y="480" width="1056" height="16">
+  <object id="104" x="768" y="382" width="304" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="84" x="640" y="480" width="16" height="1152">
+  <object id="105" x="768" y="302" width="16" height="96">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="85" x="1680" y="480" width="16" height="1152">
+  <object id="106" x="1056" y="302" width="16" height="96">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="86" x="1104" y="1408" width="96" height="16">
+  <object id="113" x="640" y="1007.67" width="1056" height="14.6667">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="87" x="1456" y="1568" width="224" height="48">
+  <object id="114" x="640" y="224" width="1056" height="14.6667">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="88" x="1264" y="1584" width="16" height="32">
+  <object id="119" x="656" y="592" width="1024" height="416">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="89" x="1280" y="1600" width="16" height="16">
+  <object id="120" x="752" y="512" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="90" x="1232" y="1408" width="304" height="16">
+  <object id="121" x="736" y="336" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="91" x="1440" y="1584" width="16" height="32">
+  <object id="122" x="704" y="352" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="92" x="1424" y="1600" width="16" height="16">
+  <object id="123" x="672" y="384" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="93" x="1488" y="1552" width="192" height="16">
+  <object id="124" x="704" y="416" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="94" x="1504" y="1536" width="176" height="16">
+  <object id="125" x="720" y="448" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="95" x="1520" y="1520" width="160" height="16">
+  <object id="126" x="736" y="480" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="96" x="1568" y="1408" width="16" height="16">
+  <object id="127" x="1088" y="320" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="97" x="1248" y="1328" width="158" height="16">
+  <object id="128" x="1120" y="336" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="98" x="1280" y="1312" width="96" height="16">
+  <object id="129" x="1136" y="368" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="99" x="1536" y="1504" width="144" height="16">
+  <object id="130" x="1168" y="384" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="100" x="1552" y="1488" width="128" height="16">
+  <object id="131" x="1186" y="416" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="101" x="1568" y="1472" width="112" height="16">
+  <object id="132" x="1184" y="416" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="102" x="1584" y="1456" width="96" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="103" x="1600" y="1440" width="80" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="104" x="928" y="1088" width="304" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="105" x="928" y="1008" width="16" height="96">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="106" x="1216" y="1008" width="16" height="96">
+  <object id="133" x="1472" y="448" width="32" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>

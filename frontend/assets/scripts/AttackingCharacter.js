@@ -12,10 +12,12 @@ window.ATK_CHARACTER_STATE = {
   BlownUp1: [8, "BlownUp1"],
   LayDown1: [9, "LayDown1"], // The last frame of "LayDown1" should have a simliar boundingbox with the first frame of "GetUp1", otherwise the animation would seem odd
   GetUp1: [10, "GetUp1"],
-  Atk2:   [11, "Atk2"],
-  Atk3:   [12, "Atk3"],
-  Atk4:   [13, "Atk4"],
-  Atk5:   [14, "Atk5"],
+  Atk2: [11, "Atk2"],
+  Atk3: [12, "Atk3"],
+  Atk4: [13, "Atk4"],
+  Atk5: [14, "Atk5"],
+  Dashing: [15, "Dashing"],
+  OnWall: [16, "OnWall"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];
@@ -31,6 +33,8 @@ window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.In
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.BlownUp1[0]);
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.LayDown1[0]);
 window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.GetUp1[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.Dashing[0]);
+window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.add(window.ATK_CHARACTER_STATE.OnWall[0]);
 
 window.ATK_CHARACTER_STATE_IN_AIR_SET = new Set();
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0]);
@@ -38,6 +42,7 @@ window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirIdle1B
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtk1[0]);
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.InAirAtked1[0]);
 window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.BlownUp1[0]);
+window.ATK_CHARACTER_STATE_IN_AIR_SET.add(window.ATK_CHARACTER_STATE.OnWall[0]);
 
 /*
 Kindly note that the use of dragonBones anim is an informed choice for the feasibility of "gotoAndPlayByFrame", which is a required feature by "Map.rollbackAndChase". You might find that "cc.Animation" -- the traditional frame anim -- can also suffice this requirement, yet if we want to develop 3D frontend in the future, working with skeletal anim will make a smoother transition.
@@ -79,6 +84,8 @@ cc.Class({
   updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch, chConfig) {
     // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevRdfPlayer.CharacterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
 
+    let newCharacterState = rdfPlayer.CharacterState;
+
     // Update directions
     if (this.animComp && this.animComp.node) {
       if (0 > rdfPlayer.DirX) {
@@ -86,9 +93,11 @@ cc.Class({
       } else if (0 < rdfPlayer.DirX) {
         this.animNode.scaleX = (1.0);
       }
+      if (ATK_CHARACTER_STATE.OnWall[0] == newCharacterState) {
+        this.animNode.scaleX *= (-1.0);
+      }
     }
 
-    let newCharacterState = rdfPlayer.CharacterState;
     let newAnimName = window.ATK_CHARACTER_STATE_ARR[newCharacterState][1];
     let playingAnimName = null;
     let underlyingAnimationCtrl = null;
@@ -139,7 +148,7 @@ cc.Class({
     let frameIdxInAnim = rdfPlayer.FramesInChState;
     if (window.ATK_CHARACTER_STATE.InAirIdle1ByJump == newCharacterState && null != chConfig) {
       frameIdxInAnim = chConfig.InAirIdleFrameIdxTurningPoint + (frameIdxInAnim - chConfig.InAirIdleFrameIdxTurningPoint) % chConfig.InAirIdleFrameIdxTurnedCycle; // TODO: Anyway to avoid using division here?
-    } 
+    }
     let fromTime = (frameIdxInAnim / targetClip.sample); // TODO: Anyway to avoid using division here?
     this.animComp.play(newAnimName, fromTime);
   },

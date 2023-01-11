@@ -21,7 +21,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -29,6 +29,7 @@ const (
 
 	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
 	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
+	VERTICAL_PLATFORM_THRESHOLD  = float64(0.9)
 
 	NO_SKILL     = -1
 	NO_SKILL_HIT = -1
@@ -66,6 +67,9 @@ const (
 	ATK_CHARACTER_STATE_ATK3 = int32(12)
 	ATK_CHARACTER_STATE_ATK4 = int32(13)
 	ATK_CHARACTER_STATE_ATK5 = int32(14)
+
+	ATK_CHARACTER_STATE_DASHING = int32(15)
+	ATK_CHARACTER_STATE_ONWALL  = int32(16)
 )
 
 var inAirSet = map[int32]bool{
@@ -74,6 +78,7 @@ var inAirSet = map[int32]bool{
 	ATK_CHARACTER_STATE_INAIR_ATK1:          true,
 	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
 	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
+	ATK_CHARACTER_STATE_ONWALL:              true,
 }
 
 var noOpSet = map[int32]bool{
@@ -420,6 +425,8 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		if decodedInput.BtnBLevel > prevBtnBLevel {
 			if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
 				jumpedOrNot = true
+			} else if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
+				jumpedOrNot = true
 			}
 		}
 	}
@@ -455,6 +462,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			VelY:             currPlayerDownsync.VelY,
 			CharacterState:   currPlayerDownsync.CharacterState,
 			InAir:            true,
+			OnWall:           false,
 			Speed:            currPlayerDownsync.Speed,
 			BattleState:      currPlayerDownsync.BattleState,
 			Score:            currPlayerDownsync.Score,
@@ -486,15 +494,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	bulletLocalId := currRenderFrame.BulletLocalIdCounter
 	// 1. Process player inputs
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
-		jumpedOrNotList[i] = false
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer)
 
-		if jumpedOrNot {
-			thatPlayerInNextFrame.VelY = int32(chConfig.JumpingInitVelY)
-			jumpedOrNotList[i] = true
-		}
+		jumpedOrNotList[i] = jumpedOrNot
 		joinIndex := currPlayerDownsync.JoinIndex
 		skillId := chConfig.SkillMapper(patternId, currPlayerDownsync)
 		if skillConfig, existent := skills[skillId]; existent {
@@ -573,12 +577,28 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
+		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
 		if jumpedOrNotList[i] {
-			newVy += chConfig.JumpingInitVelY // Immediately gets out of any snapping
+			// We haven't proceeded with "OnWall" calculation for "thatPlayerInNextFrame", thus use "currPlayerDownsync.OnWall" for checking
+			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
+				newVx -= +currPlayerDownsync.VelX // Cancel the alleged horizontal movement against wall first
+				xfac := int32(-1)
+				// "thatPlayerInNextFrame.DirX" already stores information of player input
+				if 0 > thatPlayerInNextFrame.DirX {
+					xfac = -xfac
+				}
+				newVx += xfac * chConfig.WallJumpingInitVelX
+				newVy += chConfig.WallJumpingInitVelY
+				thatPlayerInNextFrame.VelX = int32(xfac * chConfig.WallJumpingInitVelX)
+				thatPlayerInNextFrame.VelY = int32(chConfig.WallJumpingInitVelY)
+			} else {
+				thatPlayerInNextFrame.VelY = int32(chConfig.JumpingInitVelY)
+				newVy += chConfig.JumpingInitVelY // Immediately gets out of any snapping
+			}
 		}
 
 		wx, wy := VirtualGridToWorldPos(newVx, newVy)
@@ -586,7 +606,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		switch currPlayerDownsync.CharacterState {
 		case ATK_CHARACTER_STATE_LAY_DOWN1:
 			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*4, currPlayerDownsync.ColliderRadius*2
-		case ATK_CHARACTER_STATE_BLOWN_UP1, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP:
+		case ATK_CHARACTER_STATE_BLOWN_UP1, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP, ATK_CHARACTER_STATE_ONWALL:
 			colliderWidth, colliderHeight = currPlayerDownsync.ColliderRadius*2, currPlayerDownsync.ColliderRadius*2
 		}
 
@@ -598,10 +618,14 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		// Add to collision system
 		collisionSys.Add(playerCollider)
 
-		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		if currPlayerDownsync.InAir {
-			thatPlayerInNextFrame.VelX += GRAVITY_X
-			thatPlayerInNextFrame.VelY += GRAVITY_Y
+			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && !jumpedOrNotList[i] {
+				thatPlayerInNextFrame.VelX += GRAVITY_X
+				thatPlayerInNextFrame.VelY = chConfig.WallSlidingVelY
+			} else {
+				thatPlayerInNextFrame.VelX += GRAVITY_X
+				thatPlayerInNextFrame.VelY += GRAVITY_Y
+			}
 		}
 	}
 
@@ -692,24 +716,27 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 		if landedOnGravityPushback {
 			thatPlayerInNextFrame.InAir = false
-			if currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY {
-				// fallStopping
+			fallStopping := (currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY)
+			if fallStopping {
 				thatPlayerInNextFrame.VelY = 0
 				thatPlayerInNextFrame.VelX = 0
-				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
-					if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
-						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
-						thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
-					} else {
+				if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
+					thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
+				} else {
+					switch currPlayerDownsync.CharacterState {
+					case ATK_CHARACTER_STATE_BLOWN_UP1, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP, ATK_CHARACTER_STATE_ONWALL:
+						// [WARNING] To prevent bouncing due to abrupt change of collider shape, it's important that we check "currPlayerDownsync" instead of "thatPlayerInNextFrame" here!
 						halfColliderWidthDiff, halfColliderHeightDiff := int32(0), currPlayerDownsync.ColliderRadius
 						_, halfColliderWorldHeightDiff := VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff)
-						effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff // To prevent bouncing due to abrupt change of collider shape
-						thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+						effPushbacks[joinIndex-1].Y -= halfColliderWorldHeightDiff
 					}
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+					thatPlayerInNextFrame.FramesToRecover = 0
 				}
 			} else {
+				// landedOnGravityPushback not fallStopping, could be in LayDown or GetUp
 				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
-					// not fallStopping, could be in LayDown or GetUp
 					if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
 						if 0 == thatPlayerInNextFrame.FramesToRecover {
 							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
@@ -721,6 +748,30 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 							thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
 						}
 					}
+				}
+			}
+		}
+
+		if thatPlayerInNextFrame.InAir && chConfig.OnWallEnabled {
+			// [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
+			if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
+				// [WARNING] Sticking to wall could only be triggered by proactive player input
+				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
+					normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
+					ctrlAlignmentWithHorizon1 := (float64(thatPlayerInNextFrame.DirX)*float64(1.0) + float64(thatPlayerInNextFrame.DirY)*float64(0.0))
+					normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
+					ctrlAlignmentWithHorizon2 := (float64(thatPlayerInNextFrame.DirX)*float64(-1.0) + float64(thatPlayerInNextFrame.DirY)*float64(0.0))
+					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 && VERTICAL_PLATFORM_THRESHOLD < ctrlAlignmentWithHorizon1 {
+						thatPlayerInNextFrame.OnWall = true
+					}
+					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 && VERTICAL_PLATFORM_THRESHOLD < ctrlAlignmentWithHorizon2 {
+						thatPlayerInNextFrame.OnWall = true
+					}
+				}
+
+				if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
+					// To avoid mysterious climbing up the wall after sticking on it
+					thatPlayerInNextFrame.VelY = 0
 				}
 			}
 		}
@@ -842,8 +893,16 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if thatPlayerInNextFrame.InAir {
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
 			switch oldNextCharacterState {
-			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
+			case ATK_CHARACTER_STATE_IDLE1:
 				if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP
+				}
+			case ATK_CHARACTER_STATE_WALKING:
+				if thatPlayerInNextFrame.OnWall {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ONWALL
+				} else if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
 				} else {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP

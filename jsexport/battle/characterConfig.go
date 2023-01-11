@@ -18,6 +18,12 @@ type CharacterConfig struct {
 	Speed           int32
 	JumpingInitVelY int32
 
+	DashingEnabled      bool
+	OnWallEnabled       bool
+	WallJumpingInitVelX int32
+	WallJumpingInitVelY int32
+	WallSlidingVelY     int32
+
 	SkillMapper SkillMapperType
 }
 
@@ -37,6 +43,9 @@ var Characters = map[int]*CharacterConfig{
 
 		Speed:           int32(float64(1.2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+
+		DashingEnabled: false,
+		OnWallEnabled:  false,
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
@@ -81,6 +90,12 @@ var Characters = map[int]*CharacterConfig{
 		Speed:           int32(float64(1.4) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
+		DashingEnabled:      true,
+		OnWallEnabled:       true,
+		WallJumpingInitVelX: int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
+		WallJumpingInitVelY: int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		WallSlidingVelY:     int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
 				if 0 == currPlayerDownsync.FramesToRecover {
@@ -123,6 +138,9 @@ var Characters = map[int]*CharacterConfig{
 
 		Speed:           int32(float64(1.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+
+		DashingEnabled: false,
+		OnWallEnabled:  false,
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
@@ -331,10 +349,10 @@ var skills = map[int]*Skill{
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
-					SelfLockVelX:    int32(float64(-0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:    NO_LOCK_VEL,
 					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					PushbackVelY:    NO_LOCK_VEL,
+					PushbackVelY:    int32(float64(3) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(0),
 					HitboxSizeX:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
