@@ -65,6 +65,7 @@ const (
 	ATK_CHARACTER_STATE_ATK2 = int32(11)
 	ATK_CHARACTER_STATE_ATK3 = int32(12)
 	ATK_CHARACTER_STATE_ATK4 = int32(13)
+	ATK_CHARACTER_STATE_ATK5 = int32(14)
 )
 
 var inAirSet = map[int32]bool{
@@ -425,7 +426,13 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 
 	patternId := PATTERN_ID_NO_OP
 	if decodedInput.BtnALevel > prevBtnALevel {
-		patternId = 1
+		if 0 > effDy {
+			patternId = 3
+		} else if 0 < effDy {
+			patternId = 2
+		} else {
+			patternId = 1
+		}
 	}
 
 	return patternId, jumpedOrNot, effDx, effDy
@@ -521,13 +528,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				var newBullet FireballBullet = *v // Copied primitive fields into an onstack variable
 				newBullet.BulletLocalId = bulletLocalId
 				bulletLocalId++
-				xfac := int32(1)
-				if 0 > thatPlayerInNextFrame.DirX {
-					xfac = -xfac
-				}
-				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY
+				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+newBullet.HitboxOffsetY
 				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
 				newBullet.OffenderJoinIndex = joinIndex
+				newBullet.DirX = xfac
+				newBullet.DirY = 0
 				newBullet.VelX = newBullet.Speed * xfac
 				newBullet.VelY = 0
 				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, &newBullet)
@@ -550,7 +555,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 
 		if 0 == currPlayerDownsync.FramesToRecover {
 			if 0 != effDx || 0 != effDy {
-				thatPlayerInNextFrame.DirX, thatPlayerInNextFrame.DirY = effDx, effDy
+				if 0 != effDx {
+					thatPlayerInNextFrame.DirX = effDx
+				}
+				thatPlayerInNextFrame.DirY = effDy
 				thatPlayerInNextFrame.VelX = effDx * currPlayerDownsync.Speed
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
 			} else {

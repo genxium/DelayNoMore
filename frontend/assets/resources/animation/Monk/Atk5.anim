@@ -1,0 +1,85 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Atk5",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 1.0166666666666666,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "6aa88bb9-0427-496f-ae7d-dc06410e904e"
+            }
+          },
+          {
+            "frame": 0.08333333333333333,
+            "value": {
+              "__uuid__": "cdc65f83-c526-48b6-8a96-758b098568fe"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "927636af-2d1d-4801-a546-857f5eeb256d"
+            }
+          },
+          {
+            "frame": 0.26666666666666666,
+            "value": {
+              "__uuid__": "2aeeb833-9151-4160-9775-9e08a376fd63"
+            }
+          },
+          {
+            "frame": 0.36666666666666664,
+            "value": {
+              "__uuid__": "2bd1de9e-30e5-4bc5-b6c3-5c286754b0b7"
+            }
+          },
+          {
+            "frame": 0.4666666666666667,
+            "value": {
+              "__uuid__": "15a6ebb3-289a-46fb-ac94-f6efa0d90510"
+            }
+          },
+          {
+            "frame": 0.5833333333333334,
+            "value": {
+              "__uuid__": "6ca922c0-cb62-4b1b-8773-79685a58bbd6"
+            }
+          },
+          {
+            "frame": 0.7,
+            "value": {
+              "__uuid__": "d60ceb6f-3a45-47dd-8d3f-bcfe8c919d85"
+            }
+          },
+          {
+            "frame": 0.8,
+            "value": {
+              "__uuid__": "c313f6a1-e0fa-4321-8336-c32f471b2592"
+            }
+          },
+          {
+            "frame": 0.9,
+            "value": {
+              "__uuid__": "bb886d03-7f3e-45c8-acfd-393091f09adb"
+            }
+          },
+          {
+            "frame": 1,
+            "value": {
+              "__uuid__": "1be255c3-f8c9-43ae-be68-2e500e7f1125"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

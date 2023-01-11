@@ -1067,7 +1067,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     }
   },
 
-  _renderFireballBullet(fireballBullet) {
+  _renderFireballBullet(fireballBullet, rdf) {
     const self = this;
     let pqNode = self.cachedFireballs.popAny(fireballBullet.Bullet.BulletLocalId);
     const speciesName = `Fireball${fireballBullet.SpeciesId}`;
@@ -1078,7 +1078,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       console.log(`Using a cached fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId}`);
     }
     const cachedFireball = pqNode.value;
-    cachedFireball.setSpecies(speciesName);
+    cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
     cachedFireball.lastUsed = self.renderFrameId;
     cachedFireball.bulletLocalId = fireballBullet.Bullet.BulletLocalId;
 
@@ -1111,7 +1111,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const fireballBullets = rdf.FireballBullets;
     for (let k in fireballBullets) {
       const fireballBullet = fireballBullets[k];
-      self._renderFireballBullet(fireballBullet);
+      if ((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id) && (fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id)) {
+        self._renderFireballBullet(fireballBullet, rdf);
+      }
     }
 
     // Update countdown

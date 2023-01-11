@@ -130,7 +130,7 @@ var Characters = map[int]*CharacterConfig{
 					if currPlayerDownsync.InAir {
 						return 257
 					} else {
-						return 10
+						return 7
 					}
 				} else {
 					// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
@@ -144,6 +144,14 @@ var Characters = map[int]*CharacterConfig{
 							}
 						}
 					}
+				}
+			} else if 2 == patternId {
+				if !currPlayerDownsync.InAir {
+					return 11
+				}
+			} else if 3 == patternId {
+				if !currPlayerDownsync.InAir {
+					return 10
 				}
 			}
 
@@ -227,7 +235,7 @@ var skills = map[int]*Skill{
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
-					StartupFrames:   int32(15),
+					StartupFrames:   int32(8),
 					ActiveFrames:    int32(30),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
@@ -236,9 +244,9 @@ var skills = map[int]*Skill{
 					SelfLockVelY:    int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetY:   int32(0),
-					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(16) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          true,
 				},
@@ -318,7 +326,7 @@ var skills = map[int]*Skill{
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
-					StartupFrames:   int32(15),
+					StartupFrames:   int32(8),
 					ActiveFrames:    int32(28),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
@@ -326,7 +334,7 @@ var skills = map[int]*Skill{
 					SelfLockVelX:    int32(float64(-0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    NO_LOCK_VEL,
 					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(0),
 					HitboxSizeX:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -350,7 +358,7 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(13),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
-					SelfLockVelX:       int32(float64(0.05) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:       NO_LOCK_VEL,
 					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
@@ -362,7 +370,7 @@ var skills = map[int]*Skill{
 					CancellableEdFrame: int32(30),
 
 					CancelTransit: map[int]int{
-						1: 2,
+						1: 8,
 					},
 					// TODO: Use non-zero "selfLockVel"
 				},
@@ -394,34 +402,35 @@ var skills = map[int]*Skill{
 					CancellableStFrame: int32(22),
 					CancellableEdFrame: int32(36),
 					CancelTransit: map[int]int{
-						1: 3,
+						1: 9,
 					},
 				},
 			},
 		},
 	},
 	9: &Skill{
-		RecoveryFrames:        int32(50),
-		RecoveryFramesOnBlock: int32(50),
-		RecoveryFramesOnHit:   int32(50),
+		RecoveryFrames:        int32(40),
+		RecoveryFramesOnBlock: int32(40),
+		RecoveryFramesOnHit:   int32(40),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: Bullet{
-					StartupFrames:   int32(15),
+					StartupFrames:   int32(7),
 					ActiveFrames:    int32(30),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
 					Damage:          int32(10),
-					SelfLockVelX:    int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					SelfLockVelY:    int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:    int32(float64(1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    int32(float64(4) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(10) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(0),
-					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					BlowUp:          true,
 				},
 			},
 		},
@@ -447,9 +456,36 @@ var skills = map[int]*Skill{
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
 					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetY:   int32(0),
+					HitboxOffsetY:   int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				},
+			},
+		},
+	},
+	11: &Skill{
+		RecoveryFrames:        int32(60),
+		RecoveryFramesOnBlock: int32(60),
+		RecoveryFramesOnHit:   int32(60),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_ATK5,
+		Hits: []interface{}{
+			&MeleeBullet{
+				Bullet: Bullet{
+					StartupFrames:   int32(3),
+					ActiveFrames:    int32(25),
+					HitStunFrames:   MAX_INT32,
+					BlockStunFrames: int32(9),
+					Damage:          int32(30),
+					SelfLockVelX:    int32(float64(1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(0),
+					HitboxSizeX:     int32(float64(40) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeY:     int32(float64(64) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					BlowUp:          true,
 				},
 			},
 		},
