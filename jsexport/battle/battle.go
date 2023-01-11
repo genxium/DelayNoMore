@@ -865,10 +865,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	return &RoomDownsyncFrame{
-		Id:              currRenderFrame.Id + 1,
-		PlayersArr:      nextRenderFramePlayers,
-		MeleeBullets:    nextRenderFrameMeleeBullets,
-		FireballBullets: nextRenderFrameFireballBullets,
+		Id:                   currRenderFrame.Id + 1,
+		PlayersArr:           nextRenderFramePlayers,
+		BulletLocalIdCounter: bulletLocalId,
+		MeleeBullets:         nextRenderFrameMeleeBullets,
+		FireballBullets:      nextRenderFrameFireballBullets,
 	}
 }
 

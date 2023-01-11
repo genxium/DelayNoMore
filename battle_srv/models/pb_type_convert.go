@@ -38,6 +38,7 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			BattleState:       last.BattleState,
 			CharacterState:    last.CharacterState,
 			InAir:             last.InAir,
+			OnWall:            last.OnWall,
 			JoinIndex:         last.JoinIndex,
 			BulletTeamId:      last.BulletTeamId,
 			ChCollisionTeamId: last.ChCollisionTeamId,
@@ -116,6 +117,7 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			VelX:         last.VelX,
 			VelY:         last.VelY,
 			Speed:        last.Speed,
+			SpeciesId:    last.SpeciesId,
 		}
 		ret.FireballBullets[i] = pbBullet
 	}
@@ -147,6 +149,7 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 			BattleState:       last.BattleState,
 			CharacterState:    last.CharacterState,
 			InAir:             last.InAir,
+			OnWall:            last.OnWall,
 			JoinIndex:         last.JoinIndex,
 			BulletTeamId:      last.BulletTeamId,
 			ChCollisionTeamId: last.ChCollisionTeamId,
@@ -195,6 +198,7 @@ func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 			MaxHp:             last.MaxHp,
 			ColliderRadius:    last.ColliderRadius,
 			InAir:             last.InAir,
+			OnWall:            last.OnWall,
 			Score:             last.Score,
 			Removed:           last.Removed,
 		}

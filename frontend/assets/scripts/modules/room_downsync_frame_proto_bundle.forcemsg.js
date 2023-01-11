@@ -1216,6 +1216,7 @@ $root.protos = (function() {
          * @property {number|null} [framesInvinsible] PlayerDownsync framesInvinsible
          * @property {number|null} [bulletTeamId] PlayerDownsync bulletTeamId
          * @property {number|null} [chCollisionTeamId] PlayerDownsync chCollisionTeamId
+         * @property {boolean|null} [onWall] PlayerDownsync onWall
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1437,6 +1438,14 @@ $root.protos = (function() {
         PlayerDownsync.prototype.chCollisionTeamId = 0;
 
         /**
+         * PlayerDownsync onWall.
+         * @member {boolean} onWall
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.onWall = false;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1534,6 +1543,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 24, wireType 0 =*/192).int32(message.bulletTeamId);
             if (message.chCollisionTeamId != null && Object.hasOwnProperty.call(message, "chCollisionTeamId"))
                 writer.uint32(/* id 25, wireType 0 =*/200).int32(message.chCollisionTeamId);
+            if (message.onWall != null && Object.hasOwnProperty.call(message, "onWall"))
+                writer.uint32(/* id 26, wireType 0 =*/208).bool(message.onWall);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1674,6 +1685,10 @@ $root.protos = (function() {
                         message.chCollisionTeamId = reader.int32();
                         break;
                     }
+                case 26: {
+                        message.onWall = reader.bool();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1796,6 +1811,9 @@ $root.protos = (function() {
             if (message.chCollisionTeamId != null && message.hasOwnProperty("chCollisionTeamId"))
                 if (!$util.isInteger(message.chCollisionTeamId))
                     return "chCollisionTeamId: integer expected";
+            if (message.onWall != null && message.hasOwnProperty("onWall"))
+                if (typeof message.onWall !== "boolean")
+                    return "onWall: boolean expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1870,6 +1888,8 @@ $root.protos = (function() {
                 message.bulletTeamId = object.bulletTeamId | 0;
             if (object.chCollisionTeamId != null)
                 message.chCollisionTeamId = object.chCollisionTeamId | 0;
+            if (object.onWall != null)
+                message.onWall = Boolean(object.onWall);
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1918,6 +1938,7 @@ $root.protos = (function() {
                 object.framesInvinsible = 0;
                 object.bulletTeamId = 0;
                 object.chCollisionTeamId = 0;
+                object.onWall = false;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1972,6 +1993,8 @@ $root.protos = (function() {
                 object.bulletTeamId = message.bulletTeamId;
             if (message.chCollisionTeamId != null && message.hasOwnProperty("chCollisionTeamId"))
                 object.chCollisionTeamId = message.chCollisionTeamId;
+            if (message.onWall != null && message.hasOwnProperty("onWall"))
+                object.onWall = message.onWall;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))
@@ -4759,6 +4782,7 @@ $root.protos = (function() {
          * @property {boolean|null} [blowUp] FireballBullet blowUp
          * @property {number|null} [teamId] FireballBullet teamId
          * @property {number|null} [bulletLocalId] FireballBullet bulletLocalId
+         * @property {number|null} [speciesId] FireballBullet speciesId
          * @property {number|null} [virtualGridX] FireballBullet virtualGridX
          * @property {number|null} [virtualGridY] FireballBullet virtualGridY
          * @property {number|null} [dirX] FireballBullet dirX
@@ -4944,6 +4968,14 @@ $root.protos = (function() {
         FireballBullet.prototype.bulletLocalId = 0;
 
         /**
+         * FireballBullet speciesId.
+         * @member {number} speciesId
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.speciesId = 0;
+
+        /**
          * FireballBullet virtualGridX.
          * @member {number} virtualGridX
          * @memberof protos.FireballBullet
@@ -5063,6 +5095,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 19, wireType 0 =*/152).int32(message.teamId);
             if (message.bulletLocalId != null && Object.hasOwnProperty.call(message, "bulletLocalId"))
                 writer.uint32(/* id 20, wireType 0 =*/160).int32(message.bulletLocalId);
+            if (message.speciesId != null && Object.hasOwnProperty.call(message, "speciesId"))
+                writer.uint32(/* id 21, wireType 0 =*/168).int32(message.speciesId);
             if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
                 writer.uint32(/* id 999, wireType 0 =*/7992).int32(message.virtualGridX);
             if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
@@ -5191,6 +5225,10 @@ $root.protos = (function() {
                         message.bulletLocalId = reader.int32();
                         break;
                     }
+                case 21: {
+                        message.speciesId = reader.int32();
+                        break;
+                    }
                 case 999: {
                         message.virtualGridX = reader.int32();
                         break;
@@ -5314,6 +5352,9 @@ $root.protos = (function() {
             if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
                 if (!$util.isInteger(message.bulletLocalId))
                     return "bulletLocalId: integer expected";
+            if (message.speciesId != null && message.hasOwnProperty("speciesId"))
+                if (!$util.isInteger(message.speciesId))
+                    return "speciesId: integer expected";
             if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
                 if (!$util.isInteger(message.virtualGridX))
                     return "virtualGridX: integer expected";
@@ -5390,6 +5431,8 @@ $root.protos = (function() {
                 message.teamId = object.teamId | 0;
             if (object.bulletLocalId != null)
                 message.bulletLocalId = object.bulletLocalId | 0;
+            if (object.speciesId != null)
+                message.speciesId = object.speciesId | 0;
             if (object.virtualGridX != null)
                 message.virtualGridX = object.virtualGridX | 0;
             if (object.virtualGridY != null)
@@ -5441,6 +5484,7 @@ $root.protos = (function() {
                 object.blowUp = false;
                 object.teamId = 0;
                 object.bulletLocalId = 0;
+                object.speciesId = 0;
                 object.virtualGridX = 0;
                 object.virtualGridY = 0;
                 object.dirX = 0;
@@ -5489,6 +5533,8 @@ $root.protos = (function() {
                 object.teamId = message.teamId;
             if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
                 object.bulletLocalId = message.bulletLocalId;
+            if (message.speciesId != null && message.hasOwnProperty("speciesId"))
+                object.speciesId = message.speciesId;
             if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
                 object.virtualGridX = message.virtualGridX;
             if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))

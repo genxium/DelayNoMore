@@ -12,32 +12,15 @@ var BinaryHeap = function (customCompare) {
    * @private
    */
   this.list = [];
+  this.lookupKeyToIndex = {};
 
   if (customCompare) {
     this.compare = customCompare;
   }
 };
 
-/**
- * Builds a heap with the provided keys and values, this will discard the
- * heap's current data.
- *
- * @param {Array} keys An array of keys.
- * @param {Array} values An array of values. This must be the same size as the
- * key array.
- */
-BinaryHeap.prototype.buildHeap = function (keys, values) {
-  if (typeof values !== 'undefined' && values.length !== keys.length) {
-    throw new Error('Key array must be the same length as value array');
-  }
-
-  var nodeArray = [];
-
-  for (var i = 0; i < keys.length; i++) {
-    nodeArray.push(new Node(keys[i], values ? values[i] : undefined));
-  }
-
-  buildHeapFromNodeArray(this, nodeArray);
+BinaryHeap.prototype.contains = function (lookupKey) {
+  return null != this.lookupKeyToIndex[lookupKey];
 };
 
 /**
@@ -45,6 +28,7 @@ BinaryHeap.prototype.buildHeap = function (keys, values) {
  */
 BinaryHeap.prototype.clear = function () {
   this.list.length = 0;
+  this.lookupKeyToIndex = null;
 };
 
 /**
@@ -53,15 +37,20 @@ BinaryHeap.prototype.clear = function () {
  * @return {Node} node The heap's minimum node or undefined if the heap is
  * empty.
  */
-BinaryHeap.prototype.extractMinimum = function () {
-  if (!this.list.length) {
-    return undefined;
+BinaryHeap.prototype.pop = function () {
+  if (0 == this.list.length) {
+    return null;
   }
-  if (this.list.length === 1) {
+  if (1 == this.list.length) {
+    delete this.lookupKeyToIndex[Object.keys(this.lookupKeyToIndex)[0]];
     return this.list.shift();
   }
   var min = this.list[0];
+  delete this.lookupKeyToIndex[min.lookupKey];
+
   this.list[0] = this.list.pop();
+  this.lookupKeyToIndex[this.list[0].lookupKey] = 0;
+
   heapify(this, 0);
   return min;
 };
@@ -72,8 +61,8 @@ BinaryHeap.prototype.extractMinimum = function () {
  * @return {Node} node The heap's minimum node or undefined if the heap is
  * empty.
  */
-BinaryHeap.prototype.findMinimum = function () {
-  return this.isEmpty() ? undefined : this.list[0];
+BinaryHeap.prototype.top = function () {
+  return this.isEmpty() ? null : this.list[0];
 };
 
 /**
@@ -83,25 +72,79 @@ BinaryHeap.prototype.findMinimum = function () {
  * @param {Object} value The value to insert.
  * @return {Node} node The inserted node.
  */
-BinaryHeap.prototype.insert = function (key, value) {
+BinaryHeap.prototype.push = function (key, value, lookupKey) {
   var i = this.list.length;
-  var node = new Node(key, value);
+  var node = new Node(key, value, lookupKey);
   this.list.push(node);
-  var parent = getParent(i);
-  while (typeof parent !== 'undefined' &&
-      this.compare(this.list[i], this.list[parent]) < 0) {
-    swap(this.list, i, parent);
-    i = parent;
-    parent = getParent(i);
+  this.lookupKeyToIndex[lookupKey] = i;
+  let u = getParent(i);
+  while (null != u && this.compare(this.list[i], this.list[u]) < 0) {
+    swap(this.list, i, u, this.lookupKeyToIndex);
+    i = u;
+    u = getParent(i);
   }
   return node;
+};
+
+BinaryHeap.prototype.update = function (lookupKey, newKey, newValue) {
+  if (null == this.lookupKeyToIndex[lookupKey]) return null;
+  var i = this.lookupKeyToIndex[lookupKey];
+
+  this.list[i].key = newKey;
+  this.list[i].value = newValue;
+
+  let u = getParent(i);
+  if (null != u && this.compare(this.list[i], this.list[u]) < 0) {
+    while (null != u && this.compare(this.list[i], this.list[u]) < 0) {
+      swap(this.list, i, u, this.lookupKeyToIndex);
+      i = u;
+      u = getParent(i);
+    }
+  } else {
+    heapify(this, i);
+  }
+};
+
+BinaryHeap.prototype.popAny = function (lookupKey) {
+  if (null == this.lookupKeyToIndex[lookupKey]) return null;
+
+  if (0 == this.list.length) {
+    return null;
+  }
+
+  if (1 == this.list.length) {
+    delete this.lookupKeyToIndex[Object.keys(this.lookupKeyToIndex)[0]];
+    return this.list.shift();
+  }
+
+  var i = this.lookupKeyToIndex[lookupKey];
+
+
+  var old = this.list[i];
+  delete this.lookupKeyToIndex[old.lookupKey];
+
+  this.list[i] = this.list.pop();
+  this.lookupKeyToIndex[this.list[i].lookupKey] = i;
+
+  let u = getParent(i);
+  if (null != u && this.compare(this.list[i], this.list[u]) < 0) {
+    while (null != u && this.compare(this.list[i], this.list[u]) < 0) {
+      swap(this.list, i, u, this.lookupKeyToIndex);
+      i = u;
+      u = getParent(i);
+    }
+  } else {
+    heapify(this, i);
+  }
+  
+  return old;
 };
 
 /**
  * @return {boolean} Whether the heap is empty.
  */
 BinaryHeap.prototype.isEmpty = function () {
-  return !this.list.length;
+  return 0 == this.list.length;
 };
 
 /**
@@ -109,16 +152,6 @@ BinaryHeap.prototype.isEmpty = function () {
  */
 BinaryHeap.prototype.size = function () {
   return this.list.length;
-};
-
-/**
- * Joins another heap to this one.
- *
- * @param {BinaryHeap} otherHeap The other heap.
- */
-BinaryHeap.prototype.union = function (otherHeap) {
-  var array = this.list.concat(otherHeap.list);
-  buildHeapFromNodeArray(this, array);
 };
 
 /**
@@ -147,34 +180,27 @@ BinaryHeap.prototype.compare = function (a, b) {
  * @param {number} i The index of the node to heapify.
  */
 function heapify(heap, i) {
-  var l = getLeft(i);
-  var r = getRight(i);
-  var smallest = i;
-  if (l < heap.list.length &&
-      heap.compare(heap.list[l], heap.list[i]) < 0) {
-    smallest = l;
-  }
-  if (r < heap.list.length &&
-      heap.compare(heap.list[r], heap.list[smallest]) < 0) {
-    smallest = r;
-  }
-  if (smallest !== i) {
-    swap(heap.list, i, smallest);
-    heapify(heap, smallest);
-  }
-}
+  let cur = i;
+  let smallest = -1;
+  while (cur != smallest) {
+    const l = getLeft(cur);
+    const r = getRight(cur);
+    
+    smallest = cur;
+    if (l < heap.list.length &&
+        heap.compare(heap.list[l], heap.list[smallest]) < 0) {
+      smallest = l;
+    }
+    if (r < heap.list.length &&
+        heap.compare(heap.list[r], heap.list[smallest]) < 0) {
+      smallest = r;
+    }
 
-/**
- * Builds a heap from a node array, this will discard the heap's current data.
- *
- * @private
- * @param {BinaryHeap} heap The heap to override.
- * @param {Node[]} nodeArray The array of nodes for the new heap.
- */
-function buildHeapFromNodeArray(heap, nodeArray) {
-  heap.list = nodeArray;
-  for (var i = Math.floor(heap.list.length / 2); i >= 0; i--) {
-    heapify(heap, i);
+    if (smallest !== cur) {
+      swap(heap.list, cur, smallest, heap.lookupKeyToIndex);
+      cur = smallest;
+      smallest = -1;
+    }
   }
 }
 
@@ -186,10 +212,16 @@ function buildHeapFromNodeArray(heap, nodeArray) {
  * @param {number} a The index of the first element.
  * @param {number} b The index of the second element.
  */
-function swap(array, a, b) {
+function swap(array, a, b, lookupKeyToIndex) {
+  var aLookupKey = array[a].lookupKey;
+  var bLookupKey = array[b].lookupKey;
+
   var temp = array[a];
   array[a] = array[b];
   array[b] = temp;
+
+  lookupKeyToIndex[aLookupKey] = b; 
+  lookupKeyToIndex[bLookupKey] = a; 
 }
 
 /**
@@ -200,8 +232,8 @@ function swap(array, a, b) {
  * @return {number} The index of the node's parent.
  */
 function getParent(i) {
-  if (i === 0) {
-    return undefined;
+  if (0 == i) {
+    return null;
   }
   return Math.floor((i - 1) / 2);
 }
@@ -235,9 +267,10 @@ function getRight(i) {
  * @param {Object} key The key of the new node.
  * @param {Object} value The value of the new node.
  */
-function Node(key, value) {
+function Node(key, value, lookupKey) {
   this.key = key;
   this.value = value;
+  this.lookupKey = lookupKey;
 }
 
 module.exports = BinaryHeap;

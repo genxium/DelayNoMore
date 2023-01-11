@@ -102,7 +102,7 @@ func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex,
 	})
 }
 
-func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed int32) *js.Object {
+func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId int32) *js.Object {
 	return js.MakeWrapper(&FireballBullet{
 		VirtualGridX: virtualGridX,
 		VirtualGridY: virtualGridY,
@@ -111,6 +111,7 @@ func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinInd
 		VelX:         velX,
 		VelY:         velY,
 		Speed:        speed,
+		SpeciesId:    speciesId,
 		Bullet: Bullet{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,

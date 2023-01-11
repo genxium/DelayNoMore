@@ -262,6 +262,9 @@
     "controlledCharacterPrefab": {
       "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
     },
+    "fireballPrefab": {
+      "__uuid__": "d92d4831-cd65-4eb5-90bd-b77021aec35b"
+    },
     "joystickInputControllerNode": {
       "__id__": 7
     },
@@ -461,7 +464,7 @@
       "array": [
         0,
         0,
-        215.64032554232523,
+        210.49935741157617,
         0,
         0,
         0,

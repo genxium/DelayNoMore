@@ -32,6 +32,8 @@ message PlayerDownsync {
   int32 bulletTeamId = 24;
   int32 chCollisionTeamId = 25;
 
+  bool onWall = 26; // like "inAir", it’s by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "onWall (prev -> curr)"
+
   string name = 997;
   string displayName = 998;
   string avatar = 999;
@@ -146,6 +148,7 @@ message FireballBullet {
   int32 teamId = 19;
 
   int32 bulletLocalId = 20; 
+  int32 speciesId = 21; 
 
   int32 virtualGridX = 999;
   int32 virtualGridY = 1000;

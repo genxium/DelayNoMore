@@ -2,6 +2,7 @@ const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
 const RingBuffer = require('./RingBuffer');
+const PriorityQueue = require("./PriorityQueue");
 
 window.ALL_MAP_STATES = {
   VISUAL: 0, // For free dragging & zooming.
@@ -41,6 +42,10 @@ cc.Class({
       default: null,
     },
     controlledCharacterPrefab: {
+      type: cc.Prefab,
+      default: null,
+    },
+    fireballPrefab: {
       type: cc.Prefab,
       default: null,
     },
@@ -286,6 +291,30 @@ cc.Class({
     }
     self.playerRichInfoDict = new Map();
     // Clearing previous info of all players. [ENDS]
+
+    // Clearing cached fireball rendering nodes [BEGINS]
+    if (null != self.cachedFireballs) {
+      while (!self.cachedFireballs.isEmpty()) {
+        const v = self.cachedFireballs.pop();
+        if (v && v.node && v.node.parent) {
+          v.node.parent.removeChild(v.node);
+        }
+      }
+    } else {
+      self.cachedFireballs = new PriorityQueue();
+    }
+    for (let k = 0; k < 1000; k++) {
+      const newFireballNode = cc.instantiate(self.fireballPrefab);
+      const newFireball = newFireballNode.getComponent("Fireball");
+      newFireballNode.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
+      safelyAddChild(self.node, newFireballNode);
+      setLocalZOrder(newFireballNode, 5);
+      newFireball.lastUsed = -1;
+      newFireball.bulletLocalId = -1;
+      const initLookupKey = -(k + 1); // there's definitely no suck "bulletLocalId"
+      self.cachedFireballs.push(newFireball.lastUsed, newFireball, initLookupKey);
+    }
+    // Clearing cached fireball rendering nodes [ENDS]
 
     self.renderFrameId = 0; // After battle started
     self.bulletBattleLocalIdCounter = 0;
@@ -590,7 +619,7 @@ cc.Class({
     const jsFireballBulletsArr = new Array(pbRdf.fireballBullets.length).fill(null);
     for (let k = 0; k < pbRdf.fireballBullets.length; ++k) {
       const pbBullet = pbRdf.fireballBullets[k];
-      const jsFireballBullet = gopkgs.NewFireballBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.virtualGridX, pbBullet.virtualGridY, pbBullet.dirX, pbBullet.dirY, pbBullet.velX, pbBullet.velY, pbBullet.speed);
+      const jsFireballBullet = gopkgs.NewFireballBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.virtualGridX, pbBullet.virtualGridY, pbBullet.dirX, pbBullet.dirY, pbBullet.velX, pbBullet.velY, pbBullet.speed, pbBullet.speciesId);
       jsFireballBulletsArr[k] = jsFireballBullet;
     }
 
@@ -709,10 +738,9 @@ cc.Class({
 
   equalMeleeBullets(lhs, rhs) {
     if (null == lhs || null == rhs) return false;
-    if (lhs.battleLocalId != rhs.battleLocalId) return false;
-    if (lhs.offenderPlayerId != rhs.offenderPlayerId) return false;
-    if (lhs.offenderJoinIndex != rhs.offenderJoinIndex) return false;
-    if (lhs.originatedRenderFrameId != rhs.originatedRenderFrameId) return false;
+    if (lhs.BulletLocalId != rhs.BulletLocalId) return false;
+    if (lhs.OffenderJoinIndex != rhs.OffenderJoinIndex) return false;
+    if (lhs.OriginatedRenderFrameId != rhs.OriginatedRenderFrameId) return false;
     return true;
   },
 
@@ -1039,6 +1067,27 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     }
   },
 
+  _renderFireballBullet(fireballBullet) {
+    const self = this;
+    let pqNode = self.cachedFireballs.popAny(fireballBullet.Bullet.BulletLocalId);
+    const speciesName = `Fireball${fireballBullet.SpeciesId}`;
+
+    if (null == pqNode) {
+      pqNode = self.cachedFireballs.pop();
+    } else {
+      console.log(`Using a cached fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId}`);
+    }
+    const cachedFireball = pqNode.value;
+    cachedFireball.setSpecies(speciesName);
+    cachedFireball.lastUsed = self.renderFrameId;
+    cachedFireball.bulletLocalId = fireballBullet.Bullet.BulletLocalId;
+
+    const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
+    cachedFireball.node.setPosition(cc.v2(wx, wy));
+
+    self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, cachedFireball.bulletLocalId);
+  },
+
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
     const playersArr = rdf.PlayersArr;
@@ -1051,6 +1100,18 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false, chConfig);
+    }
+
+    // Move all to infinitely far away first
+    for (let k in self.cachedFireballs.list) {
+      const pqNode = self.cachedFireballs.list[k];
+      const fireball = pqNode.value;
+      fireball.node.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
+    }
+    const fireballBullets = rdf.FireballBullets;
+    for (let k in fireballBullets) {
+      const fireballBullet = fireballBullets[k];
+      self._renderFireballBullet(fireballBullet);
     }
 
     // Update countdown

@@ -33,6 +33,7 @@ type PlayerDownsync struct {
 	MaxHp             int32
 	CharacterState    int32
 	InAir             bool
+	OnWall            bool
 
 	ActiveSkillId  int32
 	ActiveSkillHit int32
@@ -104,6 +105,7 @@ type FireballBullet struct {
 	VelX         int32
 	VelY         int32
 	Speed        int32
+	SpeciesId    int32
 	Bullet
 }
 

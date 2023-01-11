@@ -122,7 +122,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpFramesToRecover:  int32(30),
 
 		Speed:           int32(float64(1.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
-		JumpingInitVelY: int32(float64(9) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
@@ -434,7 +434,8 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK4,
 		Hits: []interface{}{
 			&FireballBullet{
-				Speed: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				SpeciesId: int32(1),
+				Speed:     int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: Bullet{
 					StartupFrames:   int32(15),
 					ActiveFrames:    MAX_INT32,
