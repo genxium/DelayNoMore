@@ -93,7 +93,7 @@ var Characters = map[int]*CharacterConfig{
 
 		DashingEnabled:             true,
 		OnWallEnabled:              true,
-		WallJumpingFramesToRecover: int32(8),
+		WallJumpingFramesToRecover: int32(9), // 8 would be the minimum for an avg human
 		WallJumpingInitVelX:        int32(float64(2.5) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
 		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),

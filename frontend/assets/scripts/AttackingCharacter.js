@@ -91,10 +91,14 @@ cc.Class({
       if (0 > rdfPlayer.DirX) {
         this.animNode.scaleX = (-1.0);
       } else if (0 < rdfPlayer.DirX) {
-        this.animNode.scaleX = (1.0);
+        this.animNode.scaleX = (+1.0);
       }
       if (ATK_CHARACTER_STATE.OnWall[0] == newCharacterState) {
-        this.animNode.scaleX *= (-1.0);
+        if (0 < rdfPlayer.OnWallNormX) {
+          this.animNode.scaleX = (-1.0);
+        } else {
+          this.animNode.scaleX = (+1.0);
+        }
       }
     }
 

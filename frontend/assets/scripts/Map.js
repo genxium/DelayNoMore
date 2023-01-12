@@ -607,7 +607,7 @@ cc.Class({
     const jsPlayersArr = new Array(pbRdf.playersArr.length).fill(null);
     for (let k = 0; k < pbRdf.playersArr.length; ++k) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.onWallNormX, pbPlayer.onWallNormY, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = new Array(pbRdf.meleeBullets.length).fill(null);

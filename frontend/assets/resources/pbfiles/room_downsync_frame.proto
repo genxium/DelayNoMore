@@ -33,6 +33,8 @@ message PlayerDownsync {
   int32 chCollisionTeamId = 25;
 
   bool onWall = 26; // like "inAir", it’s by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "onWall (prev -> curr)"
+  int32 onWallNormX = 27;
+  int32 onWallNormY = 28;
 
   string name = 997;
   string displayName = 998;

@@ -21,7 +21,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -167,7 +167,7 @@ type SatResult struct {
 	Axis          resolv.Vector
 }
 
-func CalcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64, *SatResult) {
+func calcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.ConvexPolygon) (bool, float64, float64, *SatResult) {
 	origX, origY := playerShape.Position()
 	defer func() {
 		playerShape.SetPosition(origX, origY)
@@ -358,9 +358,25 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
-func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) *[]Vec2D {
+func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) *[]Vec2D {
 	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
-	collision := playerCollider.Check(0, 0)
+    virtualGripToWall := float64(0) 
+    if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && 0 == thatPlayerInNextFrame.VelX && currPlayerDownsync.DirX == thatPlayerInNextFrame.DirX {
+        /*
+        I'm not sure whether this is a bug of "resolv_tailored" (maybe due to my changes), on the x-axis a playerCollider whose right edge reaches "1680.1" is not deemed collided with a side wall whose left edge is "1680.0", while the same extent of intersection is OK in y-axis. 
+        
+        The workaround here is to grant a "virtualGripToWall" in x-axis to guarantee that if 
+        - "currPlayerDownsync" is on wall, and 
+        - "thatPlayerInNextFrame.VelX" is 0 (i.e. no proactive move against the wall), and
+        - there's no change in player facing direction 
+        */
+        xfac := float64(1)
+        if 0 > thatPlayerInNextFrame.DirX {
+            xfac = -xfac
+        }
+        virtualGripToWall = xfac*float64(currPlayerDownsync.Speed)*VIRTUAL_GRID_TO_WORLD_RATIO
+    }
+	collision := playerCollider.Check(virtualGripToWall, 0)
 	if nil == collision {
 		return &ret
 	}
@@ -370,8 +386,7 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 	for _, obj := range collision.Objects {
 		isBarrier := false
 		switch obj.Data.(type) {
-		case *PlayerDownsync:
-		case *MeleeBullet, *FireballBullet:
+		case *PlayerDownsync, *MeleeBullet, *FireballBullet:
 		default:
 			// By default it's a regular barrier, even if data is nil, note that Golang syntax of switch-case is kind of confusing, this "default" condition is met only if "!*PlayerDownsync && !*MeleeBullet && !*FireballBullet".
 			isBarrier = true
@@ -381,7 +396,7 @@ func calcHardPushbacksNorms(joinIndex int32, playerCollider *resolv.Object, play
 			continue
 		}
 		barrierShape := obj.Shape.(*resolv.ConvexPolygon)
-		overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, barrierShape)
+		overlapped, pushbackX, pushbackY, overlapResult := calcPushbacks(0, 0, playerShape, barrierShape)
 		if !overlapped {
 			continue
 		}
@@ -483,6 +498,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			ActiveSkillHit:   currPlayerDownsync.ActiveSkillHit,
 			FramesInvinsible: currPlayerDownsync.FramesInvinsible - 1,
 			ColliderRadius:   currPlayerDownsync.ColliderRadius,
+            OnWallNormX:      currPlayerDownsync.OnWallNormX, 
+            OnWallNormY:      currPlayerDownsync.OnWallNormY,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -599,10 +616,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if jumpedOrNotList[i] {
 			// We haven't proceeded with "OnWall" calculation for "thatPlayerInNextFrame", thus use "currPlayerDownsync.OnWall" for checking
 			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
-				newVx -= +currPlayerDownsync.VelX // Cancel the alleged horizontal movement against wall first
+                if 0 < currPlayerDownsync.VelX * currPlayerDownsync.OnWallNormX {
+                    newVx -= currPlayerDownsync.VelX // Cancel the alleged horizontal movement pointing to same direction of wall inward norm first
+                }
 				xfac := int32(-1)
-				// "thatPlayerInNextFrame.DirX" already stores information of player input
-				if 0 > thatPlayerInNextFrame.DirX {
+				if 0 > currPlayerDownsync.OnWallNormX {
+                    // Always jump to the opposite direction of wall inward norm
 					xfac = -xfac
 				}
 				newVx += xfac * chConfig.WallJumpingInitVelX
@@ -681,8 +700,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		joinIndex := currPlayerDownsync.JoinIndex
 		playerCollider := playerColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
-		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
+		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		landedOnGravityPushback := false
 
@@ -703,7 +722,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					continue
 				}
 				bShape := obj.Shape.(*resolv.ConvexPolygon)
-				overlapped, pushbackX, pushbackY, overlapResult := CalcPushbacks(0, 0, playerShape, bShape)
+				overlapped, pushbackX, pushbackY, overlapResult := calcPushbacks(0, 0, playerShape, bShape)
 				if !overlapped {
 					continue
 				}
@@ -767,27 +786,37 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			}
 		}
 
-		if thatPlayerInNextFrame.InAir && chConfig.OnWallEnabled {
-			// [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
-			if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
-				// [WARNING] Sticking to wall could only be triggered by proactive player input
-				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
-					normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
-					normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
-					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
-						thatPlayerInNextFrame.OnWall = true
-					}
-					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 {
-						thatPlayerInNextFrame.OnWall = true
-					}
-				}
+        if chConfig.OnWallEnabled {
+            if thatPlayerInNextFrame.InAir {
+                // [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
+                if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
+                    // [WARNING] Sticking to wall could only be triggered by proactive player input
+                    for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
+                        normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
+                        normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
+                        if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
+                            thatPlayerInNextFrame.OnWall = true
+                            thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
+                            break
+                        }
+                        if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 {
+                            thatPlayerInNextFrame.OnWall = true
+                            thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
+                            break
+                        }
+                    }
 
-				if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
-					// To avoid mysterious climbing up the wall after sticking on it
-					thatPlayerInNextFrame.VelY = 0
-				}
-			}
-		}
+                    if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
+                        // To avoid mysterious climbing up the wall after sticking on it
+                        thatPlayerInNextFrame.VelY = 0
+                    }
+                }
+            }
+            if !thatPlayerInNextFrame.OnWall {
+                thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = 0, 0
+            }
+        }
+
 	}
 
 	// 5. Check bullet-anything collisions
@@ -807,7 +836,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if v.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
-						overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
 						if !overlapped {
 							continue
 						}
@@ -849,7 +878,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if v.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
-						overlapped, _, _, _ := CalcPushbacks(0, 0, bulletShape, defenderShape)
+						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
 						if !overlapped {
 							continue
 						}
@@ -906,13 +935,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if thatPlayerInNextFrame.InAir {
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
 			switch oldNextCharacterState {
-			case ATK_CHARACTER_STATE_IDLE1:
-				if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
-				} else {
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP
-				}
-			case ATK_CHARACTER_STATE_WALKING:
+			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
 				if thatPlayerInNextFrame.OnWall {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ONWALL
 				} else if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {

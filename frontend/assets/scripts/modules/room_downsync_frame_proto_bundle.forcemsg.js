@@ -1217,6 +1217,8 @@ $root.protos = (function() {
          * @property {number|null} [bulletTeamId] PlayerDownsync bulletTeamId
          * @property {number|null} [chCollisionTeamId] PlayerDownsync chCollisionTeamId
          * @property {boolean|null} [onWall] PlayerDownsync onWall
+         * @property {number|null} [onWallNormX] PlayerDownsync onWallNormX
+         * @property {number|null} [onWallNormY] PlayerDownsync onWallNormY
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1446,6 +1448,22 @@ $root.protos = (function() {
         PlayerDownsync.prototype.onWall = false;
 
         /**
+         * PlayerDownsync onWallNormX.
+         * @member {number} onWallNormX
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.onWallNormX = 0;
+
+        /**
+         * PlayerDownsync onWallNormY.
+         * @member {number} onWallNormY
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.onWallNormY = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1545,6 +1563,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 25, wireType 0 =*/200).int32(message.chCollisionTeamId);
             if (message.onWall != null && Object.hasOwnProperty.call(message, "onWall"))
                 writer.uint32(/* id 26, wireType 0 =*/208).bool(message.onWall);
+            if (message.onWallNormX != null && Object.hasOwnProperty.call(message, "onWallNormX"))
+                writer.uint32(/* id 27, wireType 0 =*/216).int32(message.onWallNormX);
+            if (message.onWallNormY != null && Object.hasOwnProperty.call(message, "onWallNormY"))
+                writer.uint32(/* id 28, wireType 0 =*/224).int32(message.onWallNormY);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1689,6 +1711,14 @@ $root.protos = (function() {
                         message.onWall = reader.bool();
                         break;
                     }
+                case 27: {
+                        message.onWallNormX = reader.int32();
+                        break;
+                    }
+                case 28: {
+                        message.onWallNormY = reader.int32();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1814,6 +1844,12 @@ $root.protos = (function() {
             if (message.onWall != null && message.hasOwnProperty("onWall"))
                 if (typeof message.onWall !== "boolean")
                     return "onWall: boolean expected";
+            if (message.onWallNormX != null && message.hasOwnProperty("onWallNormX"))
+                if (!$util.isInteger(message.onWallNormX))
+                    return "onWallNormX: integer expected";
+            if (message.onWallNormY != null && message.hasOwnProperty("onWallNormY"))
+                if (!$util.isInteger(message.onWallNormY))
+                    return "onWallNormY: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1890,6 +1926,10 @@ $root.protos = (function() {
                 message.chCollisionTeamId = object.chCollisionTeamId | 0;
             if (object.onWall != null)
                 message.onWall = Boolean(object.onWall);
+            if (object.onWallNormX != null)
+                message.onWallNormX = object.onWallNormX | 0;
+            if (object.onWallNormY != null)
+                message.onWallNormY = object.onWallNormY | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1939,6 +1979,8 @@ $root.protos = (function() {
                 object.bulletTeamId = 0;
                 object.chCollisionTeamId = 0;
                 object.onWall = false;
+                object.onWallNormX = 0;
+                object.onWallNormY = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -1995,6 +2037,10 @@ $root.protos = (function() {
                 object.chCollisionTeamId = message.chCollisionTeamId;
             if (message.onWall != null && message.hasOwnProperty("onWall"))
                 object.onWall = message.onWall;
+            if (message.onWallNormX != null && message.hasOwnProperty("onWallNormX"))
+                object.onWallNormX = message.onWallNormX;
+            if (message.onWallNormY != null && message.hasOwnProperty("onWallNormY"))
+                object.onWallNormY = message.onWallNormY;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))

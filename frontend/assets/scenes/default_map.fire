@@ -191,8 +191,8 @@
         0,
         0,
         1,
-        1.5,
-        1.5,
+        1.2,
+        1.2,
         1
       ]
     },
@@ -234,6 +234,9 @@
     "controlledCharacterPrefab": {
       "__uuid__": "59bff7a2-23e1-4d69-bce7-afb37eae196a"
     },
+    "fireballPrefab": {
+      "__uuid__": "d92d4831-cd65-4eb5-90bd-b77021aec35b"
+    },
     "joystickInputControllerNode": {
       "__id__": 6
     },
@@ -268,6 +271,7 @@
     "renderFrameIdLagTolerance": 4,
     "jigglingEps1D": 0.001,
     "bulletTriggerEnabled": true,
+    "closeOnForcedtoResyncNotSelf": true,
     "_id": "d12gkAmppNlIzqcRDELa91"
   },
   {
@@ -453,7 +457,7 @@
       "array": [
         0,
         0,
-        215.81269742929726,
+        216.50635094610968,
         0,
         0,
         0,

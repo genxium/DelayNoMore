@@ -42,6 +42,9 @@ type PlayerDownsync struct {
 
 	BulletTeamId      int32
 	ChCollisionTeamId int32 // not the same as "BulletTeamId", because even in the same team, we should allow inter-character collisions
+
+    OnWallNormX int32
+    OnWallNormY int32
 }
 
 type InputFrameDecoded struct {

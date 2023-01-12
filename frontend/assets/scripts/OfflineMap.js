@@ -29,7 +29,7 @@ cc.Class({
     /** Init required prefab ended. */
 
     self.inputFrameUpsyncDelayTolerance = 2;
-    self.collisionMinStep = 8;
+    self.collisionMinStep = 2;
 
     self.renderCacheSize = 1024;
     self.serverFps = 60;

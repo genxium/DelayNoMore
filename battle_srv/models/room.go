@@ -381,7 +381,7 @@ func (pR *Room) StartBattle() {
 
 	for _, player := range pR.Players {
 		speciesId := int(player.JoinIndex - 1) // FIXME: Hardcoded the values for now
-		if player.JoinIndex == 2 {
+		if player.JoinIndex == 1 {
 			speciesId = 4096
 		}
 		chosenCh := battle.Characters[speciesId]
