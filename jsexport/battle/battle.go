@@ -107,6 +107,13 @@ var nonAttackingSet = map[int32]bool{
 	ATK_CHARACTER_STATE_GET_UP1:             true,
 }
 
+func intAbs(x int32) int32 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 func ShouldPrefabInputFrameDownsync(prevRenderFrameId int32, renderFrameId int32) (bool, int32) {
 	for i := prevRenderFrameId + 1; i <= renderFrameId; i++ {
 		if (0 <= i) && (0 == (i & ((1 << INPUT_SCALE_FRAMES) - 1))) {
@@ -321,8 +328,8 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, re
 func WorldToVirtualGridPos(wx, wy float64) (int32, int32) {
 	// [WARNING] Introduces loss of precision!
 	// In JavaScript floating numbers suffer from seemingly non-deterministic arithmetics, and even if certain libs solved this issue by approaches such as fixed-point-number, they might not be used in other libs -- e.g. the "collision libs" we're interested in -- thus couldn't kill all pains.
-	var virtualGridX int32 = int32(math.Floor(wx * WORLD_TO_VIRTUAL_GRID_RATIO))
-	var virtualGridY int32 = int32(math.Floor(wy * WORLD_TO_VIRTUAL_GRID_RATIO))
+	var virtualGridX int32 = int32(math.Round(wx * WORLD_TO_VIRTUAL_GRID_RATIO))
+	var virtualGridY int32 = int32(math.Round(wy * WORLD_TO_VIRTUAL_GRID_RATIO))
 	return virtualGridX, virtualGridY
 }
 
@@ -558,12 +565,19 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 
 		if 0 == currPlayerDownsync.FramesToRecover {
-			if 0 != effDx || 0 != effDy {
-				if 0 != effDx {
-					thatPlayerInNextFrame.DirX = effDx
+			if 0 != effDx {
+				xfac := int32(1)
+				if 0 > effDx {
+					xfac = -xfac
 				}
+				thatPlayerInNextFrame.DirX = effDx
 				thatPlayerInNextFrame.DirY = effDy
-				thatPlayerInNextFrame.VelX = effDx * currPlayerDownsync.Speed
+
+				thatPlayerInNextFrame.VelX = xfac * currPlayerDownsync.Speed
+				if intAbs(thatPlayerInNextFrame.VelX) < intAbs(currPlayerDownsync.VelX) {
+					// Wall jumping
+					thatPlayerInNextFrame.VelX = xfac * intAbs(currPlayerDownsync.VelX)
+				}
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
 			} else {
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
@@ -595,6 +609,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				newVy += chConfig.WallJumpingInitVelY
 				thatPlayerInNextFrame.VelX = int32(xfac * chConfig.WallJumpingInitVelX)
 				thatPlayerInNextFrame.VelY = int32(chConfig.WallJumpingInitVelY)
+				thatPlayerInNextFrame.FramesToRecover = chConfig.WallJumpingFramesToRecover
 			} else {
 				thatPlayerInNextFrame.VelY = int32(chConfig.JumpingInitVelY)
 				newVy += chConfig.JumpingInitVelY // Immediately gets out of any snapping
@@ -758,13 +773,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				// [WARNING] Sticking to wall could only be triggered by proactive player input
 				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
 					normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
-					ctrlAlignmentWithHorizon1 := (float64(thatPlayerInNextFrame.DirX)*float64(1.0) + float64(thatPlayerInNextFrame.DirY)*float64(0.0))
 					normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
-					ctrlAlignmentWithHorizon2 := (float64(thatPlayerInNextFrame.DirX)*float64(-1.0) + float64(thatPlayerInNextFrame.DirY)*float64(0.0))
-					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 && VERTICAL_PLATFORM_THRESHOLD < ctrlAlignmentWithHorizon1 {
+					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
 						thatPlayerInNextFrame.OnWall = true
 					}
-					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 && VERTICAL_PLATFORM_THRESHOLD < ctrlAlignmentWithHorizon2 {
+					if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 {
 						thatPlayerInNextFrame.OnWall = true
 					}
 				}

@@ -92,8 +92,10 @@ cc.Class({
 
       const p1Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[0].x, boundaryObjs.playerStartingPositions[0].y);
       const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
-      const speedV = gopkgs.WorldToVirtualGridPos(1.0, 0);
       const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
+
+      const speciesIdList = [1, 4096];
+      const chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(speciesIdList);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
         id: window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START,
@@ -103,7 +105,7 @@ cc.Class({
             joinIndex: 1,
             virtualGridX: p1Vpos[0],
             virtualGridY: p1Vpos[1],
-            speed: speedV[0],
+            speed: chConfigsOrderedByJoinIndex[0].Speed,
             colliderRadius: colliderRadiusV[0],
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
@@ -112,13 +114,14 @@ cc.Class({
             velX: 0,
             velY: 0,
             inAir: true,
+            onWall: false,
           }),
           window.pb.protos.PlayerDownsync.create({
             id: 11,
             joinIndex: 2,
             virtualGridX: p2Vpos[0],
             virtualGridY: p2Vpos[1],
-            speed: speedV[0],
+            speed: chConfigsOrderedByJoinIndex[1].Speed,
             colliderRadius: colliderRadiusV[0],
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
@@ -127,9 +130,10 @@ cc.Class({
             velX: 0,
             velY: 0,
             inAir: true,
+            onWall: false,
           }),
         ],
-        speciesIdList: [1, 4096],
+        speciesIdList: speciesIdList,
       });
 
       self.selfPlayerInfo = {

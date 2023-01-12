@@ -18,11 +18,12 @@ type CharacterConfig struct {
 	Speed           int32
 	JumpingInitVelY int32
 
-	DashingEnabled      bool
-	OnWallEnabled       bool
-	WallJumpingInitVelX int32
-	WallJumpingInitVelY int32
-	WallSlidingVelY     int32
+	DashingEnabled             bool
+	OnWallEnabled              bool
+	WallJumpingFramesToRecover int32
+	WallJumpingInitVelX        int32
+	WallJumpingInitVelY        int32
+	WallSlidingVelY            int32
 
 	SkillMapper SkillMapperType
 }
@@ -41,7 +42,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:           int32(float64(1.2) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(3.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		DashingEnabled: false,
@@ -87,14 +88,15 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:           int32(float64(1.4) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(4.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
-		DashingEnabled:      true,
-		OnWallEnabled:       true,
-		WallJumpingInitVelX: int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
-		WallJumpingInitVelY: int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
-		WallSlidingVelY:     int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		DashingEnabled:             true,
+		OnWallEnabled:              true,
+		WallJumpingFramesToRecover: int32(8),
+		WallJumpingInitVelX:        int32(float64(2.5) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
+		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
@@ -136,7 +138,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(8),
 		GetUpFramesToRecover:  int32(30),
 
-		Speed:           int32(float64(1.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(3.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		DashingEnabled: false,

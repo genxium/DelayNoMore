@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="134">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="135">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
  <layer id="6" name="Ground" width="128" height="64">
   <data encoding="base64" compression="zlib">
-   eJzt27tSwzAQRmFNMm7SwQA9z5KhSccL8P6Pwc1uTFaS7ZVWw3+KryAXJ9ojKxXnlNIZAAAAAAAAAAAAADp4w4/oDpH9o79DNOUZKK+dGWivnRlor50ZlNc+OX2O13XoH9//qdK969Tug0en19B/39pzvY70z+0r+sf3r+nk0b+mba5v6Xn6+6y9Zf+aMyCn1wz+s2XtVovJ0ZY9FjEDRaOv/cGgNIOe/aPuxfXnWt1b7AP6j6W2vdc+GHEGkf1LZ8BrxXVrXtNy79B/+9ovM4+2Uf2PzkDN99qvd0zG49e5bQ3r/aNZZhDdIqr/abbc/x9fboaTA+s3vPT8XqXvo37/r/svptXfXv1HQ/9ft/R3D6x5z/6lga1nD/1tF2NmXudvqdee/bSlPf1Tep7lZnbk/s/tgV73f25/0t/u7yF3DvToXzqf1PsjvkNk/3dx9NdGf23010Z/bfTXRn9t9NdGf23010Z/bfTXRn9t9NdGf23010Z/bfTXRn9t9NdGf23010Z/bcv/QEW3oD/96U//3v3Rrv8nrcyzFQ==
+   eJzt2z1uAjEURWELlIYuiKRHyk4iGjo2wP6XkRDGUmThnxne+FncU3wNEDJ+x3aqbEMIWwAAAAAAAAAAAADo4IQ/3h08+3s/gzflGSivnRlor50ZaK+dGdTX/mb0e6y+h/7+/Q+NHn1P6z7YG32G/svWXur1TP/SvqL/OP1LnSz6t7Qt9a29T//x+7fcASW9ZvDKWvpbmbPHRprBKxt97e8ZSjPo3f/L4TnSOyDXfY19QP+xtLa32gcjzsCjf+u5Pxp9ZhT0v9tN6K/jtvbvRLwH0tejY6Pcz48mzsC7hVf/zSSe/+uvc8bGQO5veO39pWrPo37+0/438Q74/5pV/9HQ/+6c9H7EevafK5h799A/b5eZmdX9W+u1ZD/NaU//ED4mpZk9c/5Le6DX+S/tT/rn+1so3QM9+tfuJ/X+8O/g2f8ijv7a6K+N/tror43+2uivjf7a6K+N/tror43+2uivjf7a6K+N/tror43+2uivjf7a6K+N/trory3+D5R3C/rTn/70790f6/X/AbS6syo=
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
-  <object id="135" x="830.33" y="535.67">
+  <object id="135" x="1630" y="518">
    <point/>
   </object>
-  <object id="137" x="888.003" y="535.67">
+  <object id="137" x="888.003" y="535">
    <point/>
   </object>
  </objectgroup>
@@ -149,12 +149,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="113" x="640" y="1007.67" width="1056" height="14.6667">
+  <object id="113" x="640" y="1008" width="1056" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="114" x="640" y="224" width="1056" height="14.6667">
+  <object id="114" x="640" y="224" width="1056" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -164,7 +164,7 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="120" x="752" y="512" width="16" height="16">
+  <object id="120" x="736" y="512" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -174,27 +174,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="122" x="704" y="352" width="16" height="16">
+  <object id="125" x="688" y="448" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="123" x="672" y="384" width="16" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="124" x="704" y="416" width="16" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="125" x="720" y="448" width="16" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
-  <object id="126" x="736" y="480" width="16" height="16">
+  <object id="126" x="720" y="480" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -219,17 +204,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="131" x="1186" y="416" width="16" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
   <object id="132" x="1184" y="416" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="133" x="1472" y="448" width="32" height="16">
+  <object id="134" x="720" y="416" width="16" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
