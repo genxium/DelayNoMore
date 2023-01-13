@@ -2,11 +2,13 @@
 
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
 
-_(the following gif is sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress)_
+_(the following gifs are sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress)_
+
+![gif_demo](./charts/internet_fireball_wallmoveset_spedup.gif)
 
 ![gif_demo](./charts/jump_sync_spedup.gif)
 
-Please also checkout [this demo video](https://pan.baidu.com/s/1Lmot9cb0pYylfUvC8G4fDg?pwd=ia97) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
+Please also checkout [this demo video](https://pan.baidu.com/s/1_DAEuE66s5Obf2GwtVul4Q?pwd=mfpq) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
 The video mainly shows the following features.
 - The backend receives inputs from frontend peers and broadcasts back for synchronization.
@@ -27,7 +29,8 @@ _(how rollback-and-chase in this project roughly works)_
 ## 1.1 Tools to install 
 ### Backend
 - [Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=command%20line%20tools) (on OSX) or [TDM-GCC](https://jmeubank.github.io/tdm-gcc/download/) (on Windows) (a `make` executable mandatory)
-- [Golang1.18.6](https://golang.org/dl/) (brought down to 1.18 for GopherJs support, mandatory, in China please try a mirror site like [that of ustc](https://mirrors.ustc.edu.cn/golang/))
+- [Golang1.18.6](https://golang.org/dl/) (brought down to 1.18 for _GopherJs_ support, mandatory, in China please try a mirror site like [that of ustc](https://mirrors.ustc.edu.cn/golang/))
+- [GopherJs1.18.0-beta1](https://github.com/gopherjs/gopherjs/tree/v1.18.0-beta1) (optional, only for developemnt)
 - [MySQL 5.7](https://dev.mysql.com/downloads/windows/installer/5.7.html) (mandatory, for OSX not all versions of 5.7 can be found thus 5.7.24 is recommended)
 - [Redis 3.0.503 or above](https://redis.io/download/) (mandatory)
 - [skeema](https://www.skeema.io/) (optional, only for convenient MySQL schema provisioning)
