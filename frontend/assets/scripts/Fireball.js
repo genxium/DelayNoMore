@@ -27,7 +27,7 @@ cc.Class({
     this.speciesName = speciesName;
     this.effAnimNode = this.animNode.getChildByName(this.speciesName);
     this.effAnimNode.active = true;
-    //this.updateAnim(speciesName, fireballBullet, rdf);
+    this.updateAnim(speciesName, fireballBullet, rdf);
   },
 
   onLoad() {},

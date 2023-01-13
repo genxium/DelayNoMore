@@ -348,7 +348,7 @@ func (pR *Room) fireballDownsyncStr(fireball *battle.FireballBullet) string {
 	if nil == fireball {
 		return ""
 	}
-	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d}", fireball.Bullet.BulletLocalId, fireball.Bullet.OriginatedRenderFrameId, fireball.Bullet.OffenderJoinIndex, fireball.VirtualGridX, fireball.VirtualGridY, fireball.VelX, fireball.VelY, fireball.DirX, fireball.DirY, fireball.Bullet.HitboxSizeX, fireball.Bullet.HitboxSizeY)
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d}", fireball.BattleAttr.BulletLocalId, fireball.BattleAttr.OriginatedRenderFrameId, fireball.BattleAttr.OffenderJoinIndex, fireball.VirtualGridX, fireball.VirtualGridY, fireball.VelX, fireball.VelY, fireball.DirX, fireball.DirY, fireball.Bullet.HitboxSizeX, fireball.Bullet.HitboxSizeY)
 
 	return s
 }

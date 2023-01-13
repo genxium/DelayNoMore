@@ -63,15 +63,10 @@ type Barrier struct {
 }
 
 type BulletConfig struct {
-	BulletLocalId int32 // for referencing cached nodes in frontend rendering
-
-	// for offender
-	OriginatedRenderFrameId int32 // Copied from the first bullet for all subsequent bullets
-	OffenderJoinIndex       int32 // Copied to favor collision handling of the dispatched bullet
-	StartupFrames           int32 // from "OriginatedRenderFrameId"
-	CancellableStFrame      int32 // from "OriginatedRenderFrameId"
-	CancellableEdFrame      int32 // from "OriginatedRenderFrameId"
-	ActiveFrames            int32
+	StartupFrames      int32 // from "OriginatedRenderFrameId"
+	CancellableStFrame int32 // from "OriginatedRenderFrameId"
+	CancellableEdFrame int32 // from "OriginatedRenderFrameId"
+	ActiveFrames       int32
 
 	// for defender
 	HitStunFrames   int32
@@ -91,12 +86,20 @@ type BulletConfig struct {
 	BlowUp bool
 
 	CancelTransit map[int]int
+}
 
-	TeamId int32
+type BulletBattleAttr struct {
+	BulletLocalId int32 // for referencing cached nodes in frontend rendering
+
+	// for offender
+	OriginatedRenderFrameId int32 // Copied from the first bullet for all subsequent bullets
+	OffenderJoinIndex       int32 // Copied to favor collision handling of the dispatched bullet
+	TeamId                  int32
 }
 
 type MeleeBullet struct {
-	Bullet *BulletConfig
+	BattleAttr *BulletBattleAttr
+	Bullet     *BulletConfig
 }
 
 type FireballBullet struct {
@@ -108,6 +111,7 @@ type FireballBullet struct {
 	VelY         int32
 	Speed        int32
 	SpeciesId    int32
+	BattleAttr   *BulletBattleAttr
 	Bullet       *BulletConfig
 }
 

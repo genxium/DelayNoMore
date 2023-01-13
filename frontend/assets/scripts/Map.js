@@ -742,9 +742,9 @@ cc.Class({
     if (null == lhs || null == rhs) return false;
     if (null == lhs && null != rhs) return false;
     if (null != lhs && null == rhs) return false;
-    if (lhs.Bullet.BulletLocalId != rhs.Bullet.BulletLocalId) return false;
-    if (lhs.Bullet.OffenderJoinIndex != rhs.Bullet.OffenderJoinIndex) return false;
-    if (lhs.Bullet.OriginatedRenderFrameId != rhs.Bullet.OriginatedRenderFrameId) return false;
+    if (lhs.BattleAttr.BulletLocalId != rhs.BattleAttr.BulletLocalId) return false;
+    if (lhs.BattleAttr.OffenderJoinIndex != rhs.BattleAttr.OffenderJoinIndex) return false;
+    if (lhs.BattleAttr.OriginatedRenderFrameId != rhs.BattleAttr.OriginatedRenderFrameId) return false;
     return true;
   },
 
@@ -752,31 +752,32 @@ cc.Class({
     if (null == lhs || null == rhs) return false;
     if (null == lhs && null != rhs) return false;
     if (null != lhs && null == rhs) return false;
-    if (lhs.Bullet.BulletLocalId != rhs.Bullet.BulletLocalId) return false;
-    if (lhs.Bullet.OffenderJoinIndex != rhs.Bullet.OffenderJoinIndex) return false;
-    if (lhs.Bullet.OriginatedRenderFrameId != rhs.Bullet.OriginatedRenderFrameId) return false;
+    if (lhs.BattleAttr.BulletLocalId != rhs.BattleAttr.BulletLocalId) return false;
+    if (lhs.BattleAttr.OffenderJoinIndex != rhs.BattleAttr.OffenderJoinIndex) return false;
+    if (lhs.BattleAttr.OriginatedRenderFrameId != rhs.BattleAttr.OriginatedRenderFrameId) return false;
 
-    if (lhs.Bullet.VirtualGridX != rhs.Bullet.VirtualGridX) return false;
-    if (lhs.Bullet.VirtualGridY != rhs.Bullet.VirtualGridY) return false;
-    if (lhs.Bullet.DirX != rhs.Bullet.DirX) return false;
-    if (lhs.Bullet.DirY != rhs.Bullet.DirY) return false;
-    if (lhs.Bullet.VelX != rhs.Bullet.VelX) return false;
-    if (lhs.Bullet.VelY != rhs.Bullet.VelY) return false;
-    if (lhs.Bullet.Speed != rhs.Bullet.Speed) return false;
-    if (lhs.Bullet.SpeciesId != rhs.Bullet.SpeciesId) return false;
+    if (lhs.VirtualGridX != rhs.Bullet.VirtualGridX) return false;
+    if (lhs.VirtualGridY != rhs.Bullet.VirtualGridY) return false;
+    if (lhs.DirX != rhs.DirX) return false;
+    if (lhs.DirY != rhs.DirY) return false;
+    if (lhs.VelX != rhs.VelX) return false;
+    if (lhs.VelY != rhs.VelY) return false;
+    if (lhs.Speed != rhs.Speed) return false;
+    if (lhs.SpeciesId != rhs.SpeciesId) return false;
+
     return true;
   },
 
   equalRoomDownsyncFrames(lhs, rhs) {
     if (null == lhs || null == rhs) return false;
-    for (let k in lhs.players) {
-      if (!this.equalPlayers(lhs.players[k], rhs.players[k])) return false;
+    for (let k in lhs.PlayersArr) {
+      if (!this.equalPlayers(lhs.PlayersArr[k], rhs.PlayersArr[k])) return false;
     }
-    for (let k in lhs.meleeBullets) {
-      if (!this.equalMeleeBullets(lhs.meleeBullets[k], rhs.meleeBullets[k])) return false;
+    for (let k in lhs.MeleeBullets) {
+      if (!this.equalMeleeBullets(lhs.MeleeBullets[k], rhs.MeleeBullets[k])) return false;
     }
     for (let k in lhs.fireballBullet) {
-      if (!this.equalMeleeBullets(lhs.meleeBullets[k], rhs.meleeBullets[k])) return false;
+      if (!this.equalFireballBullets(lhs.FireballBullets[k], rhs.FireballBullets[k])) return false;
     }
     return true;
   },
@@ -1093,10 +1094,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     }
   },
 
-  _renderFireballBullet(fireballBullet, rdf) {
-    const self = this;
-  },
-
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
     const playersArr = rdf.PlayersArr;
@@ -1117,31 +1114,32 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       const fireball = pqNode.value;
       fireball.node.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
     }
-    const fireballBullets = rdf.FireballBullets;
-    for (let k in fireballBullets) {
-      const fireballBullet = fireballBullets[k];
+    for (let k in rdf.FireballBullets) {
+      const fireballBullet = rdf.FireballBullets[k];
       if (
-        fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
+        fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
         &&
-        fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
+        fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
       ) {
-        let pqNode = self.cachedFireballs.popAny(fireballBullet.Bullet.BulletLocalId);
+        let pqNode = self.cachedFireballs.popAny(fireballBullet.BattleAttr.BulletLocalId);
         const speciesName = `Fireball${fireballBullet.SpeciesId}`;
         const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
-          console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.Bullet.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId} at wpos=(${wx},${wy})`);
+          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
         } else {
-          console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.Bullet.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId} at wpos=(${wx},${wy})`);
+          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
         }
         const cachedFireball = pqNode.value;
         cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
         cachedFireball.lastUsed = self.renderFrameId;
-        cachedFireball.bulletLocalId = fireballBullet.Bullet.BulletLocalId;
+        cachedFireball.bulletLocalId = fireballBullet.BattleAttr.BulletLocalId;
         cachedFireball.node.setPosition(cc.v2(wx, wy));
 
-        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.Bullet.BulletLocalId);
+        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.BattleAttr.BulletLocalId);
+      } else {
+        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, not rendering fireball node for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId}`);
       }
     }
 
@@ -1271,7 +1269,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   fireballDownsyncStr(fireball) {
     if (null == fireball) return "";
-    return `{${fireball.Bullet.BulletLocalId},${fireball.Bullet.OriginatedRenderFrameId},${fireball.Bullet.OffenderJoinIndex},${fireball.VirtualGridX},${fireball.VirtualGridY},${fireball.VelX},${fireball.VelY},${fireball.DirX},${fireball.DirY},${fireball.Bullet.HitboxSizeX},${fireball.Bullet.HitboxSizeY}}`;
+    return `{${fireball.BattleAttr.BulletLocalId},${fireball.BattleAttr.OriginatedRenderFrameId},${fireball.BattleAttr.OffenderJoinIndex},${fireball.VirtualGridX},${fireball.VirtualGridY},${fireball.VelX},${fireball.VelY},${fireball.DirX},${fireball.DirY},${fireball.Bullet.HitboxSizeX},${fireball.Bullet.HitboxSizeY}}`;
   },
 
   inputFrameDownsyncStr(inputFrameDownsync) {
@@ -1366,11 +1364,11 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       for (let k in rdf.MeleeBullets) {
         const meleeBullet = rdf.MeleeBullets[k];
         if (
-          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames <= rdf.Id
+          meleeBullet.BattleAttr.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames <= rdf.Id
           &&
-          meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
+          meleeBullet.BattleAttr.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
         ) {
-          const offender = rdf.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex - 1];
+          const offender = rdf.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex - 1];
           if (1 == offender.JoinIndex) {
             g2.strokeColor = cc.Color.BLUE;
           } else {
@@ -1398,11 +1396,11 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       for (let k in rdf.FireballBullets) {
         const fireballBullet = rdf.FireballBullets[k];
         if (
-          fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
+          fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
           &&
-          fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
+          fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
         ) {
-          const offender = rdf.PlayersArr[fireballBullet.Bullet.OffenderJoinIndex - 1];
+          const offender = rdf.PlayersArr[fireballBullet.BattleAttr.OffenderJoinIndex - 1];
           if (1 == offender.JoinIndex) {
             g2.strokeColor = cc.Color.BLUE;
           } else {

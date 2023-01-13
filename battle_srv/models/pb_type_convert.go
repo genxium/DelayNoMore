@@ -55,9 +55,10 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 	for i, last := range rdf.MeleeBullets {
 		pbBullet := &pb.MeleeBullet{
-			BulletLocalId:           last.Bullet.BulletLocalId,
-			OriginatedRenderFrameId: last.Bullet.OriginatedRenderFrameId,
-			OffenderJoinIndex:       last.Bullet.OffenderJoinIndex,
+			BulletLocalId:           last.BattleAttr.BulletLocalId,
+			OriginatedRenderFrameId: last.BattleAttr.OriginatedRenderFrameId,
+			OffenderJoinIndex:       last.BattleAttr.OffenderJoinIndex,
+			TeamId: last.BattleAttr.TeamId,
 
 			StartupFrames:      last.Bullet.StartupFrames,
 			CancellableStFrame: last.Bullet.CancellableStFrame,
@@ -79,16 +80,16 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			HitboxSizeY:   last.Bullet.HitboxSizeY,
 
 			BlowUp: last.Bullet.BlowUp,
-			TeamId: last.Bullet.TeamId,
 		}
 		ret.MeleeBullets[i] = pbBullet
 	}
 
 	for i, last := range rdf.FireballBullets {
 		pbBullet := &pb.FireballBullet{
-			BulletLocalId:           last.Bullet.BulletLocalId,
-			OriginatedRenderFrameId: last.Bullet.OriginatedRenderFrameId,
-			OffenderJoinIndex:       last.Bullet.OffenderJoinIndex,
+			BulletLocalId:           last.BattleAttr.BulletLocalId,
+			OriginatedRenderFrameId: last.BattleAttr.OriginatedRenderFrameId,
+			OffenderJoinIndex:       last.BattleAttr.OffenderJoinIndex,
+			TeamId: last.BattleAttr.TeamId,
 
 			StartupFrames:      last.Bullet.StartupFrames,
 			CancellableStFrame: last.Bullet.CancellableStFrame,
@@ -110,7 +111,6 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			HitboxSizeY:   last.Bullet.HitboxSizeY,
 
 			BlowUp: last.Bullet.BlowUp,
-			TeamId: last.Bullet.TeamId,
 
 			VirtualGridX: last.VirtualGridX,
 			VirtualGridY: last.VirtualGridY,

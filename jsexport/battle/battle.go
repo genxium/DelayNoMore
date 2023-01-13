@@ -541,10 +541,13 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
 				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.Bullet.BulletLocalId = bulletLocalId
+				newBullet.BattleAttr = &BulletBattleAttr{
+					BulletLocalId:           bulletLocalId,
+					OriginatedRenderFrameId: currRenderFrame.Id,
+					OffenderJoinIndex:       joinIndex,
+					TeamId:                  currPlayerDownsync.BulletTeamId,
+				}
 				bulletLocalId++
-				newBullet.Bullet.OriginatedRenderFrameId = currRenderFrame.Id
-				newBullet.Bullet.OffenderJoinIndex = joinIndex
 				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
@@ -556,10 +559,13 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				}
 			case *FireballBullet:
 				var newBullet FireballBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.Bullet.BulletLocalId = bulletLocalId
+				newBullet.BattleAttr = &BulletBattleAttr{
+					BulletLocalId:           bulletLocalId,
+					OriginatedRenderFrameId: currRenderFrame.Id,
+					OffenderJoinIndex:       joinIndex,
+					TeamId:                  currPlayerDownsync.BulletTeamId,
+				}
 				bulletLocalId++
-				newBullet.Bullet.OriginatedRenderFrameId = currRenderFrame.Id
-				newBullet.Bullet.OffenderJoinIndex = joinIndex
 				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.Bullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+newBullet.Bullet.HitboxOffsetY
 				newBullet.DirX = xfac
 				newBullet.DirY = 0
@@ -669,8 +675,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 3. Add bullet colliders into collision system
 	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for _, meleeBullet := range currRenderFrame.MeleeBullets {
-		if (meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
-			offender := currRenderFrame.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex-1]
+		if (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
+			offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
 
 			xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
 			if 0 > offender.DirX {
@@ -681,7 +687,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id {
+		} else if meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id {
 			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
 		}
 	}
@@ -697,15 +703,16 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			Speed:        prevFireball.Speed,
 			SpeciesId:    prevFireball.SpeciesId,
 			Bullet:       prevFireball.Bullet,
+			BattleAttr:   prevFireball.BattleAttr,
 		}
-		if (fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
+		if (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
 			bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
 			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
 			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id {
-			// fmt.Printf("Pushing static fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d\n", currRenderFrame.Id, fireballBullet.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
+		} else if fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id {
+			// fmt.Printf("Pushing static fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
 			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
 		}
 	}
@@ -843,12 +850,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			switch v := bulletCollider.Data.(type) {
 			case *MeleeBullet:
 				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.Bullet.OffenderJoinIndex-1]
+				offender := currRenderFrame.PlayersArr[v.BattleAttr.OffenderJoinIndex-1]
 				for _, obj := range collision.Objects {
 					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 					switch t := obj.Data.(type) {
 					case *PlayerDownsync:
-						if v.Bullet.OffenderJoinIndex == t.JoinIndex {
+						if v.BattleAttr.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
 						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
@@ -885,12 +892,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				}
 			case *FireballBullet:
 				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.Bullet.OffenderJoinIndex-1]
+				offender := currRenderFrame.PlayersArr[v.BattleAttr.OffenderJoinIndex-1]
 				for _, obj := range collision.Objects {
 					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 					switch t := obj.Data.(type) {
 					case *PlayerDownsync:
-						if v.Bullet.OffenderJoinIndex == t.JoinIndex {
+						if v.BattleAttr.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
 						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
@@ -1071,11 +1078,13 @@ func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
 
 func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *MeleeBullet {
 	return &MeleeBullet{
-		Bullet: &BulletConfig{
+		BattleAttr: &BulletBattleAttr{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
 			OffenderJoinIndex:       offenderJoinIndex,
-
+			TeamId:                  teamId,
+		},
+		Bullet: &BulletConfig{
 			StartupFrames:      startupFrames,
 			CancellableStFrame: cancellableStFrame,
 			CancellableEdFrame: cancellableEdFrame,
@@ -1096,8 +1105,6 @@ func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, s
 			HitboxSizeY:   hitboxSizeY,
 
 			BlowUp: blowUp,
-
-			TeamId: teamId,
 		},
 	}
 }
@@ -1112,11 +1119,13 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 		VelY:         velY,
 		Speed:        speed,
 		SpeciesId:    speciesId,
-		Bullet: &BulletConfig{
+		BattleAttr: &BulletBattleAttr{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
 			OffenderJoinIndex:       offenderJoinIndex,
-
+			TeamId:                  teamId,
+		},
+		Bullet: &BulletConfig{
 			StartupFrames:      startupFrames,
 			CancellableStFrame: cancellableStFrame,
 			CancellableEdFrame: cancellableEdFrame,
@@ -1137,8 +1146,6 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 			HitboxSizeY:   hitboxSizeY,
 
 			BlowUp: blowUp,
-
-			TeamId: teamId,
 		},
 	}
 }
