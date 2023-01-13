@@ -34,6 +34,8 @@ type PlayerDownsync struct {
 	CharacterState    int32
 	InAir             bool
 	OnWall            bool
+	OnWallNormX       int32
+	OnWallNormY       int32
 
 	ActiveSkillId  int32
 	ActiveSkillHit int32
@@ -42,9 +44,6 @@ type PlayerDownsync struct {
 
 	BulletTeamId      int32
 	ChCollisionTeamId int32 // not the same as "BulletTeamId", because even in the same team, we should allow inter-character collisions
-
-    OnWallNormX int32
-    OnWallNormY int32
 }
 
 type InputFrameDecoded struct {
@@ -63,7 +62,7 @@ type Barrier struct {
 	Boundary *Polygon2D
 }
 
-type Bullet struct {
+type BulletConfig struct {
 	BulletLocalId int32 // for referencing cached nodes in frontend rendering
 
 	// for offender
@@ -97,7 +96,7 @@ type Bullet struct {
 }
 
 type MeleeBullet struct {
-	Bullet
+	Bullet *BulletConfig
 }
 
 type FireballBullet struct {
@@ -109,7 +108,7 @@ type FireballBullet struct {
 	VelY         int32
 	Speed        int32
 	SpeciesId    int32
-	Bullet
+	Bullet       *BulletConfig
 }
 
 type Skill struct {

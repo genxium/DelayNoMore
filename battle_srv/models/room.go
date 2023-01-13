@@ -335,7 +335,20 @@ func (pR *Room) playerDownsyncStr(player *battle.PlayerDownsync) string {
 	if player.InAir {
 		inAirInt = 1
 	}
-	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, player.FramesToRecover, inAirInt)
+	onWallInt := 0
+	if player.OnWall {
+		onWallInt = 1
+	}
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d,%d}", player.JoinIndex, player.VirtualGridX, player.VirtualGridY, player.VelX, player.VelY, player.FramesToRecover, inAirInt, onWallInt)
+
+	return s
+}
+
+func (pR *Room) fireballDownsyncStr(fireball *battle.FireballBullet) string {
+	if nil == fireball {
+		return ""
+	}
+	s := fmt.Sprintf("{%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d}", fireball.Bullet.BulletLocalId, fireball.Bullet.OriginatedRenderFrameId, fireball.Bullet.OffenderJoinIndex, fireball.VirtualGridX, fireball.VirtualGridY, fireball.VelX, fireball.VelY, fireball.DirX, fireball.DirY, fireball.Bullet.HitboxSizeX, fireball.Bullet.HitboxSizeY)
 
 	return s
 }
@@ -365,7 +378,11 @@ func (pR *Room) rdfIdToActuallyUsedInputString() string {
 		for _, player := range rdf.PlayersArr {
 			playersStrBldr = append(playersStrBldr, pR.playerDownsyncStr(player))
 		}
-		s = append(s, fmt.Sprintf("rdfId:%d\nplayers:[%v]\nactuallyUsedinputList:{%v}", rdfId, strings.Join(playersStrBldr, ","), pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
+		fireballsStrBldr := make([]string, 0, len(rdf.FireballBullets))
+		for _, fireball := range rdf.FireballBullets {
+			fireballsStrBldr = append(fireballsStrBldr, pR.fireballDownsyncStr(fireball))
+		}
+		s = append(s, fmt.Sprintf("rdfId:%d\nplayers:[%v]\nfireballs:[%v]\nactuallyUsedinputList:{%v}", rdfId, strings.Join(playersStrBldr, ","), strings.Join(fireballsStrBldr, ","), pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
 	}
 
 	return strings.Join(s, "\n")

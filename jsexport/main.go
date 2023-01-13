@@ -65,85 +65,19 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 		ColliderRadius:    colliderRadius,
 		InAir:             inAir,
 		OnWall:            onWall,
-        OnWallNormX:       onWallNormX,
-        OnWallNormY:       onWallNormY,
+		OnWallNormX:       onWallNormX,
+		OnWallNormY:       onWallNormY,
 		BulletTeamId:      bulletTeamId,
 		ChCollisionTeamId: chCollisionTeamId,
 	})
 }
 
 func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *js.Object {
-	return js.MakeWrapper(&MeleeBullet{
-		Bullet: Bullet{
-			BulletLocalId:           bulletLocalId,
-			OriginatedRenderFrameId: originatedRenderFrameId,
-			OffenderJoinIndex:       offenderJoinIndex,
-
-			StartupFrames:      startupFrames,
-			CancellableStFrame: cancellableStFrame,
-			CancellableEdFrame: cancellableEdFrame,
-			ActiveFrames:       activeFrames,
-
-			HitStunFrames:   hitStunFrames,
-			BlockStunFrames: blockStunFrames,
-			PushbackVelX:    pushbackVelX,
-			PushbackVelY:    pushbackVelY,
-			Damage:          damage,
-
-			SelfLockVelX: selfLockVelX,
-			SelfLockVelY: selfLockVelY,
-
-			HitboxOffsetX: hitboxOffsetX,
-			HitboxOffsetY: hitboxOffsetY,
-			HitboxSizeX:   hitboxSizeX,
-			HitboxSizeY:   hitboxSizeY,
-
-			BlowUp: blowUp,
-
-			TeamId: teamId,
-		},
-	})
+	return js.MakeWrapper(NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId))
 }
 
 func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId int32) *js.Object {
-	return js.MakeWrapper(&FireballBullet{
-		VirtualGridX: virtualGridX,
-		VirtualGridY: virtualGridY,
-		DirX:         dirX,
-		DirY:         dirY,
-		VelX:         velX,
-		VelY:         velY,
-		Speed:        speed,
-		SpeciesId:    speciesId,
-		Bullet: Bullet{
-			BulletLocalId:           bulletLocalId,
-			OriginatedRenderFrameId: originatedRenderFrameId,
-			OffenderJoinIndex:       offenderJoinIndex,
-
-			StartupFrames:      startupFrames,
-			CancellableStFrame: cancellableStFrame,
-			CancellableEdFrame: cancellableEdFrame,
-			ActiveFrames:       activeFrames,
-
-			HitStunFrames:   hitStunFrames,
-			BlockStunFrames: blockStunFrames,
-			PushbackVelX:    pushbackVelX,
-			PushbackVelY:    pushbackVelY,
-			Damage:          damage,
-
-			SelfLockVelX: selfLockVelX,
-			SelfLockVelY: selfLockVelY,
-
-			HitboxOffsetX: hitboxOffsetX,
-			HitboxOffsetY: hitboxOffsetY,
-			HitboxSizeX:   hitboxSizeX,
-			HitboxSizeY:   hitboxSizeY,
-
-			BlowUp: blowUp,
-
-			TeamId: teamId,
-		},
-	})
+	return js.MakeWrapper(NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId))
 }
 
 func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {

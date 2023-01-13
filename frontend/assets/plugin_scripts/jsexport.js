@@ -2,15 +2,6678 @@
 (function() {
 
 var $goVersion = "go1.18.6";
-Error.stackTraceLimit=1/0;var $global,$module,$NaN=NaN;if("undefined"!=typeof window?$global=window:"undefined"!=typeof self?$global=self:"undefined"!=typeof global?($global=global).require=require:$global=this,void 0===$global||void 0===$global.Array)throw new Error("no global object found");if("undefined"!=typeof module&&($module=module),!$global.fs&&$global.require)try{var fs=$global.require("fs");"object"==typeof fs&&null!==fs&&0!==Object.keys(fs).length&&($global.fs=fs)}catch(e){}if(!$global.fs){var outputBuf="",decoder=new TextDecoder("utf-8");$global.fs={constants:{O_WRONLY:-1,O_RDWR:-1,O_CREAT:-1,O_TRUNC:-1,O_APPEND:-1,O_EXCL:-1},writeSync:function(e,n){var r=(outputBuf+=decoder.decode(n)).lastIndexOf("\n");return-1!=r&&(console.log(outputBuf.substr(0,r)),outputBuf=outputBuf.substr(r+1)),n.length},write:function(e,n,r,t,i,a){0===r&&t===n.length&&null===i?a(null,this.writeSync(e,n)):a(enosys())}}}var $throwRuntimeError,$linknames={},$packages={},$idCounter=0,$keys=function(e){return e?Object.keys(e):[]},$flushConsole=function(){},$throwNilPointerError=function(){$throwRuntimeError("invalid memory address or nil pointer dereference")},$call=function(e,n,r){return e.apply(n,r)},$makeFunc=function(e){return function(){return $externalize(e(this,new($sliceType($jsObjectPtr))($global.Array.prototype.slice.call(arguments,[]))),$emptyInterface)}},$unused=function(e){},$print=console.log;if(void 0!==$global.process&&$global.require)try{var util=$global.require("util");$print=function(){$global.process.stderr.write(util.format.apply(this,arguments))}}catch(e){}var $println=console.log,$initAllLinknames=function(){for(var e=$keys($packages),n=0;n<e.length;n++){var r=$packages[e[n]].$initLinknames;"function"==typeof r&&r()}},$mapArray=function(e,n){for(var r=new e.constructor(e.length),t=0;t<e.length;t++)r[t]=n(e[t]);return r},$methodVal=function(e,n){var r=e.$methodVals||{};e.$methodVals=r;var t=r[n];return void 0!==t?t:(t=e[n].bind(e),r[n]=t,t)},$methodExpr=function(e,n){var r=e.prototype[n];return void 0===r.$expr&&(r.$expr=function(){$stackDepthOffset--;try{return e.wrapped&&(arguments[0]=new e(arguments[0])),Function.call.apply(r,arguments)}finally{$stackDepthOffset++}}),r.$expr},$ifaceMethodExprs={},$ifaceMethodExpr=function(e){var n=$ifaceMethodExprs["$"+e];return void 0===n&&(n=$ifaceMethodExprs["$"+e]=function(){$stackDepthOffset--;try{return Function.call.apply(arguments[0][e],arguments)}finally{$stackDepthOffset++}}),n},$subslice=function(e,n,r,t){if(void 0===r&&(r=e.$length),void 0===t&&(t=e.$capacity),(n<0||r<n||t<r||r>e.$capacity||t>e.$capacity)&&$throwRuntimeError("slice bounds out of range"),e===e.constructor.nil)return e;var i=new e.constructor(e.$array);return i.$offset=e.$offset+n,i.$length=r-n,i.$capacity=t-n,i},$substring=function(e,n,r){return(n<0||r<n||r>e.length)&&$throwRuntimeError("slice bounds out of range"),e.substring(n,r)},$sliceToNativeArray=function(e){return e.$array.constructor!==Array?e.$array.subarray(e.$offset,e.$offset+e.$length):e.$array.slice(e.$offset,e.$offset+e.$length)},$sliceToGoArray=function(e,n){var r=n.elem;return void 0!==r&&e.$length<r.len&&$throwRuntimeError("cannot convert slice with length "+e.$length+" to pointer to array with length "+r.len),e==e.constructor.nil?n.nil:e.$array.constructor!==Array?e.$array.subarray(e.$offset,e.$offset+r.len):0==e.$offset&&e.$length==e.$capacity&&e.$length==r.len?e.$array:0==r.len?new r([]):void $throwRuntimeError("gopherjs: non-numeric slice to underlying array conversion is not supported for subslices")},$convertSliceType=function(e,n){return e==e.constructor.nil?n.nil:$subslice(new n(e.$array),e.$offset,e.$offset+e.$length)},$decodeRune=function(e,n){var r=e.charCodeAt(n);if(r<128)return[r,1];if(r!=r||r<192)return[65533,1];var t=e.charCodeAt(n+1);if(t!=t||t<128||192<=t)return[65533,1];if(r<224)return(a=(31&r)<<6|63&t)<=127?[65533,1]:[a,2];var i=e.charCodeAt(n+2);if(i!=i||i<128||192<=i)return[65533,1];if(r<240)return(a=(15&r)<<12|(63&t)<<6|63&i)<=2047?[65533,1]:55296<=a&&a<=57343?[65533,1]:[a,3];var a,o=e.charCodeAt(n+3);return o!=o||o<128||192<=o?[65533,1]:r<248?(a=(7&r)<<18|(63&t)<<12|(63&i)<<6|63&o)<=65535||1114111<a?[65533,1]:[a,4]:[65533,1]},$encodeRune=function(e){return(e<0||e>1114111||55296<=e&&e<=57343)&&(e=65533),e<=127?String.fromCharCode(e):e<=2047?String.fromCharCode(192|e>>6,128|63&e):e<=65535?String.fromCharCode(224|e>>12,128|e>>6&63,128|63&e):String.fromCharCode(240|e>>18,128|e>>12&63,128|e>>6&63,128|63&e)},$stringToBytes=function(e){for(var n=new Uint8Array(e.length),r=0;r<e.length;r++)n[r]=e.charCodeAt(r);return n},$bytesToString=function(e){if(0===e.$length)return"";for(var n="",r=0;r<e.$length;r+=1e4)n+=String.fromCharCode.apply(void 0,e.$array.subarray(e.$offset+r,e.$offset+Math.min(e.$length,r+1e4)));return n},$stringToRunes=function(e){for(var n,r=new Int32Array(e.length),t=0,i=0;i<e.length;i+=n[1],t++)n=$decodeRune(e,i),r[t]=n[0];return r.subarray(0,t)},$runesToString=function(e){if(0===e.$length)return"";for(var n="",r=0;r<e.$length;r++)n+=$encodeRune(e.$array[e.$offset+r]);return n},$copyString=function(e,n){for(var r=Math.min(n.length,e.$length),t=0;t<r;t++)e.$array[e.$offset+t]=n.charCodeAt(t);return r},$copySlice=function(e,n){var r=Math.min(n.$length,e.$length);return $copyArray(e.$array,n.$array,e.$offset,n.$offset,r,e.constructor.elem),r},$copyArray=function(e,n,r,t,i,a){if(0!==i&&(e!==n||r!==t))if(n.subarray)e.set(n.subarray(t,t+i),r);else{switch(a.kind){case $kindArray:case $kindStruct:if(e===n&&r>t){for(var o=i-1;o>=0;o--)a.copy(e[r+o],n[t+o]);return}for(o=0;o<i;o++)a.copy(e[r+o],n[t+o]);return}if(e===n&&r>t)for(o=i-1;o>=0;o--)e[r+o]=n[t+o];else for(o=0;o<i;o++)e[r+o]=n[t+o]}},$clone=function(e,n){var r=n.zero();return n.copy(r,e),r},$pointerOfStructConversion=function(e,n){void 0===e.$proxies&&(e.$proxies={},e.$proxies[e.constructor.string]=e);var r=e.$proxies[n.string];if(void 0===r){for(var t={},i=0;i<n.elem.fields.length;i++)!function(n){t[n]={get:function(){return e[n]},set:function(r){e[n]=r}}}(n.elem.fields[i].prop);(r=Object.create(n.prototype,t)).$val=r,e.$proxies[n.string]=r,r.$proxies=e.$proxies}return r},$append=function(e){return $internalAppend(e,arguments,1,arguments.length-1)},$appendSlice=function(e,n){if(n.constructor===String){var r=$stringToBytes(n);return $internalAppend(e,r,0,r.length)}return $internalAppend(e,n.$array,n.$offset,n.$length)},$internalAppend=function(e,n,r,t){if(0===t)return e;var i=e.$array,a=e.$offset,o=e.$length+t,c=e.$capacity;if(o>c)if(a=0,c=Math.max(o,e.$capacity<1024?2*e.$capacity:Math.floor(5*e.$capacity/4)),e.$array.constructor===Array){(i=e.$array.slice(e.$offset,e.$offset+e.$length)).length=c;for(var $=e.constructor.elem.zero,u=e.$length;u<c;u++)i[u]=$()}else(i=new e.$array.constructor(c)).set(e.$array.subarray(e.$offset,e.$offset+e.$length));$copyArray(i,n,a+e.$length,r,t,e.constructor.elem);var l=new e.constructor(i);return l.$offset=a,l.$length=o,l.$capacity=c,l},$equal=function(e,n,r){if(r===$jsObjectPtr)return e===n;switch(r.kind){case $kindComplex64:case $kindComplex128:return e.$real===n.$real&&e.$imag===n.$imag;case $kindInt64:case $kindUint64:return e.$high===n.$high&&e.$low===n.$low;case $kindArray:if(e.length!==n.length)return!1;for(var t=0;t<e.length;t++)if(!$equal(e[t],n[t],r.elem))return!1;return!0;case $kindStruct:for(t=0;t<r.fields.length;t++){var i=r.fields[t];if(!$equal(e[i.prop],n[i.prop],i.typ))return!1}return!0;case $kindInterface:return $interfaceIsEqual(e,n);default:return e===n}},$interfaceIsEqual=function(e,n){return e===$ifaceNil||n===$ifaceNil?e===n:e.constructor===n.constructor&&(e.constructor===$jsObjectPtr?e.object===n.object:(e.constructor.comparable||$throwRuntimeError("comparing uncomparable type "+e.constructor.string),$equal(e.$val,n.$val,e.constructor)))},$min=Math.min,$mod=function(e,n){return e%n},$parseInt=parseInt,$parseFloat=function(e){return void 0!==e&&null!==e&&e.constructor===Number?e:parseFloat(e)},$froundBuf=new Float32Array(1),$fround=Math.fround||function(e){return $froundBuf[0]=e,$froundBuf[0]},$imul=Math.imul||function(e,n){var r=65535&e,t=65535&n;return r*t+((e>>>16&65535)*t+r*(n>>>16&65535)<<16>>>0)>>0},$floatKey=function(e){return e!=e?"NaN$"+ ++$idCounter:String(e)},$flatten64=function(e){return 4294967296*e.$high+e.$low},$shiftLeft64=function(e,n){return 0===n?e:n<32?new e.constructor(e.$high<<n|e.$low>>>32-n,e.$low<<n>>>0):n<64?new e.constructor(e.$low<<n-32,0):new e.constructor(0,0)},$shiftRightInt64=function(e,n){return 0===n?e:n<32?new e.constructor(e.$high>>n,(e.$low>>>n|e.$high<<32-n)>>>0):n<64?new e.constructor(e.$high>>31,e.$high>>n-32>>>0):e.$high<0?new e.constructor(-1,4294967295):new e.constructor(0,0)},$shiftRightUint64=function(e,n){return 0===n?e:n<32?new e.constructor(e.$high>>>n,(e.$low>>>n|e.$high<<32-n)>>>0):n<64?new e.constructor(0,e.$high>>>n-32):new e.constructor(0,0)},$mul64=function(e,n){var r=e.$high>>>16,t=65535&e.$high,i=e.$low>>>16,a=65535&e.$low,o=n.$high>>>16,c=65535&n.$high,$=n.$low>>>16,u=65535&n.$low,l=0,s=0,f=0,d=0;f+=(d+=a*u)>>>16,s+=(f+=i*u)>>>16,f&=65535,s+=(f+=a*$)>>>16,l+=(s+=t*u)>>>16,s&=65535,l+=(s+=i*$)>>>16,s&=65535,l+=(s+=a*c)>>>16,l+=r*u+t*$+i*c+a*o;var p=((l&=65535)<<16|(s&=65535))>>>0,h=((f&=65535)<<16|(d&=65535))>>>0;return new e.constructor(p,h)},$div64=function(e,n,r){0===n.$high&&0===n.$low&&$throwRuntimeError("integer divide by zero");var t=1,i=1,a=e.$high,o=e.$low;a<0&&(t=-1,i=-1,a=-a,0!==o&&(a--,o=4294967296-o));var c=n.$high,$=n.$low;n.$high<0&&(t*=-1,c=-c,0!==$&&(c--,$=4294967296-$));for(var u=0,l=0,s=0;c<2147483648&&(a>c||a===c&&o>$);)c=(c<<1|$>>>31)>>>0,$=$<<1>>>0,s++;for(var f=0;f<=s;f++)u=u<<1|l>>>31,l=l<<1>>>0,(a>c||a===c&&o>=$)&&(a-=c,(o-=$)<0&&(a--,o+=4294967296),4294967296===++l&&(u++,l=0)),$=($>>>1|c<<31)>>>0,c>>>=1;return r?new e.constructor(a*i,o*i):new e.constructor(u*t,l*t)},$divComplex=function(e,n){var r=e.$real===1/0||e.$real===-1/0||e.$imag===1/0||e.$imag===-1/0,t=n.$real===1/0||n.$real===-1/0||n.$imag===1/0||n.$imag===-1/0,i=!r&&(e.$real!=e.$real||e.$imag!=e.$imag),a=!t&&(n.$real!=n.$real||n.$imag!=n.$imag);if(i||a)return new e.constructor(NaN,NaN);if(r&&!t)return new e.constructor(1/0,1/0);if(!r&&t)return new e.constructor(0,0);if(0===n.$real&&0===n.$imag)return 0===e.$real&&0===e.$imag?new e.constructor(NaN,NaN):new e.constructor(1/0,1/0);if(Math.abs(n.$real)<=Math.abs(n.$imag)){var o=n.$real/n.$imag,c=n.$real*o+n.$imag;return new e.constructor((e.$real*o+e.$imag)/c,(e.$imag*o-e.$real)/c)}o=n.$imag/n.$real,c=n.$imag*o+n.$real;return new e.constructor((e.$imag*o+e.$real)/c,(e.$imag-e.$real*o)/c)},$kindBool=1,$kindInt=2,$kindInt8=3,$kindInt16=4,$kindInt32=5,$kindInt64=6,$kindUint=7,$kindUint8=8,$kindUint16=9,$kindUint32=10,$kindUint64=11,$kindUintptr=12,$kindFloat32=13,$kindFloat64=14,$kindComplex64=15,$kindComplex128=16,$kindArray=17,$kindChan=18,$kindFunc=19,$kindInterface=20,$kindMap=21,$kindPtr=22,$kindSlice=23,$kindString=24,$kindStruct=25,$kindUnsafePointer=26,$methodSynthesizers=[],$addMethodSynthesizer=function(e){null!==$methodSynthesizers?$methodSynthesizers.push(e):e()},$synthesizeMethods=function(){$methodSynthesizers.forEach(function(e){e()}),$methodSynthesizers=null},$ifaceKeyFor=function(e){if(e===$ifaceNil)return"nil";var n=e.constructor;return n.string+"$"+n.keyFor(e.$val)},$identity=function(e){return e},$typeIDCounter=0,$idKey=function(e){return void 0===e.$id&&($idCounter++,e.$id=$idCounter),String(e.$id)},$arrayPtrCtor=function(){return function(e){this.$get=function(){return e},this.$set=function(e){typ.copy(this,e)},this.$val=e}},$newType=function(e,n,r,t,i,a,o){var c;switch(n){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindUnsafePointer:(c=function(e){this.$val=e}).wrapped=!0,c.keyFor=$identity;break;case $kindString:(c=function(e){this.$val=e}).wrapped=!0,c.keyFor=function(e){return"$"+e};break;case $kindFloat32:case $kindFloat64:(c=function(e){this.$val=e}).wrapped=!0,c.keyFor=function(e){return $floatKey(e)};break;case $kindInt64:(c=function(e,n){this.$high=e+Math.floor(Math.ceil(n)/4294967296)>>0,this.$low=n>>>0,this.$val=this}).keyFor=function(e){return e.$high+"$"+e.$low};break;case $kindUint64:(c=function(e,n){this.$high=e+Math.floor(Math.ceil(n)/4294967296)>>>0,this.$low=n>>>0,this.$val=this}).keyFor=function(e){return e.$high+"$"+e.$low};break;case $kindComplex64:(c=function(e,n){this.$real=$fround(e),this.$imag=$fround(n),this.$val=this}).keyFor=function(e){return e.$real+"$"+e.$imag};break;case $kindComplex128:(c=function(e,n){this.$real=e,this.$imag=n,this.$val=this}).keyFor=function(e){return e.$real+"$"+e.$imag};break;case $kindArray:(c=function(e){this.$val=e}).wrapped=!0,c.ptr=$newType(4,$kindPtr,"*"+r,!1,"",!1,$arrayPtrCtor()),c.init=function(e,n){c.elem=e,c.len=n,c.comparable=e.comparable,c.keyFor=function(n){return Array.prototype.join.call($mapArray(n,function(n){return String(e.keyFor(n)).replace(/\\/g,"\\\\").replace(/\$/g,"\\$")}),"$")},c.copy=function(n,r){$copyArray(n,r,0,0,r.length,e)},c.ptr.init(c),Object.defineProperty(c.ptr.nil,"nilCheck",{get:$throwNilPointerError})};break;case $kindChan:(c=function(e){this.$val=e}).wrapped=!0,c.keyFor=$idKey,c.init=function(e,n,r){c.elem=e,c.sendOnly=n,c.recvOnly=r};break;case $kindFunc:(c=function(e){this.$val=e}).wrapped=!0,c.init=function(e,n,r){c.params=e,c.results=n,c.variadic=r,c.comparable=!1};break;case $kindInterface:(c={implementedBy:{},missingMethodFor:{}}).keyFor=$ifaceKeyFor,c.init=function(e){c.methods=e,e.forEach(function(e){$ifaceNil[e.prop]=$throwNilPointerError})};break;case $kindMap:(c=function(e){this.$val=e}).wrapped=!0,c.init=function(e,n){c.key=e,c.elem=n,c.comparable=!1};break;case $kindPtr:(c=o||function(e,n,r){this.$get=e,this.$set=n,this.$target=r,this.$val=this}).keyFor=$idKey,c.init=function(e){c.elem=e,c.wrapped=e.kind===$kindArray,c.nil=new c($throwNilPointerError,$throwNilPointerError)};break;case $kindSlice:(c=function(e){e.constructor!==c.nativeArray&&(e=new c.nativeArray(e)),this.$array=e,this.$offset=0,this.$length=e.length,this.$capacity=e.length,this.$val=this}).init=function(e){c.elem=e,c.comparable=!1,c.nativeArray=$nativeArray(e.kind),c.nil=new c([])};break;case $kindStruct:(c=function(e){this.$val=e}).wrapped=!0,c.ptr=$newType(4,$kindPtr,"*"+r,!1,i,a,o),c.ptr.elem=c,c.ptr.prototype.$get=function(){return this},c.ptr.prototype.$set=function(e){c.copy(this,e)},c.init=function(e,n){c.pkgPath=e,c.fields=n,n.forEach(function(e){e.typ.comparable||(c.comparable=!1)}),c.keyFor=function(e){var r=e.$val;return $mapArray(n,function(e){return String(e.typ.keyFor(r[e.prop])).replace(/\\/g,"\\\\").replace(/\$/g,"\\$")}).join("$")},c.copy=function(e,r){for(var t=0;t<n.length;t++){var i=n[t];switch(i.typ.kind){case $kindArray:case $kindStruct:i.typ.copy(e[i.prop],r[i.prop]);continue;default:e[i.prop]=r[i.prop];continue}}};var r={};n.forEach(function(e){r[e.prop]={get:$throwNilPointerError,set:$throwNilPointerError}}),c.ptr.nil=Object.create(o.prototype,r),c.ptr.nil.$val=c.ptr.nil,$addMethodSynthesizer(function(){var e=function(e,n,r){void 0===e.prototype[n.prop]&&(e.prototype[n.prop]=function(){var e=this.$val[r.prop];return r.typ===$jsObjectPtr&&(e=new $jsObjectPtr(e)),void 0===e.$val&&(e=new r.typ(e)),e[n.prop].apply(e,arguments)})};n.forEach(function(n){n.embedded&&($methodSet(n.typ).forEach(function(r){e(c,r,n),e(c.ptr,r,n)}),$methodSet($ptrType(n.typ)).forEach(function(r){e(c.ptr,r,n)}))})})};break;default:$panic(new $String("invalid kind: "+n))}switch(n){case $kindBool:case $kindMap:c.zero=function(){return!1};break;case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindUnsafePointer:case $kindFloat32:case $kindFloat64:c.zero=function(){return 0};break;case $kindString:c.zero=function(){return""};break;case $kindInt64:case $kindUint64:case $kindComplex64:case $kindComplex128:var $=new c(0,0);c.zero=function(){return $};break;case $kindPtr:case $kindSlice:c.zero=function(){return c.nil};break;case $kindChan:c.zero=function(){return $chanNil};break;case $kindFunc:c.zero=function(){return $throwNilPointerError};break;case $kindInterface:c.zero=function(){return $ifaceNil};break;case $kindArray:c.zero=function(){var e=$nativeArray(c.elem.kind);if(e!==Array)return new e(c.len);for(var n=new Array(c.len),r=0;r<c.len;r++)n[r]=c.elem.zero();return n};break;case $kindStruct:c.zero=function(){return new c.ptr};break;default:$panic(new $String("invalid kind: "+n))}return c.id=$typeIDCounter,$typeIDCounter++,c.size=e,c.kind=n,c.string=r,c.named=t,c.pkg=i,c.exported=a,c.methods=[],c.methodSetCache=null,c.comparable=!0,c},$methodSet=function(e){if(null!==e.methodSetCache)return e.methodSetCache;var n={},r=e.kind===$kindPtr;if(r&&e.elem.kind===$kindInterface)return e.methodSetCache=[],[];for(var t=[{typ:r?e.elem:e,indirect:r}],i={};t.length>0;){var a=[],o=[];t.forEach(function(e){if(!i[e.typ.string])switch(i[e.typ.string]=!0,e.typ.named&&(o=o.concat(e.typ.methods),e.indirect&&(o=o.concat($ptrType(e.typ).methods))),e.typ.kind){case $kindStruct:e.typ.fields.forEach(function(n){if(n.embedded){var r=n.typ,t=r.kind===$kindPtr;a.push({typ:t?r.elem:r,indirect:e.indirect||t})}});break;case $kindInterface:o=o.concat(e.typ.methods)}}),o.forEach(function(e){void 0===n[e.name]&&(n[e.name]=e)}),t=a}return e.methodSetCache=[],Object.keys(n).sort().forEach(function(r){e.methodSetCache.push(n[r])}),e.methodSetCache},$Bool=$newType(1,$kindBool,"bool",!0,"",!1,null),$Int=$newType(4,$kindInt,"int",!0,"",!1,null),$Int8=$newType(1,$kindInt8,"int8",!0,"",!1,null),$Int16=$newType(2,$kindInt16,"int16",!0,"",!1,null),$Int32=$newType(4,$kindInt32,"int32",!0,"",!1,null),$Int64=$newType(8,$kindInt64,"int64",!0,"",!1,null),$Uint=$newType(4,$kindUint,"uint",!0,"",!1,null),$Uint8=$newType(1,$kindUint8,"uint8",!0,"",!1,null),$Uint16=$newType(2,$kindUint16,"uint16",!0,"",!1,null),$Uint32=$newType(4,$kindUint32,"uint32",!0,"",!1,null),$Uint64=$newType(8,$kindUint64,"uint64",!0,"",!1,null),$Uintptr=$newType(4,$kindUintptr,"uintptr",!0,"",!1,null),$Float32=$newType(4,$kindFloat32,"float32",!0,"",!1,null),$Float64=$newType(8,$kindFloat64,"float64",!0,"",!1,null),$Complex64=$newType(8,$kindComplex64,"complex64",!0,"",!1,null),$Complex128=$newType(16,$kindComplex128,"complex128",!0,"",!1,null),$String=$newType(8,$kindString,"string",!0,"",!1,null),$UnsafePointer=$newType(4,$kindUnsafePointer,"unsafe.Pointer",!0,"unsafe",!1,null),$nativeArray=function(e){switch(e){case $kindInt:return Int32Array;case $kindInt8:return Int8Array;case $kindInt16:return Int16Array;case $kindInt32:return Int32Array;case $kindUint:return Uint32Array;case $kindUint8:return Uint8Array;case $kindUint16:return Uint16Array;case $kindUint32:case $kindUintptr:return Uint32Array;case $kindFloat32:return Float32Array;case $kindFloat64:return Float64Array;default:return Array}},$toNativeArray=function(e,n){var r=$nativeArray(e);return r===Array?n:new r(n)},$arrayTypes={},$arrayType=function(e,n){var r=e.id+"$"+n,t=$arrayTypes[r];return void 0===t&&(t=$newType(12,$kindArray,"["+n+"]"+e.string,!1,"",!1,null),$arrayTypes[r]=t,t.init(e,n)),t},$chanType=function(e,n,r){var t=(r?"<-":"")+"chan"+(n?"<- ":" ");n||r||"<"!=e.string[0]?t+=e.string:t+="("+e.string+")";var i=n?"SendChan":r?"RecvChan":"Chan",a=e[i];return void 0===a&&(a=$newType(4,$kindChan,t,!1,"",!1,null),e[i]=a,a.init(e,n,r)),a},$Chan=function(e,n){(n<0||n>2147483647)&&$throwRuntimeError("makechan: size out of range"),this.$elem=e,this.$capacity=n,this.$buffer=[],this.$sendQueue=[],this.$recvQueue=[],this.$closed=!1},$chanNil=new $Chan(null,0);$chanNil.$sendQueue=$chanNil.$recvQueue={length:0,push:function(){},shift:function(){},indexOf:function(){return-1}};var $funcTypes={},$funcType=function(e,n,r){var t=$mapArray(e,function(e){return e.id}).join(",")+"$"+$mapArray(n,function(e){return e.id}).join(",")+"$"+r,i=$funcTypes[t];if(void 0===i){var a=$mapArray(e,function(e){return e.string});r&&(a[a.length-1]="..."+a[a.length-1].substr(2));var o="func("+a.join(", ")+")";1===n.length?o+=" "+n[0].string:n.length>1&&(o+=" ("+$mapArray(n,function(e){return e.string}).join(", ")+")"),i=$newType(4,$kindFunc,o,!1,"",!1,null),$funcTypes[t]=i,i.init(e,n,r)}return i},$interfaceTypes={},$interfaceType=function(e){var n=$mapArray(e,function(e){return e.pkg+","+e.name+","+e.typ.id}).join("$"),r=$interfaceTypes[n];if(void 0===r){var t="interface {}";0!==e.length&&(t="interface { "+$mapArray(e,function(e){return(""!==e.pkg?e.pkg+".":"")+e.name+e.typ.string.substr(4)}).join("; ")+" }"),r=$newType(8,$kindInterface,t,!1,"",!1,null),$interfaceTypes[n]=r,r.init(e)}return r},$emptyInterface=$interfaceType([]),$ifaceNil={},$error=$newType(8,$kindInterface,"error",!0,"",!1,null);$error.init([{prop:"Error",name:"Error",pkg:"",typ:$funcType([],[$String],!1)}]);var $panicValue,$jsObjectPtr,$jsErrorPtr,$mapTypes={},$mapType=function(e,n){var r=e.id+"$"+n.id,t=$mapTypes[r];return void 0===t&&(t=$newType(4,$kindMap,"map["+e.string+"]"+n.string,!1,"",!1,null),$mapTypes[r]=t,t.init(e,n)),t},$makeMap=function(e,n){for(var r={},t=0;t<n.length;t++){var i=n[t];r[e(i.k)]=i}return r},$ptrType=function(e){var n=e.ptr;return void 0===n&&(n=$newType(4,$kindPtr,"*"+e.string,!1,"",e.exported,null),e.ptr=n,n.init(e)),n},$newDataPointer=function(e,n){return n.elem.kind===$kindStruct?e:new n(function(){return e},function(n){e=n})},$indexPtr=function(e,n,r){if(e.buffer){var t=e.buffer.$ptr=e.buffer.$ptr||{},i=t[e.name]=t[e.name]||{},a=e.BYTES_PER_ELEMENT*n+e.byteOffset;return i[a]||(i[a]=new r(function(){return e[n]},function(r){e[n]=r}))}return e.$ptr=e.$ptr||{},e.$ptr[n]||(e.$ptr[n]=new r(function(){return e[n]},function(r){e[n]=r}))},$sliceType=function(e){var n=e.slice;return void 0===n&&(n=$newType(12,$kindSlice,"[]"+e.string,!1,"",!1,null),e.slice=n,n.init(e)),n},$makeSlice=function(e,n,r){r=r||n,(n<0||n>2147483647)&&$throwRuntimeError("makeslice: len out of range"),(r<0||r<n||r>2147483647)&&$throwRuntimeError("makeslice: cap out of range");var t=new e.nativeArray(r);if(e.nativeArray===Array)for(var i=0;i<r;i++)t[i]=e.elem.zero();var a=new e(t);return a.$length=n,a},$structTypes={},$structType=function(e,n){var r=$mapArray(n,function(e){return e.name+","+e.typ.id+","+e.tag}).join("$"),t=$structTypes[r];if(void 0===t){var i="struct { "+$mapArray(n,function(e){var n=e.typ.string+(""!==e.tag?' "'+e.tag.replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"':"");return e.embedded?n:e.name+" "+n}).join("; ")+" }";0===n.length&&(i="struct {}"),t=$newType(0,$kindStruct,i,!1,"",!1,function(){this.$val=this;for(var e=0;e<n.length;e++){var r=n[e];if("_"!=r.name){var t=arguments[e];this[r.prop]=void 0!==t?t:r.typ.zero()}}}),$structTypes[r]=t,t.init(e,n)}return t},$assertType=function(e,n,r){var t,i=n.kind===$kindInterface,a="";if(e===$ifaceNil)t=!1;else if(i){var o=e.constructor.string;if(void 0===(t=n.implementedBy[o])){t=!0;for(var c=$methodSet(e.constructor),$=n.methods,u=0;u<$.length;u++){for(var l=$[u],s=!1,f=0;f<c.length;f++){var d=c[f];if(d.name===l.name&&d.pkg===l.pkg&&d.typ===l.typ){s=!0;break}}if(!s){t=!1,n.missingMethodFor[o]=l.name;break}}n.implementedBy[o]=t}t||(a=n.missingMethodFor[o])}else t=e.constructor===n;if(!t){if(r)return[n.zero(),!1];$panic(new $packages.runtime.TypeAssertionError.ptr($packages.runtime._type.ptr.nil,e===$ifaceNil?$packages.runtime._type.ptr.nil:new $packages.runtime._type.ptr(e.constructor.string),new $packages.runtime._type.ptr(n.string),a))}return i||(e=e.$val),n===$jsObjectPtr&&(e=e.object),r?[e,!0]:e},$stackDepthOffset=0,$getStackDepth=function(){var e=new Error;if(void 0!==e.stack)return $stackDepthOffset+e.stack.split("\n").length},$panicStackDepth=null,$callDeferred=function(e,n,r){if(!r&&null!==e&&-1==$curGoroutine.deferStack.indexOf(e))throw n;if(null===n){if(!$curGoroutine.asleep){$stackDepthOffset--;var t=$panicStackDepth,i=$panicValue,a=$curGoroutine.panicStack.pop();void 0!==a&&($panicStackDepth=$getStackDepth(),$panicValue=a);try{for(;;){if(null===e&&void 0===(e=$curGoroutine.deferStack[$curGoroutine.deferStack.length-1])){if($panicStackDepth=null,a.Object instanceof Error)throw a.Object;var o;throw o=a.constructor===$String?a.$val:void 0!==a.Error?a.Error():void 0!==a.String?a.String():a,new Error(o)}var c=e.pop();if(void 0===c){if($curGoroutine.deferStack.pop(),void 0!==a){e=null;continue}return}var $=c[0].apply(c[2],c[1]);if($&&void 0!==$.$blk){if(e.push([$.$blk,[],$]),r)throw null;return}if(void 0!==a&&null===$panicStackDepth){if(r)throw null;return}}}catch(n){if(r)throw n;$callDeferred(e,n,r)}finally{void 0!==a&&(null!==$panicStackDepth&&$curGoroutine.panicStack.push(a),$panicStackDepth=t,$panicValue=i),$stackDepthOffset++}}}else{var u=null;try{$panic(new $jsErrorPtr(n))}catch(e){u=e}$callDeferred(e,u)}},$panic=function(e){$curGoroutine.panicStack.push(e),$callDeferred(null,null,!0)},$recover=function(){return null===$panicStackDepth||void 0!==$panicStackDepth&&$panicStackDepth!==$getStackDepth()-2?$ifaceNil:($panicStackDepth=null,$panicValue)},$throw=function(e){throw e},$noGoroutine={asleep:!1,exit:!1,deferStack:[],panicStack:[]},$curGoroutine=$noGoroutine,$totalGoroutines=0,$awakeGoroutines=0,$checkForDeadlock=!0,$exportedFunctions=0,$mainFinished=!1,$go=function(e,n){$totalGoroutines++,$awakeGoroutines++;var $goroutine=function(){try{$curGoroutine=$goroutine;var r=e.apply(void 0,n);if(r&&void 0!==r.$blk)return e=function(){return r.$blk()},void(n=[]);$goroutine.exit=!0}catch(e){if(!$goroutine.exit)throw e}finally{$curGoroutine=$noGoroutine,$goroutine.exit&&($totalGoroutines--,$goroutine.asleep=!0),$goroutine.asleep&&($awakeGoroutines--,!$mainFinished&&0===$awakeGoroutines&&$checkForDeadlock&&0===$exportedFunctions&&(console.error("fatal error: all goroutines are asleep - deadlock!"),void 0!==$global.process&&$global.process.exit(2)))}};$goroutine.asleep=!1,$goroutine.exit=!1,$goroutine.deferStack=[],$goroutine.panicStack=[],$schedule($goroutine)},$scheduled=[],$runScheduled=function(){var e=setTimeout($runScheduled);try{for(var n,r=Date.now();void 0!==(n=$scheduled.shift());){n();var t=Date.now()-r;if(t>4||t<0)break}}finally{0==$scheduled.length&&clearTimeout(e)}},$schedule=function(e){e.asleep&&(e.asleep=!1,$awakeGoroutines++),$scheduled.push(e),$curGoroutine===$noGoroutine&&$runScheduled()},$setTimeout=function(e,n){return $awakeGoroutines++,setTimeout(function(){$awakeGoroutines--,e()},n)},$block=function(){$curGoroutine===$noGoroutine&&$throwRuntimeError("cannot block in JavaScript callback, fix by wrapping code in goroutine"),$curGoroutine.asleep=!0},$restore=function(e,n){return void 0!==e&&void 0!==e.$blk?e:n},$send=function(e,n){e.$closed&&$throwRuntimeError("send on closed channel");var r=e.$recvQueue.shift();if(void 0===r){if(!(e.$buffer.length<e.$capacity)){var t,i=$curGoroutine;return e.$sendQueue.push(function(e){return t=e,$schedule(i),n}),$block(),{$blk:function(){t&&$throwRuntimeError("send on closed channel")}}}e.$buffer.push(n)}else r([n,!0])},$recv=function(e){var n=e.$sendQueue.shift();void 0!==n&&e.$buffer.push(n(!1));var r=e.$buffer.shift();if(void 0!==r)return[r,!0];if(e.$closed)return[e.$elem.zero(),!1];var t=$curGoroutine,i={$blk:function(){return this.value}};return e.$recvQueue.push(function(e){i.value=e,$schedule(t)}),$block(),i},$close=function(e){for(e.$closed&&$throwRuntimeError("close of closed channel"),e.$closed=!0;;){var n=e.$sendQueue.shift();if(void 0===n)break;n(!0)}for(;;){var r=e.$recvQueue.shift();if(void 0===r)break;r([e.$elem.zero(),!1])}},$select=function(e){for(var n=[],r=-1,t=0;t<e.length;t++){var i,a=(i=e[t])[0];switch(i.length){case 0:r=t;break;case 1:(0!==a.$sendQueue.length||0!==a.$buffer.length||a.$closed)&&n.push(t);break;case 2:a.$closed&&$throwRuntimeError("send on closed channel"),(0!==a.$recvQueue.length||a.$buffer.length<a.$capacity)&&n.push(t)}}if(0!==n.length&&(r=n[Math.floor(Math.random()*n.length)]),-1!==r)switch((i=e[r]).length){case 0:return[r];case 1:return[r,$recv(i[0])];case 2:return $send(i[0],i[1]),[r]}var o=[],c=$curGoroutine,$={$blk:function(){return this.selection}},u=function(){for(var e=0;e<o.length;e++){var n=o[e],r=n[0],t=r.indexOf(n[1]);-1!==t&&r.splice(t,1)}};for(t=0;t<e.length;t++)!function(n){var r=e[n];switch(r.length){case 1:var t=function(e){$.selection=[n,e],u(),$schedule(c)};o.push([r[0].$recvQueue,t]),r[0].$recvQueue.push(t);break;case 2:t=function(){return r[0].$closed&&$throwRuntimeError("send on closed channel"),$.selection=[n],u(),$schedule(c),r[1]};o.push([r[0].$sendQueue,t]),r[0].$sendQueue.push(t)}}(t);return $block(),$},$needsExternalization=function(e){switch(e.kind){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindFloat32:case $kindFloat64:return!1;default:return e!==$jsObjectPtr}},$externalize=function(e,n,r){if(n===$jsObjectPtr)return e;switch(n.kind){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindFloat32:case $kindFloat64:return e;case $kindInt64:case $kindUint64:return $flatten64(e);case $kindArray:return $needsExternalization(n.elem)?$mapArray(e,function(e){return $externalize(e,n.elem,r)}):e;case $kindFunc:return $externalizeFunction(e,n,!1,r);case $kindInterface:return e===$ifaceNil?null:e.constructor===$jsObjectPtr?e.$val.object:$externalize(e.$val,e.constructor,r);case $kindMap:for(var t={},i=$keys(e),a=0;a<i.length;a++){var o=e[i[a]];t[$externalize(o.k,n.key,r)]=$externalize(o.v,n.elem,r)}return t;case $kindPtr:return e===n.nil?null:$externalize(e.$get(),n.elem,r);case $kindSlice:return $needsExternalization(n.elem)?$mapArray($sliceToNativeArray(e),function(e){return $externalize(e,n.elem,r)}):$sliceToNativeArray(e);case $kindString:if($isASCII(e))return e;var c,$="";for(a=0;a<e.length;a+=c[1]){var u=(c=$decodeRune(e,a))[0];if(u>65535){var l=Math.floor((u-65536)/1024)+55296,s=(u-65536)%1024+56320;$+=String.fromCharCode(l,s)}else $+=String.fromCharCode(u)}return $;case $kindStruct:var f=$packages.time;if(void 0!==f&&e.constructor===f.Time.ptr){var d=$div64(e.UnixNano(),new $Int64(0,1e6));return new Date($flatten64(d))}var p={},h=function(e,n){if(n===$jsObjectPtr)return e;switch(n.kind){case $kindPtr:return e===n.nil?p:h(e.$get(),n.elem);case $kindStruct:var r=n.fields[0];return h(e[r.prop],r.typ);case $kindInterface:return h(e.$val,e.constructor);default:return p}},k=h(e,n);if(k!==p)return k;if(void 0!==r)return r(e);k={};for(a=0;a<n.fields.length;a++){var y=n.fields[a];y.exported&&(k[y.name]=$externalize(e[y.prop],y.typ,r))}return k}$throwRuntimeError("cannot externalize "+n.string)},$externalizeFunction=function(e,n,r,t){return e===$throwNilPointerError?null:(void 0===e.$externalizeWrapper&&($checkForDeadlock=!1,e.$externalizeWrapper=function(){for(var i=[],a=0;a<n.params.length;a++){if(n.variadic&&a===n.params.length-1){for(var o=n.params[a].elem,c=[],$=a;$<arguments.length;$++)c.push($internalize(arguments[$],o,t));i.push(new n.params[a](c));break}i.push($internalize(arguments[a],n.params[a],t))}var u=e.apply(r?this:void 0,i);switch(n.results.length){case 0:return;case 1:return $externalize($copyIfRequired(u,n.results[0]),n.results[0],t);default:for(a=0;a<n.results.length;a++)u[a]=$externalize($copyIfRequired(u[a],n.results[a]),n.results[a],t);return u}}),e.$externalizeWrapper)},$internalize=function(e,n,r,t,i){if(n===$jsObjectPtr)return e;if(n===$jsObjectPtr.elem&&$throwRuntimeError("cannot internalize js.Object, use *js.Object instead"),e&&void 0!==e.__internal_object__)return $assertType(e.__internal_object__,n,!1);var a=$packages.time;if(void 0!==a&&n===a.Time)return null!==e&&void 0!==e&&e.constructor===Date||$throwRuntimeError("cannot internalize time.Time from "+typeof e+", must be Date"),a.Unix(new $Int64(0,0),new $Int64(0,1e6*e.getTime()));if(void 0===t&&(t=new Map),t.has(n)||t.set(n,new Map),t.get(n).has(e))return t.get(n).get(e);switch(n.kind){case $kindBool:return!!e;case $kindInt:return parseInt(e);case $kindInt8:return parseInt(e)<<24>>24;case $kindInt16:return parseInt(e)<<16>>16;case $kindInt32:return parseInt(e)>>0;case $kindUint:return parseInt(e);case $kindUint8:return parseInt(e)<<24>>>24;case $kindUint16:return parseInt(e)<<16>>>16;case $kindUint32:case $kindUintptr:return parseInt(e)>>>0;case $kindInt64:case $kindUint64:return new n(0,e);case $kindFloat32:case $kindFloat64:return parseFloat(e);case $kindArray:return e.length!==n.len&&$throwRuntimeError("got array with wrong size from JavaScript native"),$mapArray(e,function(e){return $internalize(e,n.elem,i)});case $kindFunc:return function(){for(var t=[],a=0;a<n.params.length;a++){if(n.variadic&&a===n.params.length-1){for(var o=n.params[a].elem,c=arguments[a],$=0;$<c.$length;$++)t.push($externalize(c.$array[c.$offset+$],o,i));break}t.push($externalize(arguments[a],n.params[a],i))}var u=e.apply(r,t);switch(n.results.length){case 0:return;case 1:return $internalize(u,n.results[0],i);default:for(a=0;a<n.results.length;a++)u[a]=$internalize(u[a],n.results[a],i);return u}};case $kindInterface:if(0!==n.methods.length&&$throwRuntimeError("cannot internalize "+n.string),null===e)return $ifaceNil;if(void 0===e)return new $jsObjectPtr(void 0);switch(e.constructor){case Int8Array:return new($sliceType($Int8))(e);case Int16Array:return new($sliceType($Int16))(e);case Int32Array:return new($sliceType($Int))(e);case Uint8Array:return new($sliceType($Uint8))(e);case Uint16Array:return new($sliceType($Uint16))(e);case Uint32Array:return new($sliceType($Uint))(e);case Float32Array:return new($sliceType($Float32))(e);case Float64Array:return new($sliceType($Float64))(e);case Array:return $internalize(e,$sliceType($emptyInterface),i);case Boolean:return new $Bool(!!e);case Date:return void 0===a?new $jsObjectPtr(e):new a.Time($internalize(e,a.Time,i));case function(){}.constructor:var o=$funcType([$sliceType($emptyInterface)],[$jsObjectPtr],!0);return new o($internalize(e,o,i));case Number:return new $Float64(parseFloat(e));case String:return new $String($internalize(e,$String,i));default:if($global.Node&&e instanceof $global.Node)return new $jsObjectPtr(e);var c=$mapType($String,$emptyInterface);return new c($internalize(e,c,r,t,i))}case $kindMap:var $={};t.get(n).set(e,$);for(var u=$keys(e),l=0;l<u.length;l++){var s=$internalize(u[l],n.key,r,t,i);$[n.key.keyFor(s)]={k:s,v:$internalize(e[u[l]],n.elem,r,t,i)}}return $;case $kindPtr:if(n.elem.kind===$kindStruct)return $internalize(e,n.elem,i);case $kindSlice:return new n($mapArray(e,function(e){return $internalize(e,n.elem,i)}));case $kindString:if(e=String(e),$isASCII(e))return e;var f="";for(l=0;l<e.length;){var d=e.charCodeAt(l);if(55296<=d&&d<=56319){var p=e.charCodeAt(l+1);f+=$encodeRune(1024*(d-55296)+p-56320+65536),l+=2}else f+=$encodeRune(d),l++}return f;case $kindStruct:var h={},k=function(n){if(n===$jsObjectPtr)return e;switch(n===$jsObjectPtr.elem&&$throwRuntimeError("cannot internalize js.Object, use *js.Object instead"),n.kind){case $kindPtr:return k(n.elem);case $kindStruct:var r=n.fields[0],t=k(r.typ);if(t!==h){var i=new n.ptr;return i[r.prop]=t,i}return h;default:return h}},y=k(n);if(y!==h)return y}$throwRuntimeError("cannot internalize "+n.string)},$copyIfRequired=function(e,n){if(e&&e.constructor&&e.constructor.copy)return new e.constructor($clone(e.$val,e.constructor));if(n.copy){var r=n.zero();return n.copy(r,e),r}return e},$isASCII=function(e){for(var n=0;n<e.length;n++)if(e.charCodeAt(n)>=128)return!1;return!0};
+Error.stackTraceLimit = Infinity;
 
-$packages["github.com/gopherjs/gopherjs/js"]=(function(){var $pkg={},$init,A,B,J,K,M,O,P,Q,R,S,T,G,H,L;A=$pkg.Object=$newType(0,$kindStruct,"js.Object",true,"github.com/gopherjs/gopherjs/js",true,function(object_){this.$val=this;if(arguments.length===0){this.object=null;return;}this.object=object_;});B=$pkg.Error=$newType(0,$kindStruct,"js.Error",true,"github.com/gopherjs/gopherjs/js",true,function(Object_){this.$val=this;if(arguments.length===0){this.Object=null;return;}this.Object=Object_;});J=$pkg.M=$newType(4,$kindMap,"js.M",true,"github.com/gopherjs/gopherjs/js",true,null);K=$pkg.S=$newType(12,$kindSlice,"js.S",true,"github.com/gopherjs/gopherjs/js",true,null);M=$sliceType($emptyInterface);O=$ptrType(A);P=$sliceType(O);Q=$funcType([P],[O],true);R=$funcType([],[O],false);S=$funcType([O],[],false);T=$ptrType(B);A.ptr.prototype.Get=function(a){var a,b;b=this;return b.object[$externalize(a,$String)];};A.prototype.Get=function(a){return this.$val.Get(a);};A.ptr.prototype.Set=function(a,b){var a,b,c;c=this;c.object[$externalize(a,$String)]=$externalize(b,$emptyInterface);};A.prototype.Set=function(a,b){return this.$val.Set(a,b);};A.ptr.prototype.Delete=function(a){var a,b;b=this;delete b.object[$externalize(a,$String)];};A.prototype.Delete=function(a){return this.$val.Delete(a);};A.ptr.prototype.Length=function(){var a;a=this;return $parseInt(a.object.length);};A.prototype.Length=function(){return this.$val.Length();};A.ptr.prototype.Index=function(a){var a,b;b=this;return b.object[a];};A.prototype.Index=function(a){return this.$val.Index(a);};A.ptr.prototype.SetIndex=function(a,b){var a,b,c;c=this;c.object[a]=$externalize(b,$emptyInterface);};A.prototype.SetIndex=function(a,b){return this.$val.SetIndex(a,b);};A.ptr.prototype.Call=function(a,b){var a,b,c,d;c=this;return(d=c.object,d[$externalize(a,$String)].apply(d,$externalize(b,M)));};A.prototype.Call=function(a,b){return this.$val.Call(a,b);};A.ptr.prototype.Invoke=function(a){var a,b;b=this;return b.object.apply(undefined,$externalize(a,M));};A.prototype.Invoke=function(a){return this.$val.Invoke(a);};A.ptr.prototype.New=function(a){var a,b;b=this;return new($global.Function.prototype.bind.apply(b.object,[undefined].concat($externalize(a,M))));};A.prototype.New=function(a){return this.$val.New(a);};A.ptr.prototype.Bool=function(){var a;a=this;return!!(a.object);};A.prototype.Bool=function(){return this.$val.Bool();};A.ptr.prototype.String=function(){var a;a=this;return $internalize(a.object,$String);};A.prototype.String=function(){return this.$val.String();};A.ptr.prototype.Int=function(){var a;a=this;return $parseInt(a.object)>>0;};A.prototype.Int=function(){return this.$val.Int();};A.ptr.prototype.Int64=function(){var a;a=this;return $internalize(a.object,$Int64);};A.prototype.Int64=function(){return this.$val.Int64();};A.ptr.prototype.Uint64=function(){var a;a=this;return $internalize(a.object,$Uint64);};A.prototype.Uint64=function(){return this.$val.Uint64();};A.ptr.prototype.Float=function(){var a;a=this;return $parseFloat(a.object);};A.prototype.Float=function(){return this.$val.Float();};A.ptr.prototype.Interface=function(){var a;a=this;return $internalize(a.object,$emptyInterface);};A.prototype.Interface=function(){return this.$val.Interface();};A.ptr.prototype.Unsafe=function(){var a;a=this;return a.object;};A.prototype.Unsafe=function(){return this.$val.Unsafe();};B.ptr.prototype.Error=function(){var a;a=this;return"JavaScript error: "+$internalize(a.Object.message,$String);};B.prototype.Error=function(){return this.$val.Error();};B.ptr.prototype.Stack=function(){var a;a=this;return $internalize(a.Object.stack,$String);};B.prototype.Stack=function(){return this.$val.Stack();};G=function(a){var a,b,c,d,e,f;b=a;c=new($global.Object)();c.__internal_object__=b;d=b.constructor.methods;e=0;while(true){if(!(e<$parseInt(d.length))){break;}f=[f];f[0]=d[e];if(!($internalize(f[0].pkg,$String)==="")){e=e+(1)>>0;continue;}c[$externalize($internalize(f[0].name,$String),$String)]=$externalize((function(f){return function(g){var g;return $externalizeFunction(b[$externalize($internalize(f[0].prop,$String),$String)],f[0].typ,$externalize(true,$Bool)).apply(b,$externalize(g,P));};})(f),Q);e=e+(1)>>0;}return c;};$pkg.MakeWrapper=G;H=function(a){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=[b];c=[c];b[0]=a;d=b[0].constructor;c[0]=new($global.Object)();e=(function(b,c){return function(e,f){var e,f;$global.Object.defineProperty(c[0],$externalize(e,$String),$externalize(f,J));};})(b,c);$r=e("__internal_object__",$makeMap($String.keyFor,[{k:"value",v:new $jsObjectPtr(b[0])}]));$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}f=$internalize(d.string,$String);g=$internalize(d.pkg,$String);h="";if(f.charCodeAt(0)===42){h="*";}i=0;while(true){if(!(i<f.length)){break;}if(f.charCodeAt(i)===46){f=$substring(f,(i+1>>0));break;}i=i+(1)>>0;}j=g+"."+h+f;$r=e("$type",$makeMap($String.keyFor,[{k:"value",v:new $String(j)}]));$s=2;case 2:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}k=null;l=new($global.Array)();m=d.methods;if(!(m===undefined)){l=l.concat(m);}n=d.elem;if(!(n===undefined)){k=n.fields;l=l.concat(n.methods);}else{k=d.fields;}o=0;case 3:if(!(o<$parseInt(l.length))){$s=4;continue;}p=[p];p[0]=l[o];if(!($internalize(p[0].pkg,$String)==="")){o=o+(1)>>0;$s=3;continue;}$r=e($internalize(p[0].prop,$String),$makeMap($String.keyFor,[{k:"value",v:new Q((function(b,c,p){return function(q){var q;return $externalizeFunction(b[0][$externalize($internalize(p[0].prop,$String),$String)],p[0].typ,$externalize(true,$Bool),H).apply(b[0],$externalize(q,P));};})(b,c,p))}]));$s=5;case 5:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}o=o+(1)>>0;$s=3;continue;case 4:if(!(k===undefined)){$s=6;continue;}$s=7;continue;case 6:q=0;case 8:if(!(q<$parseInt(k.length))){$s=9;continue;}r=[r];r[0]=k[q];if(!!!(r[0].exported)){q=q+(1)>>0;$s=8;continue;}$r=e($internalize(r[0].prop,$String),$makeMap($String.keyFor,[{k:"get",v:new R((function(b,c,r){return function(){var s;s=$copyIfRequired(b[0].$val[$externalize($internalize(r[0].prop,$String),$String)],r[0].typ);return $externalize(s,r[0].typ,H);};})(b,c,r))},{k:"set",v:new S((function(b,c,r){return function(s){var s,t;t=$internalize(s,r[0].typ,H);b[0].$val[$externalize($internalize(r[0].prop,$String),$String)]=t;};})(b,c,r))}]));$s=10;case 10:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}q=q+(1)>>0;$s=8;continue;case 9:case 7:$s=-1;return c[0];}return;}var $f={$blk:H,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,$s};return $f;};$pkg.MakeFullWrapper=H;L=function(){var a;a=new B.ptr(null);$unused(a);};O.methods=[{prop:"Get",name:"Get",pkg:"",typ:$funcType([$String],[O],false)},{prop:"Set",name:"Set",pkg:"",typ:$funcType([$String,$emptyInterface],[],false)},{prop:"Delete",name:"Delete",pkg:"",typ:$funcType([$String],[],false)},{prop:"Length",name:"Length",pkg:"",typ:$funcType([],[$Int],false)},{prop:"Index",name:"Index",pkg:"",typ:$funcType([$Int],[O],false)},{prop:"SetIndex",name:"SetIndex",pkg:"",typ:$funcType([$Int,$emptyInterface],[],false)},{prop:"Call",name:"Call",pkg:"",typ:$funcType([$String,M],[O],true)},{prop:"Invoke",name:"Invoke",pkg:"",typ:$funcType([M],[O],true)},{prop:"New",name:"New",pkg:"",typ:$funcType([M],[O],true)},{prop:"Bool",name:"Bool",pkg:"",typ:$funcType([],[$Bool],false)},{prop:"String",name:"String",pkg:"",typ:$funcType([],[$String],false)},{prop:"Int",name:"Int",pkg:"",typ:$funcType([],[$Int],false)},{prop:"Int64",name:"Int64",pkg:"",typ:$funcType([],[$Int64],false)},{prop:"Uint64",name:"Uint64",pkg:"",typ:$funcType([],[$Uint64],false)},{prop:"Float",name:"Float",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Interface",name:"Interface",pkg:"",typ:$funcType([],[$emptyInterface],false)},{prop:"Unsafe",name:"Unsafe",pkg:"",typ:$funcType([],[$Uintptr],false)}];T.methods=[{prop:"Error",name:"Error",pkg:"",typ:$funcType([],[$String],false)},{prop:"Stack",name:"Stack",pkg:"",typ:$funcType([],[$String],false)}];A.init("github.com/gopherjs/gopherjs/js",[{prop:"object",name:"object",embedded:false,exported:false,typ:O,tag:""}]);B.init("",[{prop:"Object",name:"Object",embedded:true,exported:true,typ:O,tag:""}]);J.init($String,$emptyInterface);K.init($emptyInterface);$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:L();}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["runtime"]=(function(){var $pkg={},$init,A,C,D,AT,AZ,BD,AM,E,AU;A=$packages["github.com/gopherjs/gopherjs/js"];C=$pkg._type=$newType(0,$kindStruct,"runtime._type",true,"runtime",false,function(str_){this.$val=this;if(arguments.length===0){this.str="";return;}this.str=str_;});D=$pkg.TypeAssertionError=$newType(0,$kindStruct,"runtime.TypeAssertionError",true,"runtime",true,function(_interface_,concrete_,asserted_,missingMethod_){this.$val=this;if(arguments.length===0){this._interface=AZ.nil;this.concrete=AZ.nil;this.asserted=AZ.nil;this.missingMethod="";return;}this._interface=_interface_;this.concrete=concrete_;this.asserted=asserted_;this.missingMethod=missingMethod_;});AT=$pkg.errorString=$newType(8,$kindString,"runtime.errorString",true,"runtime",false,null);AZ=$ptrType(C);BD=$ptrType(D);C.ptr.prototype.string=function(){var a;a=this;return a.str;};C.prototype.string=function(){return this.$val.string();};C.ptr.prototype.pkgpath=function(){var a;a=this;return"";};C.prototype.pkgpath=function(){return this.$val.pkgpath();};D.ptr.prototype.RuntimeError=function(){};D.prototype.RuntimeError=function(){return this.$val.RuntimeError();};D.ptr.prototype.Error=function(){var a,b,c,d,e;a=this;b="interface";if(!(a._interface===AZ.nil)){b=a._interface.string();}c=a.asserted.string();if(a.concrete===AZ.nil){return"interface conversion: "+b+" is nil, not "+c;}d=a.concrete.string();if(a.missingMethod===""){e="interface conversion: "+b+" is "+d+", not "+c;if(d===c){if(!(a.concrete.pkgpath()===a.asserted.pkgpath())){e=e+(" (types from different packages)");}else{e=e+(" (types from different scopes)");}}return e;}return"interface conversion: "+d+" is not "+c+": missing method "+a.missingMethod;};D.prototype.Error=function(){return this.$val.Error();};E=function(){var a,b;a=$packages[$externalize("github.com/gopherjs/gopherjs/js",$String)];$jsObjectPtr=a.Object.ptr;$jsErrorPtr=a.Error.ptr;$throwRuntimeError=AU;AM=$internalize($goVersion,$String);b=$ifaceNil;b=new D.ptr(AZ.nil,AZ.nil,AZ.nil,"");$unused(b);};AT.prototype.RuntimeError=function(){var a;a=this.$val;};$ptrType(AT).prototype.RuntimeError=function(){return new AT(this.$get()).RuntimeError();};AT.prototype.Error=function(){var a;a=this.$val;return"runtime error: "+(a);};$ptrType(AT).prototype.Error=function(){return new AT(this.$get()).Error();};AU=function(a){var a;$panic(new AT((a)));};AZ.methods=[{prop:"string",name:"string",pkg:"runtime",typ:$funcType([],[$String],false)},{prop:"pkgpath",name:"pkgpath",pkg:"runtime",typ:$funcType([],[$String],false)}];BD.methods=[{prop:"RuntimeError",name:"RuntimeError",pkg:"",typ:$funcType([],[],false)},{prop:"Error",name:"Error",pkg:"",typ:$funcType([],[$String],false)}];AT.methods=[{prop:"RuntimeError",name:"RuntimeError",pkg:"",typ:$funcType([],[],false)},{prop:"Error",name:"Error",pkg:"",typ:$funcType([],[$String],false)}];C.init("runtime",[{prop:"str",name:"str",embedded:false,exported:false,typ:$String,tag:""}]);D.init("runtime",[{prop:"_interface",name:"_interface",embedded:false,exported:false,typ:AZ,tag:""},{prop:"concrete",name:"concrete",embedded:false,exported:false,typ:AZ,tag:""},{prop:"asserted",name:"asserted",embedded:false,exported:false,typ:AZ,tag:""},{prop:"missingMethod",name:"missingMethod",embedded:false,exported:false,typ:$String,tag:""}]);$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:$r=A.$init();$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}AM="";E();}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["math/bits"]=(function(){var $pkg={},$init;$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["math"]=(function(){var $pkg={},$init,B,A,IT,IU,IV,IW,FL,FM,FN,FO,FP,HH,EI,EX,EY,FK,GA,GH,GK,GL,GM,GS,GT,GW,GX,GZ,HA,HD,HI,HL,HM;B=$packages["github.com/gopherjs/gopherjs/js"];A=$packages["math/bits"];IT=$arrayType($Uint32,2);IU=$arrayType($Float32,2);IV=$arrayType($Float64,1);IW=$structType("math",[{prop:"uint32array",name:"uint32array",embedded:false,exported:false,typ:IT,tag:""},{prop:"float32array",name:"float32array",embedded:false,exported:false,typ:IU,tag:""},{prop:"float64array",name:"float64array",embedded:false,exported:false,typ:IV,tag:""}]);EI=function(av){var av,aw,ax,ay,az,ba,bb;aw=HL(av);ax=((($shiftRightUint64(aw,52).$low>>>0))&2047)>>>0;if(ax<1023){aw=(ay=new $Uint64(2147483648,0),new $Uint64(aw.$high&ay.$high,(aw.$low&ay.$low)>>>0));if(ax===1022){aw=(az=new $Uint64(1072693248,0),new $Uint64(aw.$high|az.$high,(aw.$low|az.$low)>>>0));}}else if(ax<1075){ax=ax-(1023)>>>0;aw=(ba=$shiftRightUint64(new $Uint64(524288,0),ax),new $Uint64(aw.$high+ba.$high,aw.$low+ba.$low));aw=(bb=$shiftRightUint64(new $Uint64(1048575,4294967295),ax),new $Uint64(aw.$high&~bb.$high,(aw.$low&~bb.$low)>>>0));}return HM(aw);};$pkg.Round=EI;EX=function(av,aw){var av,aw;if(GL(av,1)||GL(aw,1)){return GK(1);}else if(GM(av)||GM(aw)){return GW();}else if((av===0)&&(av===aw)){if(GZ(av)){return aw;}return av;}if(av>aw){return av;}return aw;};EY=function(av,aw){var av,aw;if(GL(av,-1)||GL(aw,-1)){return GK(-1);}else if(GM(av)||GM(aw)){return GW();}else if((av===0)&&(av===aw)){if(GZ(av)){return av;}return aw;}if(av<aw){return av;}return aw;};FK=function(av){var av,aw;return HM((aw=HL(av),new $Uint64(aw.$high&~2147483648,(aw.$low&~0)>>>0)));};$pkg.Abs=FK;GA=function(av){var av;return $parseFloat(FL.cos(av));};$pkg.Cos=GA;GH=function(av){var av;return $parseFloat(FL.floor(av));};$pkg.Floor=GH;GK=function(av){var av;if(av>=0){return FN;}else{return FO;}};$pkg.Inf=GK;GL=function(av,aw){var av,aw;if(av===FN){return aw>=0;}if(av===FO){return aw<=0;}return false;};$pkg.IsInf=GL;GM=function(av){var av,aw;aw=false;aw=!((av===av));return aw;};$pkg.IsNaN=GM;GS=function(av,aw){var av,aw;return EX(av,aw);};$pkg.Max=GS;GT=function(av,aw){var av,aw;return EY(av,aw);};$pkg.Min=GT;GW=function(){return FP;};$pkg.NaN=GW;GX=function(av,aw){var av,aw;if((av===1)||((av===-1)&&((aw===FN)||(aw===FO)))){return 1;}return $parseFloat(FL.pow(av,aw));};$pkg.Pow=GX;GZ=function(av){var av;return av<0||(1/av===FO);};$pkg.Signbit=GZ;HA=function(av){var av;return $parseFloat(FL.sin(av));};$pkg.Sin=HA;HD=function(av){var av;return $parseFloat(FL.sqrt(av));};$pkg.Sqrt=HD;HI=function(){var av;av=new($global.ArrayBuffer)(8);HH.uint32array=new($global.Uint32Array)(av);HH.float32array=new($global.Float32Array)(av);HH.float64array=new($global.Float64Array)(av);};HL=function(av){var av,aw,ax;HH.float64array[0]=av;return(aw=$shiftLeft64((new $Uint64(0,HH.uint32array[1])),32),ax=(new $Uint64(0,HH.uint32array[0])),new $Uint64(aw.$high+ax.$high,aw.$low+ax.$low));};$pkg.Float64bits=HL;HM=function(av){var av;HH.uint32array[0]=((av.$low>>>0));HH.uint32array[1]=(($shiftRightUint64(av,32).$low>>>0));return HH.float64array[0];};$pkg.Float64frombits=HM;$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:$r=B.$init();$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}$r=A.$init();$s=2;case 2:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}HH=new IW.ptr(IT.zero(),IU.zero(),IV.zero());FL=$global.Math;FM=0;FN=1/FM;FO=-1/FM;FP=$parseFloat($NaN);HI();}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["resolv"]=(function(){var $pkg={},$init,A,B,C,N,P,Q,S,U,X,Z,AA,AE,AG,AI,AJ,AK,AL,AM,AN,AO,AP,AQ,AR,AS,AT,AU,AV,AW,AX,AY,K,O,R,T,V,W,Y,AB,AC,AD,AF,AH;A=$packages["math"];B=$pkg.Vector=$newType(12,$kindSlice,"resolv.Vector",true,"resolv",true,null);C=$pkg.Axis=$newType(4,$kindInt,"resolv.Axis",true,"resolv",true,null);N=$pkg.Space=$newType(0,$kindStruct,"resolv.Space",true,"resolv",true,function(Cells_,CellWidth_,CellHeight_){this.$val=this;if(arguments.length===0){this.Cells=AL.nil;this.CellWidth=0;this.CellHeight=0;return;}this.Cells=Cells_;this.CellWidth=CellWidth_;this.CellHeight=CellHeight_;});P=$pkg.Shape=$newType(8,$kindInterface,"resolv.Shape",true,"resolv",true,null);Q=$pkg.Line=$newType(0,$kindStruct,"resolv.Line",true,"resolv",true,function(Start_,End_){this.$val=this;if(arguments.length===0){this.Start=B.nil;this.End=B.nil;return;}this.Start=Start_;this.End=End_;});S=$pkg.ConvexPolygon=$newType(0,$kindStruct,"resolv.ConvexPolygon",true,"resolv",true,function(Points_,X_,Y_,Closed_){this.$val=this;if(arguments.length===0){this.Points=AP.nil;this.X=0;this.Y=0;this.Closed=false;return;}this.Points=Points_;this.X=X_;this.Y=Y_;this.Closed=Closed_;});U=$pkg.ContactSet=$newType(0,$kindStruct,"resolv.ContactSet",true,"resolv",true,function(Points_,MTV_,Center_){this.$val=this;if(arguments.length===0){this.Points=AP.nil;this.MTV=B.nil;this.Center=B.nil;return;}this.Points=Points_;this.MTV=MTV_;this.Center=Center_;});X=$pkg.Circle=$newType(0,$kindStruct,"resolv.Circle",true,"resolv",true,function(X_,Y_,Radius_){this.$val=this;if(arguments.length===0){this.X=0;this.Y=0;this.Radius=0;return;}this.X=X_;this.Y=Y_;this.Radius=Radius_;});Z=$pkg.Projection=$newType(0,$kindStruct,"resolv.Projection",true,"resolv",true,function(Min_,Max_){this.$val=this;if(arguments.length===0){this.Min=0;this.Max=0;return;}this.Min=Min_;this.Max=Max_;});AA=$pkg.Object=$newType(0,$kindStruct,"resolv.Object",true,"resolv",true,function(Shape_,Space_,X_,Y_,W_,H_,TouchingCells_,Data_,ignoreList_,tags_){this.$val=this;if(arguments.length===0){this.Shape=$ifaceNil;this.Space=AM.nil;this.X=0;this.Y=0;this.W=0;this.H=0;this.TouchingCells=AK.nil;this.Data=$ifaceNil;this.ignoreList=false;this.tags=AV.nil;return;}this.Shape=Shape_;this.Space=Space_;this.X=X_;this.Y=Y_;this.W=W_;this.H=H_;this.TouchingCells=TouchingCells_;this.Data=Data_;this.ignoreList=ignoreList_;this.tags=tags_;});AE=$pkg.Collision=$newType(0,$kindStruct,"resolv.Collision",true,"resolv",true,function(checkingObject_,dx_,dy_,Objects_,Cells_){this.$val=this;if(arguments.length===0){this.checkingObject=AN.nil;this.dx=0;this.dy=0;this.Objects=AO.nil;this.Cells=AK.nil;return;}this.checkingObject=checkingObject_;this.dx=dx_;this.dy=dy_;this.Objects=Objects_;this.Cells=Cells_;});AG=$pkg.Cell=$newType(0,$kindStruct,"resolv.Cell",true,"resolv",true,function(X_,Y_,Objects_){this.$val=this;if(arguments.length===0){this.X=0;this.Y=0;this.Objects=AO.nil;return;}this.X=X_;this.Y=Y_;this.Objects=Objects_;});AI=$sliceType($Float64);AJ=$ptrType(AG);AK=$sliceType(AJ);AL=$sliceType(AK);AM=$ptrType(N);AN=$ptrType(AA);AO=$sliceType(AN);AP=$sliceType(B);AQ=$ptrType(Q);AR=$sliceType(AQ);AS=$ptrType(X);AT=$ptrType(S);AU=$ptrType(U);AV=$sliceType($String);AW=$ptrType(AE);AX=$sliceType(C);AY=$mapType(AN,$Bool);B.prototype.Clone=function(){var a,b;a=this;b=$makeSlice(B,a.$length);$copySlice(b,a);return b;};$ptrType(B).prototype.Clone=function(){return this.$get().Clone();};B.prototype.Add=function(a){var a,b,c,d,e,f;b=this;c=b.$length;d=a;e=0;while(true){if(!(e<d.$length)){break;}f=e;if(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]).$length>c){AC($convertSliceType(b,AI),1,$convertSliceType(b,AI),$convertSliceType($subslice(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]),0,c),AI));}else{AC($convertSliceType(b,AI),1,$convertSliceType(b,AI),$convertSliceType(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]),AI));}e++;}return b;};$ptrType(B).prototype.Add=function(a){return this.$get().Add(a);};B.prototype.Sub=function(a){var a,b,c,d,e,f;b=this;c=b.$length;d=a;e=0;while(true){if(!(e<d.$length)){break;}f=e;if(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]).$length>c){AC($convertSliceType(b,AI),-1,$convertSliceType($subslice(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]),0,c),AI),$convertSliceType(b,AI));}else{AC($convertSliceType(b,AI),-1,$convertSliceType(((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]),AI),$convertSliceType(b,AI));}e++;}return b;};$ptrType(B).prototype.Sub=function(a){return this.$get().Sub(a);};B.prototype.Scale=function(a){var a,b;b=this;AD($convertSliceType(b,AI),a,$convertSliceType(b,AI));return b;};$ptrType(B).prototype.Scale=function(a){return this.$get().Scale(a);};B.prototype.Equal=function(a){var a,b,c,d,e;b=this;if(!((b.$length===a.$length))){return false;}c=b;d=0;while(true){if(!(d<c.$length)){break;}e=d;if(A.Abs(((e<0||e>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+e])-((e<0||e>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+e]))>1e-08){return false;}d++;}return true;};$ptrType(B).prototype.Equal=function(a){return this.$get().Equal(a);};B.prototype.Magnitude=function(){var a;a=this;return A.Sqrt(a.Magnitude2());};$ptrType(B).prototype.Magnitude=function(){return this.$get().Magnitude();};B.prototype.Magnitude2=function(){var a,b,c,d,e;a=this;b=0;c=a;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);b=b+(e*e);d++;}return b;};$ptrType(B).prototype.Magnitude2=function(){return this.$get().Magnitude2();};B.prototype.Unit=function(){var a,b,c,d,e;a=this;b=a.Magnitude();if(b<1e-08){return a;}c=a;d=0;while(true){if(!(d<c.$length)){break;}e=d;((e<0||e>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+e]=((e<0||e>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+e])/b);d++;}return a;};$ptrType(B).prototype.Unit=function(){return this.$get().Unit();};K=function(a,b){var a,b,c,d,e,f,g,h,i,j,k;c=0;d=a.$length;e=b.$length;f=c;g=d;h=e;if(g>h){b=$appendSlice(b,$convertSliceType($makeSlice(B,(g-h>>0)),AI));}if(g<h){a=$appendSlice(a,$convertSliceType($makeSlice(B,(h-g>>0)),AI));}i=a;j=0;while(true){if(!(j<i.$length)){break;}k=j;f=f+(((k<0||k>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+k])*((k<0||k>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+k]));j++;}return f;};$pkg.Dot=K;B.prototype.Dot=function(a){var a,b;b=this;return K(b,a);};$ptrType(B).prototype.Dot=function(a){return this.$get().Dot(a);};B.prototype.Cross=function(a){var a,b;b=this;if(!((b.$length===3))||!((a.$length===3))){return B.nil;}return new B([(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1])*(2>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+2])-(2>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+2])*(1>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+1]),(2>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+2])*(0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0])-(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])*(2>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+2]),(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])*(2>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+2])-(2>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+2])*(0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0])]);};$ptrType(B).prototype.Cross=function(a){return this.$get().Cross(a);};B.prototype.Rotate=function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r;c=this;d=2;e=c.$length;f=d;g=e;if(g===0){return c;}if(b.$length>0){f=(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0]);}if((g===1)&&!((f===2))){c=$append(c,0,0);}if((g<2&&(f===2))||((g===2)&&!((f===2)))){c=$append(c,0);}h=(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]);i=(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]);j=h;k=i;l=A.Cos(a);m=A.Sin(a);n=l;o=m;p=f;if(p===(0)){q=(2>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+2]);(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=k*n-q*o);(2>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+2]=k*o+q*n);}else if(p===(1)){r=(2>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+2]);(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=j*n+r*o);(2>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+2]=-j*o+r*n);}else if(p===(2)){(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=j*n-k*o);(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=j*o+k*n);}if(g>3){return $subslice(c,0,3);}return c;};$ptrType(B).prototype.Rotate=function(a,b){return this.$get().Rotate(a,b);};B.prototype.X=function(){var a;a=this;if(a.$length<1){return 0;}return(0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0]);};$ptrType(B).prototype.X=function(){return this.$get().X();};B.prototype.Y=function(){var a;a=this;if(a.$length<2){return 0;}return(1>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+1]);};$ptrType(B).prototype.Y=function(){return this.$get().Y();};B.prototype.Z=function(){var a;a=this;if(a.$length<3){return 0;}return(2>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+2]);};$ptrType(B).prototype.Z=function(){return this.$get().Z();};O=function(a,b,c,d){var a,b,c,d,e,f,g;e=new N.ptr(AL.nil,c,d);e.Resize((f=a/c,(f===f&&f!==1/0&&f!==-1/0)?f>>0:$throwRuntimeError("integer divide by zero")),(g=b/d,(g===g&&g!==1/0&&g!==-1/0)?g>>0:$throwRuntimeError("integer divide by zero")));return e;};$pkg.NewSpace=O;N.ptr.prototype.Add=function(a){var{a,b,c,d,e,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=this;if(b===AM.nil){$panic(new $String("ERROR: space is nil"));}c=a;d=0;case 1:if(!(d<c.$length)){$s=2;continue;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);e.Space=b;$r=e.Update();$s=3;case 3:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}d++;$s=1;continue;case 2:$s=-1;return;}return;}var $f={$blk:N.ptr.prototype.Add,$c:true,$r,a,b,c,d,e,$s};return $f;};N.prototype.Add=function(a){return this.$val.Add(a);};N.ptr.prototype.Remove=function(a){var a,b,c,d,e,f,g,h;b=this;if(b===AM.nil){$panic(new $String("ERROR: space is nil"));}c=a;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);f=e.TouchingCells;g=0;while(true){if(!(g<f.$length)){break;}h=((g<0||g>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+g]);h.unregister(e);g++;}e.TouchingCells=new AK([]);e.Space=AM.nil;d++;}};N.prototype.Remove=function(a){return this.$val.Remove(a);};N.ptr.prototype.Objects=function(){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s;a=this;b=$makeMap(AN.keyFor,[]);c=new AO([]);d=a.Cells;e=0;while(true){if(!(e<d.$length)){break;}f=e;g=(h=a.Cells,((f<0||f>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+f]));i=0;while(true){if(!(i<g.$length)){break;}j=i;k=(l=(m=a.Cells,((f<0||f>=m.$length)?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+f])),((j<0||j>=l.$length)?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+j])).Objects;n=0;while(true){if(!(n<k.$length)){break;}o=((n<0||n>=k.$length)?($throwRuntimeError("index out of range"),undefined):k.$array[k.$offset+n]);p=(q=b[AN.keyFor(o)],q!==undefined?[q.v,true]:[false,false]);r=p[1];if(!r){c=$append(c,o);s=o;(b||$throwRuntimeError("assignment to entry in nil map"))[AN.keyFor(s)]={k:s,v:true};}n++;}i++;}e++;}return c;};N.prototype.Objects=function(){return this.$val.Objects();};N.ptr.prototype.Resize=function(a,b){var a,b,c,d,e,f,g;c=this;c.Cells=new AL([]);d=0;while(true){if(!(d<b)){break;}c.Cells=$append(c.Cells,new AK([]));e=0;while(true){if(!(e<a)){break;}(g=c.Cells,((d<0||d>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+d]=$append((f=c.Cells,((d<0||d>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+d])),AH(e,d))));e=e+(1)>>0;}d=d+(1)>>0;}};N.prototype.Resize=function(a,b){return this.$val.Resize(a,b);};N.ptr.prototype.Cell=function(a,b){var a,b,c,d,e,f;c=this;if(b>=0&&b<c.Cells.$length&&a>=0&&a<(d=c.Cells,((b<0||b>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+b])).$length){return(e=(f=c.Cells,((b<0||b>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+b])),((a<0||a>=e.$length)?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+a]));}return AJ.nil;};N.prototype.Cell=function(a,b){return this.$val.Cell(a,b);};N.ptr.prototype.CheckCells=function(a,b,c,d,e){var a,b,c,d,e,f,g,h,i,j,k,l,m;f=this;g=a;while(true){if(!(g<(a+c>>0))){break;}h=b;while(true){if(!(h<(b+d>>0))){break;}i=f.Cell(g,h);if(!(i===AJ.nil)){if(e.$length>0){if(i.ContainsTags(e)){j=i.Objects;k=0;while(true){if(!(k<j.$length)){break;}l=((k<0||k>=j.$length)?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+k]);if(l.HasTags(e)){return l;}k++;}}}else if(i.Occupied()){return(m=i.Objects,(0>=m.$length?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+0]));}}h=h+(1)>>0;}g=g+(1)>>0;}return AN.nil;};N.prototype.CheckCells=function(a,b,c,d,e){return this.$val.CheckCells(a,b,c,d,e);};N.ptr.prototype.CheckCellsWorld=function(a,b,c,d,e){var a,b,c,d,e,f,g,h,i,j,k,l;f=this;g=f.WorldToSpace(a,b);h=g[0];i=g[1];j=f.WorldToSpace(c,d);k=j[0];l=j[1];return f.CheckCells(h,i,k,l,e);};N.prototype.CheckCellsWorld=function(a,b,c,d,e){return this.$val.CheckCellsWorld(a,b,c,d,e);};N.ptr.prototype.UnregisterAllObjects=function(){var a,b,c,d,e,f,g;a=this;b=0;while(true){if(!(b<a.Cells.$length)){break;}c=0;while(true){if(!(c<(d=a.Cells,((b<0||b>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+b])).$length)){break;}g=(e=(f=a.Cells,((b<0||b>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+b])),((c<0||c>=e.$length)?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+c]));a.Remove(g.Objects);c=c+(1)>>0;}b=b+(1)>>0;}};N.prototype.UnregisterAllObjects=function(){return this.$val.UnregisterAllObjects();};N.ptr.prototype.WorldToSpace=function(a,b){var a,b,c,d,e;c=this;d=((A.Floor(a/(c.CellWidth))>>0));e=((A.Floor(b/(c.CellHeight))>>0));return[d,e];};N.prototype.WorldToSpace=function(a,b){return this.$val.WorldToSpace(a,b);};N.ptr.prototype.SpaceToWorld=function(a,b){var a,b,c,d,e;c=this;d=(($imul(a,c.CellWidth)));e=(($imul(b,c.CellHeight)));return[d,e];};N.prototype.SpaceToWorld=function(a,b){return this.$val.SpaceToWorld(a,b);};N.ptr.prototype.Height=function(){var a;a=this;return a.Cells.$length;};N.prototype.Height=function(){return this.$val.Height();};N.ptr.prototype.Width=function(){var a,b;a=this;if(a.Cells.$length>0){return(b=a.Cells,(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])).$length;}return 0;};N.prototype.Width=function(){return this.$val.Width();};N.ptr.prototype.CellsInLine=function(a,b,c,d){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v;e=this;f=new AK([]);g=e.Cell(a,b);h=e.Cell(c,d);if(!(g===AJ.nil)&&!(h===AJ.nil)){i=new B([((c-a>>0)),((d-b>>0))]).Unit();(0>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+0]=(0>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+0])*(((j=e.CellWidth/2,(j===j&&j!==1/0&&j!==-1/0)?j>>0:$throwRuntimeError("integer divide by zero")))));(1>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+1]=(1>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+1])*(((k=e.CellHeight/2,(k===k&&k!==1/0&&k!==-1/0)?k>>0:$throwRuntimeError("integer divide by zero")))));l=e.SpaceToWorld(a,b);m=l[0];n=l[1];q=new B([m+((o=e.CellWidth/2,(o===o&&o!==1/0&&o!==-1/0)?o>>0:$throwRuntimeError("integer divide by zero"))),n+((p=e.CellHeight/2,(p===p&&p!==1/0&&p!==-1/0)?p>>0:$throwRuntimeError("integer divide by zero")))]);r=false;while(true){if(!(!(g===AJ.nil))){break;}if(g===h){f=$append(f,g);break;}f=$append(f,g);if(r){(1>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+1]=(1>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+1])+((1>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+1])));}else{(0>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+0]=(0>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+0])+((0>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+0])));}s=e.WorldToSpace((0>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+0]),(1>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+1]));t=s[0];u=s[1];v=e.Cell(t,u);if(!(v===g)){g=v;}r=!r;}}return f;};N.prototype.CellsInLine=function(a,b,c,d){return this.$val.CellsInLine(a,b,c,d);};R=function(a,b,c,d){var a,b,c,d;return new Q.ptr(new B([a,b]),new B([c,d]));};$pkg.NewLine=R;Q.ptr.prototype.Project=function(a){var a,b;b=this;return b.Vector().Scale(a.Dot(b.Start.Sub(new AP([b.End]))));};Q.prototype.Project=function(a){return this.$val.Project(a);};Q.ptr.prototype.Normal=function(){var a,b;a=this;b=a.Vector();return new B([(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1]),-(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])]).Unit();};Q.prototype.Normal=function(){return this.$val.Normal();};Q.ptr.prototype.Vector=function(){var a;a=this;return a.End.Clone().Sub(new AP([a.Start])).Unit();};Q.prototype.Vector=function(){return this.$val.Vector();};Q.ptr.prototype.IntersectionPointsLine=function(a){var a,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;b=this;k=((c=b.End,(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]))-(d=b.Start,(0>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+0])))*((e=a.End,(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1]))-(f=a.Start,(1>=f.$length?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+1])))-((g=a.End,(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0]))-(h=a.Start,(0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0])))*((i=b.End,(1>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+1]))-(j=b.Start,(1>=j.$length?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+1])));if(!((k===0))){t=((((l=b.Start,(1>=l.$length?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+1]))-(m=a.Start,(1>=m.$length?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+1])))*((n=a.End,(0>=n.$length?($throwRuntimeError("index out of range"),undefined):n.$array[n.$offset+0]))-(o=a.Start,(0>=o.$length?($throwRuntimeError("index out of range"),undefined):o.$array[o.$offset+0]))))-(((p=b.Start,(0>=p.$length?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+0]))-(q=a.Start,(0>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+0])))*((r=a.End,(1>=r.$length?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+1]))-(s=a.Start,(1>=s.$length?($throwRuntimeError("index out of range"),undefined):s.$array[s.$offset+1]))))+1)/k;ac=((((u=b.Start,(1>=u.$length?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+1]))-(v=a.Start,(1>=v.$length?($throwRuntimeError("index out of range"),undefined):v.$array[v.$offset+1])))*((w=b.End,(0>=w.$length?($throwRuntimeError("index out of range"),undefined):w.$array[w.$offset+0]))-(x=b.Start,(0>=x.$length?($throwRuntimeError("index out of range"),undefined):x.$array[x.$offset+0]))))-(((y=b.Start,(0>=y.$length?($throwRuntimeError("index out of range"),undefined):y.$array[y.$offset+0]))-(z=a.Start,(0>=z.$length?($throwRuntimeError("index out of range"),undefined):z.$array[z.$offset+0])))*((aa=b.End,(1>=aa.$length?($throwRuntimeError("index out of range"),undefined):aa.$array[aa.$offset+1]))-(ab=b.Start,(1>=ab.$length?($throwRuntimeError("index out of range"),undefined):ab.$array[ab.$offset+1]))))+1)/k;if((0<t&&t<1)&&(0<ac&&ac<1)){af=(ad=b.End,(0>=ad.$length?($throwRuntimeError("index out of range"),undefined):ad.$array[ad.$offset+0]))-(ae=b.Start,(0>=ae.$length?($throwRuntimeError("index out of range"),undefined):ae.$array[ae.$offset+0]));ai=(ag=b.End,(1>=ag.$length?($throwRuntimeError("index out of range"),undefined):ag.$array[ag.$offset+1]))-(ah=b.Start,(1>=ah.$length?($throwRuntimeError("index out of range"),undefined):ah.$array[ah.$offset+1]));return new B([(aj=b.Start,(0>=aj.$length?($throwRuntimeError("index out of range"),undefined):aj.$array[aj.$offset+0]))+(t*af),(ak=b.Start,(1>=ak.$length?($throwRuntimeError("index out of range"),undefined):ak.$array[ak.$offset+1]))+(t*ai)]);}}return B.nil;};Q.prototype.IntersectionPointsLine=function(a){return this.$val.IntersectionPointsLine(a);};Q.ptr.prototype.IntersectionPointsCircle=function(a){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s;b=this;c=new AP([]);d=new B([a.X,a.Y]);e=b.Start.Sub(new AP([d]));f=b.End.Sub(new AP([d]));g=f.Sub(new AP([e]));h=(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0])*(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0])+(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1])*(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1]);i=2*(((0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0])*(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0]))+((1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1])*(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])));j=((0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0])*(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0]))+((1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])*(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1]))-(a.Radius*a.Radius);k=i*i-(4*h*j);if(k<0){}else if(k===0){l=-i/(2*h);if(l>=0&&l<=1){c=$append(c,new B([(m=b.Start,(0>=m.$length?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+0]))+l*(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0]),(n=b.Start,(1>=n.$length?($throwRuntimeError("index out of range"),undefined):n.$array[n.$offset+1]))+l*(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1])]));}}else{o=(-i+A.Sqrt(k))/(2*h);if(o>=0&&o<=1){c=$append(c,new B([(p=b.Start,(0>=p.$length?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+0]))+o*(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0]),(q=b.Start,(1>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+1]))+o*(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1])]));}o=(-i-A.Sqrt(k))/(2*h);if(o>=0&&o<=1){c=$append(c,new B([(r=b.Start,(0>=r.$length?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+0]))+o*(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0]),(s=b.Start,(1>=s.$length?($throwRuntimeError("index out of range"),undefined):s.$array[s.$offset+1]))+o*(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1])]));}}return c;};Q.prototype.IntersectionPointsCircle=function(a){return this.$val.IntersectionPointsCircle(a);};T=function(a){var a,b;b=new S.ptr(new AP([]),0,0,true);b.AddPoints(a);return b;};$pkg.NewConvexPolygon=T;S.ptr.prototype.Clone=function(){var a,b,c,d,e,f;a=this;b=new AP([]);c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);b=$append(b,e.Clone());d++;}f=T(AI.nil);f.X=a.X;f.Y=a.Y;f.AddPointsVec(b);f.Closed=a.Closed;return f;};S.prototype.Clone=function(){return this.$val.Clone();};S.ptr.prototype.AddPointsVec=function(a){var a,b;b=this;b.Points=$appendSlice(b.Points,a);};S.prototype.AddPointsVec=function(a){return this.$val.AddPointsVec(a);};S.ptr.prototype.AddPoints=function(a){var a,b,c,d;b=this;c=0;while(true){if(!(c<a.$length)){break;}b.Points=$append(b.Points,new B([((c<0||c>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+c]),(d=c+1>>0,((d<0||d>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+d]))]));c=c+(2)>>0;}};S.prototype.AddPoints=function(a){return this.$val.AddPoints(a);};S.ptr.prototype.Lines=function(){var a,b,c,d,e,f,g,h,i,j;a=this;b=new AR([]);c=a.Transformed();d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);f=(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]);g=e;h=f;if(d<(c.$length-1>>0)){h=(i=d+1>>0,((i<0||i>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+i]));}else if(!a.Closed){break;}j=R((0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0]),(1>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+1]),(0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0]),(1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1]));b=$append(b,j);d=d+(1)>>0;}return b;};S.prototype.Lines=function(){return this.$val.Lines();};S.ptr.prototype.Transformed=function(){var a,b,c,d,e;a=this;b=new AP([]);c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);b=$append(b,new B([(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0])+a.X,(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])+a.Y]));d++;}return b;};S.prototype.Transformed=function(){return this.$val.Transformed();};S.ptr.prototype.Bounds=function(){var a,b,c,d,e,f,g,h;a=this;b=a.Transformed();e=new B([(c=(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0]),(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0])),(d=(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0]),(1>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+1]))]);f=e.Clone();g=0;while(true){if(!(g<b.$length)){break;}h=((g<0||g>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+g]);if((0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0])<(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0])){(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0]=(0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0]));}else if((0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0])>(0>=f.$length?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+0])){(0>=f.$length?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+0]=(0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0]));}if((1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1])<(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])){(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1]=(1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1]));}else if((1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1])>(1>=f.$length?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+1])){(1>=f.$length?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+1]=(1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1]));}g=g+(1)>>0;}return[e,f];};S.prototype.Bounds=function(){return this.$val.Bounds();};S.ptr.prototype.Position=function(){var a;a=this;return[a.X,a.Y];};S.prototype.Position=function(){return this.$val.Position();};S.ptr.prototype.SetPosition=function(a,b){var a,b,c;c=this;c.X=a;c.Y=b;};S.prototype.SetPosition=function(a,b){return this.$val.SetPosition(a,b);};S.ptr.prototype.SetPositionVec=function(a){var a,b;b=this;b.X=a.X();b.Y=a.Y();};S.prototype.SetPositionVec=function(a){return this.$val.SetPositionVec(a);};S.ptr.prototype.Move=function(a,b){var a,b,c;c=this;c.X=c.X+(a);c.Y=c.Y+(b);};S.prototype.Move=function(a,b){return this.$val.Move(a,b);};S.ptr.prototype.MoveVec=function(a){var a,b;b=this;b.X=b.X+(a.X());b.Y=b.Y+(a.Y());};S.prototype.MoveVec=function(a){return this.$val.MoveVec(a);};S.ptr.prototype.Center=function(){var a,b,c,d,e;a=this;b=new B([0,0]);c=a.Transformed();d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);b.Add(new AP([e]));d++;}(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0]=(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])/((a.Transformed().$length)));(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1]=(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1])/((a.Transformed().$length)));return b;};S.prototype.Center=function(){return this.$val.Center();};S.ptr.prototype.Project=function(a){var a,b,c,d,e,f,g,h,i,j,k;b=this;a=a.Unit();c=b.Transformed();f=a.Dot(new B([(d=(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]),(0>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+0])),(e=(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]),(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1]))]));g=f;h=1;while(true){if(!(h<c.$length)){break;}k=a.Dot(new B([(i=((h<0||h>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+h]),(0>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+0])),(j=((h<0||h>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+h]),(1>=j.$length?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+1]))]));if(k<f){f=k;}else if(k>g){g=k;}h=h+(1)>>0;}return new Z.ptr(f,g);};S.prototype.Project=function(a){return this.$val.Project(a);};S.ptr.prototype.SATAxes=function(){var a,b,c,d,e;a=this;b=new AP([]);c=a.Lines();d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);b=$append(b,e.Normal());d++;}return b;};S.prototype.SATAxes=function(){return this.$val.SATAxes();};S.ptr.prototype.PointInside=function(a){var a,b,c,d,e,f,g;b=this;c=R((0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0]),(1>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+1]),(0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0])+9.99999999999e+11,(1>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+1]));d=0;e=b.Lines();f=0;while(true){if(!(f<e.$length)){break;}g=((f<0||f>=e.$length)?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+f]);if(!(g.IntersectionPointsLine(c)===B.nil)){d=d+(1)>>0;}f++;}return d===1;};S.prototype.PointInside=function(a){return this.$val.PointInside(a);};V=function(){return new U.ptr(new AP([]),new B([0,0]),new B([0,0]));};$pkg.NewContactSet=V;U.ptr.prototype.LeftmostPoint=function(){var a,b,c,d,e;a=this;b=B.nil;c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(b===B.nil||(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0])<(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])){b=e;}d++;}return b;};U.prototype.LeftmostPoint=function(){return this.$val.LeftmostPoint();};U.ptr.prototype.RightmostPoint=function(){var a,b,c,d,e;a=this;b=B.nil;c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(b===B.nil||(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0])>(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])){b=e;}d++;}return b;};U.prototype.RightmostPoint=function(){return this.$val.RightmostPoint();};U.ptr.prototype.TopmostPoint=function(){var a,b,c,d,e;a=this;b=B.nil;c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(b===B.nil||(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])<(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1])){b=e;}d++;}return b;};U.prototype.TopmostPoint=function(){return this.$val.TopmostPoint();};U.ptr.prototype.BottommostPoint=function(){var a,b,c,d,e;a=this;b=B.nil;c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(b===B.nil||(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1])>(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1])){b=e;}d++;}return b;};U.prototype.BottommostPoint=function(){return this.$val.BottommostPoint();};S.ptr.prototype.Intersection=function(a,b,c){var a,aa,ab,ac,ad,ae,af,ag,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;d=this;e=V();f=d.X;g=d.Y;d.X=d.X+(a);d.Y=d.Y+(b);h=$assertType(c,AS,true);i=h[0];j=h[1];if(j){k=d.Lines();l=0;while(true){if(!(l<k.$length)){break;}m=((l<0||l>=k.$length)?($throwRuntimeError("index out of range"),undefined):k.$array[k.$offset+l]);e.Points=$appendSlice(e.Points,m.IntersectionPointsCircle(i));l++;}}else{n=$assertType(c,AT,true);o=n[0];p=n[1];if(p){q=d.Lines();r=0;while(true){if(!(r<q.$length)){break;}s=((r<0||r>=q.$length)?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+r]);t=o.Lines();u=0;while(true){if(!(u<t.$length)){break;}v=((u<0||u>=t.$length)?($throwRuntimeError("index out of range"),undefined):t.$array[t.$offset+u]);w=s.IntersectionPointsLine(v);if(!(w===B.nil)){e.Points=$append(e.Points,w);}u++;}r++;}}}if(e.Points.$length>0){x=e.Points;y=0;while(true){if(!(y<x.$length)){break;}z=((y<0||y>=x.$length)?($throwRuntimeError("index out of range"),undefined):x.$array[x.$offset+y]);e.Center=e.Center.Add(new AP([z]));y++;}(ab=e.Center,(0>=ab.$length?($throwRuntimeError("index out of range"),undefined):ab.$array[ab.$offset+0]=(aa=e.Center,(0>=aa.$length?($throwRuntimeError("index out of range"),undefined):aa.$array[aa.$offset+0]))/((e.Points.$length))));(ad=e.Center,(1>=ad.$length?($throwRuntimeError("index out of range"),undefined):ad.$array[ad.$offset+1]=(ac=e.Center,(1>=ac.$length?($throwRuntimeError("index out of range"),undefined):ac.$array[ac.$offset+1]))/((e.Points.$length))));ae=d.calculateMTV(e,c);if(!(ae===B.nil)){e.MTV=ae;}}else{e=AU.nil;}if(!(e===AU.nil)&&(!((a===0))||!((b===0)))){af=new B([a,b]).Magnitude();ag=e.MTV.Magnitude();e.MTV=e.MTV.Unit().Scale(ag-af);}d.X=f;d.Y=g;return e;};S.prototype.Intersection=function(a,b,c){return this.$val.Intersection(a,b,c);};S.ptr.prototype.calculateMTV=function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o;c=this;d=new B([0,0]);e=new B([1.7976931348623157e+308,0]);f=b;if($assertType(f,AT,true)[1]){g=f.$val;h=c.SATAxes();i=0;while(true){if(!(i<h.$length)){break;}j=((i<0||i>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+i]);if(!$clone(c.Project(j),Z).Overlapping($clone(g.Project(j),Z))){return B.nil;}k=$clone(c.Project(j),Z).Overlap($clone(g.Project(j),Z));if(e.Magnitude()>k){e=j.Scale(k);}i++;}l=g.SATAxes();m=0;while(true){if(!(m<l.$length)){break;}n=((m<0||m>=l.$length)?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+m]);if(!$clone(c.Project(n),Z).Overlapping($clone(g.Project(n),Z))){return B.nil;}o=$clone(c.Project(n),Z).Overlap($clone(g.Project(n),Z));if(e.Magnitude()>o){e=n.Scale(o);}m++;}}(0>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+0]=(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0]));(1>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+1]=(1>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+1]));return d;};S.prototype.calculateMTV=function(a,b){return this.$val.calculateMTV(a,b);};S.ptr.prototype.ContainedBy=function(a){var a,b,c,d,e,f,g,h,i,j;b=this;c=a;if($assertType(c,AT,true)[1]){d=c.$val;e=b.SATAxes();f=0;while(true){if(!(f<e.$length)){break;}g=((f<0||f>=e.$length)?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+f]);if(!$clone(b.Project(g),Z).IsInside($clone(d.Project(g),Z))){return false;}f++;}h=d.SATAxes();i=0;while(true){if(!(i<h.$length)){break;}j=((i<0||i>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+i]);if(!$clone(b.Project(j),Z).IsInside($clone(d.Project(j),Z))){return false;}i++;}}return true;};S.prototype.ContainedBy=function(a){return this.$val.ContainedBy(a);};S.ptr.prototype.FlipH=function(){var a,b,c,d;a=this;b=a.Points;c=0;while(true){if(!(c<b.$length)){break;}d=((c<0||c>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+c]);(0>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+0]=-(0>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+0]));c++;}a.ReverseVertexOrder();};S.prototype.FlipH=function(){return this.$val.FlipH();};S.ptr.prototype.FlipV=function(){var a,b,c,d;a=this;b=a.Points;c=0;while(true){if(!(c<b.$length)){break;}d=((c<0||c>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+c]);(1>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+1]=-(1>=d.$length?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+1]));c++;}a.ReverseVertexOrder();};S.prototype.FlipV=function(){return this.$val.FlipV();};S.ptr.prototype.ReverseVertexOrder=function(){var a,b,c,d,e;a=this;c=new AP([(b=a.Points,(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0]))]);d=a.Points.$length-1>>0;while(true){if(!(d>=1)){break;}c=$append(c,(e=a.Points,((d<0||d>=e.$length)?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+d])));d=d-(1)>>0;}a.Points=c;};S.prototype.ReverseVertexOrder=function(){return this.$val.ReverseVertexOrder();};W=function(a,b,c,d){var a,b,c,d;return T(new AI([a,b,a+c,b,a+c,b+d,a,b+d]));};$pkg.NewRectangle=W;Y=function(a,b,c){var a,b,c,d;d=new X.ptr(a,b,c);return d;};$pkg.NewCircle=Y;X.ptr.prototype.Clone=function(){var a;a=this;return Y(a.X,a.Y,a.Radius);};X.prototype.Clone=function(){return this.$val.Clone();};X.ptr.prototype.Bounds=function(){var a;a=this;return[new B([a.X-a.Radius,a.Y-a.Radius]),new B([a.X+a.Radius,a.Y+a.Radius])];};X.prototype.Bounds=function(){return this.$val.Bounds();};X.ptr.prototype.Intersection=function(a,b,c){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r;d=this;e=AU.nil;f=d.X;g=d.Y;d.X=d.X+(a);d.Y=d.Y+(b);h=c;if($assertType(h,AT,true)[1]){i=h.$val;e=i.Intersection(-a,-b,d);if(!(e===AU.nil)){e.MTV=e.MTV.Scale(-1);}}else if($assertType(h,AS,true)[1]){j=h.$val;e=V();e.Points=d.IntersectionPointsCircle(j);if(e.Points.$length===0){return AU.nil;}e.MTV=new B([d.X-j.X,d.Y-j.Y]);k=e.MTV.Magnitude();e.MTV=e.MTV.Unit().Scale(d.Radius+j.Radius-k);l=e.Points;m=0;while(true){if(!(m<l.$length)){break;}n=((m<0||m>=l.$length)?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+m]);e.Center=e.Center.Add(new AP([n]));m++;}(p=e.Center,(0>=p.$length?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+0]=(o=e.Center,(0>=o.$length?($throwRuntimeError("index out of range"),undefined):o.$array[o.$offset+0]))/((e.Points.$length))));(r=e.Center,(1>=r.$length?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+1]=(q=e.Center,(1>=q.$length?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+1]))/((e.Points.$length))));}d.X=f;d.Y=g;return e;};X.prototype.Intersection=function(a,b,c){return this.$val.Intersection(a,b,c);};X.ptr.prototype.Move=function(a,b){var a,b,c;c=this;c.X=c.X+(a);c.Y=c.Y+(b);};X.prototype.Move=function(a,b){return this.$val.Move(a,b);};X.ptr.prototype.MoveVec=function(a){var a,b;b=this;b.X=b.X+(a.X());b.Y=b.Y+(a.Y());};X.prototype.MoveVec=function(a){return this.$val.MoveVec(a);};X.ptr.prototype.SetPosition=function(a,b){var a,b,c;c=this;c.X=a;c.Y=b;};X.prototype.SetPosition=function(a,b){return this.$val.SetPosition(a,b);};X.ptr.prototype.SetPositionVec=function(a){var a,b;b=this;b.X=a.X();b.Y=a.Y();};X.prototype.SetPositionVec=function(a){return this.$val.SetPositionVec(a);};X.ptr.prototype.Position=function(){var a;a=this;return[a.X,a.Y];};X.prototype.Position=function(){return this.$val.Position();};X.ptr.prototype.PointInside=function(a){var a,b;b=this;return a.Sub(new AP([new B([b.X,b.Y])])).Magnitude()<=b.Radius;};X.prototype.PointInside=function(a){return this.$val.PointInside(a);};X.ptr.prototype.IntersectionPointsCircle=function(a){var a,b,c,d,e,f,g;b=this;c=A.Sqrt(A.Pow(a.X-b.X,2)+A.Pow(a.Y-b.Y,2));if(c>b.Radius+a.Radius||c<A.Abs(b.Radius-a.Radius)||(c===0)&&(b.Radius===a.Radius)){return AP.nil;}d=(A.Pow(b.Radius,2)-A.Pow(a.Radius,2)+A.Pow(c,2))/(2*c);e=A.Sqrt(A.Pow(b.Radius,2)-A.Pow(d,2));f=b.X+d*(a.X-b.X)/c;g=b.Y+d*(a.Y-b.Y)/c;return new AP([new B([f+e*(a.Y-b.Y)/c,g-e*(a.X-b.X)/c]),new B([f-e*(a.Y-b.Y)/c,g+e*(a.X-b.X)/c])]);};X.prototype.IntersectionPointsCircle=function(a){return this.$val.IntersectionPointsCircle(a);};Z.ptr.prototype.Overlapping=function(a){var a,b;b=this;return $clone(b,Z).Overlap($clone(a,Z))>0;};Z.prototype.Overlapping=function(a){return this.$val.Overlapping(a);};Z.ptr.prototype.Overlap=function(a){var a,b;b=this;return A.Min(b.Max,a.Max)-A.Max(b.Min,a.Min);};Z.prototype.Overlap=function(a){return this.$val.Overlap(a);};Z.ptr.prototype.IsInside=function(a){var a,b;b=this;return b.Min>=a.Min&&b.Max<=a.Max;};Z.prototype.IsInside=function(a){return this.$val.IsInside(a);};AB=function(a,b,c,d,e){var a,b,c,d,e,f;f=new AA.ptr($ifaceNil,AM.nil,a,b,c,d,AK.nil,$ifaceNil,$makeMap(AN.keyFor,[]),new AV([]));if(e.$length>0){f.AddTags(e);}return f;};$pkg.NewObject=AB;AA.ptr.prototype.Clone=function(){var{a,b,c,d,e,f,g,h,$s,$r,$c}=$restore(this,{});$s=$s||0;s:while(true){switch($s){case 0:a=this;b=AB(a.X,a.Y,a.W,a.H,a.Tags());b.Data=a.Data;if(!($interfaceIsEqual(a.Shape,$ifaceNil))){$s=1;continue;}$s=2;continue;case 1:c=a.Shape.Clone();$s=3;case 3:if($c){$c=false;c=c.$blk();}if(c&&c.$blk!==undefined){break s;}$r=b.SetShape(c);$s=4;case 4:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}case 2:d=a.ignoreList;e=0;f=$keys(d);while(true){if(!(e<f.length)){break;}g=d[f[e]];if(g===undefined){e++;continue;}h=g.k;b.AddToIgnoreList(h);e++;}$s=-1;return b;}return;}var $f={$blk:AA.ptr.prototype.Clone,$c:true,$r,a,b,c,d,e,f,g,h,$s};return $f;};AA.prototype.Clone=function(){return this.$val.Clone();};AA.ptr.prototype.Update=function(){var{a,b,c,d,e,f,g,h,i,j,$s,$r,$c}=$restore(this,{});$s=$s||0;s:while(true){switch($s){case 0:a=this;if(!(a.Space===AM.nil)){b=a.Space;a.Space.Remove(new AO([a]));a.Space=b;c=a.BoundsToSpace(0,0);d=c[0];e=c[1];f=c[2];g=c[3];h=e;while(true){if(!(h<=g)){break;}i=d;while(true){if(!(i<=f)){break;}j=a.Space.Cell(i,h);if(!(j===AJ.nil)){j.register(a);a.TouchingCells=$append(a.TouchingCells,j);}i=i+(1)>>0;}h=h+(1)>>0;}}if(!($interfaceIsEqual(a.Shape,$ifaceNil))){$s=1;continue;}$s=2;continue;case 1:$r=a.Shape.SetPosition(a.X,a.Y);$s=3;case 3:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}case 2:$s=-1;return;}return;}var $f={$blk:AA.ptr.prototype.Update,$c:true,$r,a,b,c,d,e,f,g,h,i,j,$s};return $f;};AA.prototype.Update=function(){return this.$val.Update();};AA.ptr.prototype.AddTags=function(a){var a,b;b=this;b.tags=$appendSlice(b.tags,a);};AA.prototype.AddTags=function(a){return this.$val.AddTags(a);};AA.ptr.prototype.RemoveTags=function(a){var a,b,c,d,e,f,g,h,i;b=this;c=a;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);f=b.tags;g=0;while(true){if(!(g<f.$length)){break;}h=g;i=((g<0||g>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+g]);if(i===e){b.tags=$appendSlice($subslice(b.tags,0,h),$subslice(b.tags,(h+1>>0)));break;}g++;}d++;}};AA.prototype.RemoveTags=function(a){return this.$val.RemoveTags(a);};AA.ptr.prototype.HasTags=function(a){var a,b,c,d,e,f,g,h;b=this;c=a;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);f=b.tags;g=0;while(true){if(!(g<f.$length)){break;}h=((g<0||g>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+g]);if(h===e){return true;}g++;}d++;}return false;};AA.prototype.HasTags=function(a){return this.$val.HasTags(a);};AA.ptr.prototype.Tags=function(){var a;a=this;return $appendSlice(new AV([]),a.tags);};AA.prototype.Tags=function(){return this.$val.Tags();};AA.ptr.prototype.SetShape=function(a){var{a,b,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=this;if(!($interfaceIsEqual(b.Shape,a))){$s=1;continue;}$s=2;continue;case 1:b.Shape=a;$r=b.Update();$s=3;case 3:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}case 2:$s=-1;return;}return;}var $f={$blk:AA.ptr.prototype.SetShape,$c:true,$r,a,b,$s};return $f;};AA.prototype.SetShape=function(a){return this.$val.SetShape(a);};AA.ptr.prototype.BoundsToSpace=function(a,b){var a,b,c,d,e,f,g,h,i;c=this;d=c.Space.WorldToSpace(c.X+a,c.Y+b);e=d[0];f=d[1];g=c.Space.WorldToSpace(c.X+c.W+a-1,c.Y+c.H+b-1);h=g[0];i=g[1];return[e,f,h,i];};AA.prototype.BoundsToSpace=function(a,b){return this.$val.BoundsToSpace(a,b);};AA.ptr.prototype.SharesCells=function(a){var a,b,c,d,e;b=this;c=b.TouchingCells;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e.Contains(a)){return true;}d++;}return false;};AA.prototype.SharesCells=function(a){return this.$val.SharesCells(a);};AA.ptr.prototype.SharesCellsTags=function(a){var a,b,c,d,e;b=this;c=b.TouchingCells;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e.ContainsTags(a)){return true;}d++;}return false;};AA.prototype.SharesCellsTags=function(a){return this.$val.SharesCellsTags(a);};AA.ptr.prototype.Center=function(){var a;a=this;return[a.X+(a.W/2),a.Y+(a.H/2)];};AA.prototype.Center=function(){return this.$val.Center();};AA.ptr.prototype.SetCenter=function(a,b){var a,b,c;c=this;c.X=a-(c.W/2);c.Y=b-(c.H/2);};AA.prototype.SetCenter=function(a,b){return this.$val.SetCenter(a,b);};AA.ptr.prototype.CellPosition=function(){var a,b;a=this;b=a.Center();return a.Space.WorldToSpace(b[0],b[1]);};AA.prototype.CellPosition=function(){return this.$val.CellPosition();};AA.ptr.prototype.SetRight=function(a){var a,b;b=this;b.X=a-b.W;};AA.prototype.SetRight=function(a){return this.$val.SetRight(a);};AA.ptr.prototype.SetBottom=function(a){var a,b;b=this;b.Y=a-b.H;};AA.prototype.SetBottom=function(a){return this.$val.SetBottom(a);};AA.ptr.prototype.Bottom=function(){var a;a=this;return a.Y+a.H;};AA.prototype.Bottom=function(){return this.$val.Bottom();};AA.ptr.prototype.Right=function(){var a;a=this;return a.X+a.W;};AA.prototype.Right=function(){return this.$val.Right();};AA.ptr.prototype.SetBounds=function(a,b){var a,b,c;c=this;c.X=(0>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+0]);c.Y=(1>=a.$length?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+1]);c.W=(0>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+0])-c.X;c.H=(1>=b.$length?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+1])-c.Y;};AA.prototype.SetBounds=function(a,b){return this.$val.SetBounds(a,b);};AA.ptr.prototype.Check=function(a,b,c){var a,aa,ab,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;d=this;if(d.Space===AM.nil){return AW.nil;}e=AF();e.checkingObject=d;if(a<0){a=A.Min(a,-1);}else if(a>0){a=A.Max(a,1);}if(b<0){b=A.Min(b,-1);}else if(b>0){b=A.Max(b,1);}e.dx=a;e.dy=b;f=d.BoundsToSpace(a,b);g=f[0];h=f[1];i=f[2];j=f[3];k=$makeMap(AN.keyFor,[]);l=$makeMap(AJ.keyFor,[]);m=h;while(true){if(!(m<=j)){break;}n=g;while(true){if(!(n<=i)){break;}o=d.Space.Cell(n,m);if(!(o===AJ.nil)){p=o.Objects;q=0;while(true){if(!(q<p.$length)){break;}r=((q<0||q>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+q]);t=(s=d.ignoreList[AN.keyFor(r)],s!==undefined?s.v:false);if(r===d||t){q++;continue;}u=(v=k[AN.keyFor(r)],v!==undefined?[v.v,true]:[false,false]);w=u[1];if(((c.$length===0)||r.HasTags(c))&&!w){e.Objects=$append(e.Objects,r);x=r;(k||$throwRuntimeError("assignment to entry in nil map"))[AN.keyFor(x)]={k:x,v:true};y=(z=l[AJ.keyFor(o)],z!==undefined?[z.v,true]:[false,false]);aa=y[1];if(!aa){e.Cells=$append(e.Cells,o);ab=o;(l||$throwRuntimeError("assignment to entry in nil map"))[AJ.keyFor(ab)]={k:ab,v:true};}q++;continue;}q++;}}n=n+(1)>>0;}m=m+(1)>>0;}if(e.Objects.$length===0){return AW.nil;}return e;};AA.prototype.Check=function(a,b,c){return this.$val.Check(a,b,c);};AA.ptr.prototype.Overlaps=function(a){var a,b;b=this;return a.X<=b.X+b.W&&a.X+a.W>=b.X&&a.Y<=b.Y+b.H&&a.Y+a.H>=b.Y;};AA.prototype.Overlaps=function(a){return this.$val.Overlaps(a);};AA.ptr.prototype.AddToIgnoreList=function(a){var a,b,c;b=this;c=a;(b.ignoreList||$throwRuntimeError("assignment to entry in nil map"))[AN.keyFor(c)]={k:c,v:true};};AA.prototype.AddToIgnoreList=function(a){return this.$val.AddToIgnoreList(a);};AA.ptr.prototype.RemoveFromIgnoreList=function(a){var a,b;b=this;delete b.ignoreList[AN.keyFor(a)];};AA.prototype.RemoveFromIgnoreList=function(a){return this.$val.RemoveFromIgnoreList(a);};AC=function(a,b,c,d){var a,b,c,d,e,f,g,h,i;e=d.$length;f=c;g=0;while(true){if(!(g<f.$length)){break;}h=g;i=((g<0||g>=f.$length)?($throwRuntimeError("index out of range"),undefined):f.$array[f.$offset+g]);if(h===e){return;}((h<0||h>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+h]=b*i+((h<0||h>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+h]));g++;}};AD=function(a,b,c){var a,b,c,d,e,f;d=c;e=0;while(true){if(!(e<d.$length)){break;}f=e;((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f]=((f<0||f>=a.$length)?($throwRuntimeError("index out of range"),undefined):a.$array[a.$offset+f])*(b));e++;}};AF=function(){return new AE.ptr(AN.nil,0,0,new AO([]),AK.nil);};$pkg.NewCollision=AF;AE.ptr.prototype.HasTags=function(a){var a,b,c,d,e;b=this;c=b.Objects;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e===b.checkingObject){d++;continue;}if(e.HasTags(a)){return true;}d++;}return false;};AE.prototype.HasTags=function(a){return this.$val.HasTags(a);};AE.ptr.prototype.ObjectsByTags=function(a){var a,b,c,d,e,f;b=this;c=new AO([]);d=b.Objects;e=0;while(true){if(!(e<d.$length)){break;}f=((e<0||e>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+e]);if(f===b.checkingObject){e++;continue;}if(f.HasTags(a)){c=$append(c,f);}e++;}return c;};AE.prototype.ObjectsByTags=function(a){return this.$val.ObjectsByTags(a);};AE.ptr.prototype.ContactWithObject=function(a){var a,b,c;b=this;c=new B([0,0]);if(b.dx<0){(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=a.X+a.W-b.checkingObject.X);}else if(b.dx>0){(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=a.X-b.checkingObject.W-b.checkingObject.X);}if(b.dy<0){(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=a.Y+a.H-b.checkingObject.Y);}else if(b.dy>0){(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=a.Y-b.checkingObject.H-b.checkingObject.Y);}return c;};AE.prototype.ContactWithObject=function(a){return this.$val.ContactWithObject(a);};AE.ptr.prototype.ContactWithCell=function(a){var a,b,c,d,e;b=this;c=new B([0,0]);d=(($imul(a.X,b.checkingObject.Space.CellWidth)));e=(($imul(a.Y,b.checkingObject.Space.CellHeight)));if(b.dx<0){(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=d+(b.checkingObject.Space.CellWidth)-b.checkingObject.X);}else if(b.dx>0){(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0]=d-b.checkingObject.W-b.checkingObject.X);}if(b.dy<0){(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=e+(b.checkingObject.Space.CellHeight)-b.checkingObject.Y);}else if(b.dy>0){(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]=e-b.checkingObject.H-b.checkingObject.Y);}return c;};AE.prototype.ContactWithCell=function(a){return this.$val.ContactWithCell(a);};AE.ptr.prototype.SlideAgainstCell=function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u;c=this;d=c.checkingObject.Space;f=(e=c.Cells,(0>=e.$length?($throwRuntimeError("index out of range"),undefined):e.$array[e.$offset+0]));g=d.SpaceToWorld(f.X,f.Y);h=g[0];i=g[1];j=(d.CellWidth)/2;k=(d.CellHeight)/2;h=h+(j);i=i+(k);l=c.checkingObject.Center();m=l[0];n=l[1];o=m-h;p=n-i;q=d.Cell(f.X-1>>0,f.Y);r=d.Cell(f.X+1>>0,f.Y);s=d.Cell(f.X,f.Y-1>>0);t=d.Cell(f.X,f.Y+1>>0);u=new B([0,0]);if(!((c.dy===0))){if(o>0&&(r===AJ.nil||!r.ContainsTags(b))){(0>=u.$length?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+0]=h+j-c.checkingObject.X);}else if(o<0&&(q===AJ.nil||!q.ContainsTags(b))){(0>=u.$length?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+0]=h-j-(c.checkingObject.X+c.checkingObject.W));}else{return B.nil;}}if(!((c.dx===0))){if(p>0&&(t===AJ.nil||!t.ContainsTags(b))){(1>=u.$length?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+1]=i+k-c.checkingObject.Y);}else if(p<0&&(s===AJ.nil||!s.ContainsTags(b))){(1>=u.$length?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+1]=i-k-(c.checkingObject.Y+c.checkingObject.H));}else{return B.nil;}}return u;};AE.prototype.SlideAgainstCell=function(a,b){return this.$val.SlideAgainstCell(a,b);};AH=function(a,b){var a,b;return new AG.ptr(a,b,new AO([]));};AG.ptr.prototype.register=function(a){var a,b;b=this;if(!b.Contains(a)){b.Objects=$append(b.Objects,a);}};AG.prototype.register=function(a){return this.$val.register(a);};AG.ptr.prototype.unregister=function(a){var a,b,c,d,e,f,g,h,i;b=this;c=b.Objects;d=0;while(true){if(!(d<c.$length)){break;}e=d;f=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(f===a){(i=b.Objects,((e<0||e>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+e]=(g=b.Objects,h=b.Objects.$length-1>>0,((h<0||h>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+h]))));b.Objects=$subslice(b.Objects,0,(b.Objects.$length-1>>0));break;}d++;}};AG.prototype.unregister=function(a){return this.$val.unregister(a);};AG.ptr.prototype.Contains=function(a){var a,b,c,d,e;b=this;c=b.Objects;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e===a){return true;}d++;}return false;};AG.prototype.Contains=function(a){return this.$val.Contains(a);};AG.ptr.prototype.ContainsTags=function(a){var a,b,c,d,e;b=this;c=b.Objects;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e.HasTags(a)){return true;}d++;}return false;};AG.prototype.ContainsTags=function(a){return this.$val.ContainsTags(a);};AG.ptr.prototype.Occupied=function(){var a;a=this;return a.Objects.$length>0;};AG.prototype.Occupied=function(){return this.$val.Occupied();};B.methods=[{prop:"Clone",name:"Clone",pkg:"",typ:$funcType([],[B],false)},{prop:"Add",name:"Add",pkg:"",typ:$funcType([AP],[B],true)},{prop:"Sub",name:"Sub",pkg:"",typ:$funcType([AP],[B],true)},{prop:"Scale",name:"Scale",pkg:"",typ:$funcType([$Float64],[B],false)},{prop:"Equal",name:"Equal",pkg:"",typ:$funcType([B],[$Bool],false)},{prop:"Magnitude",name:"Magnitude",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Magnitude2",name:"Magnitude2",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Unit",name:"Unit",pkg:"",typ:$funcType([],[B],false)},{prop:"Dot",name:"Dot",pkg:"",typ:$funcType([B],[$Float64],false)},{prop:"Cross",name:"Cross",pkg:"",typ:$funcType([B],[B],false)},{prop:"Rotate",name:"Rotate",pkg:"",typ:$funcType([$Float64,AX],[B],true)},{prop:"X",name:"X",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Y",name:"Y",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Z",name:"Z",pkg:"",typ:$funcType([],[$Float64],false)}];AM.methods=[{prop:"Add",name:"Add",pkg:"",typ:$funcType([AO],[],true)},{prop:"Remove",name:"Remove",pkg:"",typ:$funcType([AO],[],true)},{prop:"Objects",name:"Objects",pkg:"",typ:$funcType([],[AO],false)},{prop:"Resize",name:"Resize",pkg:"",typ:$funcType([$Int,$Int],[],false)},{prop:"Cell",name:"Cell",pkg:"",typ:$funcType([$Int,$Int],[AJ],false)},{prop:"CheckCells",name:"CheckCells",pkg:"",typ:$funcType([$Int,$Int,$Int,$Int,AV],[AN],true)},{prop:"CheckCellsWorld",name:"CheckCellsWorld",pkg:"",typ:$funcType([$Float64,$Float64,$Float64,$Float64,AV],[AN],true)},{prop:"UnregisterAllObjects",name:"UnregisterAllObjects",pkg:"",typ:$funcType([],[],false)},{prop:"WorldToSpace",name:"WorldToSpace",pkg:"",typ:$funcType([$Float64,$Float64],[$Int,$Int],false)},{prop:"SpaceToWorld",name:"SpaceToWorld",pkg:"",typ:$funcType([$Int,$Int],[$Float64,$Float64],false)},{prop:"Height",name:"Height",pkg:"",typ:$funcType([],[$Int],false)},{prop:"Width",name:"Width",pkg:"",typ:$funcType([],[$Int],false)},{prop:"CellsInLine",name:"CellsInLine",pkg:"",typ:$funcType([$Int,$Int,$Int,$Int],[AK],false)}];AQ.methods=[{prop:"Project",name:"Project",pkg:"",typ:$funcType([B],[B],false)},{prop:"Normal",name:"Normal",pkg:"",typ:$funcType([],[B],false)},{prop:"Vector",name:"Vector",pkg:"",typ:$funcType([],[B],false)},{prop:"IntersectionPointsLine",name:"IntersectionPointsLine",pkg:"",typ:$funcType([AQ],[B],false)},{prop:"IntersectionPointsCircle",name:"IntersectionPointsCircle",pkg:"",typ:$funcType([AS],[AP],false)}];AT.methods=[{prop:"Clone",name:"Clone",pkg:"",typ:$funcType([],[P],false)},{prop:"AddPointsVec",name:"AddPointsVec",pkg:"",typ:$funcType([AP],[],true)},{prop:"AddPoints",name:"AddPoints",pkg:"",typ:$funcType([AI],[],true)},{prop:"Lines",name:"Lines",pkg:"",typ:$funcType([],[AR],false)},{prop:"Transformed",name:"Transformed",pkg:"",typ:$funcType([],[AP],false)},{prop:"Bounds",name:"Bounds",pkg:"",typ:$funcType([],[B,B],false)},{prop:"Position",name:"Position",pkg:"",typ:$funcType([],[$Float64,$Float64],false)},{prop:"SetPosition",name:"SetPosition",pkg:"",typ:$funcType([$Float64,$Float64],[],false)},{prop:"SetPositionVec",name:"SetPositionVec",pkg:"",typ:$funcType([B],[],false)},{prop:"Move",name:"Move",pkg:"",typ:$funcType([$Float64,$Float64],[],false)},{prop:"MoveVec",name:"MoveVec",pkg:"",typ:$funcType([B],[],false)},{prop:"Center",name:"Center",pkg:"",typ:$funcType([],[B],false)},{prop:"Project",name:"Project",pkg:"",typ:$funcType([B],[Z],false)},{prop:"SATAxes",name:"SATAxes",pkg:"",typ:$funcType([],[AP],false)},{prop:"PointInside",name:"PointInside",pkg:"",typ:$funcType([B],[$Bool],false)},{prop:"Intersection",name:"Intersection",pkg:"",typ:$funcType([$Float64,$Float64,P],[AU],false)},{prop:"calculateMTV",name:"calculateMTV",pkg:"resolv",typ:$funcType([AU,P],[B],false)},{prop:"ContainedBy",name:"ContainedBy",pkg:"",typ:$funcType([P],[$Bool],false)},{prop:"FlipH",name:"FlipH",pkg:"",typ:$funcType([],[],false)},{prop:"FlipV",name:"FlipV",pkg:"",typ:$funcType([],[],false)},{prop:"ReverseVertexOrder",name:"ReverseVertexOrder",pkg:"",typ:$funcType([],[],false)}];AU.methods=[{prop:"LeftmostPoint",name:"LeftmostPoint",pkg:"",typ:$funcType([],[B],false)},{prop:"RightmostPoint",name:"RightmostPoint",pkg:"",typ:$funcType([],[B],false)},{prop:"TopmostPoint",name:"TopmostPoint",pkg:"",typ:$funcType([],[B],false)},{prop:"BottommostPoint",name:"BottommostPoint",pkg:"",typ:$funcType([],[B],false)}];AS.methods=[{prop:"Clone",name:"Clone",pkg:"",typ:$funcType([],[P],false)},{prop:"Bounds",name:"Bounds",pkg:"",typ:$funcType([],[B,B],false)},{prop:"Intersection",name:"Intersection",pkg:"",typ:$funcType([$Float64,$Float64,P],[AU],false)},{prop:"Move",name:"Move",pkg:"",typ:$funcType([$Float64,$Float64],[],false)},{prop:"MoveVec",name:"MoveVec",pkg:"",typ:$funcType([B],[],false)},{prop:"SetPosition",name:"SetPosition",pkg:"",typ:$funcType([$Float64,$Float64],[],false)},{prop:"SetPositionVec",name:"SetPositionVec",pkg:"",typ:$funcType([B],[],false)},{prop:"Position",name:"Position",pkg:"",typ:$funcType([],[$Float64,$Float64],false)},{prop:"PointInside",name:"PointInside",pkg:"",typ:$funcType([B],[$Bool],false)},{prop:"IntersectionPointsCircle",name:"IntersectionPointsCircle",pkg:"",typ:$funcType([AS],[AP],false)}];Z.methods=[{prop:"Overlapping",name:"Overlapping",pkg:"",typ:$funcType([Z],[$Bool],false)},{prop:"Overlap",name:"Overlap",pkg:"",typ:$funcType([Z],[$Float64],false)},{prop:"IsInside",name:"IsInside",pkg:"",typ:$funcType([Z],[$Bool],false)}];AN.methods=[{prop:"Clone",name:"Clone",pkg:"",typ:$funcType([],[AN],false)},{prop:"Update",name:"Update",pkg:"",typ:$funcType([],[],false)},{prop:"AddTags",name:"AddTags",pkg:"",typ:$funcType([AV],[],true)},{prop:"RemoveTags",name:"RemoveTags",pkg:"",typ:$funcType([AV],[],true)},{prop:"HasTags",name:"HasTags",pkg:"",typ:$funcType([AV],[$Bool],true)},{prop:"Tags",name:"Tags",pkg:"",typ:$funcType([],[AV],false)},{prop:"SetShape",name:"SetShape",pkg:"",typ:$funcType([P],[],false)},{prop:"BoundsToSpace",name:"BoundsToSpace",pkg:"",typ:$funcType([$Float64,$Float64],[$Int,$Int,$Int,$Int],false)},{prop:"SharesCells",name:"SharesCells",pkg:"",typ:$funcType([AN],[$Bool],false)},{prop:"SharesCellsTags",name:"SharesCellsTags",pkg:"",typ:$funcType([AV],[$Bool],true)},{prop:"Center",name:"Center",pkg:"",typ:$funcType([],[$Float64,$Float64],false)},{prop:"SetCenter",name:"SetCenter",pkg:"",typ:$funcType([$Float64,$Float64],[],false)},{prop:"CellPosition",name:"CellPosition",pkg:"",typ:$funcType([],[$Int,$Int],false)},{prop:"SetRight",name:"SetRight",pkg:"",typ:$funcType([$Float64],[],false)},{prop:"SetBottom",name:"SetBottom",pkg:"",typ:$funcType([$Float64],[],false)},{prop:"Bottom",name:"Bottom",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"Right",name:"Right",pkg:"",typ:$funcType([],[$Float64],false)},{prop:"SetBounds",name:"SetBounds",pkg:"",typ:$funcType([B,B],[],false)},{prop:"Check",name:"Check",pkg:"",typ:$funcType([$Float64,$Float64,AV],[AW],true)},{prop:"Overlaps",name:"Overlaps",pkg:"",typ:$funcType([AN],[$Bool],false)},{prop:"AddToIgnoreList",name:"AddToIgnoreList",pkg:"",typ:$funcType([AN],[],false)},{prop:"RemoveFromIgnoreList",name:"RemoveFromIgnoreList",pkg:"",typ:$funcType([AN],[],false)}];AW.methods=[{prop:"HasTags",name:"HasTags",pkg:"",typ:$funcType([AV],[$Bool],true)},{prop:"ObjectsByTags",name:"ObjectsByTags",pkg:"",typ:$funcType([AV],[AO],true)},{prop:"ContactWithObject",name:"ContactWithObject",pkg:"",typ:$funcType([AN],[B],false)},{prop:"ContactWithCell",name:"ContactWithCell",pkg:"",typ:$funcType([AJ],[B],false)},{prop:"SlideAgainstCell",name:"SlideAgainstCell",pkg:"",typ:$funcType([AJ,AV],[B],true)}];AJ.methods=[{prop:"register",name:"register",pkg:"resolv",typ:$funcType([AN],[],false)},{prop:"unregister",name:"unregister",pkg:"resolv",typ:$funcType([AN],[],false)},{prop:"Contains",name:"Contains",pkg:"",typ:$funcType([AN],[$Bool],false)},{prop:"ContainsTags",name:"ContainsTags",pkg:"",typ:$funcType([AV],[$Bool],true)},{prop:"Occupied",name:"Occupied",pkg:"",typ:$funcType([],[$Bool],false)}];B.init($Float64);N.init("",[{prop:"Cells",name:"Cells",embedded:false,exported:true,typ:AL,tag:""},{prop:"CellWidth",name:"CellWidth",embedded:false,exported:true,typ:$Int,tag:""},{prop:"CellHeight",name:"CellHeight",embedded:false,exported:true,typ:$Int,tag:""}]);P.init([{prop:"Bounds",name:"Bounds",pkg:"",typ:$funcType([],[B,B],false)},{prop:"Clone",name:"Clone",pkg:"",typ:$funcType([],[P],false)},{prop:"Intersection",name:"Intersection",pkg:"",typ:$funcType([$Float64,$Float64,P],[AU],false)},{prop:"Position",name:"Position",pkg:"",typ:$funcType([],[$Float64,$Float64],false)},{prop:"SetPosition",name:"SetPosition",pkg:"",typ:$funcType([$Float64,$Float64],[],false)}]);Q.init("",[{prop:"Start",name:"Start",embedded:false,exported:true,typ:B,tag:""},{prop:"End",name:"End",embedded:false,exported:true,typ:B,tag:""}]);S.init("",[{prop:"Points",name:"Points",embedded:false,exported:true,typ:AP,tag:""},{prop:"X",name:"X",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Closed",name:"Closed",embedded:false,exported:true,typ:$Bool,tag:""}]);U.init("",[{prop:"Points",name:"Points",embedded:false,exported:true,typ:AP,tag:""},{prop:"MTV",name:"MTV",embedded:false,exported:true,typ:B,tag:""},{prop:"Center",name:"Center",embedded:false,exported:true,typ:B,tag:""}]);X.init("",[{prop:"X",name:"X",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Radius",name:"Radius",embedded:false,exported:true,typ:$Float64,tag:""}]);Z.init("",[{prop:"Min",name:"Min",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Max",name:"Max",embedded:false,exported:true,typ:$Float64,tag:""}]);AA.init("resolv",[{prop:"Shape",name:"Shape",embedded:false,exported:true,typ:P,tag:""},{prop:"Space",name:"Space",embedded:false,exported:true,typ:AM,tag:""},{prop:"X",name:"X",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"W",name:"W",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"H",name:"H",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"TouchingCells",name:"TouchingCells",embedded:false,exported:true,typ:AK,tag:""},{prop:"Data",name:"Data",embedded:false,exported:true,typ:$emptyInterface,tag:""},{prop:"ignoreList",name:"ignoreList",embedded:false,exported:false,typ:AY,tag:""},{prop:"tags",name:"tags",embedded:false,exported:false,typ:AV,tag:""}]);AE.init("resolv",[{prop:"checkingObject",name:"checkingObject",embedded:false,exported:false,typ:AN,tag:""},{prop:"dx",name:"dx",embedded:false,exported:false,typ:$Float64,tag:""},{prop:"dy",name:"dy",embedded:false,exported:false,typ:$Float64,tag:""},{prop:"Objects",name:"Objects",embedded:false,exported:true,typ:AO,tag:""},{prop:"Cells",name:"Cells",embedded:false,exported:true,typ:AK,tag:""}]);AG.init("",[{prop:"X",name:"X",embedded:false,exported:true,typ:$Int,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Int,tag:""},{prop:"Objects",name:"Objects",embedded:false,exported:true,typ:AO,tag:""}]);$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:$r=A.$init();$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["jsexport/battle"]=(function(){var $pkg={},$init,A,B,C,D,E,F,H,I,J,K,L,M,N,O,P,R,S,AG,AX,AY,AZ,BA,BB,BC,BD,BE,BF,BG,BH,BI,BJ,BK,BL,BM,BN,BO,BP,BQ,BR,BS,BT,BU,BV,BW,BX,BY,T,U,V,W,X,Q,Y,AA,AB,AC,AD,AE,AF,AH,AI,AJ,AK,AL,AM,AN,AO,AQ,AR,AS,AT,AU,AV,AW;A=$packages["math"];B=$packages["resolv"];C=$pkg.Vec2D=$newType(0,$kindStruct,"battle.Vec2D",true,"jsexport/battle",true,function(X_,Y_){this.$val=this;if(arguments.length===0){this.X=0;this.Y=0;return;}this.X=X_;this.Y=Y_;});D=$pkg.Polygon2D=$newType(0,$kindStruct,"battle.Polygon2D",true,"jsexport/battle",true,function(Anchor_,Points_){this.$val=this;if(arguments.length===0){this.Anchor=BU.nil;this.Points=BV.nil;return;}this.Anchor=Anchor_;this.Points=Points_;});E=$pkg.PlayerDownsync=$newType(0,$kindStruct,"battle.PlayerDownsync",true,"jsexport/battle",true,function(Id_,VirtualGridX_,VirtualGridY_,DirX_,DirY_,VelX_,VelY_,Speed_,BattleState_,JoinIndex_,ColliderRadius_,Removed_,Score_,LastMoveGmtMillis_,FramesToRecover_,FramesInChState_,Hp_,MaxHp_,CharacterState_,InAir_,OnWall_,ActiveSkillId_,ActiveSkillHit_,FramesInvinsible_,BulletTeamId_,ChCollisionTeamId_,OnWallNormX_,OnWallNormY_){this.$val=this;if(arguments.length===0){this.Id=0;this.VirtualGridX=0;this.VirtualGridY=0;this.DirX=0;this.DirY=0;this.VelX=0;this.VelY=0;this.Speed=0;this.BattleState=0;this.JoinIndex=0;this.ColliderRadius=0;this.Removed=false;this.Score=0;this.LastMoveGmtMillis=0;this.FramesToRecover=0;this.FramesInChState=0;this.Hp=0;this.MaxHp=0;this.CharacterState=0;this.InAir=false;this.OnWall=false;this.ActiveSkillId=0;this.ActiveSkillHit=0;this.FramesInvinsible=0;this.BulletTeamId=0;this.ChCollisionTeamId=0;this.OnWallNormX=0;this.OnWallNormY=0;return;}this.Id=Id_;this.VirtualGridX=VirtualGridX_;this.VirtualGridY=VirtualGridY_;this.DirX=DirX_;this.DirY=DirY_;this.VelX=VelX_;this.VelY=VelY_;this.Speed=Speed_;this.BattleState=BattleState_;this.JoinIndex=JoinIndex_;this.ColliderRadius=ColliderRadius_;this.Removed=Removed_;this.Score=Score_;this.LastMoveGmtMillis=LastMoveGmtMillis_;this.FramesToRecover=FramesToRecover_;this.FramesInChState=FramesInChState_;this.Hp=Hp_;this.MaxHp=MaxHp_;this.CharacterState=CharacterState_;this.InAir=InAir_;this.OnWall=OnWall_;this.ActiveSkillId=ActiveSkillId_;this.ActiveSkillHit=ActiveSkillHit_;this.FramesInvinsible=FramesInvinsible_;this.BulletTeamId=BulletTeamId_;this.ChCollisionTeamId=ChCollisionTeamId_;this.OnWallNormX=OnWallNormX_;this.OnWallNormY=OnWallNormY_;});F=$pkg.InputFrameDecoded=$newType(0,$kindStruct,"battle.InputFrameDecoded",true,"jsexport/battle",true,function(Dx_,Dy_,BtnALevel_,BtnBLevel_){this.$val=this;if(arguments.length===0){this.Dx=0;this.Dy=0;this.BtnALevel=0;this.BtnBLevel=0;return;}this.Dx=Dx_;this.Dy=Dy_;this.BtnALevel=BtnALevel_;this.BtnBLevel=BtnBLevel_;});H=$pkg.Barrier=$newType(0,$kindStruct,"battle.Barrier",true,"jsexport/battle",true,function(Boundary_){this.$val=this;if(arguments.length===0){this.Boundary=BW.nil;return;}this.Boundary=Boundary_;});I=$pkg.Bullet=$newType(0,$kindStruct,"battle.Bullet",true,"jsexport/battle",true,function(BulletLocalId_,OriginatedRenderFrameId_,OffenderJoinIndex_,StartupFrames_,CancellableStFrame_,CancellableEdFrame_,ActiveFrames_,HitStunFrames_,BlockStunFrames_,PushbackVelX_,PushbackVelY_,Damage_,SelfLockVelX_,SelfLockVelY_,HitboxOffsetX_,HitboxOffsetY_,HitboxSizeX_,HitboxSizeY_,BlowUp_,CancelTransit_,TeamId_){this.$val=this;if(arguments.length===0){this.BulletLocalId=0;this.OriginatedRenderFrameId=0;this.OffenderJoinIndex=0;this.StartupFrames=0;this.CancellableStFrame=0;this.CancellableEdFrame=0;this.ActiveFrames=0;this.HitStunFrames=0;this.BlockStunFrames=0;this.PushbackVelX=0;this.PushbackVelY=0;this.Damage=0;this.SelfLockVelX=0;this.SelfLockVelY=0;this.HitboxOffsetX=0;this.HitboxOffsetY=0;this.HitboxSizeX=0;this.HitboxSizeY=0;this.BlowUp=false;this.CancelTransit=false;this.TeamId=0;return;}this.BulletLocalId=BulletLocalId_;this.OriginatedRenderFrameId=OriginatedRenderFrameId_;this.OffenderJoinIndex=OffenderJoinIndex_;this.StartupFrames=StartupFrames_;this.CancellableStFrame=CancellableStFrame_;this.CancellableEdFrame=CancellableEdFrame_;this.ActiveFrames=ActiveFrames_;this.HitStunFrames=HitStunFrames_;this.BlockStunFrames=BlockStunFrames_;this.PushbackVelX=PushbackVelX_;this.PushbackVelY=PushbackVelY_;this.Damage=Damage_;this.SelfLockVelX=SelfLockVelX_;this.SelfLockVelY=SelfLockVelY_;this.HitboxOffsetX=HitboxOffsetX_;this.HitboxOffsetY=HitboxOffsetY_;this.HitboxSizeX=HitboxSizeX_;this.HitboxSizeY=HitboxSizeY_;this.BlowUp=BlowUp_;this.CancelTransit=CancelTransit_;this.TeamId=TeamId_;});J=$pkg.MeleeBullet=$newType(0,$kindStruct,"battle.MeleeBullet",true,"jsexport/battle",true,function(Bullet_){this.$val=this;if(arguments.length===0){this.Bullet=new I.ptr(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,false,false,0);return;}this.Bullet=Bullet_;});K=$pkg.FireballBullet=$newType(0,$kindStruct,"battle.FireballBullet",true,"jsexport/battle",true,function(VirtualGridX_,VirtualGridY_,DirX_,DirY_,VelX_,VelY_,Speed_,SpeciesId_,Bullet_){this.$val=this;if(arguments.length===0){this.VirtualGridX=0;this.VirtualGridY=0;this.DirX=0;this.DirY=0;this.VelX=0;this.VelY=0;this.Speed=0;this.SpeciesId=0;this.Bullet=new I.ptr(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,false,false,0);return;}this.VirtualGridX=VirtualGridX_;this.VirtualGridY=VirtualGridY_;this.DirX=DirX_;this.DirY=DirY_;this.VelX=VelX_;this.VelY=VelY_;this.Speed=Speed_;this.SpeciesId=SpeciesId_;this.Bullet=Bullet_;});L=$pkg.Skill=$newType(0,$kindStruct,"battle.Skill",true,"jsexport/battle",true,function(BattleLocalId_,RecoveryFrames_,RecoveryFramesOnBlock_,RecoveryFramesOnHit_,ReleaseTriggerType_,BoundChState_,Hits_){this.$val=this;if(arguments.length===0){this.BattleLocalId=0;this.RecoveryFrames=0;this.RecoveryFramesOnBlock=0;this.RecoveryFramesOnHit=0;this.ReleaseTriggerType=0;this.BoundChState=0;this.Hits=AZ.nil;return;}this.BattleLocalId=BattleLocalId_;this.RecoveryFrames=RecoveryFrames_;this.RecoveryFramesOnBlock=RecoveryFramesOnBlock_;this.RecoveryFramesOnHit=RecoveryFramesOnHit_;this.ReleaseTriggerType=ReleaseTriggerType_;this.BoundChState=BoundChState_;this.Hits=Hits_;});M=$pkg.RoomDownsyncFrame=$newType(0,$kindStruct,"battle.RoomDownsyncFrame",true,"jsexport/battle",true,function(Id_,PlayersArr_,CountdownNanos_,MeleeBullets_,FireballBullets_,BackendUnconfirmedMask_,ShouldForceResync_,BulletLocalIdCounter_){this.$val=this;if(arguments.length===0){this.Id=0;this.PlayersArr=BM.nil;this.CountdownNanos=new $Int64(0,0);this.MeleeBullets=BN.nil;this.FireballBullets=BO.nil;this.BackendUnconfirmedMask=new $Uint64(0,0);this.ShouldForceResync=false;this.BulletLocalIdCounter=0;return;}this.Id=Id_;this.PlayersArr=PlayersArr_;this.CountdownNanos=CountdownNanos_;this.MeleeBullets=MeleeBullets_;this.FireballBullets=FireballBullets_;this.BackendUnconfirmedMask=BackendUnconfirmedMask_;this.ShouldForceResync=ShouldForceResync_;this.BulletLocalIdCounter=BulletLocalIdCounter_;});N=$pkg.InputFrameDownsync=$newType(0,$kindStruct,"battle.InputFrameDownsync",true,"jsexport/battle",true,function(InputFrameId_,InputList_,ConfirmedList_){this.$val=this;if(arguments.length===0){this.InputFrameId=0;this.InputList=BL.nil;this.ConfirmedList=new $Uint64(0,0);return;}this.InputFrameId=InputFrameId_;this.InputList=InputList_;this.ConfirmedList=ConfirmedList_;});O=$pkg.NpcPatrolCue=$newType(0,$kindStruct,"battle.NpcPatrolCue",true,"jsexport/battle",true,function(FlAct_,FrAct_,X_,Y_){this.$val=this;if(arguments.length===0){this.FlAct=new $Uint64(0,0);this.FrAct=new $Uint64(0,0);this.X=0;this.Y=0;return;}this.FlAct=FlAct_;this.FrAct=FrAct_;this.X=X_;this.Y=Y_;});P=$pkg.RingBuffer=$newType(0,$kindStruct,"battle.RingBuffer",true,"jsexport/battle",true,function(Ed_,St_,EdFrameId_,StFrameId_,N_,Cnt_,Eles_){this.$val=this;if(arguments.length===0){this.Ed=0;this.St=0;this.EdFrameId=0;this.StFrameId=0;this.N=0;this.Cnt=0;this.Eles=AZ.nil;return;}this.Ed=Ed_;this.St=St_;this.EdFrameId=EdFrameId_;this.StFrameId=StFrameId_;this.N=N_;this.Cnt=Cnt_;this.Eles=Eles_;});R=$pkg.SkillMapperType=$newType(4,$kindFunc,"battle.SkillMapperType",true,"jsexport/battle",true,null);S=$pkg.CharacterConfig=$newType(0,$kindStruct,"battle.CharacterConfig",true,"jsexport/battle",true,function(SpeciesId_,SpeciesName_,InAirIdleFrameIdxTurningPoint_,InAirIdleFrameIdxTurnedCycle_,LayDownFrames_,LayDownFramesToRecover_,GetUpInvinsibleFrames_,GetUpFramesToRecover_,Speed_,JumpingInitVelY_,DashingEnabled_,OnWallEnabled_,WallJumpingFramesToRecover_,WallJumpingInitVelX_,WallJumpingInitVelY_,WallSlidingVelY_,SkillMapper_){this.$val=this;if(arguments.length===0){this.SpeciesId=0;this.SpeciesName="";this.InAirIdleFrameIdxTurningPoint=0;this.InAirIdleFrameIdxTurnedCycle=0;this.LayDownFrames=0;this.LayDownFramesToRecover=0;this.GetUpInvinsibleFrames=0;this.GetUpFramesToRecover=0;this.Speed=0;this.JumpingInitVelY=0;this.DashingEnabled=false;this.OnWallEnabled=false;this.WallJumpingFramesToRecover=0;this.WallJumpingInitVelX=0;this.WallJumpingInitVelY=0;this.WallSlidingVelY=0;this.SkillMapper=$throwNilPointerError;return;}this.SpeciesId=SpeciesId_;this.SpeciesName=SpeciesName_;this.InAirIdleFrameIdxTurningPoint=InAirIdleFrameIdxTurningPoint_;this.InAirIdleFrameIdxTurnedCycle=InAirIdleFrameIdxTurnedCycle_;this.LayDownFrames=LayDownFrames_;this.LayDownFramesToRecover=LayDownFramesToRecover_;this.GetUpInvinsibleFrames=GetUpInvinsibleFrames_;this.GetUpFramesToRecover=GetUpFramesToRecover_;this.Speed=Speed_;this.JumpingInitVelY=JumpingInitVelY_;this.DashingEnabled=DashingEnabled_;this.OnWallEnabled=OnWallEnabled_;this.WallJumpingFramesToRecover=WallJumpingFramesToRecover_;this.WallJumpingInitVelX=WallJumpingInitVelX_;this.WallJumpingInitVelY=WallJumpingInitVelY_;this.WallSlidingVelY=WallSlidingVelY_;this.SkillMapper=SkillMapper_;});AG=$pkg.SatResult=$newType(0,$kindStruct,"battle.SatResult",true,"jsexport/battle",true,function(Overlap_,OverlapX_,OverlapY_,AContainedInB_,BContainedInA_,Axis_){this.$val=this;if(arguments.length===0){this.Overlap=0;this.OverlapX=0;this.OverlapY=0;this.AContainedInB=false;this.BContainedInA=false;this.Axis=B.Vector.nil;return;}this.Overlap=Overlap_;this.OverlapX=OverlapX_;this.OverlapY=OverlapY_;this.AContainedInB=AContainedInB_;this.BContainedInA=BContainedInA_;this.Axis=Axis_;});AX=$sliceType($Int32);AY=$sliceType(AX);AZ=$sliceType($emptyInterface);BA=$ptrType(L);BB=$ptrType(J);BC=$ptrType(AG);BD=$sliceType(C);BE=$sliceType($String);BF=$ptrType(B.Collision);BG=$ptrType(BD);BH=$ptrType(E);BI=$ptrType(K);BJ=$ptrType(B.ConvexPolygon);BK=$ptrType(N);BL=$sliceType($Uint64);BM=$sliceType(BH);BN=$sliceType(BB);BO=$sliceType(BI);BP=$sliceType(BG);BQ=$sliceType($Bool);BR=$ptrType(B.Object);BS=$sliceType(BR);BT=$sliceType($Float64);BU=$ptrType(C);BV=$sliceType(BU);BW=$ptrType(D);BX=$mapType($Int,$Int);BY=$ptrType(P);Q=function(a){var a;return new P.ptr(0,0,0,0,a,0,$makeSlice(AZ,a));};$pkg.NewRingBuffer=Q;P.ptr.prototype.Put=function(a){var a,b,c,d;b=this;while(true){if(!(0<b.Cnt&&b.Cnt>=b.N)){break;}b.Pop();}(c=b.Eles,d=b.Ed,((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]=a));b.EdFrameId=b.EdFrameId+(1)>>0;b.Cnt=b.Cnt+(1)>>0;b.Ed=b.Ed+(1)>>0;if(b.Ed>=b.N){b.Ed=b.Ed-(b.N)>>0;}};P.prototype.Put=function(a){return this.$val.Put(a);};P.ptr.prototype.Pop=function(){var a,b,c,d;a=this;if(0===a.Cnt){return $ifaceNil;}d=(b=a.Eles,c=a.St,((c<0||c>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+c]));a.StFrameId=a.StFrameId+(1)>>0;a.Cnt=a.Cnt-(1)>>0;a.St=a.St+(1)>>0;if(a.St>=a.N){a.St=a.St-(a.N)>>0;}return d;};P.prototype.Pop=function(){return this.$val.Pop();};P.ptr.prototype.GetArrIdxByOffset=function(a){var a,b,c;b=this;if((0===b.Cnt)||0>a){return-1;}c=b.St+a>>0;if(b.St<b.Ed){if(b.St<=c&&c<b.Ed){return c;}}else{if(c>=b.N){c=c-(b.N)>>0;}if(c>=b.St||c<b.Ed){return c;}}return-1;};P.prototype.GetArrIdxByOffset=function(a){return this.$val.GetArrIdxByOffset(a);};P.ptr.prototype.GetByOffset=function(a){var a,b,c,d;b=this;c=b.GetArrIdxByOffset(a);if(-1===c){return $ifaceNil;}return(d=b.Eles,((c<0||c>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+c]));};P.prototype.GetByOffset=function(a){return this.$val.GetByOffset(a);};P.ptr.prototype.GetByFrameId=function(a){var a,b;b=this;if(a>=b.EdFrameId||a<b.StFrameId){return $ifaceNil;}return b.GetByOffset(a-b.StFrameId>>0);};P.prototype.GetByFrameId=function(a){return this.$val.GetByFrameId(a);};P.ptr.prototype.SetByFrameId=function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n;c=this;d=c.StFrameId;e=c.EdFrameId;f=d;g=e;if(b<f){return[2,f,g];}if(g>b){h=c.GetArrIdxByOffset(b-c.StFrameId>>0);if(!((-1===h))){(i=c.Eles,((h<0||h>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+h]=a));return[0,f,g];}}j=0;if(g<b){k=0;l=0;c.St=k;c.Ed=l;m=b;n=b;c.StFrameId=m;c.EdFrameId=n;c.Cnt=0;j=1;}c.Put(a);return[j,f,g];};P.prototype.SetByFrameId=function(a,b){return this.$val.SetByFrameId(a,b);};Y=function(a){var a;if(a<0){return-a;}return a;};AA=function(a){var a;return(((a&3))===0);};$pkg.ShouldGenerateInputFrameUpsync=AA;AB=function(a){var a;if(a<8){return 0;}return(((a-8>>0))>>2>>0);};$pkg.ConvertToDelayedInputFrameId=AB;AC=function(a){var a;return(a>>2>>0);};$pkg.ConvertToNoDelayInputFrameId=AC;AD=function(a){var a;return(((a<<2>>0))+8>>0);};$pkg.ConvertToFirstUsedRenderFrameId=AD;AE=function(a){var a;return(((((a<<2>>0))+8>>0)+4>>0)-1>>0);};$pkg.ConvertToLastUsedRenderFrameId=AE;AF=function(a){var a,b,c,d,e,f,g,h;b=new $Uint64(a.$high&0,(a.$low&15)>>>0);d=(((c=$shiftRightUint64(a,4),new $Uint64(c.$high&0,(c.$low&1)>>>0)).$low>>0));f=(((e=$shiftRightUint64(a,5),new $Uint64(e.$high&0,(e.$low&1)>>>0)).$low>>0));return new F.ptr((g=(($flatten64(b)<0||$flatten64(b)>=$pkg.DIRECTION_DECODER.$length)?($throwRuntimeError("index out of range"),undefined):$pkg.DIRECTION_DECODER.$array[$pkg.DIRECTION_DECODER.$offset+$flatten64(b)]),(0>=g.$length?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+0])),(h=(($flatten64(b)<0||$flatten64(b)>=$pkg.DIRECTION_DECODER.$length)?($throwRuntimeError("index out of range"),undefined):$pkg.DIRECTION_DECODER.$array[$pkg.DIRECTION_DECODER.$offset+$flatten64(b)]),(1>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+1])),d,f);};AH=function(a,b,c,d){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,$s,$deferred,$r,$c}=$restore(this,{a,b,c,d});$s=$s||0;var $err=null;try{s:while(true){switch($s){case 0:$deferred=[];$curGoroutine.deferStack.push($deferred);c=[c];e=[e];f=[f];g=c[0].Position();e[0]=g[0];f[0]=g[1];$deferred.push([(function(c,e,f){return function(){c[0].SetPosition(e[0],f[0]);};})(c,e,f),[]]);c[0].SetPosition(e[0]+a,f[0]+b);h=new AG.ptr(0,0,0,true,true,new B.Vector([0,0]));i=AI(c[0],d,h);if(i){$s=1;continue;}$s=2;continue;case 1:j=h.Overlap*h.OverlapX;k=h.Overlap*h.OverlapY;l=j;m=k;n=[true,l,m,h];$s=4;case 4:return n;case 2:o=[false,0,0,h];$s=5;case 5:return o;case 3:$s=-1;return[false,0,0,BC.nil];}return;}}catch(err){$err=err;$s=-1;return[false,0,0,BC.nil];}finally{$callDeferred($deferred,$err);if($curGoroutine.asleep){var $f={$blk:AH,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,$s,$deferred};return $f;}}};AI=function(a,b,c){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u;d=a.Points.$length;e=b.Points.$length;f=d;g=e;if((1===f)&&(1===g)){if(!(BC.nil===c)){c.Overlap=0;}return((h=(i=a.Points,(0>=i.$length?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+0])),(0>=h.$length?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+0]))===(j=(k=b.Points,(0>=k.$length?($throwRuntimeError("index out of range"),undefined):k.$array[k.$offset+0])),(0>=j.$length?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+0])))&&((l=(m=a.Points,(0>=m.$length?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+0])),(1>=l.$length?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+1]))===(n=(o=b.Points,(0>=o.$length?($throwRuntimeError("index out of range"),undefined):o.$array[o.$offset+0])),(1>=n.$length?($throwRuntimeError("index out of range"),undefined):n.$array[n.$offset+1])));}if(1<f){p=a.SATAxes();q=0;while(true){if(!(q<p.$length)){break;}r=((q<0||q>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+q]);if(AJ(a,b,r.Unit(),c)){return false;}q++;}}if(1<g){s=b.SATAxes();t=0;while(true){if(!(t<s.$length)){break;}u=((t<0||t>=s.$length)?($throwRuntimeError("index out of range"),undefined):s.$array[s.$offset+t]);if(AJ(a,b,u.Unit(),c)){return false;}t++;}}return true;};AJ=function(a,b,c,d){var a,aa,ab,ac,ad,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;e=1.7e+308;f=-1.7e+308;g=1.7e+308;h=-1.7e+308;i=e;j=f;k=g;l=h;m=a.Points;n=0;while(true){if(!(n<m.$length)){break;}o=((n<0||n>=m.$length)?($throwRuntimeError("index out of range"),undefined):m.$array[m.$offset+n]);p=((0>=o.$length?($throwRuntimeError("index out of range"),undefined):o.$array[o.$offset+0])+a.X)*(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0])+((1>=o.$length?($throwRuntimeError("index out of range"),undefined):o.$array[o.$offset+1])+a.Y)*(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]);if(i>p){i=p;}if(j<p){j=p;}n++;}q=b.Points;r=0;while(true){if(!(r<q.$length)){break;}s=((r<0||r>=q.$length)?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+r]);t=((0>=s.$length?($throwRuntimeError("index out of range"),undefined):s.$array[s.$offset+0])+b.X)*(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0])+((1>=s.$length?($throwRuntimeError("index out of range"),undefined):s.$array[s.$offset+1])+b.Y)*(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1]);if(k>t){k=t;}if(l<t){l=t;}r++;}if(i>l||j<k){return true;}if(!(BC.nil===d)){u=0;if(i<k){d.AContainedInB=false;if(j<l){u=j-k;d.BContainedInA=false;}else{v=j-k;w=l-i;if(v<w){u=v;}else{u=-w;}}}else{d.BContainedInA=false;if(j>l){u=i-l;d.AContainedInB=false;}else{x=j-k;y=l-i;if(x<y){u=x;}else{u=-y;}}}z=d.Overlap;aa=u;if(u<0){aa=-u;}if(((0===(ab=d.Axis,(0>=ab.$length?($throwRuntimeError("index out of range"),undefined):ab.$array[ab.$offset+0])))&&(0===(ac=d.Axis,(1>=ac.$length?($throwRuntimeError("index out of range"),undefined):ac.$array[ac.$offset+1]))))||z>aa){ad=1;if(u<0){ad=-1;}d.Overlap=aa;d.OverlapX=(0>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+0])*ad;d.OverlapY=(1>=c.$length?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+1])*ad;}d.Axis=c;}return false;};AK=function(a,b){var a,b,c,d;c=((A.Round(a*100)>>0));d=((A.Round(b*100)>>0));return[c,d];};$pkg.WorldToVirtualGridPos=AK;AL=function(a,b){var a,b,c,d;c=(a)*0.01;d=(b)*0.01;return[c,d];};$pkg.VirtualGridToWorldPos=AL;AM=function(a,b,c,d,e,f,g,h,i,j){var a,b,c,d,e,f,g,h,i,j;return[a-c-g+i,b-d-f+j];};$pkg.WorldToPolygonColliderBLPos=AM;AN=function(a,b,c,d,e,f,g,h,i,j){var a,b,c,d,e,f,g,h,i,j;return[a+c+g-i,b+d+f-j];};$pkg.PolygonColliderBLToWorldPos=AN;AO=function(a,b,c,d,e,f,g,h,i,j){var a,b,c,d,e,f,g,h,i,j,k,l,m;k=AN(a,b,c,d,e,f,g,h,i,j);l=k[0];m=k[1];return AK(l,m);};$pkg.PolygonColliderBLToVirtualGridPos=AO;AQ=function(a,b,c,d,e,f,g){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,$s,$r,$c}=$restore(this,{a,b,c,d,e,f,g});$s=$s||0;s:while(true){switch($s){case 0:h=[h];h[0]=$makeSlice(BD,0,10);i=0;if((16===b.CharacterState)&&(0===c.VelX)&&(b.DirX===c.DirX)){j=1;if(0>c.DirX){j=-j;}i=j*(b.Speed)*0.01;}k=d.Check(i,0,new BE([]));if(BF.nil===k){$s=-1;return(h.$ptr||(h.$ptr=new BG(function(){return this.$target[0];},function($v){this.$target[0]=$v;},h)));}l=k.Objects;m=0;case 1:if(!(m<l.$length)){$s=2;continue;}n=((m<0||m>=l.$length)?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+m]);o=false;p=n.Data;if($assertType(p,BH,true)[1]||$assertType(p,BB,true)[1]||$assertType(p,BI,true)[1]){}else{o=true;}if(!o){m++;$s=1;continue;}q=$assertType(n.Shape,BJ);s=AH(0,0,e,q);$s=3;case 3:if($c){$c=false;s=s.$blk();}if(s&&s.$blk!==undefined){break s;}r=s;t=r[0];u=r[1];v=r[2];w=r[3];if(!t){m++;$s=1;continue;}x=(w.Overlap-f)*w.OverlapX;y=(w.Overlap-f)*w.OverlapY;u=x;v=y;h[0]=$append(h[0],new C.ptr(w.OverlapX,w.OverlapY));g.X=g.X+(u);g.Y=g.Y+(v);m++;$s=1;continue;case 2:$s=-1;return(h.$ptr||(h.$ptr=new BG(function(){return this.$target[0];},function($v){this.$target[0]=$v;},h)));}return;}var $f={$blk:AQ,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,$s};return $f;};AR=function(a,b,c,d){var a,aa,ab,ac,ad,ae,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;e=AB(c.Id);f=AB(c.Id-1>>0);if(0>=e){return[-2,false,0,0];}g=(h=V[$Int32.keyFor(a.CharacterState)],h!==undefined?[h.v,true]:[false,false]);i=g[1];if(i){return[-2,false,0,0];}j=$assertType(d.GetByFrameId(e),BK).InputList;k=BL.nil;if(0<f){k=$assertType(d.GetByFrameId(f),BK).InputList;}l=false;m=a.JoinIndex;o=AF((n=m-1>>0,((n<0||n>=j.$length)?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+n])));p=0;q=0;r=p;s=q;t=0;u=0;v=t;w=u;if(!(BL.nil===k)){y=AF((x=m-1>>0,((x<0||x>=k.$length)?($throwRuntimeError("index out of range"),undefined):k.$array[k.$offset+x])));v=y.BtnALevel;w=y.BtnBLevel;}if(0===a.FramesToRecover){z=o.Dx;aa=o.Dy;r=z;s=aa;if(o.BtnBLevel>w){ab=(ac=U[$Int32.keyFor(a.CharacterState)],ac!==undefined?[ac.v,true]:[false,false]);ad=ab[1];if(!ad){l=true;}else if(16===a.CharacterState){l=true;}}}ae=-1;if(o.BtnALevel>v){if(0>s){ae=3;}else if(0<s){ae=2;}else{ae=1;}}return[ae,l,r,s];};AS=function(a,b,c,d,e,f,g){var{a,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,b,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv,bw,bx,by,bz,c,ca,cb,cc,cd,ce,cf,cg,ch,ci,cj,ck,cl,cm,cn,co,cp,cq,cr,cs,ct,cu,cv,cw,cx,cy,cz,d,da,db,dc,dd,de,df,dg,dh,di,dj,dk,dl,dm,dn,dp,dq,dr,ds,dt,du,dv,dw,dx,dy,dz,e,ea,eb,ec,ed,ee,ef,eg,eh,ei,ej,ek,el,em,en,eo,ep,eq,er,es,et,eu,ev,ew,ex,ey,ez,f,fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo,fp,fq,fr,fs,ft,fu,fv,fw,fx,fy,fz,g,ga,gb,gc,gd,ge,gf,gg,gh,gi,gj,gk,gl,gm,gn,go,gp,gq,gr,gs,gt,gu,gv,gw,gx,gy,gz,h,ha,hb,hc,hd,he,hf,hg,hh,hi,hj,hk,hl,hm,hn,ho,hp,hq,hr,hs,ht,hu,hv,hw,hx,hy,hz,i,ia,ib,ic,id,ie,ig,ih,ii,ij,ik,il,im,io,ip,iq,ir,is,it,iu,iv,iw,ix,iy,iz,j,ja,jb,jc,jd,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$s,$r,$c}=$restore(this,{a,b,c,d,e,f,g});$s=$s||0;s:while(true){switch($s){case 0:h=b.PlayersArr.$length;i=$makeSlice(BM,h);j=b.PlayersArr;k=0;while(true){if(!(k<j.$length)){break;}l=k;m=((k<0||k>=j.$length)?($throwRuntimeError("index out of range"),undefined):j.$array[j.$offset+k]);((l<0||l>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+l]=new E.ptr(m.Id,m.VirtualGridX,m.VirtualGridY,m.DirX,m.DirY,m.VelX,m.VelY,m.Speed,m.BattleState,m.JoinIndex,m.ColliderRadius,m.Removed,m.Score,0,m.FramesToRecover-1>>0,m.FramesInChState+1>>0,m.Hp,m.MaxHp,m.CharacterState,true,false,m.ActiveSkillId,m.ActiveSkillHit,m.FramesInvinsible-1>>0,0,0,m.OnWallNormX,m.OnWallNormY));if(((l<0||l>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+l]).FramesToRecover<0){((l<0||l>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+l]).FramesToRecover=0;}if(((l<0||l>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+l]).FramesInvinsible<0){((l<0||l>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+l]).FramesInvinsible=0;}k++;}n=$makeSlice(BN,0,b.MeleeBullets.$length);o=$makeSlice(BO,0,b.FireballBullets.$length);p=$makeSlice(BD,h);q=$makeSlice(BP,h);r=$makeSlice(BQ,h);s=b.BulletLocalIdCounter;t=b.PlayersArr;u=0;case 1:if(!(u<t.$length)){$s=2;continue;}v=[v];w=[w];x=u;y=((u<0||u>=t.$length)?($throwRuntimeError("index out of range"),undefined):t.$array[t.$offset+u]);z=((x<0||x>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+x]);aa=((x<0||x>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+x]);ab=AR(y,aa,b,a);ac=ab[0];ad=ab[1];ae=ab[2];af=ab[3];((x<0||x>=r.$length)?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+x]=ad);ag=y.JoinIndex;ah=z.SkillMapper(ac,y);$s=3;case 3:if($c){$c=false;ah=ah.$blk();}if(ah&&ah.$blk!==undefined){break s;}ai=ah;aj=(ak=T[$Int.keyFor(ai)],ak!==undefined?[ak.v,true]:[BA.nil,false]);al=aj[0];am=aj[1];if(am){aa.ActiveSkillId=((ai>>0));aa.ActiveSkillHit=0;aa.FramesToRecover=al.RecoveryFrames;an=1;if(0>aa.DirX){an=-an;}ao=false;ap=(aq=al.Hits,ar=aa.ActiveSkillHit,((ar<0||ar>=aq.$length)?($throwRuntimeError("index out of range"),undefined):aq.$array[aq.$offset+ar]));if($assertType(ap,BB,true)[1]){as=ap.$val;v[0]=$clone(as,J);v[0].Bullet.BulletLocalId=s;s=s+(1)>>0;v[0].Bullet.OriginatedRenderFrameId=b.Id;v[0].Bullet.OffenderJoinIndex=ag;n=$append(n,v[0]);if(!((-1===as.Bullet.SelfLockVelX))){ao=true;aa.VelX=$imul(an,as.Bullet.SelfLockVelX);}if(!((-1===as.Bullet.SelfLockVelY))){ao=true;aa.VelY=as.Bullet.SelfLockVelY;}}else if($assertType(ap,BI,true)[1]){at=ap.$val;w[0]=$clone(at,K);w[0].Bullet.BulletLocalId=s;s=s+(1)>>0;au=y.VirtualGridX+($imul(an,w[0].Bullet.HitboxOffsetX))>>0;av=y.VirtualGridY+w[0].Bullet.HitboxOffsetY>>0;w[0].VirtualGridX=au;w[0].VirtualGridY=av;w[0].Bullet.OriginatedRenderFrameId=b.Id;w[0].Bullet.OffenderJoinIndex=ag;w[0].DirX=an;w[0].DirY=0;w[0].VelX=$imul(w[0].Speed,an);w[0].VelY=0;o=$append(o,w[0]);if(!((-1===at.Bullet.SelfLockVelX))){ao=true;aa.VelX=$imul(an,at.Bullet.SelfLockVelX);}if(!((-1===at.Bullet.SelfLockVelY))){ao=true;aa.VelY=at.Bullet.SelfLockVelY;}}if(false===ao&&false===y.InAir){aa.VelX=0;}aa.CharacterState=al.BoundChState;u++;$s=1;continue;}if(0===y.FramesToRecover){if(!((0===ae))){aw=1;if(0>ae){aw=-aw;}aa.DirX=ae;aa.DirY=af;aa.VelX=$imul(aw,y.Speed);if(Y(aa.VelX)<Y(y.VelX)){aa.VelX=$imul(aw,Y(y.VelX));}aa.CharacterState=1;}else{aa.CharacterState=0;aa.VelX=0;}}u++;$s=1;continue;case 2:ax=$makeSlice(BS,b.PlayersArr.$length,b.PlayersArr.$length);ay=b.PlayersArr;az=0;case 4:if(!(az<ay.$length)){$s=5;continue;}ba=az;bb=((az<0||az>=ay.$length)?($throwRuntimeError("index out of range"),undefined):ay.$array[ay.$offset+az]);bc=bb.JoinIndex;bd=0;be=0;(bf=bc-1>>0,((bf<0||bf>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+bf])).X=bd;(bg=bc-1>>0,((bg<0||bg>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+bg])).Y=be;bh=((ba<0||ba>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+ba]);bi=((ba<0||ba>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+ba]);bj=bb.VirtualGridX+bb.VelX>>0;bk=bb.VirtualGridY+bb.VelY>>0;bl=bj;bm=bk;if(((ba<0||ba>=r.$length)?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+ba])){if(16===bb.CharacterState){if(0<($imul(bb.VelX,bb.OnWallNormX))){bl=bl-(bb.VelX)>>0;}bn=-1;if(0>bb.OnWallNormX){bn=-bn;}bl=bl+(($imul(bn,bi.WallJumpingInitVelX)))>>0;bm=bm+(bi.WallJumpingInitVelY)>>0;bh.VelX=(($imul(bn,bi.WallJumpingInitVelX)));bh.VelY=(bi.WallJumpingInitVelY);bh.FramesToRecover=bi.WallJumpingFramesToRecover;}else{bh.VelY=(bi.JumpingInitVelY);bm=bm+(bi.JumpingInitVelY)>>0;}}bo=AL(bl,bm);bp=bo[0];bq=bo[1];br=$imul(bb.ColliderRadius,2);bs=$imul(bb.ColliderRadius,4);bt=br;bu=bs;bv=bb.CharacterState;if(bv===(9)){bw=$imul(bb.ColliderRadius,4);bx=$imul(bb.ColliderRadius,2);bt=bw;bu=bx;}else if((bv===(8))||(bv===(4))||(bv===(5))||(bv===(16))){by=$imul(bb.ColliderRadius,2);bz=$imul(bb.ColliderRadius,2);bt=by;bu=bz;}ca=AL(bt,bu);cb=ca[0];cc=ca[1];cd=AT(bp,bq,cb,cc,0.1,0.1,0.1,0.1,e,f,bb,"Player");$s=6;case 6:if($c){$c=false;cd=cd.$blk();}if(cd&&cd.$blk!==undefined){break s;}ce=cd;((ba<0||ba>=ax.$length)?($throwRuntimeError("index out of range"),undefined):ax.$array[ax.$offset+ba]=ce);$r=c.Add(new BS([ce]));$s=7;case 7:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}if(bb.InAir){if((16===bb.CharacterState)&&!((ba<0||ba>=r.$length)?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+ba])){bh.VelX=bh.VelX+(0)>>0;bh.VelY=bi.WallSlidingVelY;}else{bh.VelX=bh.VelX+(0)>>0;bh.VelY=bh.VelY+(-50)>>0;}}az++;$s=4;continue;case 5:cf=$makeSlice(BS,0,b.MeleeBullets.$length);cg=b.MeleeBullets;ch=0;case 8:if(!(ch<cg.$length)){$s=9;continue;}ci=((ch<0||ch>=cg.$length)?($throwRuntimeError("index out of range"),undefined):cg.$array[cg.$offset+ch]);if(((ci.Bullet.OriginatedRenderFrameId+ci.Bullet.StartupFrames>>0)<=b.Id)&&(((ci.Bullet.OriginatedRenderFrameId+ci.Bullet.StartupFrames>>0)+ci.Bullet.ActiveFrames>>0)>b.Id)){$s=10;continue;}if(((ci.Bullet.OriginatedRenderFrameId+ci.Bullet.StartupFrames>>0)+ci.Bullet.ActiveFrames>>0)>b.Id){$s=11;continue;}$s=12;continue;case 10:cl=(cj=b.PlayersArr,ck=ci.Bullet.OffenderJoinIndex-1>>0,((ck<0||ck>=cj.$length)?($throwRuntimeError("index out of range"),undefined):cj.$array[cj.$offset+ck]));cm=1;if(0>cl.DirX){cm=-cm;}cn=AL(cl.VirtualGridX+($imul(cm,ci.Bullet.HitboxOffsetX))>>0,cl.VirtualGridY);co=cn[0];cp=cn[1];cq=AL(ci.Bullet.HitboxSizeX,ci.Bullet.HitboxSizeY);cr=cq[0];cs=cq[1];ct=AT(co,cp,cr,cs,0.1,0.1,0.1,0.1,e,f,ci,"MeleeBullet");$s=13;case 13:if($c){$c=false;ct=ct.$blk();}if(ct&&ct.$blk!==undefined){break s;}cu=ct;$r=c.Add(new BS([cu]));$s=14;case 14:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}cf=$append(cf,cu);$s=12;continue;case 11:n=$append(n,ci);case 12:ch++;$s=8;continue;case 9:cv=b.FireballBullets;cw=0;case 15:if(!(cw<cv.$length)){$s=16;continue;}cx=((cw<0||cw>=cv.$length)?($throwRuntimeError("index out of range"),undefined):cv.$array[cv.$offset+cw]);if(((cx.Bullet.OriginatedRenderFrameId+cx.Bullet.StartupFrames>>0)<b.Id)&&(((cx.Bullet.OriginatedRenderFrameId+cx.Bullet.StartupFrames>>0)+cx.Bullet.ActiveFrames>>0)>b.Id)){$s=17;continue;}if(((cx.Bullet.OriginatedRenderFrameId+cx.Bullet.StartupFrames>>0)+cx.Bullet.ActiveFrames>>0)>b.Id){$s=18;continue;}$s=19;continue;case 17:cy=AL(cx.VirtualGridX,cx.VirtualGridY);cz=cy[0];da=cy[1];db=AL(cx.Bullet.HitboxSizeX,cx.Bullet.HitboxSizeY);dc=db[0];dd=db[1];de=AT(cz,da,dc,dd,0.1,0.1,0.1,0.1,e,f,cx,"FireballBullet");$s=20;case 20:if($c){$c=false;de=de.$blk();}if(de&&de.$blk!==undefined){break s;}df=de;$r=c.Add(new BS([df]));$s=21;case 21:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}cf=$append(cf,df);$s=19;continue;case 18:o=$append(o,cx);case 19:cw++;$s=15;continue;case 16:dg=b.PlayersArr;dh=0;case 22:if(!(dh<dg.$length)){$s=23;continue;}di=dh;dj=((dh<0||dh>=dg.$length)?($throwRuntimeError("index out of range"),undefined):dg.$array[dg.$offset+dh]);dk=dj.JoinIndex;dl=((di<0||di>=ax.$length)?($throwRuntimeError("index out of range"),undefined):ax.$array[ax.$offset+di]);dm=$assertType(dl.Shape,BJ);dn=((di<0||di>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+di]);dq=AQ(dk,dj,dn,dl,dm,0.1,(dp=dk-1>>0,((dp<0||dp>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+dp])));$s=24;case 24:if($c){$c=false;dq=dq.$blk();}if(dq&&dq.$blk!==undefined){break s;}(dr=dk-1>>0,((dr<0||dr>=q.$length)?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+dr]=dq));ds=((di<0||di>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+di]);dt=false;du=dl.Check(0,0,new BE([]));if(!(BF.nil===du)){$s=25;continue;}$s=26;continue;case 25:dv=du.Objects;dw=0;case 27:if(!(dw<dv.$length)){$s=28;continue;}dx=((dw<0||dw>=dv.$length)?($throwRuntimeError("index out of range"),undefined):dv.$array[dv.$offset+dw]);dy=false;dz=false;ea=false;eb=dy;ec=dz;ed=ea;ee=dx.Data;if($assertType(ee,BH,true)[1]){ec=true;}else if($assertType(ee,BB,true)[1]||$assertType(ee,BI,true)[1]){ed=true;}else{eb=true;}if(ed){dw++;$s=27;continue;}ef=$assertType(dx.Shape,BJ);eh=AH(0,0,dm,ef);$s=29;case 29:if($c){$c=false;eh=eh.$blk();}if(eh&&eh.$blk!==undefined){break s;}eg=eh;ei=eg[0];ej=eg[1];ek=eg[2];el=eg[3];if(!ei){dw++;$s=27;continue;}em=el.OverlapX*0+el.OverlapY*-1;if(ec){en=(el.Overlap-0.2)*el.OverlapX;eo=(el.Overlap-0.2)*el.OverlapY;ej=en;ek=eo;}ep=(eq=dk-1>>0,((eq<0||eq>=q.$length)?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+eq])).$get();er=0;while(true){if(!(er<ep.$length)){break;}es=$clone(((er<0||er>=ep.$length)?($throwRuntimeError("index out of range"),undefined):ep.$array[ep.$offset+er]),C);et=ej*es.X+ek*es.Y;if(eb||(ec&&0>et)){ej=ej-(et*es.X);ek=ek-(et*es.Y);}er++;}eu=dk-1>>0;((eu<0||eu>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+eu]).X=((eu<0||eu>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+eu]).X+(ej);ev=dk-1>>0;((ev<0||ev>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+ev]).Y=((ev<0||ev>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+ev]).Y+(ek);if(0.5<em){dt=true;}dw++;$s=27;continue;case 28:case 26:if(dt){dn.InAir=false;ew=dj.InAir&&0>=dj.VelY;if(ew){dn.VelY=0;dn.VelX=0;if(8===dn.CharacterState){dn.CharacterState=9;dn.FramesToRecover=ds.LayDownFramesToRecover;}else{ex=dj.CharacterState;if((ex===(8))||(ex===(4))||(ex===(5))||(ex===(16))){ey=0;ez=dj.ColliderRadius;fa=ey;fb=ez;fc=AL(fa,fb);fd=fc[1];fe=dk-1>>0;((fe<0||fe>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+fe]).Y=((fe<0||fe>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+fe]).Y-(fd);}dn.CharacterState=0;dn.FramesToRecover=0;}}else{ff=(fg=X[$Int32.keyFor(dn.CharacterState)],fg!==undefined?[fg.v,true]:[false,false]);fh=ff[1];if(fh){if(9===dn.CharacterState){if(0===dn.FramesToRecover){dn.CharacterState=10;dn.FramesToRecover=ds.GetUpFramesToRecover;}}else if(10===dn.CharacterState){if(0===dn.FramesToRecover){dn.CharacterState=0;dn.FramesInvinsible=ds.GetUpInvinsibleFrames;}}}}}if(ds.OnWallEnabled){if(dn.InAir){fi=(fj=V[$Int32.keyFor(dj.CharacterState)],fj!==undefined?[fj.v,true]:[false,false]);fk=fi[1];if(!fk){fl=(fm=dk-1>>0,((fm<0||fm>=q.$length)?($throwRuntimeError("index out of range"),undefined):q.$array[q.$offset+fm])).$get();fn=0;while(true){if(!(fn<fl.$length)){break;}fo=$clone(((fn<0||fn>=fl.$length)?($throwRuntimeError("index out of range"),undefined):fl.$array[fl.$offset+fn]),C);fp=fo.X*1+fo.Y*0;fq=fo.X*-1+fo.Y*0;if(0.9<fp){dn.OnWall=true;fr=((fo.X>>0));fs=((fo.Y>>0));dn.OnWallNormX=fr;dn.OnWallNormY=fs;break;}if(0.9<fq){dn.OnWall=true;ft=((fo.X>>0));fu=((fo.Y>>0));dn.OnWallNormX=ft;dn.OnWallNormY=fu;break;}fn++;}if(!dj.OnWall&&dn.OnWall){dn.VelY=0;}}}if(!dn.OnWall){fv=0;fw=0;dn.OnWallNormX=fv;dn.OnWallNormY=fw;}}dh++;$s=22;continue;case 23:fx=cf;fy=0;case 30:if(!(fy<fx.$length)){$s=31;continue;}fz=((fy<0||fy>=fx.$length)?($throwRuntimeError("index out of range"),undefined):fx.$array[fx.$offset+fy]);ga=fz.Check(0,0,new BE([]));fz.Space.Remove(new BS([fz]));gb=true;if(!(BF.nil===ga)){$s=32;continue;}$s=33;continue;case 32:gc=fz.Data;if($assertType(gc,BB,true)[1]){$s=34;continue;}if($assertType(gc,BI,true)[1]){$s=35;continue;}$s=36;continue;case 34:gd=gc.$val;gf=$assertType(fz.Shape,BJ);gi=(gg=b.PlayersArr,gh=gd.Bullet.OffenderJoinIndex-1>>0,((gh<0||gh>=gg.$length)?($throwRuntimeError("index out of range"),undefined):gg.$array[gg.$offset+gh]));gj=ga.Objects;gk=0;case 37:if(!(gk<gj.$length)){$s=38;continue;}gl=((gk<0||gk>=gj.$length)?($throwRuntimeError("index out of range"),undefined):gj.$array[gj.$offset+gk]);gm=$assertType(gl.Shape,BJ);gn=gl.Data;if($assertType(gn,BH,true)[1]){$s=39;continue;}$s=40;continue;case 39:go=gn.$val;if(gd.Bullet.OffenderJoinIndex===go.JoinIndex){gk++;$s=37;continue;}gr=AH(0,0,gf,gm);$s=42;case 42:if($c){$c=false;gr=gr.$blk();}if(gr&&gr.$blk!==undefined){break s;}gq=gr;gs=gq[0];if(!gs){gk++;$s=37;continue;}gb=false;gt=(gu=W[$Int32.keyFor(go.CharacterState)],gu!==undefined?[gu.v,true]:[false,false]);gv=gt[1];if(gv){gk++;$s=37;continue;}if(0<go.FramesInvinsible){gk++;$s=37;continue;}gw=1;if(0>gi.DirX){gw=-gw;}gx=$imul(gw,gd.Bullet.PushbackVelX);gy=gd.Bullet.PushbackVelY;gz=gx;ha=gy;hc=(hb=go.JoinIndex-1>>0,((hb<0||hb>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+hb]));hc.VelX=gz;hc.VelY=ha;if(gd.Bullet.BlowUp){hc.CharacterState=8;}else{hc.CharacterState=3;}he=(hd=go.JoinIndex-1>>0,((hd<0||hd>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+hd])).FramesToRecover;if(gd.Bullet.HitStunFrames>he){hc.FramesToRecover=gd.Bullet.HitStunFrames;}$s=41;continue;case 40:gp=gn;gb=false;case 41:gk++;$s=37;continue;case 38:$s=36;continue;case 35:ge=gc.$val;hf=$assertType(fz.Shape,BJ);hi=(hg=b.PlayersArr,hh=ge.Bullet.OffenderJoinIndex-1>>0,((hh<0||hh>=hg.$length)?($throwRuntimeError("index out of range"),undefined):hg.$array[hg.$offset+hh]));hj=ga.Objects;hk=0;case 43:if(!(hk<hj.$length)){$s=44;continue;}hl=((hk<0||hk>=hj.$length)?($throwRuntimeError("index out of range"),undefined):hj.$array[hj.$offset+hk]);hm=$assertType(hl.Shape,BJ);hn=hl.Data;if($assertType(hn,BH,true)[1]){$s=45;continue;}$s=46;continue;case 45:ho=hn.$val;if(ge.Bullet.OffenderJoinIndex===ho.JoinIndex){hk++;$s=43;continue;}hr=AH(0,0,hf,hm);$s=48;case 48:if($c){$c=false;hr=hr.$blk();}if(hr&&hr.$blk!==undefined){break s;}hq=hr;hs=hq[0];if(!hs){hk++;$s=43;continue;}gb=false;ht=(hu=W[$Int32.keyFor(ho.CharacterState)],hu!==undefined?[hu.v,true]:[false,false]);hv=ht[1];if(hv){hk++;$s=43;continue;}if(0<ho.FramesInvinsible){hk++;$s=43;continue;}hw=1;if(0>hi.DirX){hw=-hw;}hx=$imul(hw,ge.Bullet.PushbackVelX);hy=ge.Bullet.PushbackVelY;hz=hx;ia=hy;ic=(ib=ho.JoinIndex-1>>0,((ib<0||ib>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+ib]));ic.VelX=hz;ic.VelY=ia;if(ge.Bullet.BlowUp){ic.CharacterState=8;}else{ic.CharacterState=3;}ie=(id=ho.JoinIndex-1>>0,((id<0||id>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+id])).FramesToRecover;if(ge.Bullet.HitStunFrames>ie){ic.FramesToRecover=ge.Bullet.HitStunFrames;}$s=47;continue;case 46:hp=hn;gb=false;case 47:hk++;$s=43;continue;case 44:case 36:case 33:if(gb){ig=fz.Data;if($assertType(ig,BB,true)[1]){ih=ig.$val;n=$append(n,ih);}else if($assertType(ig,BI,true)[1]){ii=ig.$val;ij=ii.VirtualGridX+ii.VelX>>0;ik=ii.VirtualGridY+ii.VelY>>0;ii.VirtualGridX=ij;ii.VirtualGridY=ik;o=$append(o,ii);}}fy++;$s=30;continue;case 31:il=b.PlayersArr;im=0;while(true){if(!(im<il.$length)){break;}io=im;ip=((im<0||im>=il.$length)?($throwRuntimeError("index out of range"),undefined):il.$array[il.$offset+im]);iq=ip.JoinIndex;ir=((io<0||io>=ax.$length)?($throwRuntimeError("index out of range"),undefined):ax.$array[ax.$offset+io]);is=((io<0||io>=i.$length)?($throwRuntimeError("index out of range"),undefined):i.$array[i.$offset+io]);it=AO(ir.X-(iu=iq-1>>0,((iu<0||iu>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+iu])).X,ir.Y-(iv=iq-1>>0,((iv<0||iv>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+iv])).Y,ir.W*0.5,ir.H*0.5,0,0,0,0,e,f);is.VirtualGridX=it[0];is.VirtualGridY=it[1];if(is.InAir){iw=is.CharacterState;ix=iw;if((ix===(0))||(ix===(1))){if(is.OnWall){is.CharacterState=16;}else if(((io<0||io>=r.$length)?($throwRuntimeError("index out of range"),undefined):r.$array[r.$offset+io])||(5===ip.CharacterState)){is.CharacterState=5;}else{is.CharacterState=4;}}else if(ix===(2)){is.CharacterState=6;}else if(ix===(3)){is.CharacterState=7;}}if(!((is.CharacterState===ip.CharacterState))){is.FramesInChState=0;}iy=(iz=X[$Int32.keyFor(is.CharacterState)],iz!==undefined?[iz.v,true]:[false,false]);ja=iy[1];if(ja){is.ActiveSkillId=-1;is.ActiveSkillHit=-1;}im++;}jb=ax;jc=0;while(true){if(!(jc<jb.$length)){break;}jd=((jc<0||jc>=jb.$length)?($throwRuntimeError("index out of range"),undefined):jb.$array[jb.$offset+jc]);jd.Space.Remove(new BS([jd]));jc++;}$s=-1;return new M.ptr(b.Id+1>>0,i,new $Int64(0,0),n,o,new $Uint64(0,0),false,s);}return;}var $f={$blk:AS,$c:true,$r,a,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,b,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv,bw,bx,by,bz,c,ca,cb,cc,cd,ce,cf,cg,ch,ci,cj,ck,cl,cm,cn,co,cp,cq,cr,cs,ct,cu,cv,cw,cx,cy,cz,d,da,db,dc,dd,de,df,dg,dh,di,dj,dk,dl,dm,dn,dp,dq,dr,ds,dt,du,dv,dw,dx,dy,dz,e,ea,eb,ec,ed,ee,ef,eg,eh,ei,ej,ek,el,em,en,eo,ep,eq,er,es,et,eu,ev,ew,ex,ey,ez,f,fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo,fp,fq,fr,fs,ft,fu,fv,fw,fx,fy,fz,g,ga,gb,gc,gd,ge,gf,gg,gh,gi,gj,gk,gl,gm,gn,go,gp,gq,gr,gs,gt,gu,gv,gw,gx,gy,gz,h,ha,hb,hc,hd,he,hf,hg,hh,hi,hj,hk,hl,hm,hn,ho,hp,hq,hr,hs,ht,hu,hv,hw,hx,hy,hz,i,ia,ib,ic,id,ie,ig,ih,ii,ij,ik,il,im,io,ip,iq,ir,is,it,iu,iv,iw,ix,iy,iz,j,ja,jb,jc,jd,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$s};return $f;};$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame=AS;AT=function(a,b,c,d,e,f,g,h,i,j,k,l){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,$s,$r,$c}=$restore(this,{a,b,c,d,e,f,g,h,i,j,k,l});$s=$s||0;s:while(true){switch($s){case 0:m=AM(a,b,c*0.5,d*0.5,e,f,g,h,i,j);n=m[0];o=m[1];p=AU(n,o,g+c+h,f+d+e,k,l);$s=1;case 1:if($c){$c=false;p=p.$blk();}if(p&&p.$blk!==undefined){break s;}q=p;$s=2;case 2:return q;}return;}var $f={$blk:AT,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,$s};return $f;};$pkg.GenerateRectCollider=AT;AU=function(a,b,c,d,e,f){var{a,b,c,d,e,f,g,h,$s,$r,$c}=$restore(this,{a,b,c,d,e,f});$s=$s||0;s:while(true){switch($s){case 0:g=B.NewObject(a,b,c,d,new BE([f]));h=B.NewRectangle(0,0,c,d);$r=g.SetShape(h);$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}g.Data=e;$s=-1;return g;}return;}var $f={$blk:AU,$c:true,$r,a,b,c,d,e,f,g,h,$s};return $f;};AV=function(a,b,c,d,e){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,$s,$r,$c}=$restore(this,{a,b,c,d,e});$s=$s||0;s:while(true){switch($s){case 0:f=AW(a);g=0;h=0;i=g;j=h;k=B.NewConvexPolygon(BT.nil);l=f.Points;m=0;while(true){if(!(m<l.$length)){break;}n=m;o=((m<0||m>=l.$length)?($throwRuntimeError("index out of range"),undefined):l.$array[l.$offset+m]);p=f.Points;q=0;while(true){if(!(q<p.$length)){break;}r=q;s=((q<0||q>=p.$length)?($throwRuntimeError("index out of range"),undefined):p.$array[p.$offset+q]);if(n===r){q++;continue;}if(A.Abs(s.X-o.X)>i){i=A.Abs(s.X-o.X);}if(A.Abs(s.Y-o.Y)>j){j=A.Abs(s.Y-o.Y);}q++;}m++;}t=0;while(true){if(!(t<f.Points.$length)){break;}v=(u=f.Points,((t<0||t>=u.$length)?($throwRuntimeError("index out of range"),undefined):u.$array[u.$offset+t]));k.AddPoints(new BT([v.X,v.Y]));t=t+(1)>>0;}w=B.NewObject(f.Anchor.X+b,f.Anchor.Y+c,i,j,new BE([e]));$r=w.SetShape(k);$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}w.Data=d;$s=-1;return w;}return;}var $f={$blk:AV,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,$s};return $f;};$pkg.GenerateConvexPolygonCollider=AV;AW=function(a){var a,b,c,d,e,f,g,h,i,j,k;b=new C.ptr(1.7e+308,1.7e+308);c=a.Points;d=0;while(true){if(!(d<c.$length)){break;}e=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);if(e.X<b.X){b.X=e.X;}if(e.Y<b.Y){b.Y=e.Y;}d++;}f=new D.ptr(new C.ptr(a.Anchor.X+b.X,a.Anchor.Y+b.Y),$makeSlice(BV,a.Points.$length));g=a.Points;h=0;while(true){if(!(h<g.$length)){break;}i=h;j=((h<0||h>=g.$length)?($throwRuntimeError("index out of range"),undefined):g.$array[g.$offset+h]);(k=f.Points,((i<0||i>=k.$length)?($throwRuntimeError("index out of range"),undefined):k.$array[k.$offset+i]=new C.ptr(j.X-b.X,j.Y-b.Y)));h++;}return f;};$pkg.AlignPolygon2DToBoundingBox=AW;BY.methods=[{prop:"Put",name:"Put",pkg:"",typ:$funcType([$emptyInterface],[],false)},{prop:"Pop",name:"Pop",pkg:"",typ:$funcType([],[$emptyInterface],false)},{prop:"GetArrIdxByOffset",name:"GetArrIdxByOffset",pkg:"",typ:$funcType([$Int32],[$Int32],false)},{prop:"GetByOffset",name:"GetByOffset",pkg:"",typ:$funcType([$Int32],[$emptyInterface],false)},{prop:"GetByFrameId",name:"GetByFrameId",pkg:"",typ:$funcType([$Int32],[$emptyInterface],false)},{prop:"SetByFrameId",name:"SetByFrameId",pkg:"",typ:$funcType([$emptyInterface,$Int32],[$Int32,$Int32,$Int32],false)}];C.init("",[{prop:"X",name:"X",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Float64,tag:""}]);D.init("",[{prop:"Anchor",name:"Anchor",embedded:false,exported:true,typ:BU,tag:""},{prop:"Points",name:"Points",embedded:false,exported:true,typ:BV,tag:""}]);E.init("",[{prop:"Id",name:"Id",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VirtualGridX",name:"VirtualGridX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VirtualGridY",name:"VirtualGridY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"DirX",name:"DirX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"DirY",name:"DirY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VelX",name:"VelX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VelY",name:"VelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Speed",name:"Speed",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BattleState",name:"BattleState",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"JoinIndex",name:"JoinIndex",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"ColliderRadius",name:"ColliderRadius",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Removed",name:"Removed",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"Score",name:"Score",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"LastMoveGmtMillis",name:"LastMoveGmtMillis",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"FramesToRecover",name:"FramesToRecover",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"FramesInChState",name:"FramesInChState",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Hp",name:"Hp",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"MaxHp",name:"MaxHp",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"CharacterState",name:"CharacterState",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"InAir",name:"InAir",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"OnWall",name:"OnWall",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"ActiveSkillId",name:"ActiveSkillId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"ActiveSkillHit",name:"ActiveSkillHit",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"FramesInvinsible",name:"FramesInvinsible",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BulletTeamId",name:"BulletTeamId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"ChCollisionTeamId",name:"ChCollisionTeamId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"OnWallNormX",name:"OnWallNormX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"OnWallNormY",name:"OnWallNormY",embedded:false,exported:true,typ:$Int32,tag:""}]);F.init("",[{prop:"Dx",name:"Dx",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Dy",name:"Dy",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BtnALevel",name:"BtnALevel",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BtnBLevel",name:"BtnBLevel",embedded:false,exported:true,typ:$Int32,tag:""}]);H.init("",[{prop:"Boundary",name:"Boundary",embedded:false,exported:true,typ:BW,tag:""}]);I.init("",[{prop:"BulletLocalId",name:"BulletLocalId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"OriginatedRenderFrameId",name:"OriginatedRenderFrameId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"OffenderJoinIndex",name:"OffenderJoinIndex",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"StartupFrames",name:"StartupFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"CancellableStFrame",name:"CancellableStFrame",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"CancellableEdFrame",name:"CancellableEdFrame",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"ActiveFrames",name:"ActiveFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"HitStunFrames",name:"HitStunFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BlockStunFrames",name:"BlockStunFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"PushbackVelX",name:"PushbackVelX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"PushbackVelY",name:"PushbackVelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Damage",name:"Damage",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"SelfLockVelX",name:"SelfLockVelX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"SelfLockVelY",name:"SelfLockVelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"HitboxOffsetX",name:"HitboxOffsetX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"HitboxOffsetY",name:"HitboxOffsetY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"HitboxSizeX",name:"HitboxSizeX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"HitboxSizeY",name:"HitboxSizeY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BlowUp",name:"BlowUp",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"CancelTransit",name:"CancelTransit",embedded:false,exported:true,typ:BX,tag:""},{prop:"TeamId",name:"TeamId",embedded:false,exported:true,typ:$Int32,tag:""}]);J.init("",[{prop:"Bullet",name:"Bullet",embedded:true,exported:true,typ:I,tag:""}]);K.init("",[{prop:"VirtualGridX",name:"VirtualGridX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VirtualGridY",name:"VirtualGridY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"DirX",name:"DirX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"DirY",name:"DirY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VelX",name:"VelX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"VelY",name:"VelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Speed",name:"Speed",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"SpeciesId",name:"SpeciesId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Bullet",name:"Bullet",embedded:true,exported:true,typ:I,tag:""}]);L.init("",[{prop:"BattleLocalId",name:"BattleLocalId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"RecoveryFrames",name:"RecoveryFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"RecoveryFramesOnBlock",name:"RecoveryFramesOnBlock",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"RecoveryFramesOnHit",name:"RecoveryFramesOnHit",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"ReleaseTriggerType",name:"ReleaseTriggerType",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"BoundChState",name:"BoundChState",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Hits",name:"Hits",embedded:false,exported:true,typ:AZ,tag:""}]);M.init("",[{prop:"Id",name:"Id",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"PlayersArr",name:"PlayersArr",embedded:false,exported:true,typ:BM,tag:""},{prop:"CountdownNanos",name:"CountdownNanos",embedded:false,exported:true,typ:$Int64,tag:""},{prop:"MeleeBullets",name:"MeleeBullets",embedded:false,exported:true,typ:BN,tag:""},{prop:"FireballBullets",name:"FireballBullets",embedded:false,exported:true,typ:BO,tag:""},{prop:"BackendUnconfirmedMask",name:"BackendUnconfirmedMask",embedded:false,exported:true,typ:$Uint64,tag:""},{prop:"ShouldForceResync",name:"ShouldForceResync",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"BulletLocalIdCounter",name:"BulletLocalIdCounter",embedded:false,exported:true,typ:$Int32,tag:""}]);N.init("",[{prop:"InputFrameId",name:"InputFrameId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"InputList",name:"InputList",embedded:false,exported:true,typ:BL,tag:""},{prop:"ConfirmedList",name:"ConfirmedList",embedded:false,exported:true,typ:$Uint64,tag:""}]);O.init("",[{prop:"FlAct",name:"FlAct",embedded:false,exported:true,typ:$Uint64,tag:""},{prop:"FrAct",name:"FrAct",embedded:false,exported:true,typ:$Uint64,tag:""},{prop:"X",name:"X",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"Y",name:"Y",embedded:false,exported:true,typ:$Float64,tag:""}]);P.init("",[{prop:"Ed",name:"Ed",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"St",name:"St",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"EdFrameId",name:"EdFrameId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"StFrameId",name:"StFrameId",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"N",name:"N",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Cnt",name:"Cnt",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Eles",name:"Eles",embedded:false,exported:true,typ:AZ,tag:""}]);R.init([$Int,BH],[$Int],false);S.init("",[{prop:"SpeciesId",name:"SpeciesId",embedded:false,exported:true,typ:$Int,tag:""},{prop:"SpeciesName",name:"SpeciesName",embedded:false,exported:true,typ:$String,tag:""},{prop:"InAirIdleFrameIdxTurningPoint",name:"InAirIdleFrameIdxTurningPoint",embedded:false,exported:true,typ:$Int,tag:""},{prop:"InAirIdleFrameIdxTurnedCycle",name:"InAirIdleFrameIdxTurnedCycle",embedded:false,exported:true,typ:$Int,tag:""},{prop:"LayDownFrames",name:"LayDownFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"LayDownFramesToRecover",name:"LayDownFramesToRecover",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"GetUpInvinsibleFrames",name:"GetUpInvinsibleFrames",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"GetUpFramesToRecover",name:"GetUpFramesToRecover",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"Speed",name:"Speed",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"JumpingInitVelY",name:"JumpingInitVelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"DashingEnabled",name:"DashingEnabled",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"OnWallEnabled",name:"OnWallEnabled",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"WallJumpingFramesToRecover",name:"WallJumpingFramesToRecover",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"WallJumpingInitVelX",name:"WallJumpingInitVelX",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"WallJumpingInitVelY",name:"WallJumpingInitVelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"WallSlidingVelY",name:"WallSlidingVelY",embedded:false,exported:true,typ:$Int32,tag:""},{prop:"SkillMapper",name:"SkillMapper",embedded:false,exported:true,typ:R,tag:""}]);AG.init("",[{prop:"Overlap",name:"Overlap",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"OverlapX",name:"OverlapX",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"OverlapY",name:"OverlapY",embedded:false,exported:true,typ:$Float64,tag:""},{prop:"AContainedInB",name:"AContainedInB",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"BContainedInA",name:"BContainedInA",embedded:false,exported:true,typ:$Bool,tag:""},{prop:"Axis",name:"Axis",embedded:false,exported:true,typ:B.Vector,tag:""}]);$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:$r=A.$init();$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}$r=B.$init();$s=2;case 2:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}$pkg.DIRECTION_DECODER=new AY([new AX([0,0]),new AX([0,2]),new AX([0,-2]),new AX([2,0]),new AX([-2,0]),new AX([1,1]),new AX([-1,-1]),new AX([1,-1]),new AX([-1,1])]);T=$makeMap($Int.keyFor,[{k:1,v:new L.ptr(0,30,30,30,1,2,new AZ([new J.ptr(new I.ptr(0,0,0,7,13,30,22,13,9,50,0,5,5,-1,1200,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:2}]),0))]))},{k:2,v:new L.ptr(0,36,36,36,1,11,new AZ([new J.ptr(new I.ptr(0,0,0,18,22,36,18,18,9,50,0,5,10,-1,1800,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:3}]),0))]))},{k:3,v:new L.ptr(0,50,50,50,1,12,new AZ([new J.ptr(new I.ptr(0,0,0,8,0,0,30,999999999,9,200,700,10,50,500,1600,800,3200,3200,true,false,0))]))},{k:4,v:new L.ptr(0,30,30,30,1,2,new AZ([new J.ptr(new I.ptr(0,0,0,7,13,30,22,13,9,50,0,5,5,-1,1200,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:5}]),0))]))},{k:5,v:new L.ptr(0,36,36,36,1,11,new AZ([new J.ptr(new I.ptr(0,0,0,18,22,36,18,18,9,50,0,5,10,-1,1800,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:6}]),0))]))},{k:6,v:new L.ptr(0,45,45,45,1,12,new AZ([new J.ptr(new I.ptr(0,0,0,8,0,0,28,999999999,9,200,300,10,-1,-1,2400,0,3200,3200,true,false,0))]))},{k:7,v:new L.ptr(0,30,30,30,1,2,new AZ([new J.ptr(new I.ptr(0,0,0,7,13,30,22,13,9,50,0,5,-1,-1,1200,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:8}]),0))]))},{k:8,v:new L.ptr(0,36,36,36,1,11,new AZ([new J.ptr(new I.ptr(0,0,0,18,22,36,18,18,9,50,0,5,10,-1,1800,0,2400,3200,false,$makeMap($Int.keyFor,[{k:1,v:9}]),0))]))},{k:9,v:new L.ptr(0,40,40,40,1,12,new AZ([new J.ptr(new I.ptr(0,0,0,7,0,0,30,999999999,9,200,400,10,100,-1,1000,0,3200,3200,true,false,0))]))},{k:10,v:new L.ptr(0,40,40,40,1,13,new AZ([new K.ptr(0,0,0,0,0,0,800,1,new I.ptr(0,0,0,15,0,0,999999999,15,9,200,0,20,-1,-1,3200,500,4800,3200,false,false,0))]))},{k:11,v:new L.ptr(0,60,60,60,1,14,new AZ([new J.ptr(new I.ptr(0,0,0,3,0,0,25,999999999,9,200,700,30,100,800,800,0,4000,6400,true,false,0))]))},{k:255,v:new L.ptr(0,30,30,30,1,6,new AZ([new J.ptr(new I.ptr(0,0,0,3,0,0,20,18,9,50,0,5,-1,-1,1200,0,3200,2400,false,false,0))]))},{k:256,v:new L.ptr(0,20,20,20,1,6,new AZ([new J.ptr(new I.ptr(0,0,0,3,0,0,10,15,9,50,0,5,-1,-1,1200,0,3200,2400,false,false,0))]))},{k:257,v:new L.ptr(0,30,30,30,1,6,new AZ([new J.ptr(new I.ptr(0,0,0,3,0,0,20,18,9,50,0,5,-1,-1,1200,0,3200,2400,false,false,0))]))}]);$pkg.Characters=$makeMap($Int.keyFor,[{k:0,v:new S.ptr(0,"MonkGirl",11,1,16,16,10,27,300,800,false,false,0,0,0,0,(function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n;if(1===a){if(0===b.FramesToRecover){if(b.InAir){return 255;}else{return 1;}}else{c=(d=T[$Int.keyFor(((b.ActiveSkillId>>0)))],d!==undefined?[d.v,true]:[BA.nil,false]);e=c[0];f=c[1];if(f){g=(h=e.Hits,i=b.ActiveSkillHit,((i<0||i>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+i]));if($assertType(g,BB,true)[1]){j=g.$val;if(j.Bullet.CancellableStFrame<=b.FramesInChState&&b.FramesInChState<j.Bullet.CancellableEdFrame){k=(l=j.Bullet.CancelTransit[$Int.keyFor(a)],l!==undefined?[l.v,true]:[0,false]);m=k[0];n=k[1];if(n){return m;}}}}}}return-1;}))},{k:1,v:new S.ptr(1,"KnifeGirl",9,1,16,16,10,27,400,750,true,true,9,250,700,-100,(function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n;if(1===a){if(0===b.FramesToRecover){if(b.InAir){return 256;}else{return 4;}}else{c=(d=T[$Int.keyFor(((b.ActiveSkillId>>0)))],d!==undefined?[d.v,true]:[BA.nil,false]);e=c[0];f=c[1];if(f){g=(h=e.Hits,i=b.ActiveSkillHit,((i<0||i>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+i]));if($assertType(g,BB,true)[1]){j=g.$val;if(j.Bullet.CancellableStFrame<=b.FramesInChState&&b.FramesInChState<j.Bullet.CancellableEdFrame){k=(l=j.Bullet.CancelTransit[$Int.keyFor(a)],l!==undefined?[l.v,true]:[0,false]);m=k[0];n=k[1];if(n){return m;}}}}}}return-1;}))},{k:4096,v:new S.ptr(4096,"Monk",42,2,14,14,8,30,300,750,false,false,0,0,0,0,(function(a,b){var a,b,c,d,e,f,g,h,i,j,k,l,m,n;if(1===a){if(0===b.FramesToRecover){if(b.InAir){return 257;}else{return 7;}}else{c=(d=T[$Int.keyFor(((b.ActiveSkillId>>0)))],d!==undefined?[d.v,true]:[BA.nil,false]);e=c[0];f=c[1];if(f){g=(h=e.Hits,i=b.ActiveSkillHit,((i<0||i>=h.$length)?($throwRuntimeError("index out of range"),undefined):h.$array[h.$offset+i]));if($assertType(g,BB,true)[1]){j=g.$val;if(j.Bullet.CancellableStFrame<=b.FramesInChState&&b.FramesInChState<j.Bullet.CancellableEdFrame){k=(l=j.Bullet.CancelTransit[$Int.keyFor(a)],l!==undefined?[l.v,true]:[0,false]);m=k[0];n=k[1];if(n){return m;}}}}}}else if(2===a){if(!b.InAir){return 11;}}else if(3===a){if(!b.InAir){return 10;}}return-1;}))}]);U=$makeMap($Int32.keyFor,[{k:4,v:true},{k:5,v:true},{k:6,v:true},{k:7,v:true},{k:8,v:true},{k:16,v:true}]);V=$makeMap($Int32.keyFor,[{k:3,v:true},{k:7,v:true},{k:8,v:true},{k:9,v:true}]);W=$makeMap($Int32.keyFor,[{k:8,v:true},{k:9,v:true},{k:10,v:true}]);X=$makeMap($Int32.keyFor,[{k:0,v:true},{k:1,v:true},{k:4,v:true},{k:5,v:true},{k:3,v:true},{k:7,v:true},{k:8,v:true},{k:9,v:true},{k:10,v:true}]);}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
-$packages["jsexport"]=(function(){var $pkg={},$init,A,B,C,U,V,W,X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH,AI,AJ,AK,AL,AM,AN,AO,AP,AQ,AR,AS,AT,AU,AV,AW,AX,AY,AZ,BA,BB,BC,BD,BE,BF,BG,BH,BI,BJ,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T;A=$packages["github.com/gopherjs/gopherjs/js"];B=$packages["jsexport/battle"];C=$packages["resolv"];U=$sliceType($Uint64);V=$ptrType(B.Vec2D);W=$sliceType(V);X=$ptrType(B.Polygon2D);Y=$ptrType(B.PlayerDownsync);Z=$sliceType(Y);AA=$ptrType(B.MeleeBullet);AB=$sliceType(AA);AC=$ptrType(B.FireballBullet);AD=$sliceType(AC);AE=$ptrType(A.Object);AF=$sliceType(AE);AG=$ptrType(B.CharacterConfig);AH=$funcType([$Float64,$Float64],[AE],false);AI=$funcType([V,W],[AE],false);AJ=$funcType([X],[AE],false);AK=$funcType([$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Bool,$Bool,$Int32,$Int32,$Int32,$Int32],[AE],false);AL=$funcType([$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Bool,$Int32],[AE],false);AM=$funcType([$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Bool,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32,$Int32],[AE],false);AN=$funcType([$Uint64,$Uint64,$Float64,$Float64],[AE],false);AO=$funcType([$Int32,Z,$Int32,AB,AD],[AE],false);AP=$funcType([$Int,$Int,$Int,$Int],[AE],false);AQ=$funcType([$Int32,U,$Uint64],[AE],false);AR=$funcType([$Int32],[AE],false);AS=$funcType([$Float64,$Float64,$Float64,$Float64,$Float64,$Float64,$emptyInterface,$String],[AE],false);AT=$funcType([X,$Float64,$Float64,$emptyInterface,$String],[AE],false);AU=$ptrType(C.Space);AV=$funcType([AU],[AF],false);AW=$funcType([$Float64,$Float64,$Float64,$Float64,$Float64,$Float64,$Float64,$Float64,$Float64,$Float64],[$Float64,$Float64],false);AX=$funcType([$Float64,$Float64],[$Int32,$Int32],false);AY=$funcType([$Int32,$Int32],[$Float64,$Float64],false);AZ=$sliceType($Int);BA=$funcType([AZ],[AF],false);BB=$ptrType(B.RingBuffer);BC=$ptrType(B.RoomDownsyncFrame);BD=$ptrType(C.Object);BE=$mapType($Int32,BD);BF=$sliceType(AG);BG=$funcType([BB,BC,AU,BE,$Float64,$Float64,BF],[AE],false);BH=$funcType([$Int32],[$Int32],false);BI=$funcType([$Int32],[$Bool],false);BJ=$mapType($String,$emptyInterface);D=function(a,b,c){var{a,b,c,d,e,$s,$r,$c}=$restore(this,{a,b,c});$s=$s||0;s:while(true){switch($s){case 0:d=A.MakeFullWrapper(new B.InputFrameDownsync.ptr(a,b,c));$s=1;case 1:if($c){$c=false;d=d.$blk();}if(d&&d.$blk!==undefined){break s;}e=d;$s=2;case 2:return e;}return;}var $f={$blk:D,$c:true,$r,a,b,c,d,e,$s};return $f;};$pkg.NewInputFrameDownsync=D;E=function(a){var{a,b,c,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=A.MakeFullWrapper(B.NewRingBuffer(a));$s=1;case 1:if($c){$c=false;b=b.$blk();}if(b&&b.$blk!==undefined){break s;}c=b;$s=2;case 2:return c;}return;}var $f={$blk:E,$c:true,$r,a,b,c,$s};return $f;};$pkg.NewRingBufferJs=E;F=function(a,b,c,d){var a,b,c,d;return A.MakeWrapper(C.NewSpace(a,b,c,d));};$pkg.NewCollisionSpaceJs=F;G=function(a,b){var{a,b,c,d,$s,$r,$c}=$restore(this,{a,b});$s=$s||0;s:while(true){switch($s){case 0:c=A.MakeFullWrapper(new B.Vec2D.ptr(a,b));$s=1;case 1:if($c){$c=false;c=c.$blk();}if(c&&c.$blk!==undefined){break s;}d=c;$s=2;case 2:return d;}return;}var $f={$blk:G,$c:true,$r,a,b,c,d,$s};return $f;};$pkg.NewVec2DJs=G;H=function(a,b){var{a,b,c,d,$s,$r,$c}=$restore(this,{a,b});$s=$s||0;s:while(true){switch($s){case 0:c=A.MakeFullWrapper(new B.Polygon2D.ptr(a,b));$s=1;case 1:if($c){$c=false;c=c.$blk();}if(c&&c.$blk!==undefined){break s;}d=c;$s=2;case 2:return d;}return;}var $f={$blk:H,$c:true,$r,a,b,c,d,$s};return $f;};$pkg.NewPolygon2DJs=H;I=function(a){var a;return A.MakeWrapper(new B.Barrier.ptr(a));};$pkg.NewBarrierJs=I;J=function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y;return A.MakeWrapper(new B.PlayerDownsync.ptr(a,b,c,d,e,f,g,m,n,p,s,false,0,0,h,i,q,r,o,t,u,j,k,l,x,y,v,w));};$pkg.NewPlayerDownsyncJs=J;K=function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t){var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t;return A.MakeWrapper(new B.MeleeBullet.ptr(new B.Bullet.ptr(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,false,t)));};$pkg.NewMeleeBulletJs=K;L=function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,ab){var a,aa,ab,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;return A.MakeWrapper(new B.FireballBullet.ptr(u,v,w,x,y,z,aa,ab,new B.Bullet.ptr(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,false,t)));};$pkg.NewFireballBulletJs=L;M=function(a,b,c,d){var{a,b,c,d,e,f,$s,$r,$c}=$restore(this,{a,b,c,d});$s=$s||0;s:while(true){switch($s){case 0:e=A.MakeFullWrapper(new B.NpcPatrolCue.ptr(a,b,c,d));$s=1;case 1:if($c){$c=false;e=e.$blk();}if(e&&e.$blk!==undefined){break s;}f=e;$s=2;case 2:return f;}return;}var $f={$blk:M,$c:true,$r,a,b,c,d,e,f,$s};return $f;};$pkg.NewNpcPatrolCue=M;N=function(a,b,c,d,e){var{a,b,c,d,e,f,g,$s,$r,$c}=$restore(this,{a,b,c,d,e});$s=$s||0;s:while(true){switch($s){case 0:f=A.MakeFullWrapper(new B.RoomDownsyncFrame.ptr(a,b,new $Int64(0,0),d,e,new $Uint64(0,0),false,c));$s=1;case 1:if($c){$c=false;f=f.$blk();}if(f&&f.$blk!==undefined){break s;}g=f;$s=2;case 2:return g;}return;}var $f={$blk:N,$c:true,$r,a,b,c,d,e,f,g,$s};return $f;};$pkg.NewRoomDownsyncFrameJs=N;O=function(a){var{a,b,c,d,e,f,g,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=a.Objects();c=$makeSlice(AF,0,b.$length);d=b;e=0;case 1:if(!(e<d.$length)){$s=2;continue;}f=((e<0||e>=d.$length)?($throwRuntimeError("index out of range"),undefined):d.$array[d.$offset+e]);g=A.MakeFullWrapper(f);$s=3;case 3:if($c){$c=false;g=g.$blk();}if(g&&g.$blk!==undefined){break s;}c=$append(c,g);e++;$s=1;continue;case 2:$s=-1;return c;}return;}var $f={$blk:O,$c:true,$r,a,b,c,d,e,f,g,$s};return $f;};$pkg.GetCollisionSpaceObjsJs=O;P=function(a,b,c,d,e,f,g,h){var{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,$s,$r,$c}=$restore(this,{a,b,c,d,e,f,g,h});$s=$s||0;s:while(true){switch($s){case 0:i=0.1;j=0.1;k=0.1;l=0.1;m=i;n=j;o=k;p=l;q=B.GenerateRectCollider(a,b,c,d,m,n,o,p,e,f,g,h);$s=1;case 1:if($c){$c=false;q=q.$blk();}if(q&&q.$blk!==undefined){break s;}r=A.MakeFullWrapper(q);$s=2;case 2:if($c){$c=false;r=r.$blk();}if(r&&r.$blk!==undefined){break s;}s=r;$s=3;case 3:return s;}return;}var $f={$blk:P,$c:true,$r,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,$s};return $f;};$pkg.GenerateRectColliderJs=P;Q=function(a,b,c,d,e){var{a,b,c,d,e,f,g,h,$s,$r,$c}=$restore(this,{a,b,c,d,e});$s=$s||0;s:while(true){switch($s){case 0:f=B.GenerateConvexPolygonCollider(a,b,c,d,e);$s=1;case 1:if($c){$c=false;f=f.$blk();}if(f&&f.$blk!==undefined){break s;}g=A.MakeFullWrapper(f);$s=2;case 2:if($c){$c=false;g=g.$blk();}if(g&&g.$blk!==undefined){break s;}h=g;$s=3;case 3:return h;}return;}var $f={$blk:Q,$c:true,$r,a,b,c,d,e,f,g,h,$s};return $f;};$pkg.GenerateConvexPolygonColliderJs=Q;R=function(a){var{a,b,c,d,e,f,g,h,$s,$r,$c}=$restore(this,{a});$s=$s||0;s:while(true){switch($s){case 0:b=$makeSlice(AF,a.$length,a.$length);c=a;d=0;case 1:if(!(d<c.$length)){$s=2;continue;}e=d;f=((d<0||d>=c.$length)?($throwRuntimeError("index out of range"),undefined):c.$array[c.$offset+d]);h=A.MakeFullWrapper((g=B.Characters[$Int.keyFor(f)],g!==undefined?g.v:AG.nil));$s=3;case 3:if($c){$c=false;h=h.$blk();}if(h&&h.$blk!==undefined){break s;}((e<0||e>=b.$length)?($throwRuntimeError("index out of range"),undefined):b.$array[b.$offset+e]=h);d++;$s=1;continue;case 2:$s=-1;return b;}return;}var $f={$blk:R,$c:true,$r,a,b,c,d,e,f,g,h,$s};return $f;};$pkg.GetCharacterConfigsOrderedByJoinIndex=R;S=function(a,b,c,d,e,f,g){var{a,b,c,d,e,f,g,h,i,j,$s,$r,$c}=$restore(this,{a,b,c,d,e,f,g});$s=$s||0;s:while(true){switch($s){case 0:h=B.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(a,b,c,d,e,f,g);$s=1;case 1:if($c){$c=false;h=h.$blk();}if(h&&h.$blk!==undefined){break s;}i=A.MakeFullWrapper(h);$s=2;case 2:if($c){$c=false;i=i.$blk();}if(i&&i.$blk!==undefined){break s;}j=i;$s=3;case 3:return j;}return;}var $f={$blk:S,$c:true,$r,a,b,c,d,e,f,g,h,i,j,$s};return $f;};$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs=S;T=function(){$global.gopkgs=$externalize($makeMap($String.keyFor,[{k:"NewVec2DJs",v:new AH(G)},{k:"NewPolygon2DJs",v:new AI(H)},{k:"NewBarrierJs",v:new AJ(I)},{k:"NewPlayerDownsyncJs",v:new AK(J)},{k:"NewMeleeBulletJs",v:new AL(K)},{k:"NewFireballBulletJs",v:new AM(L)},{k:"NewNpcPatrolCue",v:new AN(M)},{k:"NewRoomDownsyncFrameJs",v:new AO(N)},{k:"NewCollisionSpaceJs",v:new AP(F)},{k:"NewInputFrameDownsync",v:new AQ(D)},{k:"NewRingBufferJs",v:new AR(E)},{k:"GenerateRectColliderJs",v:new AS(P)},{k:"GenerateConvexPolygonColliderJs",v:new AT(Q)},{k:"GetCollisionSpaceObjsJs",v:new AV(O)},{k:"WorldToPolygonColliderBLPos",v:new AW(B.WorldToPolygonColliderBLPos)},{k:"PolygonColliderBLToWorldPos",v:new AW(B.PolygonColliderBLToWorldPos)},{k:"WorldToVirtualGridPos",v:new AX(B.WorldToVirtualGridPos)},{k:"VirtualGridToWorldPos",v:new AY(B.VirtualGridToWorldPos)},{k:"GetCharacterConfigsOrderedByJoinIndex",v:new BA(R)},{k:"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs",v:new BG(S)},{k:"ConvertToDelayedInputFrameId",v:new BH(B.ConvertToDelayedInputFrameId)},{k:"ConvertToNoDelayInputFrameId",v:new BH(B.ConvertToNoDelayInputFrameId)},{k:"ConvertToFirstUsedRenderFrameId",v:new BH(B.ConvertToFirstUsedRenderFrameId)},{k:"ConvertToLastUsedRenderFrameId",v:new BH(B.ConvertToLastUsedRenderFrameId)},{k:"ShouldGenerateInputFrameUpsync",v:new BI(B.ShouldGenerateInputFrameUpsync)}]),BJ);};$init=function(){$pkg.$init=function(){};var $f,$c=false,$s=0,$r;if(this!==undefined&&this.$blk!==undefined){$f=this;$c=true;$s=$f.$s;$r=$f.$r;}s:while(true){switch($s){case 0:$r=A.$init();$s=1;case 1:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}$r=B.$init();$s=2;case 2:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}$r=C.$init();$s=3;case 3:if($c){$c=false;$r=$r.$blk();}if($r&&$r.$blk!==undefined){break s;}if($pkg===$mainPkg){T();$mainFinished=true;}}return;}if($f===undefined){$f={$blk:$init};}$f.$s=$s;$f.$r=$r;return $f;};$pkg.$init=$init;return $pkg;})();
+var $NaN = NaN;
+var $global, $module;
+if (typeof window !== "undefined") { /* web page */
+  $global = window;
+} else if (typeof self !== "undefined") { /* web worker */
+  $global = self;
+} else if (typeof global !== "undefined") { /* Node.js */
+  $global = global;
+  $global.require = require;
+} else { /* others (e.g. Nashorn) */
+  $global = this;
+}
+
+if ($global === undefined || $global.Array === undefined) {
+  throw new Error("no global object found");
+}
+if (typeof module !== "undefined") {
+  $module = module;
+}
+
+if (!$global.fs && $global.require) {
+  try {
+    var fs = $global.require('fs');
+    if (typeof fs === "object" && fs !== null && Object.keys(fs).length !== 0) {
+      $global.fs = fs;
+    }
+  } catch(e) { /* Ignore if the module couldn't be loaded. */ }
+}
+
+if (!$global.fs) {
+  var outputBuf = "";
+  var decoder = new TextDecoder("utf-8");
+  $global.fs = {
+    constants: { O_WRONLY: -1, O_RDWR: -1, O_CREAT: -1, O_TRUNC: -1, O_APPEND: -1, O_EXCL: -1 }, // unused
+    writeSync: function writeSync(fd, buf) {
+      outputBuf += decoder.decode(buf);
+      var nl = outputBuf.lastIndexOf("\n");
+      if (nl != -1) {
+        console.log(outputBuf.substr(0, nl));
+        outputBuf = outputBuf.substr(nl + 1);
+      }
+      return buf.length;
+    },
+    write: function write(fd, buf, offset, length, position, callback) {
+      if (offset !== 0 || length !== buf.length || position !== null) {
+        callback(enosys());
+        return;
+      }
+      var n = this.writeSync(fd, buf);
+      callback(null, n);
+    }
+  };
+}
+
+var $linknames = {} // Collection of functions referenced by a go:linkname directive.
+var $packages = {}, $idCounter = 0;
+var $keys = function(m) { return m ? Object.keys(m) : []; };
+var $flushConsole = function() {};
+var $throwRuntimeError; /* set by package "runtime" */
+var $throwNilPointerError = function() { $throwRuntimeError("invalid memory address or nil pointer dereference"); };
+var $call = function(fn, rcvr, args) { return fn.apply(rcvr, args); };
+var $makeFunc = function(fn) { return function() { return $externalize(fn(this, new ($sliceType($jsObjectPtr))($global.Array.prototype.slice.call(arguments, []))), $emptyInterface); }; };
+var $unused = function(v) {};
+var $print = console.log;
+// Under Node we can emulate print() more closely by avoiding a newline.
+if (($global.process !== undefined) && $global.require) {
+  try {
+    var util = $global.require('util');
+    $print = function() { $global.process.stderr.write(util.format.apply(this, arguments)); };
+  } catch (e) {
+    // Failed to require util module, keep using console.log().
+  }
+}
+var $println = console.log
+
+var $initAllLinknames = function() {
+  var names = $keys($packages);
+  for (var i = 0; i < names.length; i++) {
+    var f = $packages[names[i]]["$initLinknames"];
+    if (typeof f == 'function') {
+      f();
+    }
+  }
+}
+
+var $mapArray = function(array, f) {
+  var newArray = new array.constructor(array.length);
+  for (var i = 0; i < array.length; i++) {
+    newArray[i] = f(array[i]);
+  }
+  return newArray;
+};
+
+// Returns a method bound to the receiver instance, safe to invoke as a 
+// standalone function. Bound function is cached for later reuse.
+var $methodVal = function(recv, name) {
+  var vals = recv.$methodVals || {};
+  recv.$methodVals = vals; /* noop for primitives */
+  var f = vals[name];
+  if (f !== undefined) {
+    return f;
+  }
+  var method = recv[name];
+  f = method.bind(recv);
+  vals[name] = f;
+  return f;
+};
+
+var $methodExpr = function(typ, name) {
+  var method = typ.prototype[name];
+  if (method.$expr === undefined) {
+    method.$expr = function() {
+      $stackDepthOffset--;
+      try {
+        if (typ.wrapped) {
+          arguments[0] = new typ(arguments[0]);
+        }
+        return Function.call.apply(method, arguments);
+      } finally {
+        $stackDepthOffset++;
+      }
+    };
+  }
+  return method.$expr;
+};
+
+var $ifaceMethodExprs = {};
+var $ifaceMethodExpr = function(name) {
+  var expr = $ifaceMethodExprs["$" + name];
+  if (expr === undefined) {
+    expr = $ifaceMethodExprs["$" + name] = function() {
+      $stackDepthOffset--;
+      try {
+        return Function.call.apply(arguments[0][name], arguments);
+      } finally {
+        $stackDepthOffset++;
+      }
+    };
+  }
+  return expr;
+};
+
+var $subslice = function(slice, low, high, max) {
+  if (high === undefined) {
+    high = slice.$length;
+  }
+  if (max === undefined) {
+    max = slice.$capacity;
+  }
+  if (low < 0 || high < low || max < high || high > slice.$capacity || max > slice.$capacity) {
+    $throwRuntimeError("slice bounds out of range");
+  }
+  if (slice === slice.constructor.nil) {
+    return slice;
+  }
+  var s = new slice.constructor(slice.$array);
+  s.$offset = slice.$offset + low;
+  s.$length = high - low;
+  s.$capacity = max - low;
+  return s;
+};
+
+var $substring = function(str, low, high) {
+  if (low < 0 || high < low || high > str.length) {
+    $throwRuntimeError("slice bounds out of range");
+  }
+  return str.substring(low, high);
+};
+
+// Convert Go slice to an equivalent JS array type.
+var $sliceToNativeArray = function(slice) {
+  if (slice.$array.constructor !== Array) {
+    return slice.$array.subarray(slice.$offset, slice.$offset + slice.$length);
+  }
+  return slice.$array.slice(slice.$offset, slice.$offset + slice.$length);
+};
+
+// Convert Go slice to a pointer to an underlying Go array.
+// 
+// Note that an array pointer can be represented by an "unwrapped" native array
+// type, and it will be wrapped back into its Go type when necessary.
+var $sliceToGoArray = function(slice, arrayPtrType) {
+  var arrayType = arrayPtrType.elem;
+  if (arrayType !== undefined && slice.$length < arrayType.len) {
+    $throwRuntimeError("cannot convert slice with length " + slice.$length + " to pointer to array with length " + arrayType.len);
+  }
+  if (slice == slice.constructor.nil) {
+    return arrayPtrType.nil; // Nil slice converts to nil array pointer.
+  }
+  if (slice.$array.constructor !== Array) {
+    return slice.$array.subarray(slice.$offset, slice.$offset + arrayType.len);
+  }
+  if (slice.$offset == 0 && slice.$length == slice.$capacity && slice.$length == arrayType.len) {
+    return slice.$array;
+  }
+  if (arrayType.len == 0) {
+    return new arrayType([]);
+  }
+
+  // Array.slice (unlike TypedArray.subarray) returns a copy of an array range,
+  // which is not sharing memory with the original one, which violates the spec
+  // for slice to array conversion. This is incompatible with the Go spec, in
+  // particular that the assignments to the array elements would be visible in
+  // the slice. Prefer to fail explicitly instead of creating subtle bugs.
+  $throwRuntimeError("gopherjs: non-numeric slice to underlying array conversion is not supported for subslices");
+};
+
+// Convert between compatible slice types (e.g. native and names).
+var $convertSliceType = function(slice, desiredType) {
+  if (slice == slice.constructor.nil) {
+    return desiredType.nil; // Preserve nil value.
+  }
+
+  return $subslice(new desiredType(slice.$array), slice.$offset, slice.$offset + slice.$length);
+}
+
+var $decodeRune = function(str, pos) {
+  var c0 = str.charCodeAt(pos);
+
+  if (c0 < 0x80) {
+    return [c0, 1];
+  }
+
+  if (c0 !== c0 || c0 < 0xC0) {
+    return [0xFFFD, 1];
+  }
+
+  var c1 = str.charCodeAt(pos + 1);
+  if (c1 !== c1 || c1 < 0x80 || 0xC0 <= c1) {
+    return [0xFFFD, 1];
+  }
+
+  if (c0 < 0xE0) {
+    var r = (c0 & 0x1F) << 6 | (c1 & 0x3F);
+    if (r <= 0x7F) {
+      return [0xFFFD, 1];
+    }
+    return [r, 2];
+  }
+
+  var c2 = str.charCodeAt(pos + 2);
+  if (c2 !== c2 || c2 < 0x80 || 0xC0 <= c2) {
+    return [0xFFFD, 1];
+  }
+
+  if (c0 < 0xF0) {
+    var r = (c0 & 0x0F) << 12 | (c1 & 0x3F) << 6 | (c2 & 0x3F);
+    if (r <= 0x7FF) {
+      return [0xFFFD, 1];
+    }
+    if (0xD800 <= r && r <= 0xDFFF) {
+      return [0xFFFD, 1];
+    }
+    return [r, 3];
+  }
+
+  var c3 = str.charCodeAt(pos + 3);
+  if (c3 !== c3 || c3 < 0x80 || 0xC0 <= c3) {
+    return [0xFFFD, 1];
+  }
+
+  if (c0 < 0xF8) {
+    var r = (c0 & 0x07) << 18 | (c1 & 0x3F) << 12 | (c2 & 0x3F) << 6 | (c3 & 0x3F);
+    if (r <= 0xFFFF || 0x10FFFF < r) {
+      return [0xFFFD, 1];
+    }
+    return [r, 4];
+  }
+
+  return [0xFFFD, 1];
+};
+
+var $encodeRune = function(r) {
+  if (r < 0 || r > 0x10FFFF || (0xD800 <= r && r <= 0xDFFF)) {
+    r = 0xFFFD;
+  }
+  if (r <= 0x7F) {
+    return String.fromCharCode(r);
+  }
+  if (r <= 0x7FF) {
+    return String.fromCharCode(0xC0 | r >> 6, 0x80 | (r & 0x3F));
+  }
+  if (r <= 0xFFFF) {
+    return String.fromCharCode(0xE0 | r >> 12, 0x80 | (r >> 6 & 0x3F), 0x80 | (r & 0x3F));
+  }
+  return String.fromCharCode(0xF0 | r >> 18, 0x80 | (r >> 12 & 0x3F), 0x80 | (r >> 6 & 0x3F), 0x80 | (r & 0x3F));
+};
+
+var $stringToBytes = function(str) {
+  var array = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; i++) {
+    array[i] = str.charCodeAt(i);
+  }
+  return array;
+};
+
+var $bytesToString = function(slice) {
+  if (slice.$length === 0) {
+    return "";
+  }
+  var str = "";
+  for (var i = 0; i < slice.$length; i += 10000) {
+    str += String.fromCharCode.apply(undefined, slice.$array.subarray(slice.$offset + i, slice.$offset + Math.min(slice.$length, i + 10000)));
+  }
+  return str;
+};
+
+var $stringToRunes = function(str) {
+  var array = new Int32Array(str.length);
+  var rune, j = 0;
+  for (var i = 0; i < str.length; i += rune[1], j++) {
+    rune = $decodeRune(str, i);
+    array[j] = rune[0];
+  }
+  return array.subarray(0, j);
+};
+
+var $runesToString = function(slice) {
+  if (slice.$length === 0) {
+    return "";
+  }
+  var str = "";
+  for (var i = 0; i < slice.$length; i++) {
+    str += $encodeRune(slice.$array[slice.$offset + i]);
+  }
+  return str;
+};
+
+var $copyString = function(dst, src) {
+  var n = Math.min(src.length, dst.$length);
+  for (var i = 0; i < n; i++) {
+    dst.$array[dst.$offset + i] = src.charCodeAt(i);
+  }
+  return n;
+};
+
+var $copySlice = function(dst, src) {
+  var n = Math.min(src.$length, dst.$length);
+  $copyArray(dst.$array, src.$array, dst.$offset, src.$offset, n, dst.constructor.elem);
+  return n;
+};
+
+var $copyArray = function(dst, src, dstOffset, srcOffset, n, elem) {
+  if (n === 0 || (dst === src && dstOffset === srcOffset)) {
+    return;
+  }
+
+  if (src.subarray) {
+    dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
+    return;
+  }
+
+  switch (elem.kind) {
+  case $kindArray:
+  case $kindStruct:
+    if (dst === src && dstOffset > srcOffset) {
+      for (var i = n - 1; i >= 0; i--) {
+        elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+      }
+      return;
+    }
+    for (var i = 0; i < n; i++) {
+      elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+    }
+    return;
+  }
+
+  if (dst === src && dstOffset > srcOffset) {
+    for (var i = n - 1; i >= 0; i--) {
+      dst[dstOffset + i] = src[srcOffset + i];
+    }
+    return;
+  }
+  for (var i = 0; i < n; i++) {
+    dst[dstOffset + i] = src[srcOffset + i];
+  }
+};
+
+var $clone = function(src, type) {
+  var clone = type.zero();
+  type.copy(clone, src);
+  return clone;
+};
+
+var $pointerOfStructConversion = function(obj, type) {
+  if(obj.$proxies === undefined) {
+    obj.$proxies = {};
+    obj.$proxies[obj.constructor.string] = obj;
+  }
+  var proxy = obj.$proxies[type.string];
+  if (proxy === undefined) {
+    var properties = {};
+    for (var i = 0; i < type.elem.fields.length; i++) {
+      (function(fieldProp) {
+        properties[fieldProp] = {
+          get: function() { return obj[fieldProp]; },
+          set: function(value) { obj[fieldProp] = value; }
+        };
+      })(type.elem.fields[i].prop);
+    }
+    proxy = Object.create(type.prototype, properties);
+    proxy.$val = proxy;
+    obj.$proxies[type.string] = proxy;
+    proxy.$proxies = obj.$proxies;
+  }
+  return proxy;
+};
+
+var $append = function(slice) {
+  return $internalAppend(slice, arguments, 1, arguments.length - 1);
+};
+
+var $appendSlice = function(slice, toAppend) {
+  if (toAppend.constructor === String) {
+    var bytes = $stringToBytes(toAppend);
+    return $internalAppend(slice, bytes, 0, bytes.length);
+  }
+  return $internalAppend(slice, toAppend.$array, toAppend.$offset, toAppend.$length);
+};
+
+var $internalAppend = function(slice, array, offset, length) {
+  if (length === 0) {
+    return slice;
+  }
+
+  var newArray = slice.$array;
+  var newOffset = slice.$offset;
+  var newLength = slice.$length + length;
+  var newCapacity = slice.$capacity;
+
+  if (newLength > newCapacity) {
+    newOffset = 0;
+    newCapacity = Math.max(newLength, slice.$capacity < 1024 ? slice.$capacity * 2 : Math.floor(slice.$capacity * 5 / 4));
+
+    if (slice.$array.constructor === Array) {
+      newArray = slice.$array.slice(slice.$offset, slice.$offset + slice.$length);
+      newArray.length = newCapacity;
+      var zero = slice.constructor.elem.zero;
+      for (var i = slice.$length; i < newCapacity; i++) {
+        newArray[i] = zero();
+      }
+    } else {
+      newArray = new slice.$array.constructor(newCapacity);
+      newArray.set(slice.$array.subarray(slice.$offset, slice.$offset + slice.$length));
+    }
+  }
+
+  $copyArray(newArray, array, newOffset + slice.$length, offset, length, slice.constructor.elem);
+
+  var newSlice = new slice.constructor(newArray);
+  newSlice.$offset = newOffset;
+  newSlice.$length = newLength;
+  newSlice.$capacity = newCapacity;
+  return newSlice;
+};
+
+var $equal = function(a, b, type) {
+  if (type === $jsObjectPtr) {
+    return a === b;
+  }
+  switch (type.kind) {
+  case $kindComplex64:
+  case $kindComplex128:
+    return a.$real === b.$real && a.$imag === b.$imag;
+  case $kindInt64:
+  case $kindUint64:
+    return a.$high === b.$high && a.$low === b.$low;
+  case $kindArray:
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (var i = 0; i < a.length; i++) {
+      if (!$equal(a[i], b[i], type.elem)) {
+        return false;
+      }
+    }
+    return true;
+  case $kindStruct:
+    for (var i = 0; i < type.fields.length; i++) {
+      var f = type.fields[i];
+      if (!$equal(a[f.prop], b[f.prop], f.typ)) {
+        return false;
+      }
+    }
+    return true;
+  case $kindInterface:
+    return $interfaceIsEqual(a, b);
+  default:
+    return a === b;
+  }
+};
+
+var $interfaceIsEqual = function(a, b) {
+  if (a === $ifaceNil || b === $ifaceNil) {
+    return a === b;
+  }
+  if (a.constructor !== b.constructor) {
+    return false;
+  }
+  if (a.constructor === $jsObjectPtr) {
+    return a.object === b.object;
+  }
+  if (!a.constructor.comparable) {
+    $throwRuntimeError("comparing uncomparable type " + a.constructor.string);
+  }
+  return $equal(a.$val, b.$val, a.constructor);
+};
+
+var $min = Math.min;
+var $mod = function(x, y) { return x % y; };
+var $parseInt = parseInt;
+var $parseFloat = function(f) {
+  if (f !== undefined && f !== null && f.constructor === Number) {
+    return f;
+  }
+  return parseFloat(f);
+};
+
+var $froundBuf = new Float32Array(1);
+var $fround = Math.fround || function(f) {
+  $froundBuf[0] = f;
+  return $froundBuf[0];
+};
+
+var $imul = Math.imul || function(a, b) {
+  var ah = (a >>> 16) & 0xffff;
+  var al = a & 0xffff;
+  var bh = (b >>> 16) & 0xffff;
+  var bl = b & 0xffff;
+  return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) >> 0);
+};
+
+var $floatKey = function(f) {
+  if (f !== f) {
+    $idCounter++;
+    return "NaN$" + $idCounter;
+  }
+  return String(f);
+};
+
+var $flatten64 = function(x) {
+  return x.$high * 4294967296 + x.$low;
+};
+
+var $shiftLeft64 = function(x, y) {
+  if (y === 0) {
+    return x;
+  }
+  if (y < 32) {
+    return new x.constructor(x.$high << y | x.$low >>> (32 - y), (x.$low << y) >>> 0);
+  }
+  if (y < 64) {
+    return new x.constructor(x.$low << (y - 32), 0);
+  }
+  return new x.constructor(0, 0);
+};
+
+var $shiftRightInt64 = function(x, y) {
+  if (y === 0) {
+    return x;
+  }
+  if (y < 32) {
+    return new x.constructor(x.$high >> y, (x.$low >>> y | x.$high << (32 - y)) >>> 0);
+  }
+  if (y < 64) {
+    return new x.constructor(x.$high >> 31, (x.$high >> (y - 32)) >>> 0);
+  }
+  if (x.$high < 0) {
+    return new x.constructor(-1, 4294967295);
+  }
+  return new x.constructor(0, 0);
+};
+
+var $shiftRightUint64 = function(x, y) {
+  if (y === 0) {
+    return x;
+  }
+  if (y < 32) {
+    return new x.constructor(x.$high >>> y, (x.$low >>> y | x.$high << (32 - y)) >>> 0);
+  }
+  if (y < 64) {
+    return new x.constructor(0, x.$high >>> (y - 32));
+  }
+  return new x.constructor(0, 0);
+};
+
+var $mul64 = function(x, y) {
+  var x48 = x.$high >>> 16;
+  var x32 = x.$high & 0xFFFF;
+  var x16 = x.$low >>> 16;
+  var x00 = x.$low & 0xFFFF;
+
+  var y48 = y.$high >>> 16;
+  var y32 = y.$high & 0xFFFF;
+  var y16 = y.$low >>> 16;
+  var y00 = y.$low & 0xFFFF;
+
+  var z48 = 0, z32 = 0, z16 = 0, z00 = 0;
+  z00 += x00 * y00;
+  z16 += z00 >>> 16;
+  z00 &= 0xFFFF;
+  z16 += x16 * y00;
+  z32 += z16 >>> 16;
+  z16 &= 0xFFFF;
+  z16 += x00 * y16;
+  z32 += z16 >>> 16;
+  z16 &= 0xFFFF;
+  z32 += x32 * y00;
+  z48 += z32 >>> 16;
+  z32 &= 0xFFFF;
+  z32 += x16 * y16;
+  z48 += z32 >>> 16;
+  z32 &= 0xFFFF;
+  z32 += x00 * y32;
+  z48 += z32 >>> 16;
+  z32 &= 0xFFFF;
+  z48 += x48 * y00 + x32 * y16 + x16 * y32 + x00 * y48;
+  z48 &= 0xFFFF;
+
+  var hi = ((z48 << 16) | z32) >>> 0;
+  var lo = ((z16 << 16) | z00) >>> 0;
+
+  var r = new x.constructor(hi, lo);
+  return r;
+};
+
+var $div64 = function(x, y, returnRemainder) {
+  if (y.$high === 0 && y.$low === 0) {
+    $throwRuntimeError("integer divide by zero");
+  }
+
+  var s = 1;
+  var rs = 1;
+
+  var xHigh = x.$high;
+  var xLow = x.$low;
+  if (xHigh < 0) {
+    s = -1;
+    rs = -1;
+    xHigh = -xHigh;
+    if (xLow !== 0) {
+      xHigh--;
+      xLow = 4294967296 - xLow;
+    }
+  }
+
+  var yHigh = y.$high;
+  var yLow = y.$low;
+  if (y.$high < 0) {
+    s *= -1;
+    yHigh = -yHigh;
+    if (yLow !== 0) {
+      yHigh--;
+      yLow = 4294967296 - yLow;
+    }
+  }
+
+  var high = 0, low = 0, n = 0;
+  while (yHigh < 2147483648 && ((xHigh > yHigh) || (xHigh === yHigh && xLow > yLow))) {
+    yHigh = (yHigh << 1 | yLow >>> 31) >>> 0;
+    yLow = (yLow << 1) >>> 0;
+    n++;
+  }
+  for (var i = 0; i <= n; i++) {
+    high = high << 1 | low >>> 31;
+    low = (low << 1) >>> 0;
+    if ((xHigh > yHigh) || (xHigh === yHigh && xLow >= yLow)) {
+      xHigh = xHigh - yHigh;
+      xLow = xLow - yLow;
+      if (xLow < 0) {
+        xHigh--;
+        xLow += 4294967296;
+      }
+      low++;
+      if (low === 4294967296) {
+        high++;
+        low = 0;
+      }
+    }
+    yLow = (yLow >>> 1 | yHigh << (32 - 1)) >>> 0;
+    yHigh = yHigh >>> 1;
+  }
+
+  if (returnRemainder) {
+    return new x.constructor(xHigh * rs, xLow * rs);
+  }
+  return new x.constructor(high * s, low * s);
+};
+
+var $divComplex = function(n, d) {
+  var ninf = n.$real === Infinity || n.$real === -Infinity || n.$imag === Infinity || n.$imag === -Infinity;
+  var dinf = d.$real === Infinity || d.$real === -Infinity || d.$imag === Infinity || d.$imag === -Infinity;
+  var nnan = !ninf && (n.$real !== n.$real || n.$imag !== n.$imag);
+  var dnan = !dinf && (d.$real !== d.$real || d.$imag !== d.$imag);
+  if(nnan || dnan) {
+    return new n.constructor(NaN, NaN);
+  }
+  if (ninf && !dinf) {
+    return new n.constructor(Infinity, Infinity);
+  }
+  if (!ninf && dinf) {
+    return new n.constructor(0, 0);
+  }
+  if (d.$real === 0 && d.$imag === 0) {
+    if (n.$real === 0 && n.$imag === 0) {
+      return new n.constructor(NaN, NaN);
+    }
+    return new n.constructor(Infinity, Infinity);
+  }
+  var a = Math.abs(d.$real);
+  var b = Math.abs(d.$imag);
+  if (a <= b) {
+    var ratio = d.$real / d.$imag;
+    var denom = d.$real * ratio + d.$imag;
+    return new n.constructor((n.$real * ratio + n.$imag) / denom, (n.$imag * ratio - n.$real) / denom);
+  }
+  var ratio = d.$imag / d.$real;
+  var denom = d.$imag * ratio + d.$real;
+  return new n.constructor((n.$imag * ratio + n.$real) / denom, (n.$imag - n.$real * ratio) / denom);
+};
+
+var $kindBool = 1;
+var $kindInt = 2;
+var $kindInt8 = 3;
+var $kindInt16 = 4;
+var $kindInt32 = 5;
+var $kindInt64 = 6;
+var $kindUint = 7;
+var $kindUint8 = 8;
+var $kindUint16 = 9;
+var $kindUint32 = 10;
+var $kindUint64 = 11;
+var $kindUintptr = 12;
+var $kindFloat32 = 13;
+var $kindFloat64 = 14;
+var $kindComplex64 = 15;
+var $kindComplex128 = 16;
+var $kindArray = 17;
+var $kindChan = 18;
+var $kindFunc = 19;
+var $kindInterface = 20;
+var $kindMap = 21;
+var $kindPtr = 22;
+var $kindSlice = 23;
+var $kindString = 24;
+var $kindStruct = 25;
+var $kindUnsafePointer = 26;
+
+var $methodSynthesizers = [];
+var $addMethodSynthesizer = function(f) {
+  if ($methodSynthesizers === null) {
+    f();
+    return;
+  }
+  $methodSynthesizers.push(f);
+};
+var $synthesizeMethods = function() {
+  $methodSynthesizers.forEach(function(f) { f(); });
+  $methodSynthesizers = null;
+};
+
+var $ifaceKeyFor = function(x) {
+  if (x === $ifaceNil) {
+    return 'nil';
+  }
+  var c = x.constructor;
+  return c.string + '$' + c.keyFor(x.$val);
+};
+
+var $identity = function(x) { return x; };
+
+var $typeIDCounter = 0;
+
+var $idKey = function(x) {
+  if (x.$id === undefined) {
+    $idCounter++;
+    x.$id = $idCounter;
+  }
+  return String(x.$id);
+};
+
+// Creates constructor functions for array pointer types. Returns a new function
+// instace each time to make sure each type is independent of the other.
+var $arrayPtrCtor = function() {
+  return function(array) {
+    this.$get = function() { return array; };
+    this.$set = function(v) { typ.copy(this, v); };
+    this.$val = array;
+  }
+}
+
+var $newType = function(size, kind, string, named, pkg, exported, constructor) {
+  var typ;
+  switch(kind) {
+  case $kindBool:
+  case $kindInt:
+  case $kindInt8:
+  case $kindInt16:
+  case $kindInt32:
+  case $kindUint:
+  case $kindUint8:
+  case $kindUint16:
+  case $kindUint32:
+  case $kindUintptr:
+  case $kindUnsafePointer:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.keyFor = $identity;
+    break;
+
+  case $kindString:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.keyFor = function(x) { return "$" + x; };
+    break;
+
+  case $kindFloat32:
+  case $kindFloat64:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.keyFor = function(x) { return $floatKey(x); };
+    break;
+
+  case $kindInt64:
+    typ = function(high, low) {
+      this.$high = (high + Math.floor(Math.ceil(low) / 4294967296)) >> 0;
+      this.$low = low >>> 0;
+      this.$val = this;
+    };
+    typ.keyFor = function(x) { return x.$high + "$" + x.$low; };
+    break;
+
+  case $kindUint64:
+    typ = function(high, low) {
+      this.$high = (high + Math.floor(Math.ceil(low) / 4294967296)) >>> 0;
+      this.$low = low >>> 0;
+      this.$val = this;
+    };
+    typ.keyFor = function(x) { return x.$high + "$" + x.$low; };
+    break;
+
+  case $kindComplex64:
+    typ = function(real, imag) {
+      this.$real = $fround(real);
+      this.$imag = $fround(imag);
+      this.$val = this;
+    };
+    typ.keyFor = function(x) { return x.$real + "$" + x.$imag; };
+    break;
+
+  case $kindComplex128:
+    typ = function(real, imag) {
+      this.$real = real;
+      this.$imag = imag;
+      this.$val = this;
+    };
+    typ.keyFor = function(x) { return x.$real + "$" + x.$imag; };
+    break;
+
+  case $kindArray:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.ptr = $newType(4, $kindPtr, "*" + string, false, "", false, $arrayPtrCtor());
+    typ.init = function(elem, len) {
+      typ.elem = elem;
+      typ.len = len;
+      typ.comparable = elem.comparable;
+      typ.keyFor = function(x) {
+        return Array.prototype.join.call($mapArray(x, function(e) {
+          return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\$/g, "\\$");
+        }), "$");
+      };
+      typ.copy = function(dst, src) {
+        $copyArray(dst, src, 0, 0, src.length, elem);
+      };
+      typ.ptr.init(typ);
+      Object.defineProperty(typ.ptr.nil, "nilCheck", { get: $throwNilPointerError });
+    };
+    break;
+
+  case $kindChan:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.keyFor = $idKey;
+    typ.init = function(elem, sendOnly, recvOnly) {
+      typ.elem = elem;
+      typ.sendOnly = sendOnly;
+      typ.recvOnly = recvOnly;
+    };
+    break;
+
+  case $kindFunc:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.init = function(params, results, variadic) {
+      typ.params = params;
+      typ.results = results;
+      typ.variadic = variadic;
+      typ.comparable = false;
+    };
+    break;
+
+  case $kindInterface:
+    typ = { implementedBy: {}, missingMethodFor: {} };
+    typ.keyFor = $ifaceKeyFor;
+    typ.init = function(methods) {
+      typ.methods = methods;
+      methods.forEach(function(m) {
+        $ifaceNil[m.prop] = $throwNilPointerError;
+      });
+    };
+    break;
+
+  case $kindMap:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.init = function(key, elem) {
+      typ.key = key;
+      typ.elem = elem;
+      typ.comparable = false;
+    };
+    break;
+
+  case $kindPtr:
+    typ = constructor || function(getter, setter, target) {
+      this.$get = getter;
+      this.$set = setter;
+      this.$target = target;
+      this.$val = this;
+    };
+    typ.keyFor = $idKey;
+    typ.init = function(elem) {
+      typ.elem = elem;
+      typ.wrapped = (elem.kind === $kindArray);
+      typ.nil = new typ($throwNilPointerError, $throwNilPointerError);
+    };
+    break;
+
+  case $kindSlice:
+    typ = function(array) {
+      if (array.constructor !== typ.nativeArray) {
+        array = new typ.nativeArray(array);
+      }
+      this.$array = array;
+      this.$offset = 0;
+      this.$length = array.length;
+      this.$capacity = array.length;
+      this.$val = this;
+    };
+    typ.init = function(elem) {
+      typ.elem = elem;
+      typ.comparable = false;
+      typ.nativeArray = $nativeArray(elem.kind);
+      typ.nil = new typ([]);
+    };
+    break;
+
+  case $kindStruct:
+    typ = function(v) { this.$val = v; };
+    typ.wrapped = true;
+    typ.ptr = $newType(4, $kindPtr, "*" + string, false, pkg, exported, constructor);
+    typ.ptr.elem = typ;
+    typ.ptr.prototype.$get = function() { return this; };
+    typ.ptr.prototype.$set = function(v) { typ.copy(this, v); };
+    typ.init = function(pkgPath, fields) {
+      typ.pkgPath = pkgPath;
+      typ.fields = fields;
+      fields.forEach(function(f) {
+        if (!f.typ.comparable) {
+          typ.comparable = false;
+        }
+      });
+      typ.keyFor = function(x) {
+        var val = x.$val;
+        return $mapArray(fields, function(f) {
+          return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\$/g, "\\$");
+        }).join("$");
+      };
+      typ.copy = function(dst, src) {
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          switch (f.typ.kind) {
+          case $kindArray:
+          case $kindStruct:
+            f.typ.copy(dst[f.prop], src[f.prop]);
+            continue;
+          default:
+            dst[f.prop] = src[f.prop];
+            continue;
+          }
+        }
+      };
+      /* nil value */
+      var properties = {};
+      fields.forEach(function(f) {
+        properties[f.prop] = { get: $throwNilPointerError, set: $throwNilPointerError };
+      });
+      typ.ptr.nil = Object.create(constructor.prototype, properties);
+      typ.ptr.nil.$val = typ.ptr.nil;
+      /* methods for embedded fields */
+      $addMethodSynthesizer(function() {
+        var synthesizeMethod = function(target, m, f) {
+          if (target.prototype[m.prop] !== undefined) { return; }
+          target.prototype[m.prop] = function() {
+            var v = this.$val[f.prop];
+            if (f.typ === $jsObjectPtr) {
+              v = new $jsObjectPtr(v);
+            }
+            if (v.$val === undefined) {
+              v = new f.typ(v);
+            }
+            return v[m.prop].apply(v, arguments);
+          };
+        };
+        fields.forEach(function(f) {
+          if (f.embedded) {
+            $methodSet(f.typ).forEach(function(m) {
+              synthesizeMethod(typ, m, f);
+              synthesizeMethod(typ.ptr, m, f);
+            });
+            $methodSet($ptrType(f.typ)).forEach(function(m) {
+              synthesizeMethod(typ.ptr, m, f);
+            });
+          }
+        });
+      });
+    };
+    break;
+
+  default:
+    $panic(new $String("invalid kind: " + kind));
+  }
+
+  switch (kind) {
+  case $kindBool:
+  case $kindMap:
+    typ.zero = function() { return false; };
+    break;
+
+  case $kindInt:
+  case $kindInt8:
+  case $kindInt16:
+  case $kindInt32:
+  case $kindUint:
+  case $kindUint8 :
+  case $kindUint16:
+  case $kindUint32:
+  case $kindUintptr:
+  case $kindUnsafePointer:
+  case $kindFloat32:
+  case $kindFloat64:
+    typ.zero = function() { return 0; };
+    break;
+
+  case $kindString:
+    typ.zero = function() { return ""; };
+    break;
+
+  case $kindInt64:
+  case $kindUint64:
+  case $kindComplex64:
+  case $kindComplex128:
+    var zero = new typ(0, 0);
+    typ.zero = function() { return zero; };
+    break;
+
+  case $kindPtr:
+  case $kindSlice:
+    typ.zero = function() { return typ.nil; };
+    break;
+
+  case $kindChan:
+    typ.zero = function() { return $chanNil; };
+    break;
+
+  case $kindFunc:
+    typ.zero = function() { return $throwNilPointerError; };
+    break;
+
+  case $kindInterface:
+    typ.zero = function() { return $ifaceNil; };
+    break;
+
+  case $kindArray:
+    typ.zero = function() {
+      var arrayClass = $nativeArray(typ.elem.kind);
+      if (arrayClass !== Array) {
+        return new arrayClass(typ.len);
+      }
+      var array = new Array(typ.len);
+      for (var i = 0; i < typ.len; i++) {
+        array[i] = typ.elem.zero();
+      }
+      return array;
+    };
+    break;
+
+  case $kindStruct:
+    typ.zero = function() { return new typ.ptr(); };
+    break;
+
+  default:
+    $panic(new $String("invalid kind: " + kind));
+  }
+
+  typ.id = $typeIDCounter;
+  $typeIDCounter++;
+  typ.size = size;
+  typ.kind = kind;
+  typ.string = string;
+  typ.named = named;
+  typ.pkg = pkg;
+  typ.exported = exported;
+  typ.methods = [];
+  typ.methodSetCache = null;
+  typ.comparable = true;
+  return typ;
+};
+
+var $methodSet = function(typ) {
+  if (typ.methodSetCache !== null) {
+    return typ.methodSetCache;
+  }
+  var base = {};
+
+  var isPtr = (typ.kind === $kindPtr);
+  if (isPtr && typ.elem.kind === $kindInterface) {
+    typ.methodSetCache = [];
+    return [];
+  }
+
+  var current = [{typ: isPtr ? typ.elem : typ, indirect: isPtr}];
+
+  var seen = {};
+
+  while (current.length > 0) {
+    var next = [];
+    var mset = [];
+
+    current.forEach(function(e) {
+      if (seen[e.typ.string]) {
+        return;
+      }
+      seen[e.typ.string] = true;
+
+      if (e.typ.named) {
+        mset = mset.concat(e.typ.methods);
+        if (e.indirect) {
+          mset = mset.concat($ptrType(e.typ).methods);
+        }
+      }
+
+      switch (e.typ.kind) {
+      case $kindStruct:
+        e.typ.fields.forEach(function(f) {
+          if (f.embedded) {
+            var fTyp = f.typ;
+            var fIsPtr = (fTyp.kind === $kindPtr);
+            next.push({typ: fIsPtr ? fTyp.elem : fTyp, indirect: e.indirect || fIsPtr});
+          }
+        });
+        break;
+
+      case $kindInterface:
+        mset = mset.concat(e.typ.methods);
+        break;
+      }
+    });
+
+    mset.forEach(function(m) {
+      if (base[m.name] === undefined) {
+        base[m.name] = m;
+      }
+    });
+
+    current = next;
+  }
+
+  typ.methodSetCache = [];
+  Object.keys(base).sort().forEach(function(name) {
+    typ.methodSetCache.push(base[name]);
+  });
+  return typ.methodSetCache;
+};
+
+var $Bool          = $newType( 1, $kindBool,          "bool",           true, "", false, null);
+var $Int           = $newType( 4, $kindInt,           "int",            true, "", false, null);
+var $Int8          = $newType( 1, $kindInt8,          "int8",           true, "", false, null);
+var $Int16         = $newType( 2, $kindInt16,         "int16",          true, "", false, null);
+var $Int32         = $newType( 4, $kindInt32,         "int32",          true, "", false, null);
+var $Int64         = $newType( 8, $kindInt64,         "int64",          true, "", false, null);
+var $Uint          = $newType( 4, $kindUint,          "uint",           true, "", false, null);
+var $Uint8         = $newType( 1, $kindUint8,         "uint8",          true, "", false, null);
+var $Uint16        = $newType( 2, $kindUint16,        "uint16",         true, "", false, null);
+var $Uint32        = $newType( 4, $kindUint32,        "uint32",         true, "", false, null);
+var $Uint64        = $newType( 8, $kindUint64,        "uint64",         true, "", false, null);
+var $Uintptr       = $newType( 4, $kindUintptr,       "uintptr",        true, "", false, null);
+var $Float32       = $newType( 4, $kindFloat32,       "float32",        true, "", false, null);
+var $Float64       = $newType( 8, $kindFloat64,       "float64",        true, "", false, null);
+var $Complex64     = $newType( 8, $kindComplex64,     "complex64",      true, "", false, null);
+var $Complex128    = $newType(16, $kindComplex128,    "complex128",     true, "", false, null);
+var $String        = $newType( 8, $kindString,        "string",         true, "", false, null);
+var $UnsafePointer = $newType( 4, $kindUnsafePointer, "unsafe.Pointer", true, "unsafe", false, null);
+
+var $nativeArray = function(elemKind) {
+  switch (elemKind) {
+  case $kindInt:
+    return Int32Array;
+  case $kindInt8:
+    return Int8Array;
+  case $kindInt16:
+    return Int16Array;
+  case $kindInt32:
+    return Int32Array;
+  case $kindUint:
+    return Uint32Array;
+  case $kindUint8:
+    return Uint8Array;
+  case $kindUint16:
+    return Uint16Array;
+  case $kindUint32:
+    return Uint32Array;
+  case $kindUintptr:
+    return Uint32Array;
+  case $kindFloat32:
+    return Float32Array;
+  case $kindFloat64:
+    return Float64Array;
+  default:
+    return Array;
+  }
+};
+var $toNativeArray = function(elemKind, array) {
+  var nativeArray = $nativeArray(elemKind);
+  if (nativeArray === Array) {
+    return array;
+  }
+  return new nativeArray(array);
+};
+var $arrayTypes = {};
+var $arrayType = function(elem, len) {
+  var typeKey = elem.id + "$" + len;
+  var typ = $arrayTypes[typeKey];
+  if (typ === undefined) {
+    typ = $newType(12, $kindArray, "[" + len + "]" + elem.string, false, "", false, null);
+    $arrayTypes[typeKey] = typ;
+    typ.init(elem, len);
+  }
+  return typ;
+};
+
+var $chanType = function(elem, sendOnly, recvOnly) {
+  var string = (recvOnly ? "<-" : "") + "chan" + (sendOnly ? "<- " : " ");
+  if (!sendOnly && !recvOnly && (elem.string[0] == "<")) {
+    string += "(" + elem.string + ")";
+  } else {
+    string += elem.string;
+  }
+  var field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
+  var typ = elem[field];
+  if (typ === undefined) {
+    typ = $newType(4, $kindChan, string, false, "", false, null);
+    elem[field] = typ;
+    typ.init(elem, sendOnly, recvOnly);
+  }
+  return typ;
+};
+var $Chan = function(elem, capacity) {
+  if (capacity < 0 || capacity > 2147483647) {
+    $throwRuntimeError("makechan: size out of range");
+  }
+  this.$elem = elem;
+  this.$capacity = capacity;
+  this.$buffer = [];
+  this.$sendQueue = [];
+  this.$recvQueue = [];
+  this.$closed = false;
+};
+var $chanNil = new $Chan(null, 0);
+$chanNil.$sendQueue = $chanNil.$recvQueue = { length: 0, push: function() {}, shift: function() { return undefined; }, indexOf: function() { return -1; } };
+
+var $funcTypes = {};
+var $funcType = function(params, results, variadic) {
+  var typeKey = $mapArray(params, function(p) { return p.id; }).join(",") + "$" + $mapArray(results, function(r) { return r.id; }).join(",") + "$" + variadic;
+  var typ = $funcTypes[typeKey];
+  if (typ === undefined) {
+    var paramTypes = $mapArray(params, function(p) { return p.string; });
+    if (variadic) {
+      paramTypes[paramTypes.length - 1] = "..." + paramTypes[paramTypes.length - 1].substr(2);
+    }
+    var string = "func(" + paramTypes.join(", ") + ")";
+    if (results.length === 1) {
+      string += " " + results[0].string;
+    } else if (results.length > 1) {
+      string += " (" + $mapArray(results, function(r) { return r.string; }).join(", ") + ")";
+    }
+    typ = $newType(4, $kindFunc, string, false, "", false, null);
+    $funcTypes[typeKey] = typ;
+    typ.init(params, results, variadic);
+  }
+  return typ;
+};
+
+var $interfaceTypes = {};
+var $interfaceType = function(methods) {
+  var typeKey = $mapArray(methods, function(m) { return m.pkg + "," + m.name + "," + m.typ.id; }).join("$");
+  var typ = $interfaceTypes[typeKey];
+  if (typ === undefined) {
+    var string = "interface {}";
+    if (methods.length !== 0) {
+      string = "interface { " + $mapArray(methods, function(m) {
+        return (m.pkg !== "" ? m.pkg + "." : "") + m.name + m.typ.string.substr(4);
+      }).join("; ") + " }";
+    }
+    typ = $newType(8, $kindInterface, string, false, "", false, null);
+    $interfaceTypes[typeKey] = typ;
+    typ.init(methods);
+  }
+  return typ;
+};
+var $emptyInterface = $interfaceType([]);
+var $ifaceNil = {};
+var $error = $newType(8, $kindInterface, "error", true, "", false, null);
+$error.init([{prop: "Error", name: "Error", pkg: "", typ: $funcType([], [$String], false)}]);
+
+var $mapTypes = {};
+var $mapType = function(key, elem) {
+  var typeKey = key.id + "$" + elem.id;
+  var typ = $mapTypes[typeKey];
+  if (typ === undefined) {
+    typ = $newType(4, $kindMap, "map[" + key.string + "]" + elem.string, false, "", false, null);
+    $mapTypes[typeKey] = typ;
+    typ.init(key, elem);
+  }
+  return typ;
+};
+var $makeMap = function(keyForFunc, entries) {
+  var m = {};
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    m[keyForFunc(e.k)] = e;
+  }
+  return m;
+};
+
+var $ptrType = function(elem) {
+  var typ = elem.ptr;
+  if (typ === undefined) {
+    typ = $newType(4, $kindPtr, "*" + elem.string, false, "", elem.exported, null);
+    elem.ptr = typ;
+    typ.init(elem);
+  }
+  return typ;
+};
+
+var $newDataPointer = function(data, constructor) {
+  if (constructor.elem.kind === $kindStruct) {
+    return data;
+  }
+  return new constructor(function() { return data; }, function(v) { data = v; });
+};
+
+var $indexPtr = function(array, index, constructor) {
+  if (array.buffer) {
+    // Pointers to the same underlying ArrayBuffer share cache.
+    var cache = array.buffer.$ptr = array.buffer.$ptr || {};
+    // Pointers of different primitive types are non-comparable and stored in different caches.
+    var typeCache = cache[array.name] = cache[array.name] || {};
+    var cacheIdx = array.BYTES_PER_ELEMENT * index + array.byteOffset;
+    return typeCache[cacheIdx] || (typeCache[cacheIdx] = new constructor(function() { return array[index]; }, function(v) { array[index] = v; }));
+  } else {
+    array.$ptr = array.$ptr || {};
+    return array.$ptr[index] || (array.$ptr[index] = new constructor(function() { return array[index]; }, function(v) { array[index] = v; }));
+  }
+};
+
+var $sliceType = function(elem) {
+  var typ = elem.slice;
+  if (typ === undefined) {
+    typ = $newType(12, $kindSlice, "[]" + elem.string, false, "", false, null);
+    elem.slice = typ;
+    typ.init(elem);
+  }
+  return typ;
+};
+var $makeSlice = function(typ, length, capacity) {
+  capacity = capacity || length;
+  if (length < 0 || length > 2147483647) {
+    $throwRuntimeError("makeslice: len out of range");
+  }
+  if (capacity < 0 || capacity < length || capacity > 2147483647) {
+    $throwRuntimeError("makeslice: cap out of range");
+  }
+  var array = new typ.nativeArray(capacity);
+  if (typ.nativeArray === Array) {
+    for (var i = 0; i < capacity; i++) {
+      array[i] = typ.elem.zero();
+    }
+  }
+  var slice = new typ(array);
+  slice.$length = length;
+  return slice;
+};
+
+var $structTypes = {};
+var $structType = function(pkgPath, fields) {
+  var typeKey = $mapArray(fields, function(f) { return f.name + "," + f.typ.id + "," + f.tag; }).join("$");
+  var typ = $structTypes[typeKey];
+  if (typ === undefined) {
+    var string = "struct { " + $mapArray(fields, function(f) {
+      var str = f.typ.string + (f.tag !== "" ? (" \"" + f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"") : "");
+      if (f.embedded) {
+        return str;
+      }
+      return f.name + " " + str;
+    }).join("; ") + " }";
+    if (fields.length === 0) {
+      string = "struct {}";
+    }
+    typ = $newType(0, $kindStruct, string, false, "", false, function() {
+      this.$val = this;
+      for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
+        if (f.name == '_') {
+          continue;
+        }
+        var arg = arguments[i];
+        this[f.prop] = arg !== undefined ? arg : f.typ.zero();
+      }
+    });
+    $structTypes[typeKey] = typ;
+    typ.init(pkgPath, fields);
+  }
+  return typ;
+};
+
+var $assertType = function(value, type, returnTuple) {
+  var isInterface = (type.kind === $kindInterface), ok, missingMethod = "";
+  if (value === $ifaceNil) {
+    ok = false;
+  } else if (!isInterface) {
+    ok = value.constructor === type;
+  } else {
+    var valueTypeString = value.constructor.string;
+    ok = type.implementedBy[valueTypeString];
+    if (ok === undefined) {
+      ok = true;
+      var valueMethodSet = $methodSet(value.constructor);
+      var interfaceMethods = type.methods;
+      for (var i = 0; i < interfaceMethods.length; i++) {
+        var tm = interfaceMethods[i];
+        var found = false;
+        for (var j = 0; j < valueMethodSet.length; j++) {
+          var vm = valueMethodSet[j];
+          if (vm.name === tm.name && vm.pkg === tm.pkg && vm.typ === tm.typ) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          ok = false;
+          type.missingMethodFor[valueTypeString] = tm.name;
+          break;
+        }
+      }
+      type.implementedBy[valueTypeString] = ok;
+    }
+    if (!ok) {
+      missingMethod = type.missingMethodFor[valueTypeString];
+    }
+  }
+
+  if (!ok) {
+    if (returnTuple) {
+      return [type.zero(), false];
+    }
+    $panic(new $packages["runtime"].TypeAssertionError.ptr(
+      $packages["runtime"]._type.ptr.nil,
+      (value === $ifaceNil ? $packages["runtime"]._type.ptr.nil : new $packages["runtime"]._type.ptr(value.constructor.string)),
+      new $packages["runtime"]._type.ptr(type.string),
+      missingMethod));
+  }
+
+  if (!isInterface) {
+    value = value.$val;
+  }
+  if (type === $jsObjectPtr) {
+    value = value.object;
+  }
+  return returnTuple ? [value, true] : value;
+};
+
+var $stackDepthOffset = 0;
+var $getStackDepth = function() {
+  var err = new Error();
+  if (err.stack === undefined) {
+    return undefined;
+  }
+  return $stackDepthOffset + err.stack.split("\n").length;
+};
+
+var $panicStackDepth = null, $panicValue;
+var $callDeferred = function(deferred, jsErr, fromPanic) {
+  if (!fromPanic && deferred !== null && $curGoroutine.deferStack.indexOf(deferred) == -1) {
+    throw jsErr;
+  }
+  if (jsErr !== null) {
+    var newErr = null;
+    try {
+      $panic(new $jsErrorPtr(jsErr));
+    } catch (err) {
+      newErr = err;
+    }
+    $callDeferred(deferred, newErr);
+    return;
+  }
+  if ($curGoroutine.asleep) {
+    return;
+  }
+
+  $stackDepthOffset--;
+  var outerPanicStackDepth = $panicStackDepth;
+  var outerPanicValue = $panicValue;
+
+  var localPanicValue = $curGoroutine.panicStack.pop();
+  if (localPanicValue !== undefined) {
+    $panicStackDepth = $getStackDepth();
+    $panicValue = localPanicValue;
+  }
+
+  try {
+    while (true) {
+      if (deferred === null) {
+        deferred = $curGoroutine.deferStack[$curGoroutine.deferStack.length - 1];
+        if (deferred === undefined) {
+          /* The panic reached the top of the stack. Clear it and throw it as a JavaScript error. */
+          $panicStackDepth = null;
+          if (localPanicValue.Object instanceof Error) {
+            throw localPanicValue.Object;
+          }
+          var msg;
+          if (localPanicValue.constructor === $String) {
+            msg = localPanicValue.$val;
+          } else if (localPanicValue.Error !== undefined) {
+            msg = localPanicValue.Error();
+          } else if (localPanicValue.String !== undefined) {
+            msg = localPanicValue.String();
+          } else {
+            msg = localPanicValue;
+          }
+          throw new Error(msg);
+        }
+      }
+      var call = deferred.pop();
+      if (call === undefined) {
+        $curGoroutine.deferStack.pop();
+        if (localPanicValue !== undefined) {
+          deferred = null;
+          continue;
+        }
+        return;
+      }
+      var r = call[0].apply(call[2], call[1]);
+      if (r && r.$blk !== undefined) {
+        deferred.push([r.$blk, [], r]);
+        if (fromPanic) {
+          throw null;
+        }
+        return;
+      }
+
+      if (localPanicValue !== undefined && $panicStackDepth === null) {
+        /* error was recovered */
+        if (fromPanic) {
+          throw null;
+        }
+        return;
+      }
+    }
+  } catch(e) {
+    // Deferred function threw a JavaScript exception or tries to unwind stack
+    // to the point where a panic was handled.
+    if (fromPanic) {
+      // Re-throw the exception to reach deferral execution call at the end
+      // of the function.
+      throw e;
+    }
+    // We are at the end of the function, handle the error or re-throw to
+    // continue unwinding if necessary, or simply stop unwinding if we got far
+    // enough.
+    $callDeferred(deferred, e, fromPanic);
+  } finally {
+    if (localPanicValue !== undefined) {
+      if ($panicStackDepth !== null) {
+        $curGoroutine.panicStack.push(localPanicValue);
+      }
+      $panicStackDepth = outerPanicStackDepth;
+      $panicValue = outerPanicValue;
+    }
+    $stackDepthOffset++;
+  }
+};
+
+var $panic = function(value) {
+  $curGoroutine.panicStack.push(value);
+  $callDeferred(null, null, true);
+};
+var $recover = function() {
+  if ($panicStackDepth === null || ($panicStackDepth !== undefined && $panicStackDepth !== $getStackDepth() - 2)) {
+    return $ifaceNil;
+  }
+  $panicStackDepth = null;
+  return $panicValue;
+};
+var $throw = function(err) { throw err; };
+
+var $noGoroutine = { asleep: false, exit: false, deferStack: [], panicStack: [] };
+var $curGoroutine = $noGoroutine, $totalGoroutines = 0, $awakeGoroutines = 0, $checkForDeadlock = true, $exportedFunctions = 0;
+var $mainFinished = false;
+var $go = function(fun, args) {
+  $totalGoroutines++;
+  $awakeGoroutines++;
+  var $goroutine = function() {
+    try {
+      $curGoroutine = $goroutine;
+      var r = fun.apply(undefined, args);
+      if (r && r.$blk !== undefined) {
+        fun = function() { return r.$blk(); };
+        args = [];
+        return;
+      }
+      $goroutine.exit = true;
+    } catch (err) {
+      if (!$goroutine.exit) {
+        throw err;
+      }
+    } finally {
+      $curGoroutine = $noGoroutine;
+      if ($goroutine.exit) { /* also set by runtime.Goexit() */
+        $totalGoroutines--;
+        $goroutine.asleep = true;
+      }
+      if ($goroutine.asleep) {
+        $awakeGoroutines--;
+        if (!$mainFinished && $awakeGoroutines === 0 && $checkForDeadlock && $exportedFunctions === 0) {
+          console.error("fatal error: all goroutines are asleep - deadlock!");
+          if ($global.process !== undefined) {
+            $global.process.exit(2);
+          }
+        }
+      }
+    }
+  };
+  $goroutine.asleep = false;
+  $goroutine.exit = false;
+  $goroutine.deferStack = [];
+  $goroutine.panicStack = [];
+  $schedule($goroutine);
+};
+
+var $scheduled = [];
+var $runScheduled = function() {
+  // For nested setTimeout calls browsers enforce 4ms minimum delay. We minimize
+  // the effect of this penalty by queueing the timer preemptively before we run
+  // the goroutines, and later cancelling it if it turns out unneeded. See:
+  // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#nested_timeouts
+  var nextRun = setTimeout($runScheduled);
+  try {
+    var start = Date.now();
+    var r;
+    while ((r = $scheduled.shift()) !== undefined) {
+      r();
+      // We need to interrupt this loop in order to allow the event loop to
+      // process timers, IO, etc. However, invoking scheduling through
+      // setTimeout is ~1000 times more expensive, so we amortize this cost by
+      // looping until the 4ms minimal delay has elapsed (assuming there are
+      // scheduled goroutines to run), and then yield to the event loop.
+      var elapsed = Date.now() - start;
+      if (elapsed > 4 || elapsed < 0) { break; }
+    }
+  } finally {
+    if ($scheduled.length == 0) {
+      // Cancel scheduling pass if there's nothing to run.
+      clearTimeout(nextRun);
+    }
+  }
+};
+
+var $schedule = function(goroutine) {
+  if (goroutine.asleep) {
+    goroutine.asleep = false;
+    $awakeGoroutines++;
+  }
+  $scheduled.push(goroutine);
+  if ($curGoroutine === $noGoroutine) {
+    $runScheduled();
+  }
+};
+
+var $setTimeout = function(f, t) {
+  $awakeGoroutines++;
+  return setTimeout(function() {
+    $awakeGoroutines--;
+    f();
+  }, t);
+};
+
+var $block = function() {
+  if ($curGoroutine === $noGoroutine) {
+    $throwRuntimeError("cannot block in JavaScript callback, fix by wrapping code in goroutine");
+  }
+  $curGoroutine.asleep = true;
+};
+
+var $restore = function(context, params) {
+  if (context !== undefined && context.$blk !== undefined) {
+    return context;
+  }
+  return params;
+}
+
+var $send = function(chan, value) {
+  if (chan.$closed) {
+    $throwRuntimeError("send on closed channel");
+  }
+  var queuedRecv = chan.$recvQueue.shift();
+  if (queuedRecv !== undefined) {
+    queuedRecv([value, true]);
+    return;
+  }
+  if (chan.$buffer.length < chan.$capacity) {
+    chan.$buffer.push(value);
+    return;
+  }
+
+  var thisGoroutine = $curGoroutine;
+  var closedDuringSend;
+  chan.$sendQueue.push(function(closed) {
+    closedDuringSend = closed;
+    $schedule(thisGoroutine);
+    return value;
+  });
+  $block();
+  return {
+    $blk: function() {
+      if (closedDuringSend) {
+        $throwRuntimeError("send on closed channel");
+      }
+    }
+  };
+};
+var $recv = function(chan) {
+  var queuedSend = chan.$sendQueue.shift();
+  if (queuedSend !== undefined) {
+    chan.$buffer.push(queuedSend(false));
+  }
+  var bufferedValue = chan.$buffer.shift();
+  if (bufferedValue !== undefined) {
+    return [bufferedValue, true];
+  }
+  if (chan.$closed) {
+    return [chan.$elem.zero(), false];
+  }
+
+  var thisGoroutine = $curGoroutine;
+  var f = { $blk: function() { return this.value; } };
+  var queueEntry = function(v) {
+    f.value = v;
+    $schedule(thisGoroutine);
+  };
+  chan.$recvQueue.push(queueEntry);
+  $block();
+  return f;
+};
+var $close = function(chan) {
+  if (chan.$closed) {
+    $throwRuntimeError("close of closed channel");
+  }
+  chan.$closed = true;
+  while (true) {
+    var queuedSend = chan.$sendQueue.shift();
+    if (queuedSend === undefined) {
+      break;
+    }
+    queuedSend(true); /* will panic */
+  }
+  while (true) {
+    var queuedRecv = chan.$recvQueue.shift();
+    if (queuedRecv === undefined) {
+      break;
+    }
+    queuedRecv([chan.$elem.zero(), false]);
+  }
+};
+var $select = function(comms) {
+  var ready = [];
+  var selection = -1;
+  for (var i = 0; i < comms.length; i++) {
+    var comm = comms[i];
+    var chan = comm[0];
+    switch (comm.length) {
+    case 0: /* default */
+      selection = i;
+      break;
+    case 1: /* recv */
+      if (chan.$sendQueue.length !== 0 || chan.$buffer.length !== 0 || chan.$closed) {
+        ready.push(i);
+      }
+      break;
+    case 2: /* send */
+      if (chan.$closed) {
+        $throwRuntimeError("send on closed channel");
+      }
+      if (chan.$recvQueue.length !== 0 || chan.$buffer.length < chan.$capacity) {
+        ready.push(i);
+      }
+      break;
+    }
+  }
+
+  if (ready.length !== 0) {
+    selection = ready[Math.floor(Math.random() * ready.length)];
+  }
+  if (selection !== -1) {
+    var comm = comms[selection];
+    switch (comm.length) {
+    case 0: /* default */
+      return [selection];
+    case 1: /* recv */
+      return [selection, $recv(comm[0])];
+    case 2: /* send */
+      $send(comm[0], comm[1]);
+      return [selection];
+    }
+  }
+
+  var entries = [];
+  var thisGoroutine = $curGoroutine;
+  var f = { $blk: function() { return this.selection; } };
+  var removeFromQueues = function() {
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      var queue = entry[0];
+      var index = queue.indexOf(entry[1]);
+      if (index !== -1) {
+        queue.splice(index, 1);
+      }
+    }
+  };
+  for (var i = 0; i < comms.length; i++) {
+    (function(i) {
+      var comm = comms[i];
+      switch (comm.length) {
+      case 1: /* recv */
+        var queueEntry = function(value) {
+          f.selection = [i, value];
+          removeFromQueues();
+          $schedule(thisGoroutine);
+        };
+        entries.push([comm[0].$recvQueue, queueEntry]);
+        comm[0].$recvQueue.push(queueEntry);
+        break;
+      case 2: /* send */
+        var queueEntry = function() {
+          if (comm[0].$closed) {
+            $throwRuntimeError("send on closed channel");
+          }
+          f.selection = [i];
+          removeFromQueues();
+          $schedule(thisGoroutine);
+          return comm[1];
+        };
+        entries.push([comm[0].$sendQueue, queueEntry]);
+        comm[0].$sendQueue.push(queueEntry);
+        break;
+      }
+    })(i);
+  }
+  $block();
+  return f;
+};
+
+var $jsObjectPtr, $jsErrorPtr;
+
+var $needsExternalization = function(t) {
+  switch (t.kind) {
+    case $kindBool:
+    case $kindInt:
+    case $kindInt8:
+    case $kindInt16:
+    case $kindInt32:
+    case $kindUint:
+    case $kindUint8:
+    case $kindUint16:
+    case $kindUint32:
+    case $kindUintptr:
+    case $kindFloat32:
+    case $kindFloat64:
+      return false;
+    default:
+      return t !== $jsObjectPtr;
+  }
+};
+
+var $externalize = function(v, t, makeWrapper) {
+  if (t === $jsObjectPtr) {
+    return v;
+  }
+  switch (t.kind) {
+  case $kindBool:
+  case $kindInt:
+  case $kindInt8:
+  case $kindInt16:
+  case $kindInt32:
+  case $kindUint:
+  case $kindUint8:
+  case $kindUint16:
+  case $kindUint32:
+  case $kindUintptr:
+  case $kindFloat32:
+  case $kindFloat64:
+    return v;
+  case $kindInt64:
+  case $kindUint64:
+    return $flatten64(v);
+  case $kindArray:
+    if ($needsExternalization(t.elem)) {
+      return $mapArray(v, function(e) { return $externalize(e, t.elem, makeWrapper); });
+    }
+    return v;
+  case $kindFunc:
+    return $externalizeFunction(v, t, false, makeWrapper);
+  case $kindInterface:
+    if (v === $ifaceNil) {
+      return null;
+    }
+    if (v.constructor === $jsObjectPtr) {
+      return v.$val.object;
+    }
+    return $externalize(v.$val, v.constructor, makeWrapper);
+  case $kindMap:
+    var m = {};
+    var keys = $keys(v);
+    for (var i = 0; i < keys.length; i++) {
+      var entry = v[keys[i]];
+      m[$externalize(entry.k, t.key, makeWrapper)] = $externalize(entry.v, t.elem, makeWrapper);
+    }
+    return m;
+  case $kindPtr:
+    if (v === t.nil) {
+      return null;
+    }
+    return $externalize(v.$get(), t.elem, makeWrapper);
+  case $kindSlice:
+    if ($needsExternalization(t.elem)) {
+      return $mapArray($sliceToNativeArray(v), function(e) { return $externalize(e, t.elem, makeWrapper); });
+    }
+    return $sliceToNativeArray(v);
+  case $kindString:
+    if ($isASCII(v)) {
+      return v;
+    }
+    var s = "", r;
+    for (var i = 0; i < v.length; i += r[1]) {
+      r = $decodeRune(v, i);
+      var c = r[0];
+      if (c > 0xFFFF) {
+        var h = Math.floor((c - 0x10000) / 0x400) + 0xD800;
+        var l = (c - 0x10000) % 0x400 + 0xDC00;
+        s += String.fromCharCode(h, l);
+        continue;
+      }
+      s += String.fromCharCode(c);
+    }
+    return s;
+  case $kindStruct:
+    var timePkg = $packages["time"];
+    if (timePkg !== undefined && v.constructor === timePkg.Time.ptr) {
+      var milli = $div64(v.UnixNano(), new $Int64(0, 1000000));
+      return new Date($flatten64(milli));
+    }
+
+    var noJsObject = {};
+    var searchJsObject = function(v, t) {
+      if (t === $jsObjectPtr) {
+        return v;
+      }
+      switch (t.kind) {
+      case $kindPtr:
+        if (v === t.nil) {
+          return noJsObject;
+        }
+        return searchJsObject(v.$get(), t.elem);
+      case $kindStruct:
+        var f = t.fields[0];
+        return searchJsObject(v[f.prop], f.typ);
+      case $kindInterface:
+        return searchJsObject(v.$val, v.constructor);
+      default:
+        return noJsObject;
+      }
+    };
+    var o = searchJsObject(v, t);
+    if (o !== noJsObject) {
+      return o;
+    }
+
+    if (makeWrapper !== undefined) {
+      return makeWrapper(v);
+    }
+
+    o = {};
+    for (var i = 0; i < t.fields.length; i++) {
+      var f = t.fields[i];
+      if (!f.exported) {
+        continue;
+      }
+      o[f.name] = $externalize(v[f.prop], f.typ, makeWrapper);
+    }
+    return o;
+  }
+  $throwRuntimeError("cannot externalize " + t.string);
+};
+
+var $externalizeFunction = function(v, t, passThis, makeWrapper) {
+  if (v === $throwNilPointerError) {
+    return null;
+  }
+  if (v.$externalizeWrapper === undefined) {
+    $checkForDeadlock = false;
+    v.$externalizeWrapper = function() {
+      var args = [];
+      for (var i = 0; i < t.params.length; i++) {
+        if (t.variadic && i === t.params.length - 1) {
+          var vt = t.params[i].elem, varargs = [];
+          for (var j = i; j < arguments.length; j++) {
+            varargs.push($internalize(arguments[j], vt, makeWrapper));
+          }
+          args.push(new (t.params[i])(varargs));
+          break;
+        }
+        args.push($internalize(arguments[i], t.params[i], makeWrapper));
+      }
+      var result = v.apply(passThis ? this : undefined, args);
+      switch (t.results.length) {
+      case 0:
+        return;
+      case 1:
+        return $externalize($copyIfRequired(result, t.results[0]), t.results[0], makeWrapper);
+      default:
+        for (var i = 0; i < t.results.length; i++) {
+          result[i] = $externalize($copyIfRequired(result[i], t.results[i]), t.results[i], makeWrapper);
+        }
+        return result;
+      }
+    };
+  }
+  return v.$externalizeWrapper;
+};
+
+var $internalize = function(v, t, recv, seen, makeWrapper) {
+  if (t === $jsObjectPtr) {
+    return v;
+  }
+  if (t === $jsObjectPtr.elem) {
+    $throwRuntimeError("cannot internalize js.Object, use *js.Object instead");
+  }
+  if (v && v.__internal_object__ !== undefined) {
+    return $assertType(v.__internal_object__, t, false);
+  }
+  var timePkg = $packages["time"];
+  if (timePkg !== undefined && t === timePkg.Time) {
+    if (!(v !== null && v !== undefined && v.constructor === Date)) {
+      $throwRuntimeError("cannot internalize time.Time from " + typeof v + ", must be Date");
+    }
+    return timePkg.Unix(new $Int64(0, 0), new $Int64(0, v.getTime() * 1000000));
+  }
+
+  // Cache for values we've already internalized in order to deal with circular
+  // references.
+  if (seen === undefined) { seen = new Map(); }
+  if (!seen.has(t)) { seen.set(t, new Map()); }
+  if (seen.get(t).has(v)) { return seen.get(t).get(v); }
+
+  switch (t.kind) {
+  case $kindBool:
+    return !!v;
+  case $kindInt:
+    return parseInt(v);
+  case $kindInt8:
+    return parseInt(v) << 24 >> 24;
+  case $kindInt16:
+    return parseInt(v) << 16 >> 16;
+  case $kindInt32:
+    return parseInt(v) >> 0;
+  case $kindUint:
+    return parseInt(v);
+  case $kindUint8:
+    return parseInt(v) << 24 >>> 24;
+  case $kindUint16:
+    return parseInt(v) << 16 >>> 16;
+  case $kindUint32:
+  case $kindUintptr:
+    return parseInt(v) >>> 0;
+  case $kindInt64:
+  case $kindUint64:
+    return new t(0, v);
+  case $kindFloat32:
+  case $kindFloat64:
+    return parseFloat(v);
+  case $kindArray:
+    if (v.length !== t.len) {
+      $throwRuntimeError("got array with wrong size from JavaScript native");
+    }
+    return $mapArray(v, function(e) { return $internalize(e, t.elem, makeWrapper); });
+  case $kindFunc:
+    return function() {
+      var args = [];
+      for (var i = 0; i < t.params.length; i++) {
+        if (t.variadic && i === t.params.length - 1) {
+          var vt = t.params[i].elem, varargs = arguments[i];
+          for (var j = 0; j < varargs.$length; j++) {
+            args.push($externalize(varargs.$array[varargs.$offset + j], vt, makeWrapper));
+          }
+          break;
+        }
+        args.push($externalize(arguments[i], t.params[i], makeWrapper));
+      }
+      var result = v.apply(recv, args);
+      switch (t.results.length) {
+      case 0:
+        return;
+      case 1:
+        return $internalize(result, t.results[0], makeWrapper);
+      default:
+        for (var i = 0; i < t.results.length; i++) {
+          result[i] = $internalize(result[i], t.results[i], makeWrapper);
+        }
+        return result;
+      }
+    };
+  case $kindInterface:
+    if (t.methods.length !== 0) {
+      $throwRuntimeError("cannot internalize " + t.string);
+    }
+    if (v === null) {
+      return $ifaceNil;
+    }
+    if (v === undefined) {
+      return new $jsObjectPtr(undefined);
+    }
+    switch (v.constructor) {
+    case Int8Array:
+      return new ($sliceType($Int8))(v);
+    case Int16Array:
+      return new ($sliceType($Int16))(v);
+    case Int32Array:
+      return new ($sliceType($Int))(v);
+    case Uint8Array:
+      return new ($sliceType($Uint8))(v);
+    case Uint16Array:
+      return new ($sliceType($Uint16))(v);
+    case Uint32Array:
+      return new ($sliceType($Uint))(v);
+    case Float32Array:
+      return new ($sliceType($Float32))(v);
+    case Float64Array:
+      return new ($sliceType($Float64))(v);
+    case Array:
+      return $internalize(v, $sliceType($emptyInterface), makeWrapper);
+    case Boolean:
+      return new $Bool(!!v);
+    case Date:
+      if (timePkg === undefined) {
+        /* time package is not present, internalize as &js.Object{Date} so it can be externalized into original Date. */
+        return new $jsObjectPtr(v);
+      }
+      return new timePkg.Time($internalize(v, timePkg.Time, makeWrapper));
+    case (function () { }).constructor: // is usually Function, but in Chrome extensions it is something else
+      var funcType = $funcType([$sliceType($emptyInterface)], [$jsObjectPtr], true);
+      return new funcType($internalize(v, funcType, makeWrapper));
+    case Number:
+      return new $Float64(parseFloat(v));
+    case String:
+      return new $String($internalize(v, $String, makeWrapper));
+    default:
+      if ($global.Node && v instanceof $global.Node) {
+        return new $jsObjectPtr(v);
+      }
+      var mapType = $mapType($String, $emptyInterface);
+      return new mapType($internalize(v, mapType, recv, seen, makeWrapper));
+    }
+  case $kindMap:
+    var m = {};
+    seen.get(t).set(v, m);
+    var keys = $keys(v);
+    for (var i = 0; i < keys.length; i++) {
+      var k = $internalize(keys[i], t.key, recv, seen, makeWrapper);
+      m[t.key.keyFor(k)] = { k: k, v: $internalize(v[keys[i]], t.elem, recv, seen, makeWrapper) };
+    }
+    return m;
+  case $kindPtr:
+    if (t.elem.kind === $kindStruct) {
+      return $internalize(v, t.elem, makeWrapper);
+    }
+  case $kindSlice:
+    return new t($mapArray(v, function(e) { return $internalize(e, t.elem, makeWrapper); }));
+  case $kindString:
+    v = String(v);
+    if ($isASCII(v)) {
+      return v;
+    }
+    var s = "";
+    var i = 0;
+    while (i < v.length) {
+      var h = v.charCodeAt(i);
+      if (0xD800 <= h && h <= 0xDBFF) {
+        var l = v.charCodeAt(i + 1);
+        var c = (h - 0xD800) * 0x400 + l - 0xDC00 + 0x10000;
+        s += $encodeRune(c);
+        i += 2;
+        continue;
+      }
+      s += $encodeRune(h);
+      i++;
+    }
+    return s;
+  case $kindStruct:
+    var noJsObject = {};
+    var searchJsObject = function(t) {
+      if (t === $jsObjectPtr) {
+        return v;
+      }
+      if (t === $jsObjectPtr.elem) {
+        $throwRuntimeError("cannot internalize js.Object, use *js.Object instead");
+      }
+      switch (t.kind) {
+      case $kindPtr:
+        return searchJsObject(t.elem);
+      case $kindStruct:
+        var f = t.fields[0];
+        var o = searchJsObject(f.typ);
+        if (o !== noJsObject) {
+          var n = new t.ptr();
+          n[f.prop] = o;
+          return n;
+        }
+        return noJsObject;
+      default:
+        return noJsObject;
+      }
+    };
+    var o = searchJsObject(t);
+    if (o !== noJsObject) {
+      return o;
+    }
+  }
+  $throwRuntimeError("cannot internalize " + t.string);
+};
+
+var $copyIfRequired = function(v, typ) {
+  // interface values
+  if (v && v.constructor && v.constructor.copy) {
+    return new v.constructor($clone(v.$val, v.constructor))
+  }
+  // array and struct values
+  if (typ.copy) {
+    var clone = typ.zero();
+    typ.copy(clone, v);
+    return clone;
+  }
+  return v;
+}
+
+/* $isASCII reports whether string s contains only ASCII characters. */
+var $isASCII = function(s) {
+  for (var i = 0; i < s.length; i++) {
+    if (s.charCodeAt(i) >= 128) {
+      return false;
+    }
+  }
+  return true;
+};
+
+$packages["github.com/gopherjs/gopherjs/js"] = (function() {
+	var $pkg = {}, $init, Object, Error, M, sliceType, ptrType, sliceType$2, funcType, funcType$1, funcType$2, ptrType$1, MakeWrapper, MakeFullWrapper, init;
+	Object = $pkg.Object = $newType(0, $kindStruct, "js.Object", true, "github.com/gopherjs/gopherjs/js", true, function(object_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.object = null;
+			return;
+		}
+		this.object = object_;
+	});
+	Error = $pkg.Error = $newType(0, $kindStruct, "js.Error", true, "github.com/gopherjs/gopherjs/js", true, function(Object_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Object = null;
+			return;
+		}
+		this.Object = Object_;
+	});
+	M = $pkg.M = $newType(4, $kindMap, "js.M", true, "github.com/gopherjs/gopherjs/js", true, null);
+	sliceType = $sliceType($emptyInterface);
+	ptrType = $ptrType(Object);
+	sliceType$2 = $sliceType(ptrType);
+	funcType = $funcType([sliceType$2], [ptrType], true);
+	funcType$1 = $funcType([], [ptrType], false);
+	funcType$2 = $funcType([ptrType], [], false);
+	ptrType$1 = $ptrType(Error);
+	Object.ptr.prototype.Get = function(key) {
+		var key, o;
+		o = this;
+		return o.object[$externalize(key, $String)];
+	};
+	Object.prototype.Get = function(key) { return this.$val.Get(key); };
+	Object.ptr.prototype.Set = function(key, value) {
+		var key, o, value;
+		o = this;
+		o.object[$externalize(key, $String)] = $externalize(value, $emptyInterface);
+	};
+	Object.prototype.Set = function(key, value) { return this.$val.Set(key, value); };
+	Object.ptr.prototype.Delete = function(key) {
+		var key, o;
+		o = this;
+		delete o.object[$externalize(key, $String)];
+	};
+	Object.prototype.Delete = function(key) { return this.$val.Delete(key); };
+	Object.ptr.prototype.Length = function() {
+		var o;
+		o = this;
+		return $parseInt(o.object.length);
+	};
+	Object.prototype.Length = function() { return this.$val.Length(); };
+	Object.ptr.prototype.Index = function(i) {
+		var i, o;
+		o = this;
+		return o.object[i];
+	};
+	Object.prototype.Index = function(i) { return this.$val.Index(i); };
+	Object.ptr.prototype.SetIndex = function(i, value) {
+		var i, o, value;
+		o = this;
+		o.object[i] = $externalize(value, $emptyInterface);
+	};
+	Object.prototype.SetIndex = function(i, value) { return this.$val.SetIndex(i, value); };
+	Object.ptr.prototype.Call = function(name, args) {
+		var args, name, o, obj;
+		o = this;
+		return (obj = o.object, obj[$externalize(name, $String)].apply(obj, $externalize(args, sliceType)));
+	};
+	Object.prototype.Call = function(name, args) { return this.$val.Call(name, args); };
+	Object.ptr.prototype.Invoke = function(args) {
+		var args, o;
+		o = this;
+		return o.object.apply(undefined, $externalize(args, sliceType));
+	};
+	Object.prototype.Invoke = function(args) { return this.$val.Invoke(args); };
+	Object.ptr.prototype.New = function(args) {
+		var args, o;
+		o = this;
+		return new ($global.Function.prototype.bind.apply(o.object, [undefined].concat($externalize(args, sliceType))));
+	};
+	Object.prototype.New = function(args) { return this.$val.New(args); };
+	Object.ptr.prototype.Bool = function() {
+		var o;
+		o = this;
+		return !!(o.object);
+	};
+	Object.prototype.Bool = function() { return this.$val.Bool(); };
+	Object.ptr.prototype.String = function() {
+		var o;
+		o = this;
+		return $internalize(o.object, $String);
+	};
+	Object.prototype.String = function() { return this.$val.String(); };
+	Object.ptr.prototype.Int = function() {
+		var o;
+		o = this;
+		return $parseInt(o.object) >> 0;
+	};
+	Object.prototype.Int = function() { return this.$val.Int(); };
+	Object.ptr.prototype.Int64 = function() {
+		var o;
+		o = this;
+		return $internalize(o.object, $Int64);
+	};
+	Object.prototype.Int64 = function() { return this.$val.Int64(); };
+	Object.ptr.prototype.Uint64 = function() {
+		var o;
+		o = this;
+		return $internalize(o.object, $Uint64);
+	};
+	Object.prototype.Uint64 = function() { return this.$val.Uint64(); };
+	Object.ptr.prototype.Float = function() {
+		var o;
+		o = this;
+		return $parseFloat(o.object);
+	};
+	Object.prototype.Float = function() { return this.$val.Float(); };
+	Object.ptr.prototype.Interface = function() {
+		var o;
+		o = this;
+		return $internalize(o.object, $emptyInterface);
+	};
+	Object.prototype.Interface = function() { return this.$val.Interface(); };
+	Object.ptr.prototype.Unsafe = function() {
+		var o;
+		o = this;
+		return o.object;
+	};
+	Object.prototype.Unsafe = function() { return this.$val.Unsafe(); };
+	Error.ptr.prototype.Error = function() {
+		var err;
+		err = this;
+		return "JavaScript error: " + $internalize(err.Object.message, $String);
+	};
+	Error.prototype.Error = function() { return this.$val.Error(); };
+	Error.ptr.prototype.Stack = function() {
+		var err;
+		err = this;
+		return $internalize(err.Object.stack, $String);
+	};
+	Error.prototype.Stack = function() { return this.$val.Stack(); };
+	MakeWrapper = function(i) {
+		var i, i$1, m, methods, o, v;
+		v = i;
+		o = new ($global.Object)();
+		o.__internal_object__ = v;
+		methods = v.constructor.methods;
+		i$1 = 0;
+		while (true) {
+			if (!(i$1 < $parseInt(methods.length))) { break; }
+			m = [m];
+			m[0] = methods[i$1];
+			if (!($internalize(m[0].pkg, $String) === "")) {
+				i$1 = i$1 + (1) >> 0;
+				continue;
+			}
+			o[$externalize($internalize(m[0].name, $String), $String)] = $externalize((function(m) { return function(args) {
+				var args;
+				return $externalizeFunction(v[$externalize($internalize(m[0].prop, $String), $String)], m[0].typ, $externalize(true, $Bool)).apply(v, $externalize(args, sliceType$2));
+			}; })(m), funcType);
+			i$1 = i$1 + (1) >> 0;
+		}
+		return o;
+	};
+	$pkg.MakeWrapper = MakeWrapper;
+	MakeFullWrapper = function(i) {
+		var {constructor, defineProperty, e, f, fields, i, i$1, i$2, i$3, internalObj, m, methods, ms, pkg, pkgTyp, ptr, typ, wrapperObj, $s, $r, $c} = $restore(this, {i});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		internalObj = [internalObj];
+		wrapperObj = [wrapperObj];
+		internalObj[0] = i;
+		constructor = internalObj[0].constructor;
+		wrapperObj[0] = new ($global.Object)();
+		defineProperty = (function(internalObj, wrapperObj) { return function(key, descriptor) {
+			var descriptor, key;
+			$global.Object.defineProperty(wrapperObj[0], $externalize(key, $String), $externalize(descriptor, M));
+		}; })(internalObj, wrapperObj);
+		$r = defineProperty("__internal_object__", $makeMap($String.keyFor, [{ k: "value", v: new $jsObjectPtr(internalObj[0]) }])); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		typ = $internalize(constructor.string, $String);
+		pkg = $internalize(constructor.pkg, $String);
+		ptr = "";
+		if (typ.charCodeAt(0) === 42) {
+			ptr = "*";
+		}
+		i$1 = 0;
+		while (true) {
+			if (!(i$1 < typ.length)) { break; }
+			if (typ.charCodeAt(i$1) === 46) {
+				typ = $substring(typ, (i$1 + 1 >> 0));
+				break;
+			}
+			i$1 = i$1 + (1) >> 0;
+		}
+		pkgTyp = pkg + "." + ptr + typ;
+		$r = defineProperty("$type", $makeMap($String.keyFor, [{ k: "value", v: new $String(pkgTyp) }])); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		fields = null;
+		methods = new ($global.Array)();
+		ms = constructor.methods;
+		if (!(ms === undefined)) {
+			methods = methods.concat(ms);
+		}
+		e = constructor.elem;
+		if (!(e === undefined)) {
+			fields = e.fields;
+			methods = methods.concat(e.methods);
+		} else {
+			fields = constructor.fields;
+		}
+		i$2 = 0;
+		/* while (true) { */ case 3:
+			/* if (!(i$2 < $parseInt(methods.length))) { break; } */ if(!(i$2 < $parseInt(methods.length))) { $s = 4; continue; }
+			m = [m];
+			m[0] = methods[i$2];
+			if (!($internalize(m[0].pkg, $String) === "")) {
+				i$2 = i$2 + (1) >> 0;
+				/* continue; */ $s = 3; continue;
+			}
+			$r = defineProperty($internalize(m[0].prop, $String), $makeMap($String.keyFor, [{ k: "value", v: new funcType((function(internalObj, m, wrapperObj) { return function(args) {
+				var args;
+				return $externalizeFunction(internalObj[0][$externalize($internalize(m[0].prop, $String), $String)], m[0].typ, $externalize(true, $Bool), MakeFullWrapper).apply(internalObj[0], $externalize(args, sliceType$2));
+			}; })(internalObj, m, wrapperObj)) }])); /* */ $s = 5; case 5: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+			i$2 = i$2 + (1) >> 0;
+		$s = 3; continue;
+		case 4:
+		/* */ if (!(fields === undefined)) { $s = 6; continue; }
+		/* */ $s = 7; continue;
+		/* if (!(fields === undefined)) { */ case 6:
+			i$3 = 0;
+			/* while (true) { */ case 8:
+				/* if (!(i$3 < $parseInt(fields.length))) { break; } */ if(!(i$3 < $parseInt(fields.length))) { $s = 9; continue; }
+				f = [f];
+				f[0] = fields[i$3];
+				if (!!!(f[0].exported)) {
+					i$3 = i$3 + (1) >> 0;
+					/* continue; */ $s = 8; continue;
+				}
+				$r = defineProperty($internalize(f[0].prop, $String), $makeMap($String.keyFor, [{ k: "get", v: new funcType$1((function(f, internalObj, wrapperObj) { return function() {
+					var vc;
+					vc = $copyIfRequired(internalObj[0].$val[$externalize($internalize(f[0].prop, $String), $String)], f[0].typ);
+					return $externalize(vc, f[0].typ, MakeFullWrapper);
+				}; })(f, internalObj, wrapperObj)) }, { k: "set", v: new funcType$2((function(f, internalObj, wrapperObj) { return function(jv) {
+					var gv, jv;
+					gv = $internalize(jv, f[0].typ, MakeFullWrapper);
+					internalObj[0].$val[$externalize($internalize(f[0].prop, $String), $String)] = gv;
+				}; })(f, internalObj, wrapperObj)) }])); /* */ $s = 10; case 10: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+				i$3 = i$3 + (1) >> 0;
+			$s = 8; continue;
+			case 9:
+		/* } */ case 7:
+		$s = -1; return wrapperObj[0];
+		/* */ } return; } var $f = {$blk: MakeFullWrapper, $c: true, $r, constructor, defineProperty, e, f, fields, i, i$1, i$2, i$3, internalObj, m, methods, ms, pkg, pkgTyp, ptr, typ, wrapperObj, $s};return $f;
+	};
+	$pkg.MakeFullWrapper = MakeFullWrapper;
+	init = function() {
+		var e;
+		e = new Error.ptr(null);
+		$unused(e);
+	};
+	ptrType.methods = [{prop: "Get", name: "Get", pkg: "", typ: $funcType([$String], [ptrType], false)}, {prop: "Set", name: "Set", pkg: "", typ: $funcType([$String, $emptyInterface], [], false)}, {prop: "Delete", name: "Delete", pkg: "", typ: $funcType([$String], [], false)}, {prop: "Length", name: "Length", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "Index", name: "Index", pkg: "", typ: $funcType([$Int], [ptrType], false)}, {prop: "SetIndex", name: "SetIndex", pkg: "", typ: $funcType([$Int, $emptyInterface], [], false)}, {prop: "Call", name: "Call", pkg: "", typ: $funcType([$String, sliceType], [ptrType], true)}, {prop: "Invoke", name: "Invoke", pkg: "", typ: $funcType([sliceType], [ptrType], true)}, {prop: "New", name: "New", pkg: "", typ: $funcType([sliceType], [ptrType], true)}, {prop: "Bool", name: "Bool", pkg: "", typ: $funcType([], [$Bool], false)}, {prop: "String", name: "String", pkg: "", typ: $funcType([], [$String], false)}, {prop: "Int", name: "Int", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "Int64", name: "Int64", pkg: "", typ: $funcType([], [$Int64], false)}, {prop: "Uint64", name: "Uint64", pkg: "", typ: $funcType([], [$Uint64], false)}, {prop: "Float", name: "Float", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Interface", name: "Interface", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "Unsafe", name: "Unsafe", pkg: "", typ: $funcType([], [$Uintptr], false)}];
+	ptrType$1.methods = [{prop: "Error", name: "Error", pkg: "", typ: $funcType([], [$String], false)}, {prop: "Stack", name: "Stack", pkg: "", typ: $funcType([], [$String], false)}];
+	Object.init("github.com/gopherjs/gopherjs/js", [{prop: "object", name: "object", embedded: false, exported: false, typ: ptrType, tag: ""}]);
+	Error.init("", [{prop: "Object", name: "Object", embedded: true, exported: true, typ: ptrType, tag: ""}]);
+	M.init($String, $emptyInterface);
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		init();
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["runtime"] = (function() {
+	var $pkg = {}, $init, js, _type, TypeAssertionError, errorString, ptrType$1, ptrType$2, buildVersion, init, throw$1;
+	js = $packages["github.com/gopherjs/gopherjs/js"];
+	_type = $pkg._type = $newType(0, $kindStruct, "runtime._type", true, "runtime", false, function(str_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.str = "";
+			return;
+		}
+		this.str = str_;
+	});
+	TypeAssertionError = $pkg.TypeAssertionError = $newType(0, $kindStruct, "runtime.TypeAssertionError", true, "runtime", true, function(_interface_, concrete_, asserted_, missingMethod_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this._interface = ptrType$1.nil;
+			this.concrete = ptrType$1.nil;
+			this.asserted = ptrType$1.nil;
+			this.missingMethod = "";
+			return;
+		}
+		this._interface = _interface_;
+		this.concrete = concrete_;
+		this.asserted = asserted_;
+		this.missingMethod = missingMethod_;
+	});
+	errorString = $pkg.errorString = $newType(8, $kindString, "runtime.errorString", true, "runtime", false, null);
+	ptrType$1 = $ptrType(_type);
+	ptrType$2 = $ptrType(TypeAssertionError);
+	_type.ptr.prototype.string = function() {
+		var t;
+		t = this;
+		return t.str;
+	};
+	_type.prototype.string = function() { return this.$val.string(); };
+	_type.ptr.prototype.pkgpath = function() {
+		var t;
+		t = this;
+		return "";
+	};
+	_type.prototype.pkgpath = function() { return this.$val.pkgpath(); };
+	TypeAssertionError.ptr.prototype.RuntimeError = function() {
+	};
+	TypeAssertionError.prototype.RuntimeError = function() { return this.$val.RuntimeError(); };
+	TypeAssertionError.ptr.prototype.Error = function() {
+		var as, cs, e, inter, msg;
+		e = this;
+		inter = "interface";
+		if (!(e._interface === ptrType$1.nil)) {
+			inter = e._interface.string();
+		}
+		as = e.asserted.string();
+		if (e.concrete === ptrType$1.nil) {
+			return "interface conversion: " + inter + " is nil, not " + as;
+		}
+		cs = e.concrete.string();
+		if (e.missingMethod === "") {
+			msg = "interface conversion: " + inter + " is " + cs + ", not " + as;
+			if (cs === as) {
+				if (!(e.concrete.pkgpath() === e.asserted.pkgpath())) {
+					msg = msg + (" (types from different packages)");
+				} else {
+					msg = msg + (" (types from different scopes)");
+				}
+			}
+			return msg;
+		}
+		return "interface conversion: " + cs + " is not " + as + ": missing method " + e.missingMethod;
+	};
+	TypeAssertionError.prototype.Error = function() { return this.$val.Error(); };
+	init = function() {
+		var e, jsPkg;
+		jsPkg = $packages[$externalize("github.com/gopherjs/gopherjs/js", $String)];
+		$jsObjectPtr = jsPkg.Object.ptr;
+		$jsErrorPtr = jsPkg.Error.ptr;
+		$throwRuntimeError = throw$1;
+		buildVersion = $internalize($goVersion, $String);
+		e = $ifaceNil;
+		e = new TypeAssertionError.ptr(ptrType$1.nil, ptrType$1.nil, ptrType$1.nil, "");
+		$unused(e);
+	};
+	errorString.prototype.RuntimeError = function() {
+		var e;
+		e = this.$val;
+	};
+	$ptrType(errorString).prototype.RuntimeError = function() { return new errorString(this.$get()).RuntimeError(); };
+	errorString.prototype.Error = function() {
+		var e;
+		e = this.$val;
+		return "runtime error: " + (e);
+	};
+	$ptrType(errorString).prototype.Error = function() { return new errorString(this.$get()).Error(); };
+	throw$1 = function(s) {
+		var s;
+		$panic(new errorString((s)));
+	};
+	ptrType$1.methods = [{prop: "string", name: "string", pkg: "runtime", typ: $funcType([], [$String], false)}, {prop: "pkgpath", name: "pkgpath", pkg: "runtime", typ: $funcType([], [$String], false)}];
+	ptrType$2.methods = [{prop: "RuntimeError", name: "RuntimeError", pkg: "", typ: $funcType([], [], false)}, {prop: "Error", name: "Error", pkg: "", typ: $funcType([], [$String], false)}];
+	errorString.methods = [{prop: "RuntimeError", name: "RuntimeError", pkg: "", typ: $funcType([], [], false)}, {prop: "Error", name: "Error", pkg: "", typ: $funcType([], [$String], false)}];
+	_type.init("runtime", [{prop: "str", name: "str", embedded: false, exported: false, typ: $String, tag: ""}]);
+	TypeAssertionError.init("runtime", [{prop: "_interface", name: "_interface", embedded: false, exported: false, typ: ptrType$1, tag: ""}, {prop: "concrete", name: "concrete", embedded: false, exported: false, typ: ptrType$1, tag: ""}, {prop: "asserted", name: "asserted", embedded: false, exported: false, typ: ptrType$1, tag: ""}, {prop: "missingMethod", name: "missingMethod", embedded: false, exported: false, typ: $String, tag: ""}]);
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		$r = js.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		buildVersion = "";
+		init();
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["math/bits"] = (function() {
+	var $pkg = {}, $init;
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["math"] = (function() {
+	var $pkg = {}, $init, js, bits, arrayType, arrayType$1, arrayType$2, structType, math, _zero, posInf, negInf, nan, buf, Round, max, min, Abs, Cos, Floor, Inf, IsInf, IsNaN, Max, Min, NaN, Pow, Signbit, Sin, Sqrt, init, Float64bits, Float64frombits;
+	js = $packages["github.com/gopherjs/gopherjs/js"];
+	bits = $packages["math/bits"];
+	arrayType = $arrayType($Uint32, 2);
+	arrayType$1 = $arrayType($Float32, 2);
+	arrayType$2 = $arrayType($Float64, 1);
+	structType = $structType("math", [{prop: "uint32array", name: "uint32array", embedded: false, exported: false, typ: arrayType, tag: ""}, {prop: "float32array", name: "float32array", embedded: false, exported: false, typ: arrayType$1, tag: ""}, {prop: "float64array", name: "float64array", embedded: false, exported: false, typ: arrayType$2, tag: ""}]);
+	Round = function(x) {
+		var bits$1, e, x, x$1, x$2, x$3, x$4;
+		bits$1 = Float64bits(x);
+		e = ((($shiftRightUint64(bits$1, 52).$low >>> 0)) & 2047) >>> 0;
+		if (e < 1023) {
+			bits$1 = (x$1 = new $Uint64(2147483648, 0), new $Uint64(bits$1.$high & x$1.$high, (bits$1.$low & x$1.$low) >>> 0));
+			if (e === 1022) {
+				bits$1 = (x$2 = new $Uint64(1072693248, 0), new $Uint64(bits$1.$high | x$2.$high, (bits$1.$low | x$2.$low) >>> 0));
+			}
+		} else if (e < 1075) {
+			e = e - (1023) >>> 0;
+			bits$1 = (x$3 = $shiftRightUint64(new $Uint64(524288, 0), e), new $Uint64(bits$1.$high + x$3.$high, bits$1.$low + x$3.$low));
+			bits$1 = (x$4 = $shiftRightUint64(new $Uint64(1048575, 4294967295), e), new $Uint64(bits$1.$high & ~x$4.$high, (bits$1.$low & ~x$4.$low) >>> 0));
+		}
+		return Float64frombits(bits$1);
+	};
+	$pkg.Round = Round;
+	max = function(x, y) {
+		var x, y;
+		if (IsInf(x, 1) || IsInf(y, 1)) {
+			return Inf(1);
+		} else if (IsNaN(x) || IsNaN(y)) {
+			return NaN();
+		} else if ((x === 0) && (x === y)) {
+			if (Signbit(x)) {
+				return y;
+			}
+			return x;
+		}
+		if (x > y) {
+			return x;
+		}
+		return y;
+	};
+	min = function(x, y) {
+		var x, y;
+		if (IsInf(x, -1) || IsInf(y, -1)) {
+			return Inf(-1);
+		} else if (IsNaN(x) || IsNaN(y)) {
+			return NaN();
+		} else if ((x === 0) && (x === y)) {
+			if (Signbit(x)) {
+				return x;
+			}
+			return y;
+		}
+		if (x < y) {
+			return x;
+		}
+		return y;
+	};
+	Abs = function(x) {
+		var x, x$1;
+		return Float64frombits((x$1 = Float64bits(x), new $Uint64(x$1.$high & ~2147483648, (x$1.$low & ~0) >>> 0)));
+	};
+	$pkg.Abs = Abs;
+	Cos = function(x) {
+		var x;
+		return $parseFloat(math.cos(x));
+	};
+	$pkg.Cos = Cos;
+	Floor = function(x) {
+		var x;
+		return $parseFloat(math.floor(x));
+	};
+	$pkg.Floor = Floor;
+	Inf = function(sign) {
+		var sign;
+		if (sign >= 0) {
+			return posInf;
+		} else {
+			return negInf;
+		}
+	};
+	$pkg.Inf = Inf;
+	IsInf = function(f, sign) {
+		var f, sign;
+		if (f === posInf) {
+			return sign >= 0;
+		}
+		if (f === negInf) {
+			return sign <= 0;
+		}
+		return false;
+	};
+	$pkg.IsInf = IsInf;
+	IsNaN = function(f) {
+		var f, is;
+		is = false;
+		is = !((f === f));
+		return is;
+	};
+	$pkg.IsNaN = IsNaN;
+	Max = function(x, y) {
+		var x, y;
+		return max(x, y);
+	};
+	$pkg.Max = Max;
+	Min = function(x, y) {
+		var x, y;
+		return min(x, y);
+	};
+	$pkg.Min = Min;
+	NaN = function() {
+		return nan;
+	};
+	$pkg.NaN = NaN;
+	Pow = function(x, y) {
+		var x, y;
+		if ((x === 1) || ((x === -1) && ((y === posInf) || (y === negInf)))) {
+			return 1;
+		}
+		return $parseFloat(math.pow(x, y));
+	};
+	$pkg.Pow = Pow;
+	Signbit = function(x) {
+		var x;
+		return x < 0 || (1 / x === negInf);
+	};
+	$pkg.Signbit = Signbit;
+	Sin = function(x) {
+		var x;
+		return $parseFloat(math.sin(x));
+	};
+	$pkg.Sin = Sin;
+	Sqrt = function(x) {
+		var x;
+		return $parseFloat(math.sqrt(x));
+	};
+	$pkg.Sqrt = Sqrt;
+	init = function() {
+		var ab;
+		ab = new ($global.ArrayBuffer)(8);
+		buf.uint32array = new ($global.Uint32Array)(ab);
+		buf.float32array = new ($global.Float32Array)(ab);
+		buf.float64array = new ($global.Float64Array)(ab);
+	};
+	Float64bits = function(f) {
+		var f, x, x$1;
+		buf.float64array[0] = f;
+		return (x = $shiftLeft64((new $Uint64(0, buf.uint32array[1])), 32), x$1 = (new $Uint64(0, buf.uint32array[0])), new $Uint64(x.$high + x$1.$high, x.$low + x$1.$low));
+	};
+	$pkg.Float64bits = Float64bits;
+	Float64frombits = function(b) {
+		var b;
+		buf.uint32array[0] = ((b.$low >>> 0));
+		buf.uint32array[1] = (($shiftRightUint64(b, 32).$low >>> 0));
+		return buf.float64array[0];
+	};
+	$pkg.Float64frombits = Float64frombits;
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		$r = js.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		$r = bits.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		buf = new structType.ptr(arrayType.zero(), arrayType$1.zero(), arrayType$2.zero());
+		math = $global.Math;
+		_zero = 0;
+		posInf = 1 / _zero;
+		negInf = -1 / _zero;
+		nan = $parseFloat($NaN);
+		init();
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["resolv"] = (function() {
+	var $pkg = {}, $init, math, Vector, Axis, Space, Shape, Line, ConvexPolygon, ContactSet, Circle, Projection, Object, Collision, Cell, sliceType, ptrType, sliceType$1, sliceType$2, ptrType$1, ptrType$2, sliceType$3, sliceType$4, ptrType$3, sliceType$5, ptrType$4, ptrType$5, ptrType$6, sliceType$6, ptrType$7, sliceType$7, mapType, Dot, NewSpace, NewLine, NewConvexPolygon, NewContactSet, NewRectangle, NewCircle, NewObject, axpyUnitaryTo, scalUnitaryTo, NewCollision, newCell;
+	math = $packages["math"];
+	Vector = $pkg.Vector = $newType(12, $kindSlice, "resolv.Vector", true, "resolv", true, null);
+	Axis = $pkg.Axis = $newType(4, $kindInt, "resolv.Axis", true, "resolv", true, null);
+	Space = $pkg.Space = $newType(0, $kindStruct, "resolv.Space", true, "resolv", true, function(Cells_, CellWidth_, CellHeight_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Cells = sliceType$2.nil;
+			this.CellWidth = 0;
+			this.CellHeight = 0;
+			return;
+		}
+		this.Cells = Cells_;
+		this.CellWidth = CellWidth_;
+		this.CellHeight = CellHeight_;
+	});
+	Shape = $pkg.Shape = $newType(8, $kindInterface, "resolv.Shape", true, "resolv", true, null);
+	Line = $pkg.Line = $newType(0, $kindStruct, "resolv.Line", true, "resolv", true, function(Start_, End_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Start = Vector.nil;
+			this.End = Vector.nil;
+			return;
+		}
+		this.Start = Start_;
+		this.End = End_;
+	});
+	ConvexPolygon = $pkg.ConvexPolygon = $newType(0, $kindStruct, "resolv.ConvexPolygon", true, "resolv", true, function(Points_, X_, Y_, Closed_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Points = sliceType$4.nil;
+			this.X = 0;
+			this.Y = 0;
+			this.Closed = false;
+			return;
+		}
+		this.Points = Points_;
+		this.X = X_;
+		this.Y = Y_;
+		this.Closed = Closed_;
+	});
+	ContactSet = $pkg.ContactSet = $newType(0, $kindStruct, "resolv.ContactSet", true, "resolv", true, function(Points_, MTV_, Center_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Points = sliceType$4.nil;
+			this.MTV = Vector.nil;
+			this.Center = Vector.nil;
+			return;
+		}
+		this.Points = Points_;
+		this.MTV = MTV_;
+		this.Center = Center_;
+	});
+	Circle = $pkg.Circle = $newType(0, $kindStruct, "resolv.Circle", true, "resolv", true, function(X_, Y_, Radius_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.X = 0;
+			this.Y = 0;
+			this.Radius = 0;
+			return;
+		}
+		this.X = X_;
+		this.Y = Y_;
+		this.Radius = Radius_;
+	});
+	Projection = $pkg.Projection = $newType(0, $kindStruct, "resolv.Projection", true, "resolv", true, function(Min_, Max_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Min = 0;
+			this.Max = 0;
+			return;
+		}
+		this.Min = Min_;
+		this.Max = Max_;
+	});
+	Object = $pkg.Object = $newType(0, $kindStruct, "resolv.Object", true, "resolv", true, function(Shape_, Space_, X_, Y_, W_, H_, TouchingCells_, Data_, ignoreList_, tags_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Shape = $ifaceNil;
+			this.Space = ptrType$1.nil;
+			this.X = 0;
+			this.Y = 0;
+			this.W = 0;
+			this.H = 0;
+			this.TouchingCells = sliceType$1.nil;
+			this.Data = $ifaceNil;
+			this.ignoreList = false;
+			this.tags = sliceType$6.nil;
+			return;
+		}
+		this.Shape = Shape_;
+		this.Space = Space_;
+		this.X = X_;
+		this.Y = Y_;
+		this.W = W_;
+		this.H = H_;
+		this.TouchingCells = TouchingCells_;
+		this.Data = Data_;
+		this.ignoreList = ignoreList_;
+		this.tags = tags_;
+	});
+	Collision = $pkg.Collision = $newType(0, $kindStruct, "resolv.Collision", true, "resolv", true, function(checkingObject_, dx_, dy_, Objects_, Cells_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.checkingObject = ptrType$2.nil;
+			this.dx = 0;
+			this.dy = 0;
+			this.Objects = sliceType$3.nil;
+			this.Cells = sliceType$1.nil;
+			return;
+		}
+		this.checkingObject = checkingObject_;
+		this.dx = dx_;
+		this.dy = dy_;
+		this.Objects = Objects_;
+		this.Cells = Cells_;
+	});
+	Cell = $pkg.Cell = $newType(0, $kindStruct, "resolv.Cell", true, "resolv", true, function(X_, Y_, Objects_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.X = 0;
+			this.Y = 0;
+			this.Objects = sliceType$3.nil;
+			return;
+		}
+		this.X = X_;
+		this.Y = Y_;
+		this.Objects = Objects_;
+	});
+	sliceType = $sliceType($Float64);
+	ptrType = $ptrType(Cell);
+	sliceType$1 = $sliceType(ptrType);
+	sliceType$2 = $sliceType(sliceType$1);
+	ptrType$1 = $ptrType(Space);
+	ptrType$2 = $ptrType(Object);
+	sliceType$3 = $sliceType(ptrType$2);
+	sliceType$4 = $sliceType(Vector);
+	ptrType$3 = $ptrType(Line);
+	sliceType$5 = $sliceType(ptrType$3);
+	ptrType$4 = $ptrType(Circle);
+	ptrType$5 = $ptrType(ConvexPolygon);
+	ptrType$6 = $ptrType(ContactSet);
+	sliceType$6 = $sliceType($String);
+	ptrType$7 = $ptrType(Collision);
+	sliceType$7 = $sliceType(Axis);
+	mapType = $mapType(ptrType$2, $Bool);
+	Vector.prototype.Clone = function() {
+		var clone, v;
+		v = this;
+		clone = $makeSlice(Vector, v.$length);
+		$copySlice(clone, v);
+		return clone;
+	};
+	$ptrType(Vector).prototype.Clone = function() { return this.$get().Clone(); };
+	Vector.prototype.Add = function(vs) {
+		var _i, _ref, dim, i, v, vs;
+		v = this;
+		dim = v.$length;
+		_ref = vs;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			if (((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]).$length > dim) {
+				axpyUnitaryTo($convertSliceType(v, sliceType), 1, $convertSliceType(v, sliceType), $convertSliceType($subslice(((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]), 0, dim), sliceType));
+			} else {
+				axpyUnitaryTo($convertSliceType(v, sliceType), 1, $convertSliceType(v, sliceType), $convertSliceType(((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]), sliceType));
+			}
+			_i++;
+		}
+		return v;
+	};
+	$ptrType(Vector).prototype.Add = function(vs) { return this.$get().Add(vs); };
+	Vector.prototype.Sub = function(vs) {
+		var _i, _ref, dim, i, v, vs;
+		v = this;
+		dim = v.$length;
+		_ref = vs;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			if (((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]).$length > dim) {
+				axpyUnitaryTo($convertSliceType(v, sliceType), -1, $convertSliceType($subslice(((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]), 0, dim), sliceType), $convertSliceType(v, sliceType));
+			} else {
+				axpyUnitaryTo($convertSliceType(v, sliceType), -1, $convertSliceType(((i < 0 || i >= vs.$length) ? ($throwRuntimeError("index out of range"), undefined) : vs.$array[vs.$offset + i]), sliceType), $convertSliceType(v, sliceType));
+			}
+			_i++;
+		}
+		return v;
+	};
+	$ptrType(Vector).prototype.Sub = function(vs) { return this.$get().Sub(vs); };
+	Vector.prototype.Scale = function(size) {
+		var size, v;
+		v = this;
+		scalUnitaryTo($convertSliceType(v, sliceType), size, $convertSliceType(v, sliceType));
+		return v;
+	};
+	$ptrType(Vector).prototype.Scale = function(size) { return this.$get().Scale(size); };
+	Vector.prototype.Equal = function(v2) {
+		var _i, _ref, i, v, v2;
+		v = this;
+		if (!((v.$length === v2.$length))) {
+			return false;
+		}
+		_ref = v;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			if (math.Abs(((i < 0 || i >= v.$length) ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + i]) - ((i < 0 || i >= v2.$length) ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + i])) > 1e-08) {
+				return false;
+			}
+			_i++;
+		}
+		return true;
+	};
+	$ptrType(Vector).prototype.Equal = function(v2) { return this.$get().Equal(v2); };
+	Vector.prototype.Magnitude = function() {
+		var v;
+		v = this;
+		return math.Sqrt(v.Magnitude2());
+	};
+	$ptrType(Vector).prototype.Magnitude = function() { return this.$get().Magnitude(); };
+	Vector.prototype.Magnitude2 = function() {
+		var _i, _ref, result, scalar, v;
+		v = this;
+		result = 0;
+		_ref = v;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			scalar = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			result = result + (scalar * scalar);
+			_i++;
+		}
+		return result;
+	};
+	$ptrType(Vector).prototype.Magnitude2 = function() { return this.$get().Magnitude2(); };
+	Vector.prototype.Unit = function() {
+		var _i, _ref, i, l, v;
+		v = this;
+		l = v.Magnitude();
+		if (l < 1e-08) {
+			return v;
+		}
+		_ref = v;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			((i < 0 || i >= v.$length) ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + i] = ((i < 0 || i >= v.$length) ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + i]) / l);
+			_i++;
+		}
+		return v;
+	};
+	$ptrType(Vector).prototype.Unit = function() { return this.$get().Unit(); };
+	Dot = function(v1, v2) {
+		var _i, _ref, _tmp, _tmp$1, _tmp$2, dim1, dim2, i, result, v1, v2;
+		_tmp = 0;
+		_tmp$1 = v1.$length;
+		_tmp$2 = v2.$length;
+		result = _tmp;
+		dim1 = _tmp$1;
+		dim2 = _tmp$2;
+		if (dim1 > dim2) {
+			v2 = $appendSlice(v2, $convertSliceType($makeSlice(Vector, (dim1 - dim2 >> 0)), sliceType));
+		}
+		if (dim1 < dim2) {
+			v1 = $appendSlice(v1, $convertSliceType($makeSlice(Vector, (dim2 - dim1 >> 0)), sliceType));
+		}
+		_ref = v1;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			result = result + (((i < 0 || i >= v1.$length) ? ($throwRuntimeError("index out of range"), undefined) : v1.$array[v1.$offset + i]) * ((i < 0 || i >= v2.$length) ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + i]));
+			_i++;
+		}
+		return result;
+	};
+	$pkg.Dot = Dot;
+	Vector.prototype.Dot = function(v2) {
+		var v, v2;
+		v = this;
+		return Dot(v, v2);
+	};
+	$ptrType(Vector).prototype.Dot = function(v2) { return this.$get().Dot(v2); };
+	Vector.prototype.Cross = function(v2) {
+		var v, v2;
+		v = this;
+		if (!((v.$length === 3)) || !((v2.$length === 3))) {
+			return Vector.nil;
+		}
+		return new Vector([(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]) * (2 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 2]) - (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]) * (1 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 1]), (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]) * (0 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 0]) - (0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]) * (2 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 2]), (0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]) * (2 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 2]) - (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]) * (0 >= v2.$length ? ($throwRuntimeError("index out of range"), undefined) : v2.$array[v2.$offset + 0])]);
+	};
+	$ptrType(Vector).prototype.Cross = function(v2) { return this.$get().Cross(v2); };
+	Vector.prototype.Rotate = function(angle, as) {
+		var _1, _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, angle, as, axis, cos, dim, sin, v, x, y, z, z$1;
+		v = this;
+		_tmp = 2;
+		_tmp$1 = v.$length;
+		axis = _tmp;
+		dim = _tmp$1;
+		if (dim === 0) {
+			return v;
+		}
+		if (as.$length > 0) {
+			axis = (0 >= as.$length ? ($throwRuntimeError("index out of range"), undefined) : as.$array[as.$offset + 0]);
+		}
+		if ((dim === 1) && !((axis === 2))) {
+			v = $append(v, 0, 0);
+		}
+		if ((dim < 2 && (axis === 2)) || ((dim === 2) && !((axis === 2)))) {
+			v = $append(v, 0);
+		}
+		_tmp$2 = (0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]);
+		_tmp$3 = (1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]);
+		x = _tmp$2;
+		y = _tmp$3;
+		_tmp$4 = math.Cos(angle);
+		_tmp$5 = math.Sin(angle);
+		cos = _tmp$4;
+		sin = _tmp$5;
+		_1 = axis;
+		if (_1 === (0)) {
+			z = (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]);
+			(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1] = y * cos - z * sin);
+			(2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2] = y * sin + z * cos);
+		} else if (_1 === (1)) {
+			z$1 = (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]);
+			(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0] = x * cos + z$1 * sin);
+			(2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2] = -x * sin + z$1 * cos);
+		} else if (_1 === (2)) {
+			(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0] = x * cos - y * sin);
+			(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1] = x * sin + y * cos);
+		}
+		if (dim > 3) {
+			return $subslice(v, 0, 3);
+		}
+		return v;
+	};
+	$ptrType(Vector).prototype.Rotate = function(angle, as) { return this.$get().Rotate(angle, as); };
+	Vector.prototype.X = function() {
+		var v;
+		v = this;
+		if (v.$length < 1) {
+			return 0;
+		}
+		return (0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]);
+	};
+	$ptrType(Vector).prototype.X = function() { return this.$get().X(); };
+	Vector.prototype.Y = function() {
+		var v;
+		v = this;
+		if (v.$length < 2) {
+			return 0;
+		}
+		return (1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]);
+	};
+	$ptrType(Vector).prototype.Y = function() { return this.$get().Y(); };
+	Vector.prototype.Z = function() {
+		var v;
+		v = this;
+		if (v.$length < 3) {
+			return 0;
+		}
+		return (2 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 2]);
+	};
+	$ptrType(Vector).prototype.Z = function() { return this.$get().Z(); };
+	NewSpace = function(spaceWidth, spaceHeight, cellWidth, cellHeight) {
+		var _q, _q$1, cellHeight, cellWidth, sp, spaceHeight, spaceWidth;
+		sp = new Space.ptr(sliceType$2.nil, cellWidth, cellHeight);
+		sp.Resize((_q = spaceWidth / cellWidth, (_q === _q && _q !== 1/0 && _q !== -1/0) ? _q >> 0 : $throwRuntimeError("integer divide by zero")), (_q$1 = spaceHeight / cellHeight, (_q$1 === _q$1 && _q$1 !== 1/0 && _q$1 !== -1/0) ? _q$1 >> 0 : $throwRuntimeError("integer divide by zero")));
+		return sp;
+	};
+	$pkg.NewSpace = NewSpace;
+	Space.ptr.prototype.Add = function(objects) {
+		var {_i, _ref, obj, objects, sp, $s, $r, $c} = $restore(this, {objects});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		sp = this;
+		if (sp === ptrType$1.nil) {
+			$panic(new $String("ERROR: space is nil"));
+		}
+		_ref = objects;
+		_i = 0;
+		/* while (true) { */ case 1:
+			/* if (!(_i < _ref.$length)) { break; } */ if(!(_i < _ref.$length)) { $s = 2; continue; }
+			obj = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			obj.Space = sp;
+			$r = obj.Update(); /* */ $s = 3; case 3: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+			_i++;
+		$s = 1; continue;
+		case 2:
+		$s = -1; return;
+		/* */ } return; } var $f = {$blk: Space.ptr.prototype.Add, $c: true, $r, _i, _ref, obj, objects, sp, $s};return $f;
+	};
+	Space.prototype.Add = function(objects) { return this.$val.Add(objects); };
+	Space.ptr.prototype.Remove = function(objects) {
+		var _i, _i$1, _ref, _ref$1, cell, obj, objects, sp;
+		sp = this;
+		if (sp === ptrType$1.nil) {
+			$panic(new $String("ERROR: space is nil"));
+		}
+		_ref = objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			obj = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_ref$1 = obj.TouchingCells;
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				cell = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+				cell.unregister(obj);
+				_i$1++;
+			}
+			obj.TouchingCells = new sliceType$1([]);
+			obj.Space = ptrType$1.nil;
+			_i++;
+		}
+	};
+	Space.prototype.Remove = function(objects) { return this.$val.Remove(objects); };
+	Space.ptr.prototype.Objects = function() {
+		var _entry, _i, _i$1, _i$2, _key, _ref, _ref$1, _ref$2, _tuple, added, cx, cy, o, objects, objectsAdded, sp, x, x$1, x$2;
+		sp = this;
+		objectsAdded = $makeMap(ptrType$2.keyFor, []);
+		objects = new sliceType$3([]);
+		_ref = sp.Cells;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			cy = _i;
+			_ref$1 = (x = sp.Cells, ((cy < 0 || cy >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + cy]));
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				cx = _i$1;
+				_ref$2 = (x$1 = (x$2 = sp.Cells, ((cy < 0 || cy >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + cy])), ((cx < 0 || cx >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + cx])).Objects;
+				_i$2 = 0;
+				while (true) {
+					if (!(_i$2 < _ref$2.$length)) { break; }
+					o = ((_i$2 < 0 || _i$2 >= _ref$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$2.$array[_ref$2.$offset + _i$2]);
+					_tuple = (_entry = objectsAdded[ptrType$2.keyFor(o)], _entry !== undefined ? [_entry.v, true] : [false, false]);
+					added = _tuple[1];
+					if (!added) {
+						objects = $append(objects, o);
+						_key = o; (objectsAdded || $throwRuntimeError("assignment to entry in nil map"))[ptrType$2.keyFor(_key)] = { k: _key, v: true };
+					}
+					_i$2++;
+				}
+				_i$1++;
+			}
+			_i++;
+		}
+		return objects;
+	};
+	Space.prototype.Objects = function() { return this.$val.Objects(); };
+	Space.ptr.prototype.Resize = function(width, height) {
+		var height, sp, width, x, x$1, x$2, y;
+		sp = this;
+		sp.Cells = new sliceType$2([]);
+		y = 0;
+		while (true) {
+			if (!(y < height)) { break; }
+			sp.Cells = $append(sp.Cells, new sliceType$1([]));
+			x = 0;
+			while (true) {
+				if (!(x < width)) { break; }
+				(x$2 = sp.Cells, ((y < 0 || y >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + y] = $append((x$1 = sp.Cells, ((y < 0 || y >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + y])), newCell(x, y))));
+				x = x + (1) >> 0;
+			}
+			y = y + (1) >> 0;
+		}
+	};
+	Space.prototype.Resize = function(width, height) { return this.$val.Resize(width, height); };
+	Space.ptr.prototype.Cell = function(x, y) {
+		var sp, x, x$1, x$2, x$3, y;
+		sp = this;
+		if (y >= 0 && y < sp.Cells.$length && x >= 0 && x < (x$1 = sp.Cells, ((y < 0 || y >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + y])).$length) {
+			return (x$2 = (x$3 = sp.Cells, ((y < 0 || y >= x$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + y])), ((x < 0 || x >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + x]));
+		}
+		return ptrType.nil;
+	};
+	Space.prototype.Cell = function(x, y) { return this.$val.Cell(x, y); };
+	Space.ptr.prototype.CheckCells = function(x, y, w, h, tags) {
+		var _i, _ref, cell, h, ix, iy, obj, sp, tags, w, x, x$1, y;
+		sp = this;
+		ix = x;
+		while (true) {
+			if (!(ix < (x + w >> 0))) { break; }
+			iy = y;
+			while (true) {
+				if (!(iy < (y + h >> 0))) { break; }
+				cell = sp.Cell(ix, iy);
+				if (!(cell === ptrType.nil)) {
+					if (tags.$length > 0) {
+						if (cell.ContainsTags(tags)) {
+							_ref = cell.Objects;
+							_i = 0;
+							while (true) {
+								if (!(_i < _ref.$length)) { break; }
+								obj = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+								if (obj.HasTags(tags)) {
+									return obj;
+								}
+								_i++;
+							}
+						}
+					} else if (cell.Occupied()) {
+						return (x$1 = cell.Objects, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0]));
+					}
+				}
+				iy = iy + (1) >> 0;
+			}
+			ix = ix + (1) >> 0;
+		}
+		return ptrType$2.nil;
+	};
+	Space.prototype.CheckCells = function(x, y, w, h, tags) { return this.$val.CheckCells(x, y, w, h, tags); };
+	Space.ptr.prototype.CheckCellsWorld = function(x, y, w, h, tags) {
+		var _tuple, _tuple$1, ch, cw, h, sp, sx, sy, tags, w, x, y;
+		sp = this;
+		_tuple = sp.WorldToSpace(x, y);
+		sx = _tuple[0];
+		sy = _tuple[1];
+		_tuple$1 = sp.WorldToSpace(w, h);
+		cw = _tuple$1[0];
+		ch = _tuple$1[1];
+		return sp.CheckCells(sx, sy, cw, ch, tags);
+	};
+	Space.prototype.CheckCellsWorld = function(x, y, w, h, tags) { return this.$val.CheckCellsWorld(x, y, w, h, tags); };
+	Space.ptr.prototype.UnregisterAllObjects = function() {
+		var cell, sp, x, x$1, x$2, x$3, y;
+		sp = this;
+		y = 0;
+		while (true) {
+			if (!(y < sp.Cells.$length)) { break; }
+			x = 0;
+			while (true) {
+				if (!(x < (x$1 = sp.Cells, ((y < 0 || y >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + y])).$length)) { break; }
+				cell = (x$2 = (x$3 = sp.Cells, ((y < 0 || y >= x$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + y])), ((x < 0 || x >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + x]));
+				sp.Remove(cell.Objects);
+				x = x + (1) >> 0;
+			}
+			y = y + (1) >> 0;
+		}
+	};
+	Space.prototype.UnregisterAllObjects = function() { return this.$val.UnregisterAllObjects(); };
+	Space.ptr.prototype.WorldToSpace = function(x, y) {
+		var fx, fy, sp, x, y;
+		sp = this;
+		fx = ((math.Floor(x / (sp.CellWidth)) >> 0));
+		fy = ((math.Floor(y / (sp.CellHeight)) >> 0));
+		return [fx, fy];
+	};
+	Space.prototype.WorldToSpace = function(x, y) { return this.$val.WorldToSpace(x, y); };
+	Space.ptr.prototype.SpaceToWorld = function(x, y) {
+		var fx, fy, sp, x, y;
+		sp = this;
+		fx = (($imul(x, sp.CellWidth)));
+		fy = (($imul(y, sp.CellHeight)));
+		return [fx, fy];
+	};
+	Space.prototype.SpaceToWorld = function(x, y) { return this.$val.SpaceToWorld(x, y); };
+	Space.ptr.prototype.Height = function() {
+		var sp;
+		sp = this;
+		return sp.Cells.$length;
+	};
+	Space.prototype.Height = function() { return this.$val.Height(); };
+	Space.ptr.prototype.Width = function() {
+		var sp, x;
+		sp = this;
+		if (sp.Cells.$length > 0) {
+			return (x = sp.Cells, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])).$length;
+		}
+		return 0;
+	};
+	Space.prototype.Width = function() { return this.$val.Width(); };
+	Space.ptr.prototype.CellsInLine = function(startX, startY, endX, endY) {
+		var _q, _q$1, _q$2, _q$3, _tuple, _tuple$1, alternate, c, cell, cells, cx, cy, dv, endCell, endX, endY, p, pX, pY, sp, startX, startY;
+		sp = this;
+		cells = new sliceType$1([]);
+		cell = sp.Cell(startX, startY);
+		endCell = sp.Cell(endX, endY);
+		if (!(cell === ptrType.nil) && !(endCell === ptrType.nil)) {
+			dv = new Vector([((endX - startX >> 0)), ((endY - startY >> 0))]).Unit();
+			(0 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 0] = (0 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 0]) * (((_q = sp.CellWidth / 2, (_q === _q && _q !== 1/0 && _q !== -1/0) ? _q >> 0 : $throwRuntimeError("integer divide by zero")))));
+			(1 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 1] = (1 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 1]) * (((_q$1 = sp.CellHeight / 2, (_q$1 === _q$1 && _q$1 !== 1/0 && _q$1 !== -1/0) ? _q$1 >> 0 : $throwRuntimeError("integer divide by zero")))));
+			_tuple = sp.SpaceToWorld(startX, startY);
+			pX = _tuple[0];
+			pY = _tuple[1];
+			p = new Vector([pX + ((_q$2 = sp.CellWidth / 2, (_q$2 === _q$2 && _q$2 !== 1/0 && _q$2 !== -1/0) ? _q$2 >> 0 : $throwRuntimeError("integer divide by zero"))), pY + ((_q$3 = sp.CellHeight / 2, (_q$3 === _q$3 && _q$3 !== 1/0 && _q$3 !== -1/0) ? _q$3 >> 0 : $throwRuntimeError("integer divide by zero")))]);
+			alternate = false;
+			while (true) {
+				if (!(!(cell === ptrType.nil))) { break; }
+				if (cell === endCell) {
+					cells = $append(cells, cell);
+					break;
+				}
+				cells = $append(cells, cell);
+				if (alternate) {
+					(1 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 1] = (1 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 1]) + ((1 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 1])));
+				} else {
+					(0 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 0] = (0 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 0]) + ((0 >= dv.$length ? ($throwRuntimeError("index out of range"), undefined) : dv.$array[dv.$offset + 0])));
+				}
+				_tuple$1 = sp.WorldToSpace((0 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 0]), (1 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 1]));
+				cx = _tuple$1[0];
+				cy = _tuple$1[1];
+				c = sp.Cell(cx, cy);
+				if (!(c === cell)) {
+					cell = c;
+				}
+				alternate = !alternate;
+			}
+		}
+		return cells;
+	};
+	Space.prototype.CellsInLine = function(startX, startY, endX, endY) { return this.$val.CellsInLine(startX, startY, endX, endY); };
+	NewLine = function(x, y, x2, y2) {
+		var x, x2, y, y2;
+		return new Line.ptr(new Vector([x, y]), new Vector([x2, y2]));
+	};
+	$pkg.NewLine = NewLine;
+	Line.ptr.prototype.Project = function(axis) {
+		var axis, line;
+		line = this;
+		return line.Vector().Scale(axis.Dot(line.Start.Sub(new sliceType$4([line.End]))));
+	};
+	Line.prototype.Project = function(axis) { return this.$val.Project(axis); };
+	Line.ptr.prototype.Normal = function() {
+		var line, v;
+		line = this;
+		v = line.Vector();
+		return new Vector([(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]), -(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0])]).Unit();
+	};
+	Line.prototype.Normal = function() { return this.$val.Normal(); };
+	Line.ptr.prototype.Vector = function() {
+		var line;
+		line = this;
+		return line.End.Clone().Sub(new sliceType$4([line.Start])).Unit();
+	};
+	Line.prototype.Vector = function() { return this.$val.Vector(); };
+	Line.ptr.prototype.IntersectionPointsLine = function(other) {
+		var det, dx, dy, gamma, lambda, line, other, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$20, x$21, x$22, x$23, x$24, x$25, x$26, x$27, x$28, x$29, x$3, x$4, x$5, x$6, x$7, x$8, x$9;
+		line = this;
+		det = ((x = line.End, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) - (x$1 = line.Start, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0]))) * ((x$2 = other.End, (1 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 1])) - (x$3 = other.Start, (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1]))) - ((x$4 = other.End, (0 >= x$4.$length ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + 0])) - (x$5 = other.Start, (0 >= x$5.$length ? ($throwRuntimeError("index out of range"), undefined) : x$5.$array[x$5.$offset + 0]))) * ((x$6 = line.End, (1 >= x$6.$length ? ($throwRuntimeError("index out of range"), undefined) : x$6.$array[x$6.$offset + 1])) - (x$7 = line.Start, (1 >= x$7.$length ? ($throwRuntimeError("index out of range"), undefined) : x$7.$array[x$7.$offset + 1])));
+		if (!((det === 0))) {
+			lambda = ((((x$8 = line.Start, (1 >= x$8.$length ? ($throwRuntimeError("index out of range"), undefined) : x$8.$array[x$8.$offset + 1])) - (x$9 = other.Start, (1 >= x$9.$length ? ($throwRuntimeError("index out of range"), undefined) : x$9.$array[x$9.$offset + 1]))) * ((x$10 = other.End, (0 >= x$10.$length ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + 0])) - (x$11 = other.Start, (0 >= x$11.$length ? ($throwRuntimeError("index out of range"), undefined) : x$11.$array[x$11.$offset + 0])))) - (((x$12 = line.Start, (0 >= x$12.$length ? ($throwRuntimeError("index out of range"), undefined) : x$12.$array[x$12.$offset + 0])) - (x$13 = other.Start, (0 >= x$13.$length ? ($throwRuntimeError("index out of range"), undefined) : x$13.$array[x$13.$offset + 0]))) * ((x$14 = other.End, (1 >= x$14.$length ? ($throwRuntimeError("index out of range"), undefined) : x$14.$array[x$14.$offset + 1])) - (x$15 = other.Start, (1 >= x$15.$length ? ($throwRuntimeError("index out of range"), undefined) : x$15.$array[x$15.$offset + 1])))) + 1) / det;
+			gamma = ((((x$16 = line.Start, (1 >= x$16.$length ? ($throwRuntimeError("index out of range"), undefined) : x$16.$array[x$16.$offset + 1])) - (x$17 = other.Start, (1 >= x$17.$length ? ($throwRuntimeError("index out of range"), undefined) : x$17.$array[x$17.$offset + 1]))) * ((x$18 = line.End, (0 >= x$18.$length ? ($throwRuntimeError("index out of range"), undefined) : x$18.$array[x$18.$offset + 0])) - (x$19 = line.Start, (0 >= x$19.$length ? ($throwRuntimeError("index out of range"), undefined) : x$19.$array[x$19.$offset + 0])))) - (((x$20 = line.Start, (0 >= x$20.$length ? ($throwRuntimeError("index out of range"), undefined) : x$20.$array[x$20.$offset + 0])) - (x$21 = other.Start, (0 >= x$21.$length ? ($throwRuntimeError("index out of range"), undefined) : x$21.$array[x$21.$offset + 0]))) * ((x$22 = line.End, (1 >= x$22.$length ? ($throwRuntimeError("index out of range"), undefined) : x$22.$array[x$22.$offset + 1])) - (x$23 = line.Start, (1 >= x$23.$length ? ($throwRuntimeError("index out of range"), undefined) : x$23.$array[x$23.$offset + 1])))) + 1) / det;
+			if ((0 < lambda && lambda < 1) && (0 < gamma && gamma < 1)) {
+				dx = (x$24 = line.End, (0 >= x$24.$length ? ($throwRuntimeError("index out of range"), undefined) : x$24.$array[x$24.$offset + 0])) - (x$25 = line.Start, (0 >= x$25.$length ? ($throwRuntimeError("index out of range"), undefined) : x$25.$array[x$25.$offset + 0]));
+				dy = (x$26 = line.End, (1 >= x$26.$length ? ($throwRuntimeError("index out of range"), undefined) : x$26.$array[x$26.$offset + 1])) - (x$27 = line.Start, (1 >= x$27.$length ? ($throwRuntimeError("index out of range"), undefined) : x$27.$array[x$27.$offset + 1]));
+				return new Vector([(x$28 = line.Start, (0 >= x$28.$length ? ($throwRuntimeError("index out of range"), undefined) : x$28.$array[x$28.$offset + 0])) + (lambda * dx), (x$29 = line.Start, (1 >= x$29.$length ? ($throwRuntimeError("index out of range"), undefined) : x$29.$array[x$29.$offset + 1])) + (lambda * dy)]);
+			}
+		}
+		return Vector.nil;
+	};
+	Line.prototype.IntersectionPointsLine = function(other) { return this.$val.IntersectionPointsLine(other); };
+	Line.ptr.prototype.IntersectionPointsCircle = function(circle) {
+		var a, b, c, circle, cp, det, diff, lEnd, lStart, line, points, t, t$1, x, x$1, x$2, x$3, x$4, x$5;
+		line = this;
+		points = new sliceType$4([]);
+		cp = new Vector([circle.X, circle.Y]);
+		lStart = line.Start.Sub(new sliceType$4([cp]));
+		lEnd = line.End.Sub(new sliceType$4([cp]));
+		diff = lEnd.Sub(new sliceType$4([lStart]));
+		a = (0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]) * (0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]) + (1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1]) * (1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1]);
+		b = 2 * (((0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]) * (0 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 0])) + ((1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1]) * (1 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 1])));
+		c = ((0 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 0]) * (0 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 0])) + ((1 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 1]) * (1 >= lStart.$length ? ($throwRuntimeError("index out of range"), undefined) : lStart.$array[lStart.$offset + 1])) - (circle.Radius * circle.Radius);
+		det = b * b - (4 * a * c);
+		if (det < 0) {
+		} else if (det === 0) {
+			t = -b / (2 * a);
+			if (t >= 0 && t <= 1) {
+				points = $append(points, new Vector([(x = line.Start, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) + t * (0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]), (x$1 = line.Start, (1 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 1])) + t * (1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1])]));
+			}
+		} else {
+			t$1 = (-b + math.Sqrt(det)) / (2 * a);
+			if (t$1 >= 0 && t$1 <= 1) {
+				points = $append(points, new Vector([(x$2 = line.Start, (0 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 0])) + t$1 * (0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]), (x$3 = line.Start, (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1])) + t$1 * (1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1])]));
+			}
+			t$1 = (-b - math.Sqrt(det)) / (2 * a);
+			if (t$1 >= 0 && t$1 <= 1) {
+				points = $append(points, new Vector([(x$4 = line.Start, (0 >= x$4.$length ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + 0])) + t$1 * (0 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 0]), (x$5 = line.Start, (1 >= x$5.$length ? ($throwRuntimeError("index out of range"), undefined) : x$5.$array[x$5.$offset + 1])) + t$1 * (1 >= diff.$length ? ($throwRuntimeError("index out of range"), undefined) : diff.$array[diff.$offset + 1])]));
+			}
+		}
+		return points;
+	};
+	Line.prototype.IntersectionPointsCircle = function(circle) { return this.$val.IntersectionPointsCircle(circle); };
+	NewConvexPolygon = function(points) {
+		var cp, points;
+		cp = new ConvexPolygon.ptr(new sliceType$4([]), 0, 0, true);
+		cp.AddPoints(points);
+		return cp;
+	};
+	$pkg.NewConvexPolygon = NewConvexPolygon;
+	ConvexPolygon.ptr.prototype.Clone = function() {
+		var _i, _ref, cp, newPoly, point, points;
+		cp = this;
+		points = new sliceType$4([]);
+		_ref = cp.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			points = $append(points, point.Clone());
+			_i++;
+		}
+		newPoly = NewConvexPolygon(sliceType.nil);
+		newPoly.X = cp.X;
+		newPoly.Y = cp.Y;
+		newPoly.AddPointsVec(points);
+		newPoly.Closed = cp.Closed;
+		return newPoly;
+	};
+	ConvexPolygon.prototype.Clone = function() { return this.$val.Clone(); };
+	ConvexPolygon.ptr.prototype.AddPointsVec = function(points) {
+		var cp, points;
+		cp = this;
+		cp.Points = $appendSlice(cp.Points, points);
+	};
+	ConvexPolygon.prototype.AddPointsVec = function(points) { return this.$val.AddPointsVec(points); };
+	ConvexPolygon.ptr.prototype.AddPoints = function(vertexPositions) {
+		var cp, v, vertexPositions, x;
+		cp = this;
+		v = 0;
+		while (true) {
+			if (!(v < vertexPositions.$length)) { break; }
+			cp.Points = $append(cp.Points, new Vector([((v < 0 || v >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + v]), (x = v + 1 >> 0, ((x < 0 || x >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + x]))]));
+			v = v + (2) >> 0;
+		}
+	};
+	ConvexPolygon.prototype.AddPoints = function(vertexPositions) { return this.$val.AddPoints(vertexPositions); };
+	ConvexPolygon.ptr.prototype.Lines = function() {
+		var _tmp, _tmp$1, cp, end, i, line, lines, start, vertices, x;
+		cp = this;
+		lines = new sliceType$5([]);
+		vertices = cp.Transformed();
+		i = 0;
+		while (true) {
+			if (!(i < vertices.$length)) { break; }
+			_tmp = ((i < 0 || i >= vertices.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + i]);
+			_tmp$1 = (0 >= vertices.$length ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + 0]);
+			start = _tmp;
+			end = _tmp$1;
+			if (i < (vertices.$length - 1 >> 0)) {
+				end = (x = i + 1 >> 0, ((x < 0 || x >= vertices.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + x]));
+			} else if (!cp.Closed) {
+				break;
+			}
+			line = NewLine((0 >= start.$length ? ($throwRuntimeError("index out of range"), undefined) : start.$array[start.$offset + 0]), (1 >= start.$length ? ($throwRuntimeError("index out of range"), undefined) : start.$array[start.$offset + 1]), (0 >= end.$length ? ($throwRuntimeError("index out of range"), undefined) : end.$array[end.$offset + 0]), (1 >= end.$length ? ($throwRuntimeError("index out of range"), undefined) : end.$array[end.$offset + 1]));
+			lines = $append(lines, line);
+			i = i + (1) >> 0;
+		}
+		return lines;
+	};
+	ConvexPolygon.prototype.Lines = function() { return this.$val.Lines(); };
+	ConvexPolygon.ptr.prototype.Transformed = function() {
+		var _i, _ref, cp, point, transformed;
+		cp = this;
+		transformed = new sliceType$4([]);
+		_ref = cp.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			transformed = $append(transformed, new Vector([(0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) + cp.X, (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) + cp.Y]));
+			_i++;
+		}
+		return transformed;
+	};
+	ConvexPolygon.prototype.Transformed = function() { return this.$val.Transformed(); };
+	ConvexPolygon.ptr.prototype.Bounds = function() {
+		var bottomRight, cp, i, point, topLeft, transformed, x, x$1;
+		cp = this;
+		transformed = cp.Transformed();
+		topLeft = new Vector([(x = (0 >= transformed.$length ? ($throwRuntimeError("index out of range"), undefined) : transformed.$array[transformed.$offset + 0]), (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])), (x$1 = (0 >= transformed.$length ? ($throwRuntimeError("index out of range"), undefined) : transformed.$array[transformed.$offset + 0]), (1 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 1]))]);
+		bottomRight = topLeft.Clone();
+		i = 0;
+		while (true) {
+			if (!(i < transformed.$length)) { break; }
+			point = ((i < 0 || i >= transformed.$length) ? ($throwRuntimeError("index out of range"), undefined) : transformed.$array[transformed.$offset + i]);
+			if ((0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) < (0 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 0])) {
+				(0 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 0] = (0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]));
+			} else if ((0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) > (0 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 0])) {
+				(0 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 0] = (0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]));
+			}
+			if ((1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) < (1 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 1])) {
+				(1 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 1] = (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]));
+			} else if ((1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) > (1 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 1])) {
+				(1 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 1] = (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]));
+			}
+			i = i + (1) >> 0;
+		}
+		return [topLeft, bottomRight];
+	};
+	ConvexPolygon.prototype.Bounds = function() { return this.$val.Bounds(); };
+	ConvexPolygon.ptr.prototype.Position = function() {
+		var cp;
+		cp = this;
+		return [cp.X, cp.Y];
+	};
+	ConvexPolygon.prototype.Position = function() { return this.$val.Position(); };
+	ConvexPolygon.ptr.prototype.SetPosition = function(x, y) {
+		var cp, x, y;
+		cp = this;
+		cp.X = x;
+		cp.Y = y;
+	};
+	ConvexPolygon.prototype.SetPosition = function(x, y) { return this.$val.SetPosition(x, y); };
+	ConvexPolygon.ptr.prototype.SetPositionVec = function(vec) {
+		var cp, vec;
+		cp = this;
+		cp.X = vec.X();
+		cp.Y = vec.Y();
+	};
+	ConvexPolygon.prototype.SetPositionVec = function(vec) { return this.$val.SetPositionVec(vec); };
+	ConvexPolygon.ptr.prototype.Move = function(x, y) {
+		var cp, x, y;
+		cp = this;
+		cp.X = cp.X + (x);
+		cp.Y = cp.Y + (y);
+	};
+	ConvexPolygon.prototype.Move = function(x, y) { return this.$val.Move(x, y); };
+	ConvexPolygon.ptr.prototype.MoveVec = function(vec) {
+		var cp, vec;
+		cp = this;
+		cp.X = cp.X + (vec.X());
+		cp.Y = cp.Y + (vec.Y());
+	};
+	ConvexPolygon.prototype.MoveVec = function(vec) { return this.$val.MoveVec(vec); };
+	ConvexPolygon.ptr.prototype.Center = function() {
+		var _i, _ref, cp, pos, v;
+		cp = this;
+		pos = new Vector([0, 0]);
+		_ref = cp.Transformed();
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			pos.Add(new sliceType$4([v]));
+			_i++;
+		}
+		(0 >= pos.$length ? ($throwRuntimeError("index out of range"), undefined) : pos.$array[pos.$offset + 0] = (0 >= pos.$length ? ($throwRuntimeError("index out of range"), undefined) : pos.$array[pos.$offset + 0]) / ((cp.Transformed().$length)));
+		(1 >= pos.$length ? ($throwRuntimeError("index out of range"), undefined) : pos.$array[pos.$offset + 1] = (1 >= pos.$length ? ($throwRuntimeError("index out of range"), undefined) : pos.$array[pos.$offset + 1]) / ((cp.Transformed().$length)));
+		return pos;
+	};
+	ConvexPolygon.prototype.Center = function() { return this.$val.Center(); };
+	ConvexPolygon.ptr.prototype.Project = function(axis) {
+		var axis, cp, i, max, min, p, vertices, x, x$1, x$2, x$3;
+		cp = this;
+		axis = axis.Unit();
+		vertices = cp.Transformed();
+		min = axis.Dot(new Vector([(x = (0 >= vertices.$length ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + 0]), (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])), (x$1 = (0 >= vertices.$length ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + 0]), (1 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 1]))]));
+		max = min;
+		i = 1;
+		while (true) {
+			if (!(i < vertices.$length)) { break; }
+			p = axis.Dot(new Vector([(x$2 = ((i < 0 || i >= vertices.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + i]), (0 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 0])), (x$3 = ((i < 0 || i >= vertices.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertices.$array[vertices.$offset + i]), (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1]))]));
+			if (p < min) {
+				min = p;
+			} else if (p > max) {
+				max = p;
+			}
+			i = i + (1) >> 0;
+		}
+		return new Projection.ptr(min, max);
+	};
+	ConvexPolygon.prototype.Project = function(axis) { return this.$val.Project(axis); };
+	ConvexPolygon.ptr.prototype.SATAxes = function() {
+		var _i, _ref, axes, cp, line;
+		cp = this;
+		axes = new sliceType$4([]);
+		_ref = cp.Lines();
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			line = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			axes = $append(axes, line.Normal());
+			_i++;
+		}
+		return axes;
+	};
+	ConvexPolygon.prototype.SATAxes = function() { return this.$val.SATAxes(); };
+	ConvexPolygon.ptr.prototype.PointInside = function(point) {
+		var _i, _ref, contactCount, line, point, pointLine, polygon;
+		polygon = this;
+		pointLine = NewLine((0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]), (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]), (0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) + 9.99999999999e+11, (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]));
+		contactCount = 0;
+		_ref = polygon.Lines();
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			line = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (!(line.IntersectionPointsLine(pointLine) === Vector.nil)) {
+				contactCount = contactCount + (1) >> 0;
+			}
+			_i++;
+		}
+		return contactCount === 1;
+	};
+	ConvexPolygon.prototype.PointInside = function(point) { return this.$val.PointInside(point); };
+	NewContactSet = function() {
+		return new ContactSet.ptr(new sliceType$4([]), new Vector([0, 0]), new Vector([0, 0]));
+	};
+	$pkg.NewContactSet = NewContactSet;
+	ContactSet.ptr.prototype.LeftmostPoint = function() {
+		var _i, _ref, cs, left, point;
+		cs = this;
+		left = Vector.nil;
+		_ref = cs.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (left === Vector.nil || (0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) < (0 >= left.$length ? ($throwRuntimeError("index out of range"), undefined) : left.$array[left.$offset + 0])) {
+				left = point;
+			}
+			_i++;
+		}
+		return left;
+	};
+	ContactSet.prototype.LeftmostPoint = function() { return this.$val.LeftmostPoint(); };
+	ContactSet.ptr.prototype.RightmostPoint = function() {
+		var _i, _ref, cs, point, right;
+		cs = this;
+		right = Vector.nil;
+		_ref = cs.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (right === Vector.nil || (0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) > (0 >= right.$length ? ($throwRuntimeError("index out of range"), undefined) : right.$array[right.$offset + 0])) {
+				right = point;
+			}
+			_i++;
+		}
+		return right;
+	};
+	ContactSet.prototype.RightmostPoint = function() { return this.$val.RightmostPoint(); };
+	ContactSet.ptr.prototype.TopmostPoint = function() {
+		var _i, _ref, cs, point, top;
+		cs = this;
+		top = Vector.nil;
+		_ref = cs.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (top === Vector.nil || (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) < (1 >= top.$length ? ($throwRuntimeError("index out of range"), undefined) : top.$array[top.$offset + 1])) {
+				top = point;
+			}
+			_i++;
+		}
+		return top;
+	};
+	ContactSet.prototype.TopmostPoint = function() { return this.$val.TopmostPoint(); };
+	ContactSet.ptr.prototype.BottommostPoint = function() {
+		var _i, _ref, bottom, cs, point;
+		cs = this;
+		bottom = Vector.nil;
+		_ref = cs.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (bottom === Vector.nil || (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) > (1 >= bottom.$length ? ($throwRuntimeError("index out of range"), undefined) : bottom.$array[bottom.$offset + 1])) {
+				bottom = point;
+			}
+			_i++;
+		}
+		return bottom;
+	};
+	ContactSet.prototype.BottommostPoint = function() { return this.$val.BottommostPoint(); };
+	ConvexPolygon.ptr.prototype.Intersection = function(dx, dy, other) {
+		var _i, _i$1, _i$2, _i$3, _ref, _ref$1, _ref$2, _ref$3, _tuple, _tuple$1, circle, contactSet, cp, deltaMagnitude, dx, dy, isCircle, isPoly, line, line$1, mtv, ogMagnitude, ogX, ogY, other, otherLine, point, point$1, poly, x, x$1, x$2, x$3;
+		cp = this;
+		contactSet = NewContactSet();
+		ogX = cp.X;
+		ogY = cp.Y;
+		cp.X = cp.X + (dx);
+		cp.Y = cp.Y + (dy);
+		_tuple = $assertType(other, ptrType$4, true);
+		circle = _tuple[0];
+		isCircle = _tuple[1];
+		if (isCircle) {
+			_ref = cp.Lines();
+			_i = 0;
+			while (true) {
+				if (!(_i < _ref.$length)) { break; }
+				line = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+				contactSet.Points = $appendSlice(contactSet.Points, line.IntersectionPointsCircle(circle));
+				_i++;
+			}
+		} else {
+			_tuple$1 = $assertType(other, ptrType$5, true);
+			poly = _tuple$1[0];
+			isPoly = _tuple$1[1];
+			if (isPoly) {
+				_ref$1 = cp.Lines();
+				_i$1 = 0;
+				while (true) {
+					if (!(_i$1 < _ref$1.$length)) { break; }
+					line$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+					_ref$2 = poly.Lines();
+					_i$2 = 0;
+					while (true) {
+						if (!(_i$2 < _ref$2.$length)) { break; }
+						otherLine = ((_i$2 < 0 || _i$2 >= _ref$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$2.$array[_ref$2.$offset + _i$2]);
+						point = line$1.IntersectionPointsLine(otherLine);
+						if (!(point === Vector.nil)) {
+							contactSet.Points = $append(contactSet.Points, point);
+						}
+						_i$2++;
+					}
+					_i$1++;
+				}
+			}
+		}
+		if (contactSet.Points.$length > 0) {
+			_ref$3 = contactSet.Points;
+			_i$3 = 0;
+			while (true) {
+				if (!(_i$3 < _ref$3.$length)) { break; }
+				point$1 = ((_i$3 < 0 || _i$3 >= _ref$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$3.$array[_ref$3.$offset + _i$3]);
+				contactSet.Center = contactSet.Center.Add(new sliceType$4([point$1]));
+				_i$3++;
+			}
+			(x$1 = contactSet.Center, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0] = (x = contactSet.Center, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) / ((contactSet.Points.$length))));
+			(x$3 = contactSet.Center, (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1] = (x$2 = contactSet.Center, (1 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 1])) / ((contactSet.Points.$length))));
+			mtv = cp.calculateMTV(contactSet, other);
+			if (!(mtv === Vector.nil)) {
+				contactSet.MTV = mtv;
+			}
+		} else {
+			contactSet = ptrType$6.nil;
+		}
+		if (!(contactSet === ptrType$6.nil) && (!((dx === 0)) || !((dy === 0)))) {
+			deltaMagnitude = new Vector([dx, dy]).Magnitude();
+			ogMagnitude = contactSet.MTV.Magnitude();
+			contactSet.MTV = contactSet.MTV.Unit().Scale(ogMagnitude - deltaMagnitude);
+		}
+		cp.X = ogX;
+		cp.Y = ogY;
+		return contactSet;
+	};
+	ConvexPolygon.prototype.Intersection = function(dx, dy, other) { return this.$val.Intersection(dx, dy, other); };
+	ConvexPolygon.ptr.prototype.calculateMTV = function(contactSet, otherShape) {
+		var _i, _i$1, _ref, _ref$1, _ref$2, axis, axis$1, contactSet, cp, delta, other, otherShape, overlap, overlap$1, smallest;
+		cp = this;
+		delta = new Vector([0, 0]);
+		smallest = new Vector([1.7976931348623157e+308, 0]);
+		_ref = otherShape;
+		if ($assertType(_ref, ptrType$5, true)[1]) {
+			other = _ref.$val;
+			_ref$1 = cp.SATAxes();
+			_i = 0;
+			while (true) {
+				if (!(_i < _ref$1.$length)) { break; }
+				axis = ((_i < 0 || _i >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i]);
+				if (!$clone(cp.Project(axis), Projection).Overlapping($clone(other.Project(axis), Projection))) {
+					return Vector.nil;
+				}
+				overlap = $clone(cp.Project(axis), Projection).Overlap($clone(other.Project(axis), Projection));
+				if (smallest.Magnitude() > overlap) {
+					smallest = axis.Scale(overlap);
+				}
+				_i++;
+			}
+			_ref$2 = other.SATAxes();
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$2.$length)) { break; }
+				axis$1 = ((_i$1 < 0 || _i$1 >= _ref$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$2.$array[_ref$2.$offset + _i$1]);
+				if (!$clone(cp.Project(axis$1), Projection).Overlapping($clone(other.Project(axis$1), Projection))) {
+					return Vector.nil;
+				}
+				overlap$1 = $clone(cp.Project(axis$1), Projection).Overlap($clone(other.Project(axis$1), Projection));
+				if (smallest.Magnitude() > overlap$1) {
+					smallest = axis$1.Scale(overlap$1);
+				}
+				_i$1++;
+			}
+		}
+		(0 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 0] = (0 >= smallest.$length ? ($throwRuntimeError("index out of range"), undefined) : smallest.$array[smallest.$offset + 0]));
+		(1 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 1] = (1 >= smallest.$length ? ($throwRuntimeError("index out of range"), undefined) : smallest.$array[smallest.$offset + 1]));
+		return delta;
+	};
+	ConvexPolygon.prototype.calculateMTV = function(contactSet, otherShape) { return this.$val.calculateMTV(contactSet, otherShape); };
+	ConvexPolygon.ptr.prototype.ContainedBy = function(otherShape) {
+		var _i, _i$1, _ref, _ref$1, _ref$2, axis, axis$1, cp, other, otherShape;
+		cp = this;
+		_ref = otherShape;
+		if ($assertType(_ref, ptrType$5, true)[1]) {
+			other = _ref.$val;
+			_ref$1 = cp.SATAxes();
+			_i = 0;
+			while (true) {
+				if (!(_i < _ref$1.$length)) { break; }
+				axis = ((_i < 0 || _i >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i]);
+				if (!$clone(cp.Project(axis), Projection).IsInside($clone(other.Project(axis), Projection))) {
+					return false;
+				}
+				_i++;
+			}
+			_ref$2 = other.SATAxes();
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$2.$length)) { break; }
+				axis$1 = ((_i$1 < 0 || _i$1 >= _ref$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$2.$array[_ref$2.$offset + _i$1]);
+				if (!$clone(cp.Project(axis$1), Projection).IsInside($clone(other.Project(axis$1), Projection))) {
+					return false;
+				}
+				_i$1++;
+			}
+		}
+		return true;
+	};
+	ConvexPolygon.prototype.ContainedBy = function(otherShape) { return this.$val.ContainedBy(otherShape); };
+	ConvexPolygon.ptr.prototype.FlipH = function() {
+		var _i, _ref, cp, v;
+		cp = this;
+		_ref = cp.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0] = -(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]));
+			_i++;
+		}
+		cp.ReverseVertexOrder();
+	};
+	ConvexPolygon.prototype.FlipH = function() { return this.$val.FlipH(); };
+	ConvexPolygon.ptr.prototype.FlipV = function() {
+		var _i, _ref, cp, v;
+		cp = this;
+		_ref = cp.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1] = -(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]));
+			_i++;
+		}
+		cp.ReverseVertexOrder();
+	};
+	ConvexPolygon.prototype.FlipV = function() { return this.$val.FlipV(); };
+	ConvexPolygon.ptr.prototype.ReverseVertexOrder = function() {
+		var cp, i, verts, x, x$1;
+		cp = this;
+		verts = new sliceType$4([(x = cp.Points, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0]))]);
+		i = cp.Points.$length - 1 >> 0;
+		while (true) {
+			if (!(i >= 1)) { break; }
+			verts = $append(verts, (x$1 = cp.Points, ((i < 0 || i >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + i])));
+			i = i - (1) >> 0;
+		}
+		cp.Points = verts;
+	};
+	ConvexPolygon.prototype.ReverseVertexOrder = function() { return this.$val.ReverseVertexOrder(); };
+	NewRectangle = function(x, y, w, h) {
+		var h, w, x, y;
+		return NewConvexPolygon(new sliceType([x, y, x + w, y, x + w, y + h, x, y + h]));
+	};
+	$pkg.NewRectangle = NewRectangle;
+	NewCircle = function(x, y, radius) {
+		var circle, radius, x, y;
+		circle = new Circle.ptr(x, y, radius);
+		return circle;
+	};
+	$pkg.NewCircle = NewCircle;
+	Circle.ptr.prototype.Clone = function() {
+		var circle;
+		circle = this;
+		return NewCircle(circle.X, circle.Y, circle.Radius);
+	};
+	Circle.prototype.Clone = function() { return this.$val.Clone(); };
+	Circle.ptr.prototype.Bounds = function() {
+		var circle;
+		circle = this;
+		return [new Vector([circle.X - circle.Radius, circle.Y - circle.Radius]), new Vector([circle.X + circle.Radius, circle.Y + circle.Radius])];
+	};
+	Circle.prototype.Bounds = function() { return this.$val.Bounds(); };
+	Circle.ptr.prototype.Intersection = function(dx, dy, other) {
+		var _i, _ref, _ref$1, circle, contactSet, dist, dx, dy, other, ox, oy, point, shape, shape$1, x, x$1, x$2, x$3;
+		circle = this;
+		contactSet = ptrType$6.nil;
+		ox = circle.X;
+		oy = circle.Y;
+		circle.X = circle.X + (dx);
+		circle.Y = circle.Y + (dy);
+		_ref = other;
+		if ($assertType(_ref, ptrType$5, true)[1]) {
+			shape = _ref.$val;
+			contactSet = shape.Intersection(-dx, -dy, circle);
+			if (!(contactSet === ptrType$6.nil)) {
+				contactSet.MTV = contactSet.MTV.Scale(-1);
+			}
+		} else if ($assertType(_ref, ptrType$4, true)[1]) {
+			shape$1 = _ref.$val;
+			contactSet = NewContactSet();
+			contactSet.Points = circle.IntersectionPointsCircle(shape$1);
+			if (contactSet.Points.$length === 0) {
+				return ptrType$6.nil;
+			}
+			contactSet.MTV = new Vector([circle.X - shape$1.X, circle.Y - shape$1.Y]);
+			dist = contactSet.MTV.Magnitude();
+			contactSet.MTV = contactSet.MTV.Unit().Scale(circle.Radius + shape$1.Radius - dist);
+			_ref$1 = contactSet.Points;
+			_i = 0;
+			while (true) {
+				if (!(_i < _ref$1.$length)) { break; }
+				point = ((_i < 0 || _i >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i]);
+				contactSet.Center = contactSet.Center.Add(new sliceType$4([point]));
+				_i++;
+			}
+			(x$1 = contactSet.Center, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0] = (x = contactSet.Center, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) / ((contactSet.Points.$length))));
+			(x$3 = contactSet.Center, (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1] = (x$2 = contactSet.Center, (1 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 1])) / ((contactSet.Points.$length))));
+		}
+		circle.X = ox;
+		circle.Y = oy;
+		return contactSet;
+	};
+	Circle.prototype.Intersection = function(dx, dy, other) { return this.$val.Intersection(dx, dy, other); };
+	Circle.ptr.prototype.Move = function(x, y) {
+		var circle, x, y;
+		circle = this;
+		circle.X = circle.X + (x);
+		circle.Y = circle.Y + (y);
+	};
+	Circle.prototype.Move = function(x, y) { return this.$val.Move(x, y); };
+	Circle.ptr.prototype.MoveVec = function(vec) {
+		var circle, vec;
+		circle = this;
+		circle.X = circle.X + (vec.X());
+		circle.Y = circle.Y + (vec.Y());
+	};
+	Circle.prototype.MoveVec = function(vec) { return this.$val.MoveVec(vec); };
+	Circle.ptr.prototype.SetPosition = function(x, y) {
+		var circle, x, y;
+		circle = this;
+		circle.X = x;
+		circle.Y = y;
+	};
+	Circle.prototype.SetPosition = function(x, y) { return this.$val.SetPosition(x, y); };
+	Circle.ptr.prototype.SetPositionVec = function(vec) {
+		var circle, vec;
+		circle = this;
+		circle.X = vec.X();
+		circle.Y = vec.Y();
+	};
+	Circle.prototype.SetPositionVec = function(vec) { return this.$val.SetPositionVec(vec); };
+	Circle.ptr.prototype.Position = function() {
+		var circle;
+		circle = this;
+		return [circle.X, circle.Y];
+	};
+	Circle.prototype.Position = function() { return this.$val.Position(); };
+	Circle.ptr.prototype.PointInside = function(point) {
+		var circle, point;
+		circle = this;
+		return point.Sub(new sliceType$4([new Vector([circle.X, circle.Y])])).Magnitude() <= circle.Radius;
+	};
+	Circle.prototype.PointInside = function(point) { return this.$val.PointInside(point); };
+	Circle.ptr.prototype.IntersectionPointsCircle = function(other) {
+		var a, circle, d, h, other, x2, y2;
+		circle = this;
+		d = math.Sqrt(math.Pow(other.X - circle.X, 2) + math.Pow(other.Y - circle.Y, 2));
+		if (d > circle.Radius + other.Radius || d < math.Abs(circle.Radius - other.Radius) || (d === 0) && (circle.Radius === other.Radius)) {
+			return sliceType$4.nil;
+		}
+		a = (math.Pow(circle.Radius, 2) - math.Pow(other.Radius, 2) + math.Pow(d, 2)) / (2 * d);
+		h = math.Sqrt(math.Pow(circle.Radius, 2) - math.Pow(a, 2));
+		x2 = circle.X + a * (other.X - circle.X) / d;
+		y2 = circle.Y + a * (other.Y - circle.Y) / d;
+		return new sliceType$4([new Vector([x2 + h * (other.Y - circle.Y) / d, y2 - h * (other.X - circle.X) / d]), new Vector([x2 - h * (other.Y - circle.Y) / d, y2 + h * (other.X - circle.X) / d])]);
+	};
+	Circle.prototype.IntersectionPointsCircle = function(other) { return this.$val.IntersectionPointsCircle(other); };
+	Projection.ptr.prototype.Overlapping = function(other) {
+		var other, projection;
+		projection = this;
+		return $clone(projection, Projection).Overlap($clone(other, Projection)) > 0;
+	};
+	Projection.prototype.Overlapping = function(other) { return this.$val.Overlapping(other); };
+	Projection.ptr.prototype.Overlap = function(other) {
+		var other, projection;
+		projection = this;
+		return math.Min(projection.Max, other.Max) - math.Max(projection.Min, other.Min);
+	};
+	Projection.prototype.Overlap = function(other) { return this.$val.Overlap(other); };
+	Projection.ptr.prototype.IsInside = function(other) {
+		var other, projection;
+		projection = this;
+		return projection.Min >= other.Min && projection.Max <= other.Max;
+	};
+	Projection.prototype.IsInside = function(other) { return this.$val.IsInside(other); };
+	NewObject = function(x, y, w, h, tags) {
+		var h, o, tags, w, x, y;
+		o = new Object.ptr($ifaceNil, ptrType$1.nil, x, y, w, h, sliceType$1.nil, $ifaceNil, $makeMap(ptrType$2.keyFor, []), new sliceType$6([]));
+		if (tags.$length > 0) {
+			o.AddTags(tags);
+		}
+		return o;
+	};
+	$pkg.NewObject = NewObject;
+	Object.ptr.prototype.Clone = function() {
+		var {_entry, _i, _keys, _r, _ref, k, newObj, obj, $s, $r, $c} = $restore(this, {});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		obj = this;
+		newObj = NewObject(obj.X, obj.Y, obj.W, obj.H, obj.Tags());
+		newObj.Data = obj.Data;
+		/* */ if (!($interfaceIsEqual(obj.Shape, $ifaceNil))) { $s = 1; continue; }
+		/* */ $s = 2; continue;
+		/* if (!($interfaceIsEqual(obj.Shape, $ifaceNil))) { */ case 1:
+			_r = obj.Shape.Clone(); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			$r = newObj.SetShape(_r); /* */ $s = 4; case 4: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		/* } */ case 2:
+		_ref = obj.ignoreList;
+		_i = 0;
+		_keys = $keys(_ref);
+		while (true) {
+			if (!(_i < _keys.length)) { break; }
+			_entry = _ref[_keys[_i]];
+			if (_entry === undefined) {
+				_i++;
+				continue;
+			}
+			k = _entry.k;
+			newObj.AddToIgnoreList(k);
+			_i++;
+		}
+		$s = -1; return newObj;
+		/* */ } return; } var $f = {$blk: Object.ptr.prototype.Clone, $c: true, $r, _entry, _i, _keys, _r, _ref, k, newObj, obj, $s};return $f;
+	};
+	Object.prototype.Clone = function() { return this.$val.Clone(); };
+	Object.ptr.prototype.Update = function() {
+		var {_tuple, c, cx, cy, ex, ey, obj, space, x, y, $s, $r, $c} = $restore(this, {});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		obj = this;
+		if (!(obj.Space === ptrType$1.nil)) {
+			space = obj.Space;
+			obj.Space.Remove(new sliceType$3([obj]));
+			obj.Space = space;
+			_tuple = obj.BoundsToSpace(0, 0);
+			cx = _tuple[0];
+			cy = _tuple[1];
+			ex = _tuple[2];
+			ey = _tuple[3];
+			y = cy;
+			while (true) {
+				if (!(y <= ey)) { break; }
+				x = cx;
+				while (true) {
+					if (!(x <= ex)) { break; }
+					c = obj.Space.Cell(x, y);
+					if (!(c === ptrType.nil)) {
+						c.register(obj);
+						obj.TouchingCells = $append(obj.TouchingCells, c);
+					}
+					x = x + (1) >> 0;
+				}
+				y = y + (1) >> 0;
+			}
+		}
+		/* */ if (!($interfaceIsEqual(obj.Shape, $ifaceNil))) { $s = 1; continue; }
+		/* */ $s = 2; continue;
+		/* if (!($interfaceIsEqual(obj.Shape, $ifaceNil))) { */ case 1:
+			$r = obj.Shape.SetPosition(obj.X, obj.Y); /* */ $s = 3; case 3: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		/* } */ case 2:
+		$s = -1; return;
+		/* */ } return; } var $f = {$blk: Object.ptr.prototype.Update, $c: true, $r, _tuple, c, cx, cy, ex, ey, obj, space, x, y, $s};return $f;
+	};
+	Object.prototype.Update = function() { return this.$val.Update(); };
+	Object.ptr.prototype.AddTags = function(tags) {
+		var obj, tags;
+		obj = this;
+		obj.tags = $appendSlice(obj.tags, tags);
+	};
+	Object.prototype.AddTags = function(tags) { return this.$val.AddTags(tags); };
+	Object.ptr.prototype.RemoveTags = function(tags) {
+		var _i, _i$1, _ref, _ref$1, i, obj, t, tag, tags;
+		obj = this;
+		_ref = tags;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			tag = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_ref$1 = obj.tags;
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				i = _i$1;
+				t = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+				if (t === tag) {
+					obj.tags = $appendSlice($subslice(obj.tags, 0, i), $subslice(obj.tags, (i + 1 >> 0)));
+					break;
+				}
+				_i$1++;
+			}
+			_i++;
+		}
+	};
+	Object.prototype.RemoveTags = function(tags) { return this.$val.RemoveTags(tags); };
+	Object.ptr.prototype.HasTags = function(tags) {
+		var _i, _i$1, _ref, _ref$1, obj, t, tag, tags;
+		obj = this;
+		_ref = tags;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			tag = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_ref$1 = obj.tags;
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				t = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+				if (t === tag) {
+					return true;
+				}
+				_i$1++;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Object.prototype.HasTags = function(tags) { return this.$val.HasTags(tags); };
+	Object.ptr.prototype.Tags = function() {
+		var obj;
+		obj = this;
+		return $appendSlice(new sliceType$6([]), obj.tags);
+	};
+	Object.prototype.Tags = function() { return this.$val.Tags(); };
+	Object.ptr.prototype.SetShape = function(shape) {
+		var {obj, shape, $s, $r, $c} = $restore(this, {shape});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		obj = this;
+		/* */ if (!($interfaceIsEqual(obj.Shape, shape))) { $s = 1; continue; }
+		/* */ $s = 2; continue;
+		/* if (!($interfaceIsEqual(obj.Shape, shape))) { */ case 1:
+			obj.Shape = shape;
+			$r = obj.Update(); /* */ $s = 3; case 3: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		/* } */ case 2:
+		$s = -1; return;
+		/* */ } return; } var $f = {$blk: Object.ptr.prototype.SetShape, $c: true, $r, obj, shape, $s};return $f;
+	};
+	Object.prototype.SetShape = function(shape) { return this.$val.SetShape(shape); };
+	Object.ptr.prototype.BoundsToSpace = function(dx, dy) {
+		var _tuple, _tuple$1, cx, cy, dx, dy, ex, ey, obj;
+		obj = this;
+		_tuple = obj.Space.WorldToSpace(obj.X + dx, obj.Y + dy);
+		cx = _tuple[0];
+		cy = _tuple[1];
+		_tuple$1 = obj.Space.WorldToSpace(obj.X + obj.W + dx - 1, obj.Y + obj.H + dy - 1);
+		ex = _tuple$1[0];
+		ey = _tuple$1[1];
+		return [cx, cy, ex, ey];
+	};
+	Object.prototype.BoundsToSpace = function(dx, dy) { return this.$val.BoundsToSpace(dx, dy); };
+	Object.ptr.prototype.SharesCells = function(other) {
+		var _i, _ref, cell, obj, other;
+		obj = this;
+		_ref = obj.TouchingCells;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			cell = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (cell.Contains(other)) {
+				return true;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Object.prototype.SharesCells = function(other) { return this.$val.SharesCells(other); };
+	Object.ptr.prototype.SharesCellsTags = function(tags) {
+		var _i, _ref, cell, obj, tags;
+		obj = this;
+		_ref = obj.TouchingCells;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			cell = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (cell.ContainsTags(tags)) {
+				return true;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Object.prototype.SharesCellsTags = function(tags) { return this.$val.SharesCellsTags(tags); };
+	Object.ptr.prototype.Center = function() {
+		var obj;
+		obj = this;
+		return [obj.X + (obj.W / 2), obj.Y + (obj.H / 2)];
+	};
+	Object.prototype.Center = function() { return this.$val.Center(); };
+	Object.ptr.prototype.SetCenter = function(x, y) {
+		var obj, x, y;
+		obj = this;
+		obj.X = x - (obj.W / 2);
+		obj.Y = y - (obj.H / 2);
+	};
+	Object.prototype.SetCenter = function(x, y) { return this.$val.SetCenter(x, y); };
+	Object.ptr.prototype.CellPosition = function() {
+		var _tuple, obj;
+		obj = this;
+		_tuple = obj.Center();
+		return obj.Space.WorldToSpace(_tuple[0], _tuple[1]);
+	};
+	Object.prototype.CellPosition = function() { return this.$val.CellPosition(); };
+	Object.ptr.prototype.SetRight = function(x) {
+		var obj, x;
+		obj = this;
+		obj.X = x - obj.W;
+	};
+	Object.prototype.SetRight = function(x) { return this.$val.SetRight(x); };
+	Object.ptr.prototype.SetBottom = function(y) {
+		var obj, y;
+		obj = this;
+		obj.Y = y - obj.H;
+	};
+	Object.prototype.SetBottom = function(y) { return this.$val.SetBottom(y); };
+	Object.ptr.prototype.Bottom = function() {
+		var obj;
+		obj = this;
+		return obj.Y + obj.H;
+	};
+	Object.prototype.Bottom = function() { return this.$val.Bottom(); };
+	Object.ptr.prototype.Right = function() {
+		var obj;
+		obj = this;
+		return obj.X + obj.W;
+	};
+	Object.prototype.Right = function() { return this.$val.Right(); };
+	Object.ptr.prototype.SetBounds = function(topLeft, bottomRight) {
+		var bottomRight, obj, topLeft;
+		obj = this;
+		obj.X = (0 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 0]);
+		obj.Y = (1 >= topLeft.$length ? ($throwRuntimeError("index out of range"), undefined) : topLeft.$array[topLeft.$offset + 1]);
+		obj.W = (0 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 0]) - obj.X;
+		obj.H = (1 >= bottomRight.$length ? ($throwRuntimeError("index out of range"), undefined) : bottomRight.$array[bottomRight.$offset + 1]) - obj.Y;
+	};
+	Object.prototype.SetBounds = function(topLeft, bottomRight) { return this.$val.SetBounds(topLeft, bottomRight); };
+	Object.ptr.prototype.Check = function(dx, dy, tags) {
+		var _entry, _entry$1, _entry$2, _i, _key, _key$1, _ref, _tuple, _tuple$1, _tuple$2, added, added$1, c, cc, cellsAdded, cx, cy, dx, dy, ex, ey, ignored, o, obj, objectsAdded, tags, x, y;
+		obj = this;
+		if (obj.Space === ptrType$1.nil) {
+			return ptrType$7.nil;
+		}
+		cc = NewCollision();
+		cc.checkingObject = obj;
+		if (dx < 0) {
+			dx = math.Min(dx, -1);
+		} else if (dx > 0) {
+			dx = math.Max(dx, 1);
+		}
+		if (dy < 0) {
+			dy = math.Min(dy, -1);
+		} else if (dy > 0) {
+			dy = math.Max(dy, 1);
+		}
+		cc.dx = dx;
+		cc.dy = dy;
+		_tuple = obj.BoundsToSpace(dx, dy);
+		cx = _tuple[0];
+		cy = _tuple[1];
+		ex = _tuple[2];
+		ey = _tuple[3];
+		objectsAdded = $makeMap(ptrType$2.keyFor, []);
+		cellsAdded = $makeMap(ptrType.keyFor, []);
+		y = cy;
+		while (true) {
+			if (!(y <= ey)) { break; }
+			x = cx;
+			while (true) {
+				if (!(x <= ex)) { break; }
+				c = obj.Space.Cell(x, y);
+				if (!(c === ptrType.nil)) {
+					_ref = c.Objects;
+					_i = 0;
+					while (true) {
+						if (!(_i < _ref.$length)) { break; }
+						o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+						ignored = (_entry = obj.ignoreList[ptrType$2.keyFor(o)], _entry !== undefined ? _entry.v : false);
+						if (o === obj || ignored) {
+							_i++;
+							continue;
+						}
+						_tuple$1 = (_entry$1 = objectsAdded[ptrType$2.keyFor(o)], _entry$1 !== undefined ? [_entry$1.v, true] : [false, false]);
+						added = _tuple$1[1];
+						if (((tags.$length === 0) || o.HasTags(tags)) && !added) {
+							cc.Objects = $append(cc.Objects, o);
+							_key = o; (objectsAdded || $throwRuntimeError("assignment to entry in nil map"))[ptrType$2.keyFor(_key)] = { k: _key, v: true };
+							_tuple$2 = (_entry$2 = cellsAdded[ptrType.keyFor(c)], _entry$2 !== undefined ? [_entry$2.v, true] : [false, false]);
+							added$1 = _tuple$2[1];
+							if (!added$1) {
+								cc.Cells = $append(cc.Cells, c);
+								_key$1 = c; (cellsAdded || $throwRuntimeError("assignment to entry in nil map"))[ptrType.keyFor(_key$1)] = { k: _key$1, v: true };
+							}
+							_i++;
+							continue;
+						}
+						_i++;
+					}
+				}
+				x = x + (1) >> 0;
+			}
+			y = y + (1) >> 0;
+		}
+		if (cc.Objects.$length === 0) {
+			return ptrType$7.nil;
+		}
+		return cc;
+	};
+	Object.prototype.Check = function(dx, dy, tags) { return this.$val.Check(dx, dy, tags); };
+	Object.ptr.prototype.Overlaps = function(other) {
+		var obj, other;
+		obj = this;
+		return other.X <= obj.X + obj.W && other.X + other.W >= obj.X && other.Y <= obj.Y + obj.H && other.Y + other.H >= obj.Y;
+	};
+	Object.prototype.Overlaps = function(other) { return this.$val.Overlaps(other); };
+	Object.ptr.prototype.AddToIgnoreList = function(ignoreObj) {
+		var _key, ignoreObj, obj;
+		obj = this;
+		_key = ignoreObj; (obj.ignoreList || $throwRuntimeError("assignment to entry in nil map"))[ptrType$2.keyFor(_key)] = { k: _key, v: true };
+	};
+	Object.prototype.AddToIgnoreList = function(ignoreObj) { return this.$val.AddToIgnoreList(ignoreObj); };
+	Object.ptr.prototype.RemoveFromIgnoreList = function(ignoreObj) {
+		var ignoreObj, obj;
+		obj = this;
+		delete obj.ignoreList[ptrType$2.keyFor(ignoreObj)];
+	};
+	Object.prototype.RemoveFromIgnoreList = function(ignoreObj) { return this.$val.RemoveFromIgnoreList(ignoreObj); };
+	axpyUnitaryTo = function(dst, alpha, x, y) {
+		var _i, _ref, alpha, dim, dst, i, v, x, y;
+		dim = y.$length;
+		_ref = x;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (i === dim) {
+				return;
+			}
+			((i < 0 || i >= dst.$length) ? ($throwRuntimeError("index out of range"), undefined) : dst.$array[dst.$offset + i] = alpha * v + ((i < 0 || i >= y.$length) ? ($throwRuntimeError("index out of range"), undefined) : y.$array[y.$offset + i]));
+			_i++;
+		}
+	};
+	scalUnitaryTo = function(dst, alpha, x) {
+		var _i, _ref, alpha, dst, i, x;
+		_ref = x;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			((i < 0 || i >= dst.$length) ? ($throwRuntimeError("index out of range"), undefined) : dst.$array[dst.$offset + i] = ((i < 0 || i >= dst.$length) ? ($throwRuntimeError("index out of range"), undefined) : dst.$array[dst.$offset + i]) * (alpha));
+			_i++;
+		}
+	};
+	NewCollision = function() {
+		return new Collision.ptr(ptrType$2.nil, 0, 0, new sliceType$3([]), sliceType$1.nil);
+	};
+	$pkg.NewCollision = NewCollision;
+	Collision.ptr.prototype.HasTags = function(tags) {
+		var _i, _ref, cc, o, tags;
+		cc = this;
+		_ref = cc.Objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (o === cc.checkingObject) {
+				_i++;
+				continue;
+			}
+			if (o.HasTags(tags)) {
+				return true;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Collision.prototype.HasTags = function(tags) { return this.$val.HasTags(tags); };
+	Collision.ptr.prototype.ObjectsByTags = function(tags) {
+		var _i, _ref, cc, o, objects, tags;
+		cc = this;
+		objects = new sliceType$3([]);
+		_ref = cc.Objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (o === cc.checkingObject) {
+				_i++;
+				continue;
+			}
+			if (o.HasTags(tags)) {
+				objects = $append(objects, o);
+			}
+			_i++;
+		}
+		return objects;
+	};
+	Collision.prototype.ObjectsByTags = function(tags) { return this.$val.ObjectsByTags(tags); };
+	Collision.ptr.prototype.ContactWithObject = function(object) {
+		var cc, delta, object;
+		cc = this;
+		delta = new Vector([0, 0]);
+		if (cc.dx < 0) {
+			(0 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 0] = object.X + object.W - cc.checkingObject.X);
+		} else if (cc.dx > 0) {
+			(0 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 0] = object.X - cc.checkingObject.W - cc.checkingObject.X);
+		}
+		if (cc.dy < 0) {
+			(1 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 1] = object.Y + object.H - cc.checkingObject.Y);
+		} else if (cc.dy > 0) {
+			(1 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 1] = object.Y - cc.checkingObject.H - cc.checkingObject.Y);
+		}
+		return delta;
+	};
+	Collision.prototype.ContactWithObject = function(object) { return this.$val.ContactWithObject(object); };
+	Collision.ptr.prototype.ContactWithCell = function(cell) {
+		var cc, cell, cx, cy, delta;
+		cc = this;
+		delta = new Vector([0, 0]);
+		cx = (($imul(cell.X, cc.checkingObject.Space.CellWidth)));
+		cy = (($imul(cell.Y, cc.checkingObject.Space.CellHeight)));
+		if (cc.dx < 0) {
+			(0 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 0] = cx + (cc.checkingObject.Space.CellWidth) - cc.checkingObject.X);
+		} else if (cc.dx > 0) {
+			(0 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 0] = cx - cc.checkingObject.W - cc.checkingObject.X);
+		}
+		if (cc.dy < 0) {
+			(1 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 1] = cy + (cc.checkingObject.Space.CellHeight) - cc.checkingObject.Y);
+		} else if (cc.dy > 0) {
+			(1 >= delta.$length ? ($throwRuntimeError("index out of range"), undefined) : delta.$array[delta.$offset + 1] = cy - cc.checkingObject.H - cc.checkingObject.Y);
+		}
+		return delta;
+	};
+	Collision.prototype.ContactWithCell = function(cell) { return this.$val.ContactWithCell(cell); };
+	Collision.ptr.prototype.SlideAgainstCell = function(cell, avoidTags) {
+		var _tuple, _tuple$1, avoidTags, cc, ccX, ccY, cell, collidingCell, diffX, diffY, down, hX, hY, left, oX, oY, right, slide, sp, up, x;
+		cc = this;
+		sp = cc.checkingObject.Space;
+		collidingCell = (x = cc.Cells, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0]));
+		_tuple = sp.SpaceToWorld(collidingCell.X, collidingCell.Y);
+		ccX = _tuple[0];
+		ccY = _tuple[1];
+		hX = (sp.CellWidth) / 2;
+		hY = (sp.CellHeight) / 2;
+		ccX = ccX + (hX);
+		ccY = ccY + (hY);
+		_tuple$1 = cc.checkingObject.Center();
+		oX = _tuple$1[0];
+		oY = _tuple$1[1];
+		diffX = oX - ccX;
+		diffY = oY - ccY;
+		left = sp.Cell(collidingCell.X - 1 >> 0, collidingCell.Y);
+		right = sp.Cell(collidingCell.X + 1 >> 0, collidingCell.Y);
+		up = sp.Cell(collidingCell.X, collidingCell.Y - 1 >> 0);
+		down = sp.Cell(collidingCell.X, collidingCell.Y + 1 >> 0);
+		slide = new Vector([0, 0]);
+		if (!((cc.dy === 0))) {
+			if (diffX > 0 && (right === ptrType.nil || !right.ContainsTags(avoidTags))) {
+				(0 >= slide.$length ? ($throwRuntimeError("index out of range"), undefined) : slide.$array[slide.$offset + 0] = ccX + hX - cc.checkingObject.X);
+			} else if (diffX < 0 && (left === ptrType.nil || !left.ContainsTags(avoidTags))) {
+				(0 >= slide.$length ? ($throwRuntimeError("index out of range"), undefined) : slide.$array[slide.$offset + 0] = ccX - hX - (cc.checkingObject.X + cc.checkingObject.W));
+			} else {
+				return Vector.nil;
+			}
+		}
+		if (!((cc.dx === 0))) {
+			if (diffY > 0 && (down === ptrType.nil || !down.ContainsTags(avoidTags))) {
+				(1 >= slide.$length ? ($throwRuntimeError("index out of range"), undefined) : slide.$array[slide.$offset + 1] = ccY + hY - cc.checkingObject.Y);
+			} else if (diffY < 0 && (up === ptrType.nil || !up.ContainsTags(avoidTags))) {
+				(1 >= slide.$length ? ($throwRuntimeError("index out of range"), undefined) : slide.$array[slide.$offset + 1] = ccY - hY - (cc.checkingObject.Y + cc.checkingObject.H));
+			} else {
+				return Vector.nil;
+			}
+		}
+		return slide;
+	};
+	Collision.prototype.SlideAgainstCell = function(cell, avoidTags) { return this.$val.SlideAgainstCell(cell, avoidTags); };
+	newCell = function(x, y) {
+		var x, y;
+		return new Cell.ptr(x, y, new sliceType$3([]));
+	};
+	Cell.ptr.prototype.register = function(obj) {
+		var cell, obj;
+		cell = this;
+		if (!cell.Contains(obj)) {
+			cell.Objects = $append(cell.Objects, obj);
+		}
+	};
+	Cell.prototype.register = function(obj) { return this.$val.register(obj); };
+	Cell.ptr.prototype.unregister = function(obj) {
+		var _i, _ref, cell, i, o, obj, x, x$1, x$2;
+		cell = this;
+		_ref = cell.Objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (o === obj) {
+				(x$2 = cell.Objects, ((i < 0 || i >= x$2.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + i] = (x = cell.Objects, x$1 = cell.Objects.$length - 1 >> 0, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]))));
+				cell.Objects = $subslice(cell.Objects, 0, (cell.Objects.$length - 1 >> 0));
+				break;
+			}
+			_i++;
+		}
+	};
+	Cell.prototype.unregister = function(obj) { return this.$val.unregister(obj); };
+	Cell.ptr.prototype.Contains = function(obj) {
+		var _i, _ref, cell, o, obj;
+		cell = this;
+		_ref = cell.Objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (o === obj) {
+				return true;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Cell.prototype.Contains = function(obj) { return this.$val.Contains(obj); };
+	Cell.ptr.prototype.ContainsTags = function(tags) {
+		var _i, _ref, cell, o, tags;
+		cell = this;
+		_ref = cell.Objects;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			o = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (o.HasTags(tags)) {
+				return true;
+			}
+			_i++;
+		}
+		return false;
+	};
+	Cell.prototype.ContainsTags = function(tags) { return this.$val.ContainsTags(tags); };
+	Cell.ptr.prototype.Occupied = function() {
+		var cell;
+		cell = this;
+		return cell.Objects.$length > 0;
+	};
+	Cell.prototype.Occupied = function() { return this.$val.Occupied(); };
+	Vector.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Add", name: "Add", pkg: "", typ: $funcType([sliceType$4], [Vector], true)}, {prop: "Sub", name: "Sub", pkg: "", typ: $funcType([sliceType$4], [Vector], true)}, {prop: "Scale", name: "Scale", pkg: "", typ: $funcType([$Float64], [Vector], false)}, {prop: "Equal", name: "Equal", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "Magnitude", name: "Magnitude", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Magnitude2", name: "Magnitude2", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Unit", name: "Unit", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Dot", name: "Dot", pkg: "", typ: $funcType([Vector], [$Float64], false)}, {prop: "Cross", name: "Cross", pkg: "", typ: $funcType([Vector], [Vector], false)}, {prop: "Rotate", name: "Rotate", pkg: "", typ: $funcType([$Float64, sliceType$7], [Vector], true)}, {prop: "X", name: "X", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Y", name: "Y", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Z", name: "Z", pkg: "", typ: $funcType([], [$Float64], false)}];
+	ptrType$1.methods = [{prop: "Add", name: "Add", pkg: "", typ: $funcType([sliceType$3], [], true)}, {prop: "Remove", name: "Remove", pkg: "", typ: $funcType([sliceType$3], [], true)}, {prop: "Objects", name: "Objects", pkg: "", typ: $funcType([], [sliceType$3], false)}, {prop: "Resize", name: "Resize", pkg: "", typ: $funcType([$Int, $Int], [], false)}, {prop: "Cell", name: "Cell", pkg: "", typ: $funcType([$Int, $Int], [ptrType], false)}, {prop: "CheckCells", name: "CheckCells", pkg: "", typ: $funcType([$Int, $Int, $Int, $Int, sliceType$6], [ptrType$2], true)}, {prop: "CheckCellsWorld", name: "CheckCellsWorld", pkg: "", typ: $funcType([$Float64, $Float64, $Float64, $Float64, sliceType$6], [ptrType$2], true)}, {prop: "UnregisterAllObjects", name: "UnregisterAllObjects", pkg: "", typ: $funcType([], [], false)}, {prop: "WorldToSpace", name: "WorldToSpace", pkg: "", typ: $funcType([$Float64, $Float64], [$Int, $Int], false)}, {prop: "SpaceToWorld", name: "SpaceToWorld", pkg: "", typ: $funcType([$Int, $Int], [$Float64, $Float64], false)}, {prop: "Height", name: "Height", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "Width", name: "Width", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "CellsInLine", name: "CellsInLine", pkg: "", typ: $funcType([$Int, $Int, $Int, $Int], [sliceType$1], false)}];
+	ptrType$3.methods = [{prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Vector], false)}, {prop: "Normal", name: "Normal", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Vector", name: "Vector", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "IntersectionPointsLine", name: "IntersectionPointsLine", pkg: "", typ: $funcType([ptrType$3], [Vector], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$4], [sliceType$4], false)}];
+	ptrType$5.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "AddPointsVec", name: "AddPointsVec", pkg: "", typ: $funcType([sliceType$4], [], true)}, {prop: "AddPoints", name: "AddPoints", pkg: "", typ: $funcType([sliceType], [], true)}, {prop: "Lines", name: "Lines", pkg: "", typ: $funcType([], [sliceType$5], false)}, {prop: "Transformed", name: "Transformed", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Center", name: "Center", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Projection], false)}, {prop: "SATAxes", name: "SATAxes", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "calculateMTV", name: "calculateMTV", pkg: "resolv", typ: $funcType([ptrType$6, Shape], [Vector], false)}, {prop: "ContainedBy", name: "ContainedBy", pkg: "", typ: $funcType([Shape], [$Bool], false)}, {prop: "FlipH", name: "FlipH", pkg: "", typ: $funcType([], [], false)}, {prop: "FlipV", name: "FlipV", pkg: "", typ: $funcType([], [], false)}, {prop: "ReverseVertexOrder", name: "ReverseVertexOrder", pkg: "", typ: $funcType([], [], false)}];
+	ptrType$6.methods = [{prop: "LeftmostPoint", name: "LeftmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "RightmostPoint", name: "RightmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "TopmostPoint", name: "TopmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "BottommostPoint", name: "BottommostPoint", pkg: "", typ: $funcType([], [Vector], false)}];
+	ptrType$4.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$4], [sliceType$4], false)}];
+	Projection.methods = [{prop: "Overlapping", name: "Overlapping", pkg: "", typ: $funcType([Projection], [$Bool], false)}, {prop: "Overlap", name: "Overlap", pkg: "", typ: $funcType([Projection], [$Float64], false)}, {prop: "IsInside", name: "IsInside", pkg: "", typ: $funcType([Projection], [$Bool], false)}];
+	ptrType$2.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [ptrType$2], false)}, {prop: "Update", name: "Update", pkg: "", typ: $funcType([], [], false)}, {prop: "AddTags", name: "AddTags", pkg: "", typ: $funcType([sliceType$6], [], true)}, {prop: "RemoveTags", name: "RemoveTags", pkg: "", typ: $funcType([sliceType$6], [], true)}, {prop: "HasTags", name: "HasTags", pkg: "", typ: $funcType([sliceType$6], [$Bool], true)}, {prop: "Tags", name: "Tags", pkg: "", typ: $funcType([], [sliceType$6], false)}, {prop: "SetShape", name: "SetShape", pkg: "", typ: $funcType([Shape], [], false)}, {prop: "BoundsToSpace", name: "BoundsToSpace", pkg: "", typ: $funcType([$Float64, $Float64], [$Int, $Int, $Int, $Int], false)}, {prop: "SharesCells", name: "SharesCells", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "SharesCellsTags", name: "SharesCellsTags", pkg: "", typ: $funcType([sliceType$6], [$Bool], true)}, {prop: "Center", name: "Center", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetCenter", name: "SetCenter", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "CellPosition", name: "CellPosition", pkg: "", typ: $funcType([], [$Int, $Int], false)}, {prop: "SetRight", name: "SetRight", pkg: "", typ: $funcType([$Float64], [], false)}, {prop: "SetBottom", name: "SetBottom", pkg: "", typ: $funcType([$Float64], [], false)}, {prop: "Bottom", name: "Bottom", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Right", name: "Right", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "SetBounds", name: "SetBounds", pkg: "", typ: $funcType([Vector, Vector], [], false)}, {prop: "Check", name: "Check", pkg: "", typ: $funcType([$Float64, $Float64, sliceType$6], [ptrType$7], true)}, {prop: "Overlaps", name: "Overlaps", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "AddToIgnoreList", name: "AddToIgnoreList", pkg: "", typ: $funcType([ptrType$2], [], false)}, {prop: "RemoveFromIgnoreList", name: "RemoveFromIgnoreList", pkg: "", typ: $funcType([ptrType$2], [], false)}];
+	ptrType$7.methods = [{prop: "HasTags", name: "HasTags", pkg: "", typ: $funcType([sliceType$6], [$Bool], true)}, {prop: "ObjectsByTags", name: "ObjectsByTags", pkg: "", typ: $funcType([sliceType$6], [sliceType$3], true)}, {prop: "ContactWithObject", name: "ContactWithObject", pkg: "", typ: $funcType([ptrType$2], [Vector], false)}, {prop: "ContactWithCell", name: "ContactWithCell", pkg: "", typ: $funcType([ptrType], [Vector], false)}, {prop: "SlideAgainstCell", name: "SlideAgainstCell", pkg: "", typ: $funcType([ptrType, sliceType$6], [Vector], true)}];
+	ptrType.methods = [{prop: "register", name: "register", pkg: "resolv", typ: $funcType([ptrType$2], [], false)}, {prop: "unregister", name: "unregister", pkg: "resolv", typ: $funcType([ptrType$2], [], false)}, {prop: "Contains", name: "Contains", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "ContainsTags", name: "ContainsTags", pkg: "", typ: $funcType([sliceType$6], [$Bool], true)}, {prop: "Occupied", name: "Occupied", pkg: "", typ: $funcType([], [$Bool], false)}];
+	Vector.init($Float64);
+	Space.init("", [{prop: "Cells", name: "Cells", embedded: false, exported: true, typ: sliceType$2, tag: ""}, {prop: "CellWidth", name: "CellWidth", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "CellHeight", name: "CellHeight", embedded: false, exported: true, typ: $Int, tag: ""}]);
+	Shape.init([{prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}]);
+	Line.init("", [{prop: "Start", name: "Start", embedded: false, exported: true, typ: Vector, tag: ""}, {prop: "End", name: "End", embedded: false, exported: true, typ: Vector, tag: ""}]);
+	ConvexPolygon.init("", [{prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$4, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Closed", name: "Closed", embedded: false, exported: true, typ: $Bool, tag: ""}]);
+	ContactSet.init("", [{prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$4, tag: ""}, {prop: "MTV", name: "MTV", embedded: false, exported: true, typ: Vector, tag: ""}, {prop: "Center", name: "Center", embedded: false, exported: true, typ: Vector, tag: ""}]);
+	Circle.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Radius", name: "Radius", embedded: false, exported: true, typ: $Float64, tag: ""}]);
+	Projection.init("", [{prop: "Min", name: "Min", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Max", name: "Max", embedded: false, exported: true, typ: $Float64, tag: ""}]);
+	Object.init("resolv", [{prop: "Shape", name: "Shape", embedded: false, exported: true, typ: Shape, tag: ""}, {prop: "Space", name: "Space", embedded: false, exported: true, typ: ptrType$1, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "W", name: "W", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "H", name: "H", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "TouchingCells", name: "TouchingCells", embedded: false, exported: true, typ: sliceType$1, tag: ""}, {prop: "Data", name: "Data", embedded: false, exported: true, typ: $emptyInterface, tag: ""}, {prop: "ignoreList", name: "ignoreList", embedded: false, exported: false, typ: mapType, tag: ""}, {prop: "tags", name: "tags", embedded: false, exported: false, typ: sliceType$6, tag: ""}]);
+	Collision.init("resolv", [{prop: "checkingObject", name: "checkingObject", embedded: false, exported: false, typ: ptrType$2, tag: ""}, {prop: "dx", name: "dx", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "dy", name: "dy", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: sliceType$3, tag: ""}, {prop: "Cells", name: "Cells", embedded: false, exported: true, typ: sliceType$1, tag: ""}]);
+	Cell.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: sliceType$3, tag: ""}]);
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		$r = math.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["jsexport/battle"] = (function() {
+	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, BulletConfig, MeleeBullet, FireballBullet, Skill, RoomDownsyncFrame, InputFrameDownsync, NpcPatrolCue, RingBuffer, SkillMapperType, CharacterConfig, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, ptrType$1, ptrType$2, ptrType$3, sliceType$3, sliceType$4, ptrType$4, ptrType$5, ptrType$6, ptrType$7, ptrType$8, ptrType$9, sliceType$5, sliceType$6, sliceType$7, sliceType$8, sliceType$9, sliceType$10, ptrType$10, sliceType$11, sliceType$12, ptrType$11, sliceType$13, ptrType$12, mapType, ptrType$13, skills, inAirSet, noOpSet, invinsibleSet, nonAttackingSet, NewRingBuffer, intAbs, ShouldGenerateInputFrameUpsync, ConvertToDelayedInputFrameId, ConvertToNoDelayInputFrameId, ConvertToFirstUsedRenderFrameId, ConvertToLastUsedRenderFrameId, decodeInput, calcPushbacks, isPolygonPairOverlapped, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox, NewMeleeBullet, NewFireballBullet;
+	math = $packages["math"];
+	resolv = $packages["resolv"];
+	Vec2D = $pkg.Vec2D = $newType(0, $kindStruct, "battle.Vec2D", true, "jsexport/battle", true, function(X_, Y_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.X = 0;
+			this.Y = 0;
+			return;
+		}
+		this.X = X_;
+		this.Y = Y_;
+	});
+	Polygon2D = $pkg.Polygon2D = $newType(0, $kindStruct, "battle.Polygon2D", true, "jsexport/battle", true, function(Anchor_, Points_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Anchor = ptrType$11.nil;
+			this.Points = sliceType$13.nil;
+			return;
+		}
+		this.Anchor = Anchor_;
+		this.Points = Points_;
+	});
+	PlayerDownsync = $pkg.PlayerDownsync = $newType(0, $kindStruct, "battle.PlayerDownsync", true, "jsexport/battle", true, function(Id_, VirtualGridX_, VirtualGridY_, DirX_, DirY_, VelX_, VelY_, Speed_, BattleState_, JoinIndex_, ColliderRadius_, Removed_, Score_, LastMoveGmtMillis_, FramesToRecover_, FramesInChState_, Hp_, MaxHp_, CharacterState_, InAir_, OnWall_, OnWallNormX_, OnWallNormY_, ActiveSkillId_, ActiveSkillHit_, FramesInvinsible_, BulletTeamId_, ChCollisionTeamId_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Id = 0;
+			this.VirtualGridX = 0;
+			this.VirtualGridY = 0;
+			this.DirX = 0;
+			this.DirY = 0;
+			this.VelX = 0;
+			this.VelY = 0;
+			this.Speed = 0;
+			this.BattleState = 0;
+			this.JoinIndex = 0;
+			this.ColliderRadius = 0;
+			this.Removed = false;
+			this.Score = 0;
+			this.LastMoveGmtMillis = 0;
+			this.FramesToRecover = 0;
+			this.FramesInChState = 0;
+			this.Hp = 0;
+			this.MaxHp = 0;
+			this.CharacterState = 0;
+			this.InAir = false;
+			this.OnWall = false;
+			this.OnWallNormX = 0;
+			this.OnWallNormY = 0;
+			this.ActiveSkillId = 0;
+			this.ActiveSkillHit = 0;
+			this.FramesInvinsible = 0;
+			this.BulletTeamId = 0;
+			this.ChCollisionTeamId = 0;
+			return;
+		}
+		this.Id = Id_;
+		this.VirtualGridX = VirtualGridX_;
+		this.VirtualGridY = VirtualGridY_;
+		this.DirX = DirX_;
+		this.DirY = DirY_;
+		this.VelX = VelX_;
+		this.VelY = VelY_;
+		this.Speed = Speed_;
+		this.BattleState = BattleState_;
+		this.JoinIndex = JoinIndex_;
+		this.ColliderRadius = ColliderRadius_;
+		this.Removed = Removed_;
+		this.Score = Score_;
+		this.LastMoveGmtMillis = LastMoveGmtMillis_;
+		this.FramesToRecover = FramesToRecover_;
+		this.FramesInChState = FramesInChState_;
+		this.Hp = Hp_;
+		this.MaxHp = MaxHp_;
+		this.CharacterState = CharacterState_;
+		this.InAir = InAir_;
+		this.OnWall = OnWall_;
+		this.OnWallNormX = OnWallNormX_;
+		this.OnWallNormY = OnWallNormY_;
+		this.ActiveSkillId = ActiveSkillId_;
+		this.ActiveSkillHit = ActiveSkillHit_;
+		this.FramesInvinsible = FramesInvinsible_;
+		this.BulletTeamId = BulletTeamId_;
+		this.ChCollisionTeamId = ChCollisionTeamId_;
+	});
+	InputFrameDecoded = $pkg.InputFrameDecoded = $newType(0, $kindStruct, "battle.InputFrameDecoded", true, "jsexport/battle", true, function(Dx_, Dy_, BtnALevel_, BtnBLevel_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Dx = 0;
+			this.Dy = 0;
+			this.BtnALevel = 0;
+			this.BtnBLevel = 0;
+			return;
+		}
+		this.Dx = Dx_;
+		this.Dy = Dy_;
+		this.BtnALevel = BtnALevel_;
+		this.BtnBLevel = BtnBLevel_;
+	});
+	Barrier = $pkg.Barrier = $newType(0, $kindStruct, "battle.Barrier", true, "jsexport/battle", true, function(Boundary_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Boundary = ptrType$12.nil;
+			return;
+		}
+		this.Boundary = Boundary_;
+	});
+	BulletConfig = $pkg.BulletConfig = $newType(0, $kindStruct, "battle.BulletConfig", true, "jsexport/battle", true, function(BulletLocalId_, OriginatedRenderFrameId_, OffenderJoinIndex_, StartupFrames_, CancellableStFrame_, CancellableEdFrame_, ActiveFrames_, HitStunFrames_, BlockStunFrames_, PushbackVelX_, PushbackVelY_, Damage_, SelfLockVelX_, SelfLockVelY_, HitboxOffsetX_, HitboxOffsetY_, HitboxSizeX_, HitboxSizeY_, BlowUp_, CancelTransit_, TeamId_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.BulletLocalId = 0;
+			this.OriginatedRenderFrameId = 0;
+			this.OffenderJoinIndex = 0;
+			this.StartupFrames = 0;
+			this.CancellableStFrame = 0;
+			this.CancellableEdFrame = 0;
+			this.ActiveFrames = 0;
+			this.HitStunFrames = 0;
+			this.BlockStunFrames = 0;
+			this.PushbackVelX = 0;
+			this.PushbackVelY = 0;
+			this.Damage = 0;
+			this.SelfLockVelX = 0;
+			this.SelfLockVelY = 0;
+			this.HitboxOffsetX = 0;
+			this.HitboxOffsetY = 0;
+			this.HitboxSizeX = 0;
+			this.HitboxSizeY = 0;
+			this.BlowUp = false;
+			this.CancelTransit = false;
+			this.TeamId = 0;
+			return;
+		}
+		this.BulletLocalId = BulletLocalId_;
+		this.OriginatedRenderFrameId = OriginatedRenderFrameId_;
+		this.OffenderJoinIndex = OffenderJoinIndex_;
+		this.StartupFrames = StartupFrames_;
+		this.CancellableStFrame = CancellableStFrame_;
+		this.CancellableEdFrame = CancellableEdFrame_;
+		this.ActiveFrames = ActiveFrames_;
+		this.HitStunFrames = HitStunFrames_;
+		this.BlockStunFrames = BlockStunFrames_;
+		this.PushbackVelX = PushbackVelX_;
+		this.PushbackVelY = PushbackVelY_;
+		this.Damage = Damage_;
+		this.SelfLockVelX = SelfLockVelX_;
+		this.SelfLockVelY = SelfLockVelY_;
+		this.HitboxOffsetX = HitboxOffsetX_;
+		this.HitboxOffsetY = HitboxOffsetY_;
+		this.HitboxSizeX = HitboxSizeX_;
+		this.HitboxSizeY = HitboxSizeY_;
+		this.BlowUp = BlowUp_;
+		this.CancelTransit = CancelTransit_;
+		this.TeamId = TeamId_;
+	});
+	MeleeBullet = $pkg.MeleeBullet = $newType(0, $kindStruct, "battle.MeleeBullet", true, "jsexport/battle", true, function(Bullet_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Bullet = ptrType.nil;
+			return;
+		}
+		this.Bullet = Bullet_;
+	});
+	FireballBullet = $pkg.FireballBullet = $newType(0, $kindStruct, "battle.FireballBullet", true, "jsexport/battle", true, function(VirtualGridX_, VirtualGridY_, DirX_, DirY_, VelX_, VelY_, Speed_, SpeciesId_, Bullet_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.VirtualGridX = 0;
+			this.VirtualGridY = 0;
+			this.DirX = 0;
+			this.DirY = 0;
+			this.VelX = 0;
+			this.VelY = 0;
+			this.Speed = 0;
+			this.SpeciesId = 0;
+			this.Bullet = ptrType.nil;
+			return;
+		}
+		this.VirtualGridX = VirtualGridX_;
+		this.VirtualGridY = VirtualGridY_;
+		this.DirX = DirX_;
+		this.DirY = DirY_;
+		this.VelX = VelX_;
+		this.VelY = VelY_;
+		this.Speed = Speed_;
+		this.SpeciesId = SpeciesId_;
+		this.Bullet = Bullet_;
+	});
+	Skill = $pkg.Skill = $newType(0, $kindStruct, "battle.Skill", true, "jsexport/battle", true, function(BattleLocalId_, RecoveryFrames_, RecoveryFramesOnBlock_, RecoveryFramesOnHit_, ReleaseTriggerType_, BoundChState_, Hits_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.BattleLocalId = 0;
+			this.RecoveryFrames = 0;
+			this.RecoveryFramesOnBlock = 0;
+			this.RecoveryFramesOnHit = 0;
+			this.ReleaseTriggerType = 0;
+			this.BoundChState = 0;
+			this.Hits = sliceType$2.nil;
+			return;
+		}
+		this.BattleLocalId = BattleLocalId_;
+		this.RecoveryFrames = RecoveryFrames_;
+		this.RecoveryFramesOnBlock = RecoveryFramesOnBlock_;
+		this.RecoveryFramesOnHit = RecoveryFramesOnHit_;
+		this.ReleaseTriggerType = ReleaseTriggerType_;
+		this.BoundChState = BoundChState_;
+		this.Hits = Hits_;
+	});
+	RoomDownsyncFrame = $pkg.RoomDownsyncFrame = $newType(0, $kindStruct, "battle.RoomDownsyncFrame", true, "jsexport/battle", true, function(Id_, PlayersArr_, CountdownNanos_, MeleeBullets_, FireballBullets_, BackendUnconfirmedMask_, ShouldForceResync_, BulletLocalIdCounter_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Id = 0;
+			this.PlayersArr = sliceType$6.nil;
+			this.CountdownNanos = new $Int64(0, 0);
+			this.MeleeBullets = sliceType$7.nil;
+			this.FireballBullets = sliceType$8.nil;
+			this.BackendUnconfirmedMask = new $Uint64(0, 0);
+			this.ShouldForceResync = false;
+			this.BulletLocalIdCounter = 0;
+			return;
+		}
+		this.Id = Id_;
+		this.PlayersArr = PlayersArr_;
+		this.CountdownNanos = CountdownNanos_;
+		this.MeleeBullets = MeleeBullets_;
+		this.FireballBullets = FireballBullets_;
+		this.BackendUnconfirmedMask = BackendUnconfirmedMask_;
+		this.ShouldForceResync = ShouldForceResync_;
+		this.BulletLocalIdCounter = BulletLocalIdCounter_;
+	});
+	InputFrameDownsync = $pkg.InputFrameDownsync = $newType(0, $kindStruct, "battle.InputFrameDownsync", true, "jsexport/battle", true, function(InputFrameId_, InputList_, ConfirmedList_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.InputFrameId = 0;
+			this.InputList = sliceType$5.nil;
+			this.ConfirmedList = new $Uint64(0, 0);
+			return;
+		}
+		this.InputFrameId = InputFrameId_;
+		this.InputList = InputList_;
+		this.ConfirmedList = ConfirmedList_;
+	});
+	NpcPatrolCue = $pkg.NpcPatrolCue = $newType(0, $kindStruct, "battle.NpcPatrolCue", true, "jsexport/battle", true, function(FlAct_, FrAct_, X_, Y_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.FlAct = new $Uint64(0, 0);
+			this.FrAct = new $Uint64(0, 0);
+			this.X = 0;
+			this.Y = 0;
+			return;
+		}
+		this.FlAct = FlAct_;
+		this.FrAct = FrAct_;
+		this.X = X_;
+		this.Y = Y_;
+	});
+	RingBuffer = $pkg.RingBuffer = $newType(0, $kindStruct, "battle.RingBuffer", true, "jsexport/battle", true, function(Ed_, St_, EdFrameId_, StFrameId_, N_, Cnt_, Eles_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Ed = 0;
+			this.St = 0;
+			this.EdFrameId = 0;
+			this.StFrameId = 0;
+			this.N = 0;
+			this.Cnt = 0;
+			this.Eles = sliceType$2.nil;
+			return;
+		}
+		this.Ed = Ed_;
+		this.St = St_;
+		this.EdFrameId = EdFrameId_;
+		this.StFrameId = StFrameId_;
+		this.N = N_;
+		this.Cnt = Cnt_;
+		this.Eles = Eles_;
+	});
+	SkillMapperType = $pkg.SkillMapperType = $newType(4, $kindFunc, "battle.SkillMapperType", true, "jsexport/battle", true, null);
+	CharacterConfig = $pkg.CharacterConfig = $newType(0, $kindStruct, "battle.CharacterConfig", true, "jsexport/battle", true, function(SpeciesId_, SpeciesName_, InAirIdleFrameIdxTurningPoint_, InAirIdleFrameIdxTurnedCycle_, LayDownFrames_, LayDownFramesToRecover_, GetUpInvinsibleFrames_, GetUpFramesToRecover_, Speed_, JumpingInitVelY_, DashingEnabled_, OnWallEnabled_, WallJumpingFramesToRecover_, WallJumpingInitVelX_, WallJumpingInitVelY_, WallSlidingVelY_, SkillMapper_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.SpeciesId = 0;
+			this.SpeciesName = "";
+			this.InAirIdleFrameIdxTurningPoint = 0;
+			this.InAirIdleFrameIdxTurnedCycle = 0;
+			this.LayDownFrames = 0;
+			this.LayDownFramesToRecover = 0;
+			this.GetUpInvinsibleFrames = 0;
+			this.GetUpFramesToRecover = 0;
+			this.Speed = 0;
+			this.JumpingInitVelY = 0;
+			this.DashingEnabled = false;
+			this.OnWallEnabled = false;
+			this.WallJumpingFramesToRecover = 0;
+			this.WallJumpingInitVelX = 0;
+			this.WallJumpingInitVelY = 0;
+			this.WallSlidingVelY = 0;
+			this.SkillMapper = $throwNilPointerError;
+			return;
+		}
+		this.SpeciesId = SpeciesId_;
+		this.SpeciesName = SpeciesName_;
+		this.InAirIdleFrameIdxTurningPoint = InAirIdleFrameIdxTurningPoint_;
+		this.InAirIdleFrameIdxTurnedCycle = InAirIdleFrameIdxTurnedCycle_;
+		this.LayDownFrames = LayDownFrames_;
+		this.LayDownFramesToRecover = LayDownFramesToRecover_;
+		this.GetUpInvinsibleFrames = GetUpInvinsibleFrames_;
+		this.GetUpFramesToRecover = GetUpFramesToRecover_;
+		this.Speed = Speed_;
+		this.JumpingInitVelY = JumpingInitVelY_;
+		this.DashingEnabled = DashingEnabled_;
+		this.OnWallEnabled = OnWallEnabled_;
+		this.WallJumpingFramesToRecover = WallJumpingFramesToRecover_;
+		this.WallJumpingInitVelX = WallJumpingInitVelX_;
+		this.WallJumpingInitVelY = WallJumpingInitVelY_;
+		this.WallSlidingVelY = WallSlidingVelY_;
+		this.SkillMapper = SkillMapper_;
+	});
+	SatResult = $pkg.SatResult = $newType(0, $kindStruct, "battle.SatResult", true, "jsexport/battle", true, function(Overlap_, OverlapX_, OverlapY_, AContainedInB_, BContainedInA_, Axis_) {
+		this.$val = this;
+		if (arguments.length === 0) {
+			this.Overlap = 0;
+			this.OverlapX = 0;
+			this.OverlapY = 0;
+			this.AContainedInB = false;
+			this.BContainedInA = false;
+			this.Axis = resolv.Vector.nil;
+			return;
+		}
+		this.Overlap = Overlap_;
+		this.OverlapX = OverlapX_;
+		this.OverlapY = OverlapY_;
+		this.AContainedInB = AContainedInB_;
+		this.BContainedInA = BContainedInA_;
+		this.Axis = Axis_;
+	});
+	sliceType = $sliceType($Int32);
+	sliceType$1 = $sliceType(sliceType);
+	sliceType$2 = $sliceType($emptyInterface);
+	ptrType = $ptrType(BulletConfig);
+	ptrType$1 = $ptrType(Skill);
+	ptrType$2 = $ptrType(MeleeBullet);
+	ptrType$3 = $ptrType(SatResult);
+	sliceType$3 = $sliceType(Vec2D);
+	sliceType$4 = $sliceType($String);
+	ptrType$4 = $ptrType(resolv.Collision);
+	ptrType$5 = $ptrType(sliceType$3);
+	ptrType$6 = $ptrType(PlayerDownsync);
+	ptrType$7 = $ptrType(FireballBullet);
+	ptrType$8 = $ptrType(resolv.ConvexPolygon);
+	ptrType$9 = $ptrType(InputFrameDownsync);
+	sliceType$5 = $sliceType($Uint64);
+	sliceType$6 = $sliceType(ptrType$6);
+	sliceType$7 = $sliceType(ptrType$2);
+	sliceType$8 = $sliceType(ptrType$7);
+	sliceType$9 = $sliceType(ptrType$5);
+	sliceType$10 = $sliceType($Bool);
+	ptrType$10 = $ptrType(resolv.Object);
+	sliceType$11 = $sliceType(ptrType$10);
+	sliceType$12 = $sliceType($Float64);
+	ptrType$11 = $ptrType(Vec2D);
+	sliceType$13 = $sliceType(ptrType$11);
+	ptrType$12 = $ptrType(Polygon2D);
+	mapType = $mapType($Int, $Int);
+	ptrType$13 = $ptrType(RingBuffer);
+	NewRingBuffer = function(n) {
+		var n;
+		return new RingBuffer.ptr(0, 0, 0, 0, n, 0, $makeSlice(sliceType$2, n));
+	};
+	$pkg.NewRingBuffer = NewRingBuffer;
+	RingBuffer.ptr.prototype.Put = function(pItem) {
+		var pItem, rb, x, x$1;
+		rb = this;
+		while (true) {
+			if (!(0 < rb.Cnt && rb.Cnt >= rb.N)) { break; }
+			rb.Pop();
+		}
+		(x = rb.Eles, x$1 = rb.Ed, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1] = pItem));
+		rb.EdFrameId = rb.EdFrameId + (1) >> 0;
+		rb.Cnt = rb.Cnt + (1) >> 0;
+		rb.Ed = rb.Ed + (1) >> 0;
+		if (rb.Ed >= rb.N) {
+			rb.Ed = rb.Ed - (rb.N) >> 0;
+		}
+	};
+	RingBuffer.prototype.Put = function(pItem) { return this.$val.Put(pItem); };
+	RingBuffer.ptr.prototype.Pop = function() {
+		var pItem, rb, x, x$1;
+		rb = this;
+		if (0 === rb.Cnt) {
+			return $ifaceNil;
+		}
+		pItem = (x = rb.Eles, x$1 = rb.St, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]));
+		rb.StFrameId = rb.StFrameId + (1) >> 0;
+		rb.Cnt = rb.Cnt - (1) >> 0;
+		rb.St = rb.St + (1) >> 0;
+		if (rb.St >= rb.N) {
+			rb.St = rb.St - (rb.N) >> 0;
+		}
+		return pItem;
+	};
+	RingBuffer.prototype.Pop = function() { return this.$val.Pop(); };
+	RingBuffer.ptr.prototype.GetArrIdxByOffset = function(offsetFromSt) {
+		var arrIdx, offsetFromSt, rb;
+		rb = this;
+		if ((0 === rb.Cnt) || 0 > offsetFromSt) {
+			return -1;
+		}
+		arrIdx = rb.St + offsetFromSt >> 0;
+		if (rb.St < rb.Ed) {
+			if (rb.St <= arrIdx && arrIdx < rb.Ed) {
+				return arrIdx;
+			}
+		} else {
+			if (arrIdx >= rb.N) {
+				arrIdx = arrIdx - (rb.N) >> 0;
+			}
+			if (arrIdx >= rb.St || arrIdx < rb.Ed) {
+				return arrIdx;
+			}
+		}
+		return -1;
+	};
+	RingBuffer.prototype.GetArrIdxByOffset = function(offsetFromSt) { return this.$val.GetArrIdxByOffset(offsetFromSt); };
+	RingBuffer.ptr.prototype.GetByOffset = function(offsetFromSt) {
+		var arrIdx, offsetFromSt, rb, x;
+		rb = this;
+		arrIdx = rb.GetArrIdxByOffset(offsetFromSt);
+		if (-1 === arrIdx) {
+			return $ifaceNil;
+		}
+		return (x = rb.Eles, ((arrIdx < 0 || arrIdx >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + arrIdx]));
+	};
+	RingBuffer.prototype.GetByOffset = function(offsetFromSt) { return this.$val.GetByOffset(offsetFromSt); };
+	RingBuffer.ptr.prototype.GetByFrameId = function(frameId) {
+		var frameId, rb;
+		rb = this;
+		if (frameId >= rb.EdFrameId || frameId < rb.StFrameId) {
+			return $ifaceNil;
+		}
+		return rb.GetByOffset(frameId - rb.StFrameId >> 0);
+	};
+	RingBuffer.prototype.GetByFrameId = function(frameId) { return this.$val.GetByFrameId(frameId); };
+	RingBuffer.ptr.prototype.SetByFrameId = function(pItem, frameId) {
+		var _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, arrIdx, frameId, oldEdFrameId, oldStFrameId, pItem, rb, ret, x;
+		rb = this;
+		_tmp = rb.StFrameId;
+		_tmp$1 = rb.EdFrameId;
+		oldStFrameId = _tmp;
+		oldEdFrameId = _tmp$1;
+		if (frameId < oldStFrameId) {
+			return [2, oldStFrameId, oldEdFrameId];
+		}
+		if (oldEdFrameId > frameId) {
+			arrIdx = rb.GetArrIdxByOffset(frameId - rb.StFrameId >> 0);
+			if (!((-1 === arrIdx))) {
+				(x = rb.Eles, ((arrIdx < 0 || arrIdx >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + arrIdx] = pItem));
+				return [0, oldStFrameId, oldEdFrameId];
+			}
+		}
+		ret = 0;
+		if (oldEdFrameId < frameId) {
+			_tmp$2 = 0;
+			_tmp$3 = 0;
+			rb.St = _tmp$2;
+			rb.Ed = _tmp$3;
+			_tmp$4 = frameId;
+			_tmp$5 = frameId;
+			rb.StFrameId = _tmp$4;
+			rb.EdFrameId = _tmp$5;
+			rb.Cnt = 0;
+			ret = 1;
+		}
+		rb.Put(pItem);
+		return [ret, oldStFrameId, oldEdFrameId];
+	};
+	RingBuffer.prototype.SetByFrameId = function(pItem, frameId) { return this.$val.SetByFrameId(pItem, frameId); };
+	intAbs = function(x) {
+		var x;
+		if (x < 0) {
+			return -x;
+		}
+		return x;
+	};
+	ShouldGenerateInputFrameUpsync = function(renderFrameId) {
+		var renderFrameId;
+		return (((renderFrameId & 3)) === 0);
+	};
+	$pkg.ShouldGenerateInputFrameUpsync = ShouldGenerateInputFrameUpsync;
+	ConvertToDelayedInputFrameId = function(renderFrameId) {
+		var renderFrameId;
+		if (renderFrameId < 4) {
+			return 0;
+		}
+		return (((renderFrameId - 4 >> 0)) >> 2 >> 0);
+	};
+	$pkg.ConvertToDelayedInputFrameId = ConvertToDelayedInputFrameId;
+	ConvertToNoDelayInputFrameId = function(renderFrameId) {
+		var renderFrameId;
+		return (renderFrameId >> 2 >> 0);
+	};
+	$pkg.ConvertToNoDelayInputFrameId = ConvertToNoDelayInputFrameId;
+	ConvertToFirstUsedRenderFrameId = function(inputFrameId) {
+		var inputFrameId;
+		return (((inputFrameId << 2 >> 0)) + 4 >> 0);
+	};
+	$pkg.ConvertToFirstUsedRenderFrameId = ConvertToFirstUsedRenderFrameId;
+	ConvertToLastUsedRenderFrameId = function(inputFrameId) {
+		var inputFrameId;
+		return (((((inputFrameId << 2 >> 0)) + 4 >> 0) + 4 >> 0) - 1 >> 0);
+	};
+	$pkg.ConvertToLastUsedRenderFrameId = ConvertToLastUsedRenderFrameId;
+	decodeInput = function(encodedInput) {
+		var btnALevel, btnBLevel, encodedDirection, encodedInput, x, x$1, x$2, x$3;
+		encodedDirection = new $Uint64(encodedInput.$high & 0, (encodedInput.$low & 15) >>> 0);
+		btnALevel = (((x = $shiftRightUint64(encodedInput, 4), new $Uint64(x.$high & 0, (x.$low & 1) >>> 0)).$low >> 0));
+		btnBLevel = (((x$1 = $shiftRightUint64(encodedInput, 5), new $Uint64(x$1.$high & 0, (x$1.$low & 1) >>> 0)).$low >> 0));
+		return new InputFrameDecoded.ptr((x$2 = (($flatten64(encodedDirection) < 0 || $flatten64(encodedDirection) >= $pkg.DIRECTION_DECODER.$length) ? ($throwRuntimeError("index out of range"), undefined) : $pkg.DIRECTION_DECODER.$array[$pkg.DIRECTION_DECODER.$offset + $flatten64(encodedDirection)]), (0 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 0])), (x$3 = (($flatten64(encodedDirection) < 0 || $flatten64(encodedDirection) >= $pkg.DIRECTION_DECODER.$length) ? ($throwRuntimeError("index out of range"), undefined) : $pkg.DIRECTION_DECODER.$array[$pkg.DIRECTION_DECODER.$offset + $flatten64(encodedDirection)]), (1 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 1])), btnALevel, btnBLevel);
+	};
+	calcPushbacks = function(oldDx, oldDy, playerShape, barrierShape) {
+		var {$24r, $24r$1, _tmp, _tmp$1, _tuple, barrierShape, oldDx, oldDy, origX, origY, overlapResult, overlapped, playerShape, pushbackX, pushbackY, $s, $deferred, $r, $c} = $restore(this, {oldDx, oldDy, playerShape, barrierShape});
+		/* */ $s = $s || 0; var $err = null; try { s: while (true) { switch ($s) { case 0: $deferred = []; $curGoroutine.deferStack.push($deferred);
+		origX = [origX];
+		origY = [origY];
+		playerShape = [playerShape];
+		_tuple = playerShape[0].Position();
+		origX[0] = _tuple[0];
+		origY[0] = _tuple[1];
+		$deferred.push([(function(origX, origY, playerShape) { return function() {
+			playerShape[0].SetPosition(origX[0], origY[0]);
+		}; })(origX, origY, playerShape), []]);
+		playerShape[0].SetPosition(origX[0] + oldDx, origY[0] + oldDy);
+		overlapResult = new SatResult.ptr(0, 0, 0, true, true, new resolv.Vector([0, 0]));
+		overlapped = isPolygonPairOverlapped(playerShape[0], barrierShape, overlapResult);
+		/* */ if (overlapped) { $s = 1; continue; }
+		/* */ $s = 2; continue;
+		/* if (overlapped) { */ case 1:
+			_tmp = overlapResult.Overlap * overlapResult.OverlapX;
+			_tmp$1 = overlapResult.Overlap * overlapResult.OverlapY;
+			pushbackX = _tmp;
+			pushbackY = _tmp$1;
+			$24r = [true, pushbackX, pushbackY, overlapResult];
+			$s = 4; case 4: return $24r;
+		/* } else { */ case 2:
+			$24r$1 = [false, 0, 0, overlapResult];
+			$s = 5; case 5: return $24r$1;
+		/* } */ case 3:
+		$s = -1; return [false, 0, 0, ptrType$3.nil];
+		/* */ } return; } } catch(err) { $err = err; $s = -1; return [false, 0, 0, ptrType$3.nil]; } finally { $callDeferred($deferred, $err); if($curGoroutine.asleep) { var $f = {$blk: calcPushbacks, $c: true, $r, $24r, $24r$1, _tmp, _tmp$1, _tuple, barrierShape, oldDx, oldDy, origX, origY, overlapResult, overlapped, playerShape, pushbackX, pushbackY, $s, $deferred};return $f; } }
+	};
+	isPolygonPairOverlapped = function(a, b, result) {
+		var _i, _i$1, _ref, _ref$1, _tmp, _tmp$1, a, aCnt, axis, axis$1, b, bCnt, result, x, x$1, x$2, x$3, x$4, x$5, x$6, x$7;
+		_tmp = a.Points.$length;
+		_tmp$1 = b.Points.$length;
+		aCnt = _tmp;
+		bCnt = _tmp$1;
+		if ((1 === aCnt) && (1 === bCnt)) {
+			if (!(ptrType$3.nil === result)) {
+				result.Overlap = 0;
+			}
+			return ((x = (x$1 = a.Points, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0])), (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) === (x$2 = (x$3 = b.Points, (0 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 0])), (0 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 0]))) && ((x$4 = (x$5 = a.Points, (0 >= x$5.$length ? ($throwRuntimeError("index out of range"), undefined) : x$5.$array[x$5.$offset + 0])), (1 >= x$4.$length ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + 1])) === (x$6 = (x$7 = b.Points, (0 >= x$7.$length ? ($throwRuntimeError("index out of range"), undefined) : x$7.$array[x$7.$offset + 0])), (1 >= x$6.$length ? ($throwRuntimeError("index out of range"), undefined) : x$6.$array[x$6.$offset + 1])));
+		}
+		if (1 < aCnt) {
+			_ref = a.SATAxes();
+			_i = 0;
+			while (true) {
+				if (!(_i < _ref.$length)) { break; }
+				axis = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+				if (isPolygonPairSeparatedByDir(a, b, axis.Unit(), result)) {
+					return false;
+				}
+				_i++;
+			}
+		}
+		if (1 < bCnt) {
+			_ref$1 = b.SATAxes();
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				axis$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+				if (isPolygonPairSeparatedByDir(a, b, axis$1.Unit(), result)) {
+					return false;
+				}
+				_i$1++;
+			}
+		}
+		return true;
+	};
+	isPolygonPairSeparatedByDir = function(a, b, e, result) {
+		var _i, _i$1, _ref, _ref$1, _tmp, _tmp$1, _tmp$2, _tmp$3, a, aEnd, aStart, absoluteOverlap, b, bEnd, bStart, currentOverlap, dot, dot$1, e, option1, option1$1, option2, option2$1, overlap, p, p$1, result, sign, x, x$1;
+		_tmp = 1.7e+308;
+		_tmp$1 = -1.7e+308;
+		_tmp$2 = 1.7e+308;
+		_tmp$3 = -1.7e+308;
+		aStart = _tmp;
+		aEnd = _tmp$1;
+		bStart = _tmp$2;
+		bEnd = _tmp$3;
+		_ref = a.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			p = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			dot = ((0 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 0]) + a.X) * (0 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 0]) + ((1 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 1]) + a.Y) * (1 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 1]);
+			if (aStart > dot) {
+				aStart = dot;
+			}
+			if (aEnd < dot) {
+				aEnd = dot;
+			}
+			_i++;
+		}
+		_ref$1 = b.Points;
+		_i$1 = 0;
+		while (true) {
+			if (!(_i$1 < _ref$1.$length)) { break; }
+			p$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+			dot$1 = ((0 >= p$1.$length ? ($throwRuntimeError("index out of range"), undefined) : p$1.$array[p$1.$offset + 0]) + b.X) * (0 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 0]) + ((1 >= p$1.$length ? ($throwRuntimeError("index out of range"), undefined) : p$1.$array[p$1.$offset + 1]) + b.Y) * (1 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 1]);
+			if (bStart > dot$1) {
+				bStart = dot$1;
+			}
+			if (bEnd < dot$1) {
+				bEnd = dot$1;
+			}
+			_i$1++;
+		}
+		if (aStart > bEnd || aEnd < bStart) {
+			return true;
+		}
+		if (!(ptrType$3.nil === result)) {
+			overlap = 0;
+			if (aStart < bStart) {
+				result.AContainedInB = false;
+				if (aEnd < bEnd) {
+					overlap = aEnd - bStart;
+					result.BContainedInA = false;
+				} else {
+					option1 = aEnd - bStart;
+					option2 = bEnd - aStart;
+					if (option1 < option2) {
+						overlap = option1;
+					} else {
+						overlap = -option2;
+					}
+				}
+			} else {
+				result.BContainedInA = false;
+				if (aEnd > bEnd) {
+					overlap = aStart - bEnd;
+					result.AContainedInB = false;
+				} else {
+					option1$1 = aEnd - bStart;
+					option2$1 = bEnd - aStart;
+					if (option1$1 < option2$1) {
+						overlap = option1$1;
+					} else {
+						overlap = -option2$1;
+					}
+				}
+			}
+			currentOverlap = result.Overlap;
+			absoluteOverlap = overlap;
+			if (overlap < 0) {
+				absoluteOverlap = -overlap;
+			}
+			if (((0 === (x = result.Axis, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0]))) && (0 === (x$1 = result.Axis, (1 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 1])))) || currentOverlap > absoluteOverlap) {
+				sign = 1;
+				if (overlap < 0) {
+					sign = -1;
+				}
+				result.Overlap = absoluteOverlap;
+				result.OverlapX = (0 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 0]) * sign;
+				result.OverlapY = (1 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 1]) * sign;
+			}
+			result.Axis = e;
+		}
+		return false;
+	};
+	WorldToVirtualGridPos = function(wx, wy) {
+		var virtualGridX, virtualGridY, wx, wy;
+		virtualGridX = ((math.Round(wx * 100) >> 0));
+		virtualGridY = ((math.Round(wy * 100) >> 0));
+		return [virtualGridX, virtualGridY];
+	};
+	$pkg.WorldToVirtualGridPos = WorldToVirtualGridPos;
+	VirtualGridToWorldPos = function(vx, vy) {
+		var vx, vy, wx, wy;
+		wx = (vx) * 0.01;
+		wy = (vy) * 0.01;
+		return [wx, wy];
+	};
+	$pkg.VirtualGridToWorldPos = VirtualGridToWorldPos;
+	WorldToPolygonColliderBLPos = function(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY) {
+		var bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY, halfBoundingH, halfBoundingW, leftPadding, rightPadding, topPadding, wx, wy;
+		return [wx - halfBoundingW - leftPadding + collisionSpaceOffsetX, wy - halfBoundingH - bottomPadding + collisionSpaceOffsetY];
+	};
+	$pkg.WorldToPolygonColliderBLPos = WorldToPolygonColliderBLPos;
+	PolygonColliderBLToWorldPos = function(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY) {
+		var bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY, cx, cy, halfBoundingH, halfBoundingW, leftPadding, rightPadding, topPadding;
+		return [cx + halfBoundingW + leftPadding - collisionSpaceOffsetX, cy + halfBoundingH + bottomPadding - collisionSpaceOffsetY];
+	};
+	$pkg.PolygonColliderBLToWorldPos = PolygonColliderBLToWorldPos;
+	PolygonColliderBLToVirtualGridPos = function(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY) {
+		var _tuple, bottomPadding, collisionSpaceOffsetX, collisionSpaceOffsetY, cx, cy, halfBoundingH, halfBoundingW, leftPadding, rightPadding, topPadding, wx, wy;
+		_tuple = PolygonColliderBLToWorldPos(cx, cy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY);
+		wx = _tuple[0];
+		wy = _tuple[1];
+		return WorldToVirtualGridPos(wx, wy);
+	};
+	$pkg.PolygonColliderBLToVirtualGridPos = PolygonColliderBLToVirtualGridPos;
+	calcHardPushbacksNorms = function(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, snapIntoPlatformOverlap, pEffPushback) {
+		var {_i, _r, _ref, _ref$1, _tmp, _tmp$1, _tuple, barrierShape, collision, currPlayerDownsync, isBarrier, joinIndex, obj, overlapResult, overlapped, pEffPushback, playerCollider, playerShape, pushbackX, pushbackY, ret, snapIntoPlatformOverlap, thatPlayerInNextFrame, virtualGripToWall, xfac, $s, $r, $c} = $restore(this, {joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, snapIntoPlatformOverlap, pEffPushback});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		ret = [ret];
+		ret[0] = $makeSlice(sliceType$3, 0, 10);
+		virtualGripToWall = 0;
+		if ((16 === currPlayerDownsync.CharacterState) && (0 === thatPlayerInNextFrame.VelX) && (currPlayerDownsync.DirX === thatPlayerInNextFrame.DirX)) {
+			xfac = 1;
+			if (0 > thatPlayerInNextFrame.DirX) {
+				xfac = -xfac;
+			}
+			virtualGripToWall = xfac * (currPlayerDownsync.Speed) * 0.01;
+		}
+		collision = playerCollider.Check(virtualGripToWall, 0, new sliceType$4([]));
+		if (ptrType$4.nil === collision) {
+			$s = -1; return (ret.$ptr || (ret.$ptr = new ptrType$5(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, ret)));
+		}
+		_ref = collision.Objects;
+		_i = 0;
+		/* while (true) { */ case 1:
+			/* if (!(_i < _ref.$length)) { break; } */ if(!(_i < _ref.$length)) { $s = 2; continue; }
+			obj = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			isBarrier = false;
+			_ref$1 = obj.Data;
+			if ($assertType(_ref$1, ptrType$6, true)[1] || $assertType(_ref$1, ptrType$2, true)[1] || $assertType(_ref$1, ptrType$7, true)[1]) {
+			} else {
+				isBarrier = true;
+			}
+			if (!isBarrier) {
+				_i++;
+				/* continue; */ $s = 1; continue;
+			}
+			barrierShape = $assertType(obj.Shape, ptrType$8);
+			_r = calcPushbacks(0, 0, playerShape, barrierShape); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			_tuple = _r;
+			overlapped = _tuple[0];
+			pushbackX = _tuple[1];
+			pushbackY = _tuple[2];
+			overlapResult = _tuple[3];
+			if (!overlapped) {
+				_i++;
+				/* continue; */ $s = 1; continue;
+			}
+			_tmp = (overlapResult.Overlap - snapIntoPlatformOverlap) * overlapResult.OverlapX;
+			_tmp$1 = (overlapResult.Overlap - snapIntoPlatformOverlap) * overlapResult.OverlapY;
+			pushbackX = _tmp;
+			pushbackY = _tmp$1;
+			ret[0] = $append(ret[0], new Vec2D.ptr(overlapResult.OverlapX, overlapResult.OverlapY));
+			pEffPushback.X = pEffPushback.X + (pushbackX);
+			pEffPushback.Y = pEffPushback.Y + (pushbackY);
+			_i++;
+		$s = 1; continue;
+		case 2:
+		$s = -1; return (ret.$ptr || (ret.$ptr = new ptrType$5(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, ret)));
+		/* */ } return; } var $f = {$blk: calcHardPushbacksNorms, $c: true, $r, _i, _r, _ref, _ref$1, _tmp, _tmp$1, _tuple, barrierShape, collision, currPlayerDownsync, isBarrier, joinIndex, obj, overlapResult, overlapped, pEffPushback, playerCollider, playerShape, pushbackX, pushbackY, ret, snapIntoPlatformOverlap, thatPlayerInNextFrame, virtualGripToWall, xfac, $s};return $f;
+	};
+	deriveOpPattern = function(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer) {
+		var _entry, _entry$1, _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, _tuple, _tuple$1, currPlayerDownsync, currRenderFrame, decodedInput, delayedInputFrameId, delayedInputFrameIdForPrevRdf, delayedInputList, delayedInputListForPrevRdf, effDx, effDy, existent, existent$1, inputsBuffer, joinIndex, jumpedOrNot, patternId, prevBtnALevel, prevBtnBLevel, prevDecodedInput, thatPlayerInNextFrame, x, x$1;
+		delayedInputFrameId = ConvertToDelayedInputFrameId(currRenderFrame.Id);
+		delayedInputFrameIdForPrevRdf = ConvertToDelayedInputFrameId(currRenderFrame.Id - 1 >> 0);
+		if (0 >= delayedInputFrameId) {
+			return [-2, false, 0, 0];
+		}
+		_tuple = (_entry = noOpSet[$Int32.keyFor(currPlayerDownsync.CharacterState)], _entry !== undefined ? [_entry.v, true] : [false, false]);
+		existent = _tuple[1];
+		if (existent) {
+			return [-2, false, 0, 0];
+		}
+		delayedInputList = $assertType(inputsBuffer.GetByFrameId(delayedInputFrameId), ptrType$9).InputList;
+		delayedInputListForPrevRdf = sliceType$5.nil;
+		if (0 < delayedInputFrameIdForPrevRdf) {
+			delayedInputListForPrevRdf = $assertType(inputsBuffer.GetByFrameId(delayedInputFrameIdForPrevRdf), ptrType$9).InputList;
+		}
+		jumpedOrNot = false;
+		joinIndex = currPlayerDownsync.JoinIndex;
+		decodedInput = decodeInput((x = joinIndex - 1 >> 0, ((x < 0 || x >= delayedInputList.$length) ? ($throwRuntimeError("index out of range"), undefined) : delayedInputList.$array[delayedInputList.$offset + x])));
+		_tmp = 0;
+		_tmp$1 = 0;
+		effDx = _tmp;
+		effDy = _tmp$1;
+		_tmp$2 = 0;
+		_tmp$3 = 0;
+		prevBtnALevel = _tmp$2;
+		prevBtnBLevel = _tmp$3;
+		if (!(sliceType$5.nil === delayedInputListForPrevRdf)) {
+			prevDecodedInput = decodeInput((x$1 = joinIndex - 1 >> 0, ((x$1 < 0 || x$1 >= delayedInputListForPrevRdf.$length) ? ($throwRuntimeError("index out of range"), undefined) : delayedInputListForPrevRdf.$array[delayedInputListForPrevRdf.$offset + x$1])));
+			prevBtnALevel = prevDecodedInput.BtnALevel;
+			prevBtnBLevel = prevDecodedInput.BtnBLevel;
+		}
+		if (0 === currPlayerDownsync.FramesToRecover) {
+			_tmp$4 = decodedInput.Dx;
+			_tmp$5 = decodedInput.Dy;
+			effDx = _tmp$4;
+			effDy = _tmp$5;
+			if (decodedInput.BtnBLevel > prevBtnBLevel) {
+				_tuple$1 = (_entry$1 = inAirSet[$Int32.keyFor(currPlayerDownsync.CharacterState)], _entry$1 !== undefined ? [_entry$1.v, true] : [false, false]);
+				existent$1 = _tuple$1[1];
+				if (!existent$1) {
+					jumpedOrNot = true;
+				} else if (16 === currPlayerDownsync.CharacterState) {
+					jumpedOrNot = true;
+				}
+			}
+		}
+		patternId = -1;
+		if (decodedInput.BtnALevel > prevBtnALevel) {
+			if (0 > effDy) {
+				patternId = 3;
+			} else if (0 < effDy) {
+				patternId = 2;
+			} else {
+				patternId = 1;
+			}
+		}
+		return [patternId, jumpedOrNot, effDx, effDy];
+	};
+	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = function(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex) {
+		var {_1, _2, _3, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _i, _i$1, _i$10, _i$11, _i$12, _i$13, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _r$6, _r$7, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$15, _ref$16, _ref$17, _ref$18, _ref$19, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$29, _tmp$3, _tmp$30, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, addToNextRenderFrame, atkedPlayerInNextFrame, atkedPlayerInNextFrame$1, bShape, bulletCollider, bulletColliders, bulletLocalId, bulletShape, bulletShape$1, bulletWx, bulletWx$1, bulletWy, bulletWy$1, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, defenderShape$1, effDx, effDy, effPushbacks, existent, existent$1, existent$2, existent$3, existent$4, existent$5, fallStopping, fireballBullet, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNorms, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBullet$1, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, obj$2, offender, offender$1, offender$2, oldFramesToRecover, oldFramesToRecover$1, oldNextCharacterState, overlapResult, overlapped, overlapped$1, overlapped$2, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, prevFireball, projectedMagnitude, pushbackVelX, pushbackVelX$1, pushbackVelY, pushbackVelY$1, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, t$2, t$3, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, xfac$5, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		roomCapacity = currRenderFrame.PlayersArr.$length;
+		nextRenderFramePlayers = $makeSlice(sliceType$6, roomCapacity);
+		_ref = currRenderFrame.PlayersArr;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			currPlayerDownsync = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i] = new PlayerDownsync.ptr(currPlayerDownsync.Id, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY, currPlayerDownsync.DirX, currPlayerDownsync.DirY, currPlayerDownsync.VelX, currPlayerDownsync.VelY, currPlayerDownsync.Speed, currPlayerDownsync.BattleState, currPlayerDownsync.JoinIndex, currPlayerDownsync.ColliderRadius, currPlayerDownsync.Removed, currPlayerDownsync.Score, 0, currPlayerDownsync.FramesToRecover - 1 >> 0, currPlayerDownsync.FramesInChState + 1 >> 0, currPlayerDownsync.Hp, currPlayerDownsync.MaxHp, currPlayerDownsync.CharacterState, true, false, currPlayerDownsync.OnWallNormX, currPlayerDownsync.OnWallNormY, currPlayerDownsync.ActiveSkillId, currPlayerDownsync.ActiveSkillHit, currPlayerDownsync.FramesInvinsible - 1 >> 0, 0, 0));
+			if (((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesToRecover < 0) {
+				((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesToRecover = 0;
+			}
+			if (((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesInvinsible < 0) {
+				((i < 0 || i >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i]).FramesInvinsible = 0;
+			}
+			_i++;
+		}
+		nextRenderFrameMeleeBullets = $makeSlice(sliceType$7, 0, currRenderFrame.MeleeBullets.$length);
+		nextRenderFrameFireballBullets = $makeSlice(sliceType$8, 0, currRenderFrame.FireballBullets.$length);
+		effPushbacks = $makeSlice(sliceType$3, roomCapacity);
+		hardPushbackNorms = $makeSlice(sliceType$9, roomCapacity);
+		jumpedOrNotList = $makeSlice(sliceType$10, roomCapacity);
+		bulletLocalId = currRenderFrame.BulletLocalIdCounter;
+		_ref$1 = currRenderFrame.PlayersArr;
+		_i$1 = 0;
+		/* while (true) { */ case 1:
+			/* if (!(_i$1 < _ref$1.$length)) { break; } */ if(!(_i$1 < _ref$1.$length)) { $s = 2; continue; }
+			newBullet = [newBullet];
+			newBullet$1 = [newBullet$1];
+			i$1 = _i$1;
+			currPlayerDownsync$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+			chConfig = ((i$1 < 0 || i$1 >= chConfigsOrderedByJoinIndex.$length) ? ($throwRuntimeError("index out of range"), undefined) : chConfigsOrderedByJoinIndex.$array[chConfigsOrderedByJoinIndex.$offset + i$1]);
+			thatPlayerInNextFrame = ((i$1 < 0 || i$1 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$1]);
+			_tuple = deriveOpPattern(currPlayerDownsync$1, thatPlayerInNextFrame, currRenderFrame, inputsBuffer);
+			patternId = _tuple[0];
+			jumpedOrNot = _tuple[1];
+			effDx = _tuple[2];
+			effDy = _tuple[3];
+			((i$1 < 0 || i$1 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$1] = jumpedOrNot);
+			joinIndex = currPlayerDownsync$1.JoinIndex;
+			_r = chConfig.SkillMapper(patternId, currPlayerDownsync$1); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			skillId = _r;
+			_tuple$1 = (_entry = skills[$Int.keyFor(skillId)], _entry !== undefined ? [_entry.v, true] : [ptrType$1.nil, false]);
+			skillConfig = _tuple$1[0];
+			existent = _tuple$1[1];
+			if (existent) {
+				thatPlayerInNextFrame.ActiveSkillId = ((skillId >> 0));
+				thatPlayerInNextFrame.ActiveSkillHit = 0;
+				thatPlayerInNextFrame.FramesToRecover = skillConfig.RecoveryFrames;
+				xfac = 1;
+				if (0 > thatPlayerInNextFrame.DirX) {
+					xfac = -xfac;
+				}
+				hasLockVel = false;
+				_ref$2 = (x = skillConfig.Hits, x$1 = thatPlayerInNextFrame.ActiveSkillHit, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]));
+				if ($assertType(_ref$2, ptrType$2, true)[1]) {
+					v = _ref$2.$val;
+					newBullet[0] = $clone(v, MeleeBullet);
+					newBullet[0].Bullet.BulletLocalId = bulletLocalId;
+					bulletLocalId = bulletLocalId + (1) >> 0;
+					newBullet[0].Bullet.OriginatedRenderFrameId = currRenderFrame.Id;
+					newBullet[0].Bullet.OffenderJoinIndex = joinIndex;
+					nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, newBullet[0]);
+					if (!((-1 === v.Bullet.SelfLockVelX))) {
+						hasLockVel = true;
+						thatPlayerInNextFrame.VelX = $imul(xfac, v.Bullet.SelfLockVelX);
+					}
+					if (!((-1 === v.Bullet.SelfLockVelY))) {
+						hasLockVel = true;
+						thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY;
+					}
+				} else if ($assertType(_ref$2, ptrType$7, true)[1]) {
+					v$1 = _ref$2.$val;
+					newBullet$1[0] = $clone(v$1, FireballBullet);
+					newBullet$1[0].Bullet.BulletLocalId = bulletLocalId;
+					bulletLocalId = bulletLocalId + (1) >> 0;
+					newBullet$1[0].Bullet.OriginatedRenderFrameId = currRenderFrame.Id;
+					newBullet$1[0].Bullet.OffenderJoinIndex = joinIndex;
+					_tmp = currPlayerDownsync$1.VirtualGridX + ($imul(xfac, newBullet$1[0].Bullet.HitboxOffsetX)) >> 0;
+					_tmp$1 = currPlayerDownsync$1.VirtualGridY + newBullet$1[0].Bullet.HitboxOffsetY >> 0;
+					newBullet$1[0].VirtualGridX = _tmp;
+					newBullet$1[0].VirtualGridY = _tmp$1;
+					newBullet$1[0].DirX = xfac;
+					newBullet$1[0].DirY = 0;
+					newBullet$1[0].VelX = $imul(newBullet$1[0].Speed, xfac);
+					newBullet$1[0].VelY = 0;
+					nextRenderFrameFireballBullets = $append(nextRenderFrameFireballBullets, newBullet$1[0]);
+					if (!((-1 === v$1.Bullet.SelfLockVelX))) {
+						hasLockVel = true;
+						thatPlayerInNextFrame.VelX = $imul(xfac, v$1.Bullet.SelfLockVelX);
+					}
+					if (!((-1 === v$1.Bullet.SelfLockVelY))) {
+						hasLockVel = true;
+						thatPlayerInNextFrame.VelY = v$1.Bullet.SelfLockVelY;
+					}
+				}
+				if (false === hasLockVel && false === currPlayerDownsync$1.InAir) {
+					thatPlayerInNextFrame.VelX = 0;
+				}
+				thatPlayerInNextFrame.CharacterState = skillConfig.BoundChState;
+				_i$1++;
+				/* continue; */ $s = 1; continue;
+			}
+			if (0 === currPlayerDownsync$1.FramesToRecover) {
+				if (!((0 === effDx))) {
+					xfac$1 = 1;
+					if (0 > effDx) {
+						xfac$1 = -xfac$1;
+					}
+					thatPlayerInNextFrame.DirX = effDx;
+					thatPlayerInNextFrame.DirY = effDy;
+					thatPlayerInNextFrame.VelX = $imul(xfac$1, currPlayerDownsync$1.Speed);
+					if (intAbs(thatPlayerInNextFrame.VelX) < intAbs(currPlayerDownsync$1.VelX)) {
+						thatPlayerInNextFrame.VelX = $imul(xfac$1, intAbs(currPlayerDownsync$1.VelX));
+					}
+					thatPlayerInNextFrame.CharacterState = 1;
+				} else {
+					thatPlayerInNextFrame.CharacterState = 0;
+					thatPlayerInNextFrame.VelX = 0;
+				}
+			}
+			_i$1++;
+		$s = 1; continue;
+		case 2:
+		playerColliders = $makeSlice(sliceType$11, currRenderFrame.PlayersArr.$length, currRenderFrame.PlayersArr.$length);
+		_ref$3 = currRenderFrame.PlayersArr;
+		_i$2 = 0;
+		/* while (true) { */ case 4:
+			/* if (!(_i$2 < _ref$3.$length)) { break; } */ if(!(_i$2 < _ref$3.$length)) { $s = 5; continue; }
+			i$2 = _i$2;
+			currPlayerDownsync$2 = ((_i$2 < 0 || _i$2 >= _ref$3.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$3.$array[_ref$3.$offset + _i$2]);
+			joinIndex$1 = currPlayerDownsync$2.JoinIndex;
+			_tmp$2 = 0;
+			_tmp$3 = 0;
+			(x$2 = joinIndex$1 - 1 >> 0, ((x$2 < 0 || x$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$2])).X = _tmp$2;
+			(x$3 = joinIndex$1 - 1 >> 0, ((x$3 < 0 || x$3 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$3])).Y = _tmp$3;
+			thatPlayerInNextFrame$1 = ((i$2 < 0 || i$2 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$2]);
+			chConfig$1 = ((i$2 < 0 || i$2 >= chConfigsOrderedByJoinIndex.$length) ? ($throwRuntimeError("index out of range"), undefined) : chConfigsOrderedByJoinIndex.$array[chConfigsOrderedByJoinIndex.$offset + i$2]);
+			_tmp$4 = currPlayerDownsync$2.VirtualGridX + currPlayerDownsync$2.VelX >> 0;
+			_tmp$5 = currPlayerDownsync$2.VirtualGridY + currPlayerDownsync$2.VelY >> 0;
+			newVx = _tmp$4;
+			newVy = _tmp$5;
+			if (((i$2 < 0 || i$2 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$2])) {
+				if (16 === currPlayerDownsync$2.CharacterState) {
+					if (0 < ($imul(currPlayerDownsync$2.VelX, currPlayerDownsync$2.OnWallNormX))) {
+						newVx = newVx - (currPlayerDownsync$2.VelX) >> 0;
+					}
+					xfac$2 = -1;
+					if (0 > currPlayerDownsync$2.OnWallNormX) {
+						xfac$2 = -xfac$2;
+					}
+					newVx = newVx + (($imul(xfac$2, chConfig$1.WallJumpingInitVelX))) >> 0;
+					newVy = newVy + (chConfig$1.WallJumpingInitVelY) >> 0;
+					thatPlayerInNextFrame$1.VelX = (($imul(xfac$2, chConfig$1.WallJumpingInitVelX)));
+					thatPlayerInNextFrame$1.VelY = (chConfig$1.WallJumpingInitVelY);
+					thatPlayerInNextFrame$1.FramesToRecover = chConfig$1.WallJumpingFramesToRecover;
+				} else {
+					thatPlayerInNextFrame$1.VelY = (chConfig$1.JumpingInitVelY);
+					newVy = newVy + (chConfig$1.JumpingInitVelY) >> 0;
+				}
+			}
+			_tuple$2 = VirtualGridToWorldPos(newVx, newVy);
+			wx = _tuple$2[0];
+			wy = _tuple$2[1];
+			_tmp$6 = $imul(currPlayerDownsync$2.ColliderRadius, 2);
+			_tmp$7 = $imul(currPlayerDownsync$2.ColliderRadius, 4);
+			colliderWidth = _tmp$6;
+			colliderHeight = _tmp$7;
+			_1 = currPlayerDownsync$2.CharacterState;
+			if (_1 === (9)) {
+				_tmp$8 = $imul(currPlayerDownsync$2.ColliderRadius, 4);
+				_tmp$9 = $imul(currPlayerDownsync$2.ColliderRadius, 2);
+				colliderWidth = _tmp$8;
+				colliderHeight = _tmp$9;
+			} else if ((_1 === (8)) || (_1 === (4)) || (_1 === (5)) || (_1 === (16))) {
+				_tmp$10 = $imul(currPlayerDownsync$2.ColliderRadius, 2);
+				_tmp$11 = $imul(currPlayerDownsync$2.ColliderRadius, 2);
+				colliderWidth = _tmp$10;
+				colliderHeight = _tmp$11;
+			}
+			_tuple$3 = VirtualGridToWorldPos(colliderWidth, colliderHeight);
+			colliderWorldWidth = _tuple$3[0];
+			colliderWorldHeight = _tuple$3[1];
+			_r$1 = GenerateRectCollider(wx, wy, colliderWorldWidth, colliderWorldHeight, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync$2, "Player"); /* */ $s = 6; case 6: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+			playerCollider = _r$1;
+			((i$2 < 0 || i$2 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$2] = playerCollider);
+			$r = collisionSys.Add(new sliceType$11([playerCollider])); /* */ $s = 7; case 7: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+			if (currPlayerDownsync$2.InAir) {
+				if ((16 === currPlayerDownsync$2.CharacterState) && !((i$2 < 0 || i$2 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$2])) {
+					thatPlayerInNextFrame$1.VelX = thatPlayerInNextFrame$1.VelX + (0) >> 0;
+					thatPlayerInNextFrame$1.VelY = chConfig$1.WallSlidingVelY;
+				} else {
+					thatPlayerInNextFrame$1.VelX = thatPlayerInNextFrame$1.VelX + (0) >> 0;
+					thatPlayerInNextFrame$1.VelY = thatPlayerInNextFrame$1.VelY + (-50) >> 0;
+				}
+			}
+			_i$2++;
+		$s = 4; continue;
+		case 5:
+		bulletColliders = $makeSlice(sliceType$11, 0, currRenderFrame.MeleeBullets.$length);
+		_ref$4 = currRenderFrame.MeleeBullets;
+		_i$3 = 0;
+		/* while (true) { */ case 8:
+			/* if (!(_i$3 < _ref$4.$length)) { break; } */ if(!(_i$3 < _ref$4.$length)) { $s = 9; continue; }
+			meleeBullet = ((_i$3 < 0 || _i$3 >= _ref$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$4.$array[_ref$4.$offset + _i$3]);
+			/* */ if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) <= currRenderFrame.Id) && (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { $s = 10; continue; }
+			/* */ if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id) { $s = 11; continue; }
+			/* */ $s = 12; continue;
+			/* if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) <= currRenderFrame.Id) && (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { */ case 10:
+				offender = (x$4 = currRenderFrame.PlayersArr, x$5 = meleeBullet.Bullet.OffenderJoinIndex - 1 >> 0, ((x$5 < 0 || x$5 >= x$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + x$5]));
+				xfac$3 = 1;
+				if (0 > offender.DirX) {
+					xfac$3 = -xfac$3;
+				}
+				_tuple$4 = VirtualGridToWorldPos(offender.VirtualGridX + ($imul(xfac$3, meleeBullet.Bullet.HitboxOffsetX)) >> 0, offender.VirtualGridY);
+				bulletWx = _tuple$4[0];
+				bulletWy = _tuple$4[1];
+				_tuple$5 = VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY);
+				hitboxSizeWx = _tuple$5[0];
+				hitboxSizeWy = _tuple$5[1];
+				_r$2 = GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet"); /* */ $s = 13; case 13: if($c) { $c = false; _r$2 = _r$2.$blk(); } if (_r$2 && _r$2.$blk !== undefined) { break s; }
+				newBulletCollider = _r$2;
+				$r = collisionSys.Add(new sliceType$11([newBulletCollider])); /* */ $s = 14; case 14: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+				bulletColliders = $append(bulletColliders, newBulletCollider);
+				$s = 12; continue;
+			/* } else if (((meleeBullet.Bullet.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames >> 0) + meleeBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id) { */ case 11:
+				nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, meleeBullet);
+			/* } */ case 12:
+			_i$3++;
+		$s = 8; continue;
+		case 9:
+		_ref$5 = currRenderFrame.FireballBullets;
+		_i$4 = 0;
+		/* while (true) { */ case 15:
+			/* if (!(_i$4 < _ref$5.$length)) { break; } */ if(!(_i$4 < _ref$5.$length)) { $s = 16; continue; }
+			prevFireball = ((_i$4 < 0 || _i$4 >= _ref$5.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$5.$array[_ref$5.$offset + _i$4]);
+			fireballBullet = new FireballBullet.ptr(prevFireball.VirtualGridX, prevFireball.VirtualGridY, prevFireball.DirX, prevFireball.DirY, prevFireball.VelX, prevFireball.VelY, prevFireball.Speed, prevFireball.SpeciesId, prevFireball.Bullet);
+			/* */ if (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) < currRenderFrame.Id) && (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) + fireballBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { $s = 17; continue; }
+			/* */ if (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) + fireballBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id) { $s = 18; continue; }
+			/* */ $s = 19; continue;
+			/* if (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) < currRenderFrame.Id) && (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) + fireballBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id)) { */ case 17:
+				_tuple$6 = VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
+				bulletWx$1 = _tuple$6[0];
+				bulletWy$1 = _tuple$6[1];
+				_tuple$7 = VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY);
+				hitboxSizeWx$1 = _tuple$7[0];
+				hitboxSizeWy$1 = _tuple$7[1];
+				_r$3 = GenerateRectCollider(bulletWx$1, bulletWy$1, hitboxSizeWx$1, hitboxSizeWy$1, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet"); /* */ $s = 20; case 20: if($c) { $c = false; _r$3 = _r$3.$blk(); } if (_r$3 && _r$3.$blk !== undefined) { break s; }
+				newBulletCollider$1 = _r$3;
+				$r = collisionSys.Add(new sliceType$11([newBulletCollider$1])); /* */ $s = 21; case 21: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+				bulletColliders = $append(bulletColliders, newBulletCollider$1);
+				$s = 19; continue;
+			/* } else if (((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames >> 0) + fireballBullet.Bullet.ActiveFrames >> 0) > currRenderFrame.Id) { */ case 18:
+				nextRenderFrameFireballBullets = $append(nextRenderFrameFireballBullets, fireballBullet);
+			/* } */ case 19:
+			_i$4++;
+		$s = 15; continue;
+		case 16:
+		_ref$6 = currRenderFrame.PlayersArr;
+		_i$5 = 0;
+		/* while (true) { */ case 22:
+			/* if (!(_i$5 < _ref$6.$length)) { break; } */ if(!(_i$5 < _ref$6.$length)) { $s = 23; continue; }
+			i$3 = _i$5;
+			currPlayerDownsync$3 = ((_i$5 < 0 || _i$5 >= _ref$6.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$6.$array[_ref$6.$offset + _i$5]);
+			joinIndex$2 = currPlayerDownsync$3.JoinIndex;
+			playerCollider$1 = ((i$3 < 0 || i$3 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$3]);
+			playerShape = $assertType(playerCollider$1.Shape, ptrType$8);
+			thatPlayerInNextFrame$2 = ((i$3 < 0 || i$3 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$3]);
+			_r$4 = calcHardPushbacksNorms(joinIndex$2, currPlayerDownsync$3, thatPlayerInNextFrame$2, playerCollider$1, playerShape, 0.1, (x$6 = joinIndex$2 - 1 >> 0, ((x$6 < 0 || x$6 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$6]))); /* */ $s = 24; case 24: if($c) { $c = false; _r$4 = _r$4.$blk(); } if (_r$4 && _r$4.$blk !== undefined) { break s; }
+			(x$7 = joinIndex$2 - 1 >> 0, ((x$7 < 0 || x$7 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$7] = _r$4));
+			chConfig$2 = ((i$3 < 0 || i$3 >= chConfigsOrderedByJoinIndex.$length) ? ($throwRuntimeError("index out of range"), undefined) : chConfigsOrderedByJoinIndex.$array[chConfigsOrderedByJoinIndex.$offset + i$3]);
+			landedOnGravityPushback = false;
+			collision = playerCollider$1.Check(0, 0, new sliceType$4([]));
+			/* */ if (!(ptrType$4.nil === collision)) { $s = 25; continue; }
+			/* */ $s = 26; continue;
+			/* if (!(ptrType$4.nil === collision)) { */ case 25:
+				_ref$7 = collision.Objects;
+				_i$6 = 0;
+				/* while (true) { */ case 27:
+					/* if (!(_i$6 < _ref$7.$length)) { break; } */ if(!(_i$6 < _ref$7.$length)) { $s = 28; continue; }
+					obj = ((_i$6 < 0 || _i$6 >= _ref$7.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$7.$array[_ref$7.$offset + _i$6]);
+					_tmp$12 = false;
+					_tmp$13 = false;
+					_tmp$14 = false;
+					isBarrier = _tmp$12;
+					isAnotherPlayer = _tmp$13;
+					isBullet = _tmp$14;
+					_ref$8 = obj.Data;
+					if ($assertType(_ref$8, ptrType$6, true)[1]) {
+						isAnotherPlayer = true;
+					} else if ($assertType(_ref$8, ptrType$2, true)[1] || $assertType(_ref$8, ptrType$7, true)[1]) {
+						isBullet = true;
+					} else {
+						isBarrier = true;
+					}
+					if (isBullet) {
+						_i$6++;
+						/* continue; */ $s = 27; continue;
+					}
+					bShape = $assertType(obj.Shape, ptrType$8);
+					_r$5 = calcPushbacks(0, 0, playerShape, bShape); /* */ $s = 29; case 29: if($c) { $c = false; _r$5 = _r$5.$blk(); } if (_r$5 && _r$5.$blk !== undefined) { break s; }
+					_tuple$8 = _r$5;
+					overlapped = _tuple$8[0];
+					pushbackX = _tuple$8[1];
+					pushbackY = _tuple$8[2];
+					overlapResult = _tuple$8[3];
+					if (!overlapped) {
+						_i$6++;
+						/* continue; */ $s = 27; continue;
+					}
+					normAlignmentWithGravity = overlapResult.OverlapX * 0 + overlapResult.OverlapY * -1;
+					if (isAnotherPlayer) {
+						_tmp$15 = (overlapResult.Overlap - 0.2) * overlapResult.OverlapX;
+						_tmp$16 = (overlapResult.Overlap - 0.2) * overlapResult.OverlapY;
+						pushbackX = _tmp$15;
+						pushbackY = _tmp$16;
+					}
+					_ref$9 = (x$8 = joinIndex$2 - 1 >> 0, ((x$8 < 0 || x$8 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$8])).$get();
+					_i$7 = 0;
+					while (true) {
+						if (!(_i$7 < _ref$9.$length)) { break; }
+						hardPushbackNorm = $clone(((_i$7 < 0 || _i$7 >= _ref$9.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$9.$array[_ref$9.$offset + _i$7]), Vec2D);
+						projectedMagnitude = pushbackX * hardPushbackNorm.X + pushbackY * hardPushbackNorm.Y;
+						if (isBarrier || (isAnotherPlayer && 0 > projectedMagnitude)) {
+							pushbackX = pushbackX - (projectedMagnitude * hardPushbackNorm.X);
+							pushbackY = pushbackY - (projectedMagnitude * hardPushbackNorm.Y);
+						}
+						_i$7++;
+					}
+					_index = joinIndex$2 - 1 >> 0;
+					((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X = ((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X + (pushbackX);
+					_index$1 = joinIndex$2 - 1 >> 0;
+					((_index$1 < 0 || _index$1 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$1]).Y = ((_index$1 < 0 || _index$1 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$1]).Y + (pushbackY);
+					if (0.5 < normAlignmentWithGravity) {
+						landedOnGravityPushback = true;
+					}
+					_i$6++;
+				$s = 27; continue;
+				case 28:
+			/* } */ case 26:
+			if (landedOnGravityPushback) {
+				thatPlayerInNextFrame$2.InAir = false;
+				fallStopping = currPlayerDownsync$3.InAir && 0 >= currPlayerDownsync$3.VelY;
+				if (fallStopping) {
+					thatPlayerInNextFrame$2.VelY = 0;
+					thatPlayerInNextFrame$2.VelX = 0;
+					if (8 === thatPlayerInNextFrame$2.CharacterState) {
+						thatPlayerInNextFrame$2.CharacterState = 9;
+						thatPlayerInNextFrame$2.FramesToRecover = chConfig$2.LayDownFramesToRecover;
+					} else {
+						_2 = currPlayerDownsync$3.CharacterState;
+						if ((_2 === (8)) || (_2 === (4)) || (_2 === (5)) || (_2 === (16))) {
+							_tmp$17 = 0;
+							_tmp$18 = currPlayerDownsync$3.ColliderRadius;
+							halfColliderWidthDiff = _tmp$17;
+							halfColliderHeightDiff = _tmp$18;
+							_tuple$9 = VirtualGridToWorldPos(halfColliderWidthDiff, halfColliderHeightDiff);
+							halfColliderWorldHeightDiff = _tuple$9[1];
+							_index$2 = joinIndex$2 - 1 >> 0;
+							((_index$2 < 0 || _index$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$2]).Y = ((_index$2 < 0 || _index$2 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index$2]).Y - (halfColliderWorldHeightDiff);
+						}
+						thatPlayerInNextFrame$2.CharacterState = 0;
+						thatPlayerInNextFrame$2.FramesToRecover = 0;
+					}
+				} else {
+					_tuple$10 = (_entry$1 = nonAttackingSet[$Int32.keyFor(thatPlayerInNextFrame$2.CharacterState)], _entry$1 !== undefined ? [_entry$1.v, true] : [false, false]);
+					existent$1 = _tuple$10[1];
+					if (existent$1) {
+						if (9 === thatPlayerInNextFrame$2.CharacterState) {
+							if (0 === thatPlayerInNextFrame$2.FramesToRecover) {
+								thatPlayerInNextFrame$2.CharacterState = 10;
+								thatPlayerInNextFrame$2.FramesToRecover = chConfig$2.GetUpFramesToRecover;
+							}
+						} else if (10 === thatPlayerInNextFrame$2.CharacterState) {
+							if (0 === thatPlayerInNextFrame$2.FramesToRecover) {
+								thatPlayerInNextFrame$2.CharacterState = 0;
+								thatPlayerInNextFrame$2.FramesInvinsible = chConfig$2.GetUpInvinsibleFrames;
+							}
+						}
+					}
+				}
+			}
+			if (chConfig$2.OnWallEnabled) {
+				if (thatPlayerInNextFrame$2.InAir) {
+					_tuple$11 = (_entry$2 = noOpSet[$Int32.keyFor(currPlayerDownsync$3.CharacterState)], _entry$2 !== undefined ? [_entry$2.v, true] : [false, false]);
+					existent$2 = _tuple$11[1];
+					if (!existent$2) {
+						_ref$10 = (x$9 = joinIndex$2 - 1 >> 0, ((x$9 < 0 || x$9 >= hardPushbackNorms.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNorms.$array[hardPushbackNorms.$offset + x$9])).$get();
+						_i$8 = 0;
+						while (true) {
+							if (!(_i$8 < _ref$10.$length)) { break; }
+							hardPushbackNorm$1 = $clone(((_i$8 < 0 || _i$8 >= _ref$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$10.$array[_ref$10.$offset + _i$8]), Vec2D);
+							normAlignmentWithHorizon1 = hardPushbackNorm$1.X * 1 + hardPushbackNorm$1.Y * 0;
+							normAlignmentWithHorizon2 = hardPushbackNorm$1.X * -1 + hardPushbackNorm$1.Y * 0;
+							if (0.9 < normAlignmentWithHorizon1) {
+								thatPlayerInNextFrame$2.OnWall = true;
+								_tmp$19 = ((hardPushbackNorm$1.X >> 0));
+								_tmp$20 = ((hardPushbackNorm$1.Y >> 0));
+								thatPlayerInNextFrame$2.OnWallNormX = _tmp$19;
+								thatPlayerInNextFrame$2.OnWallNormY = _tmp$20;
+								break;
+							}
+							if (0.9 < normAlignmentWithHorizon2) {
+								thatPlayerInNextFrame$2.OnWall = true;
+								_tmp$21 = ((hardPushbackNorm$1.X >> 0));
+								_tmp$22 = ((hardPushbackNorm$1.Y >> 0));
+								thatPlayerInNextFrame$2.OnWallNormX = _tmp$21;
+								thatPlayerInNextFrame$2.OnWallNormY = _tmp$22;
+								break;
+							}
+							_i$8++;
+						}
+						if (!currPlayerDownsync$3.OnWall && thatPlayerInNextFrame$2.OnWall) {
+							thatPlayerInNextFrame$2.VelY = 0;
+						}
+					}
+				}
+				if (!thatPlayerInNextFrame$2.OnWall) {
+					_tmp$23 = 0;
+					_tmp$24 = 0;
+					thatPlayerInNextFrame$2.OnWallNormX = _tmp$23;
+					thatPlayerInNextFrame$2.OnWallNormY = _tmp$24;
+				}
+			}
+			_i$5++;
+		$s = 22; continue;
+		case 23:
+		_ref$11 = bulletColliders;
+		_i$9 = 0;
+		/* while (true) { */ case 30:
+			/* if (!(_i$9 < _ref$11.$length)) { break; } */ if(!(_i$9 < _ref$11.$length)) { $s = 31; continue; }
+			bulletCollider = ((_i$9 < 0 || _i$9 >= _ref$11.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$11.$array[_ref$11.$offset + _i$9]);
+			collision$1 = bulletCollider.Check(0, 0, new sliceType$4([]));
+			bulletCollider.Space.Remove(new sliceType$11([bulletCollider]));
+			addToNextRenderFrame = true;
+			/* */ if (!(ptrType$4.nil === collision$1)) { $s = 32; continue; }
+			/* */ $s = 33; continue;
+			/* if (!(ptrType$4.nil === collision$1)) { */ case 32:
+				_ref$12 = bulletCollider.Data;
+				/* */ if ($assertType(_ref$12, ptrType$2, true)[1]) { $s = 34; continue; }
+				/* */ if ($assertType(_ref$12, ptrType$7, true)[1]) { $s = 35; continue; }
+				/* */ $s = 36; continue;
+				/* if ($assertType(_ref$12, ptrType$2, true)[1]) { */ case 34:
+					v$2 = _ref$12.$val;
+					bulletShape = $assertType(bulletCollider.Shape, ptrType$8);
+					offender$1 = (x$10 = currRenderFrame.PlayersArr, x$11 = v$2.Bullet.OffenderJoinIndex - 1 >> 0, ((x$11 < 0 || x$11 >= x$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + x$11]));
+					_ref$13 = collision$1.Objects;
+					_i$10 = 0;
+					/* while (true) { */ case 37:
+						/* if (!(_i$10 < _ref$13.$length)) { break; } */ if(!(_i$10 < _ref$13.$length)) { $s = 38; continue; }
+						obj$1 = ((_i$10 < 0 || _i$10 >= _ref$13.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$13.$array[_ref$13.$offset + _i$10]);
+						defenderShape = $assertType(obj$1.Shape, ptrType$8);
+						_ref$14 = obj$1.Data;
+						/* */ if ($assertType(_ref$14, ptrType$6, true)[1]) { $s = 39; continue; }
+						/* */ $s = 40; continue;
+						/* if ($assertType(_ref$14, ptrType$6, true)[1]) { */ case 39:
+							t = _ref$14.$val;
+							if (v$2.Bullet.OffenderJoinIndex === t.JoinIndex) {
+								_i$10++;
+								/* continue; */ $s = 37; continue;
+							}
+							_r$6 = calcPushbacks(0, 0, bulletShape, defenderShape); /* */ $s = 42; case 42: if($c) { $c = false; _r$6 = _r$6.$blk(); } if (_r$6 && _r$6.$blk !== undefined) { break s; }
+							_tuple$12 = _r$6;
+							overlapped$1 = _tuple$12[0];
+							if (!overlapped$1) {
+								_i$10++;
+								/* continue; */ $s = 37; continue;
+							}
+							addToNextRenderFrame = false;
+							_tuple$13 = (_entry$3 = invinsibleSet[$Int32.keyFor(t.CharacterState)], _entry$3 !== undefined ? [_entry$3.v, true] : [false, false]);
+							existent$3 = _tuple$13[1];
+							if (existent$3) {
+								_i$10++;
+								/* continue; */ $s = 37; continue;
+							}
+							if (0 < t.FramesInvinsible) {
+								_i$10++;
+								/* continue; */ $s = 37; continue;
+							}
+							xfac$4 = 1;
+							if (0 > offender$1.DirX) {
+								xfac$4 = -xfac$4;
+							}
+							_tmp$25 = $imul(xfac$4, v$2.Bullet.PushbackVelX);
+							_tmp$26 = v$2.Bullet.PushbackVelY;
+							pushbackVelX = _tmp$25;
+							pushbackVelY = _tmp$26;
+							atkedPlayerInNextFrame = (x$12 = t.JoinIndex - 1 >> 0, ((x$12 < 0 || x$12 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$12]));
+							atkedPlayerInNextFrame.VelX = pushbackVelX;
+							atkedPlayerInNextFrame.VelY = pushbackVelY;
+							if (v$2.Bullet.BlowUp) {
+								atkedPlayerInNextFrame.CharacterState = 8;
+							} else {
+								atkedPlayerInNextFrame.CharacterState = 3;
+							}
+							oldFramesToRecover = (x$13 = t.JoinIndex - 1 >> 0, ((x$13 < 0 || x$13 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$13])).FramesToRecover;
+							if (v$2.Bullet.HitStunFrames > oldFramesToRecover) {
+								atkedPlayerInNextFrame.FramesToRecover = v$2.Bullet.HitStunFrames;
+							}
+							$s = 41; continue;
+						/* } else { */ case 40:
+							t$1 = _ref$14;
+							addToNextRenderFrame = false;
+						/* } */ case 41:
+						_i$10++;
+					$s = 37; continue;
+					case 38:
+					$s = 36; continue;
+				/* } else if ($assertType(_ref$12, ptrType$7, true)[1]) { */ case 35:
+					v$3 = _ref$12.$val;
+					bulletShape$1 = $assertType(bulletCollider.Shape, ptrType$8);
+					offender$2 = (x$14 = currRenderFrame.PlayersArr, x$15 = v$3.Bullet.OffenderJoinIndex - 1 >> 0, ((x$15 < 0 || x$15 >= x$14.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$14.$array[x$14.$offset + x$15]));
+					_ref$15 = collision$1.Objects;
+					_i$11 = 0;
+					/* while (true) { */ case 43:
+						/* if (!(_i$11 < _ref$15.$length)) { break; } */ if(!(_i$11 < _ref$15.$length)) { $s = 44; continue; }
+						obj$2 = ((_i$11 < 0 || _i$11 >= _ref$15.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$15.$array[_ref$15.$offset + _i$11]);
+						defenderShape$1 = $assertType(obj$2.Shape, ptrType$8);
+						_ref$16 = obj$2.Data;
+						/* */ if ($assertType(_ref$16, ptrType$6, true)[1]) { $s = 45; continue; }
+						/* */ $s = 46; continue;
+						/* if ($assertType(_ref$16, ptrType$6, true)[1]) { */ case 45:
+							t$2 = _ref$16.$val;
+							if (v$3.Bullet.OffenderJoinIndex === t$2.JoinIndex) {
+								_i$11++;
+								/* continue; */ $s = 43; continue;
+							}
+							_r$7 = calcPushbacks(0, 0, bulletShape$1, defenderShape$1); /* */ $s = 48; case 48: if($c) { $c = false; _r$7 = _r$7.$blk(); } if (_r$7 && _r$7.$blk !== undefined) { break s; }
+							_tuple$14 = _r$7;
+							overlapped$2 = _tuple$14[0];
+							if (!overlapped$2) {
+								_i$11++;
+								/* continue; */ $s = 43; continue;
+							}
+							addToNextRenderFrame = false;
+							_tuple$15 = (_entry$4 = invinsibleSet[$Int32.keyFor(t$2.CharacterState)], _entry$4 !== undefined ? [_entry$4.v, true] : [false, false]);
+							existent$4 = _tuple$15[1];
+							if (existent$4) {
+								_i$11++;
+								/* continue; */ $s = 43; continue;
+							}
+							if (0 < t$2.FramesInvinsible) {
+								_i$11++;
+								/* continue; */ $s = 43; continue;
+							}
+							xfac$5 = 1;
+							if (0 > offender$2.DirX) {
+								xfac$5 = -xfac$5;
+							}
+							_tmp$27 = $imul(xfac$5, v$3.Bullet.PushbackVelX);
+							_tmp$28 = v$3.Bullet.PushbackVelY;
+							pushbackVelX$1 = _tmp$27;
+							pushbackVelY$1 = _tmp$28;
+							atkedPlayerInNextFrame$1 = (x$16 = t$2.JoinIndex - 1 >> 0, ((x$16 < 0 || x$16 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$16]));
+							atkedPlayerInNextFrame$1.VelX = pushbackVelX$1;
+							atkedPlayerInNextFrame$1.VelY = pushbackVelY$1;
+							if (v$3.Bullet.BlowUp) {
+								atkedPlayerInNextFrame$1.CharacterState = 8;
+							} else {
+								atkedPlayerInNextFrame$1.CharacterState = 3;
+							}
+							oldFramesToRecover$1 = (x$17 = t$2.JoinIndex - 1 >> 0, ((x$17 < 0 || x$17 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + x$17])).FramesToRecover;
+							if (v$3.Bullet.HitStunFrames > oldFramesToRecover$1) {
+								atkedPlayerInNextFrame$1.FramesToRecover = v$3.Bullet.HitStunFrames;
+							}
+							$s = 47; continue;
+						/* } else { */ case 46:
+							t$3 = _ref$16;
+							addToNextRenderFrame = false;
+						/* } */ case 47:
+						_i$11++;
+					$s = 43; continue;
+					case 44:
+				/* } */ case 36:
+			/* } */ case 33:
+			if (addToNextRenderFrame) {
+				_ref$17 = bulletCollider.Data;
+				if ($assertType(_ref$17, ptrType$2, true)[1]) {
+					v$4 = _ref$17.$val;
+					nextRenderFrameMeleeBullets = $append(nextRenderFrameMeleeBullets, v$4);
+				} else if ($assertType(_ref$17, ptrType$7, true)[1]) {
+					v$5 = _ref$17.$val;
+					_tmp$29 = v$5.VirtualGridX + v$5.VelX >> 0;
+					_tmp$30 = v$5.VirtualGridY + v$5.VelY >> 0;
+					v$5.VirtualGridX = _tmp$29;
+					v$5.VirtualGridY = _tmp$30;
+					nextRenderFrameFireballBullets = $append(nextRenderFrameFireballBullets, v$5);
+				}
+			}
+			_i$9++;
+		$s = 30; continue;
+		case 31:
+		_ref$18 = currRenderFrame.PlayersArr;
+		_i$12 = 0;
+		while (true) {
+			if (!(_i$12 < _ref$18.$length)) { break; }
+			i$4 = _i$12;
+			currPlayerDownsync$4 = ((_i$12 < 0 || _i$12 >= _ref$18.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$18.$array[_ref$18.$offset + _i$12]);
+			joinIndex$3 = currPlayerDownsync$4.JoinIndex;
+			playerCollider$2 = ((i$4 < 0 || i$4 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$4]);
+			thatPlayerInNextFrame$3 = ((i$4 < 0 || i$4 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$4]);
+			_tuple$16 = PolygonColliderBLToVirtualGridPos(playerCollider$2.X - (x$18 = joinIndex$3 - 1 >> 0, ((x$18 < 0 || x$18 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$18])).X, playerCollider$2.Y - (x$19 = joinIndex$3 - 1 >> 0, ((x$19 < 0 || x$19 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$19])).Y, playerCollider$2.W * 0.5, playerCollider$2.H * 0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY);
+			thatPlayerInNextFrame$3.VirtualGridX = _tuple$16[0];
+			thatPlayerInNextFrame$3.VirtualGridY = _tuple$16[1];
+			if (thatPlayerInNextFrame$3.InAir) {
+				oldNextCharacterState = thatPlayerInNextFrame$3.CharacterState;
+				_3 = oldNextCharacterState;
+				if ((_3 === (0)) || (_3 === (1))) {
+					if (thatPlayerInNextFrame$3.OnWall) {
+						thatPlayerInNextFrame$3.CharacterState = 16;
+					} else if (((i$4 < 0 || i$4 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$4]) || (5 === currPlayerDownsync$4.CharacterState)) {
+						thatPlayerInNextFrame$3.CharacterState = 5;
+					} else {
+						thatPlayerInNextFrame$3.CharacterState = 4;
+					}
+				} else if (_3 === (2)) {
+					thatPlayerInNextFrame$3.CharacterState = 6;
+				} else if (_3 === (3)) {
+					thatPlayerInNextFrame$3.CharacterState = 7;
+				}
+			}
+			if (!((thatPlayerInNextFrame$3.CharacterState === currPlayerDownsync$4.CharacterState))) {
+				thatPlayerInNextFrame$3.FramesInChState = 0;
+			}
+			_tuple$17 = (_entry$5 = nonAttackingSet[$Int32.keyFor(thatPlayerInNextFrame$3.CharacterState)], _entry$5 !== undefined ? [_entry$5.v, true] : [false, false]);
+			existent$5 = _tuple$17[1];
+			if (existent$5) {
+				thatPlayerInNextFrame$3.ActiveSkillId = -1;
+				thatPlayerInNextFrame$3.ActiveSkillHit = -1;
+			}
+			_i$12++;
+		}
+		_ref$19 = playerColliders;
+		_i$13 = 0;
+		while (true) {
+			if (!(_i$13 < _ref$19.$length)) { break; }
+			playerCollider$3 = ((_i$13 < 0 || _i$13 >= _ref$19.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$19.$array[_ref$19.$offset + _i$13]);
+			playerCollider$3.Space.Remove(new sliceType$11([playerCollider$3]));
+			_i$13++;
+		}
+		$s = -1; return new RoomDownsyncFrame.ptr(currRenderFrame.Id + 1 >> 0, nextRenderFramePlayers, new $Int64(0, 0), nextRenderFrameMeleeBullets, nextRenderFrameFireballBullets, new $Uint64(0, 0), false, bulletLocalId);
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _2, _3, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _i, _i$1, _i$10, _i$11, _i$12, _i$13, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _i$9, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _r$6, _r$7, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$14, _ref$15, _ref$16, _ref$17, _ref$18, _ref$19, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$29, _tmp$3, _tmp$30, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, addToNextRenderFrame, atkedPlayerInNextFrame, atkedPlayerInNextFrame$1, bShape, bulletCollider, bulletColliders, bulletLocalId, bulletShape, bulletShape$1, bulletWx, bulletWx$1, bulletWy, bulletWy$1, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collision$1, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, defenderShape, defenderShape$1, effDx, effDy, effPushbacks, existent, existent$1, existent$2, existent$3, existent$4, existent$5, fallStopping, fireballBullet, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNorms, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, newBullet, newBullet$1, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, obj$2, offender, offender$1, offender$2, oldFramesToRecover, oldFramesToRecover$1, oldNextCharacterState, overlapResult, overlapped, overlapped$1, overlapped$2, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, prevFireball, projectedMagnitude, pushbackVelX, pushbackVelX$1, pushbackVelY, pushbackVelY$1, pushbackX, pushbackY, roomCapacity, skillConfig, skillId, t, t$1, t$2, t$3, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, xfac$5, $s};return $f;
+	};
+	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame;
+	GenerateRectCollider = function(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag) {
+		var {$24r, _r, _tuple, blX, blY, bottomPadding, data, h, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, tag, topPadding, w, wx, wy, $s, $r, $c} = $restore(this, {wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_tuple = WorldToPolygonColliderBLPos(wx, wy, w * 0.5, h * 0.5, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY);
+		blX = _tuple[0];
+		blY = _tuple[1];
+		_r = generateRectColliderInCollisionSpace(blX, blY, leftPadding + w + rightPadding, bottomPadding + h + topPadding, data, tag); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: GenerateRectCollider, $c: true, $r, $24r, _r, _tuple, blX, blY, bottomPadding, data, h, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, tag, topPadding, w, wx, wy, $s};return $f;
+	};
+	$pkg.GenerateRectCollider = GenerateRectCollider;
+	generateRectColliderInCollisionSpace = function(blX, blY, w, h, data, tag) {
+		var {blX, blY, collider, data, h, shape, tag, w, $s, $r, $c} = $restore(this, {blX, blY, w, h, data, tag});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		collider = resolv.NewObject(blX, blY, w, h, new sliceType$4([tag]));
+		shape = resolv.NewRectangle(0, 0, w, h);
+		$r = collider.SetShape(shape); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		collider.Data = data;
+		$s = -1; return collider;
+		/* */ } return; } var $f = {$blk: generateRectColliderInCollisionSpace, $c: true, $r, blX, blY, collider, data, h, shape, tag, w, $s};return $f;
+	};
+	GenerateConvexPolygonCollider = function(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag) {
+		var {_i, _i$1, _ref, _ref$1, _tmp, _tmp$1, aligned, collider, data, h, i, i$1, j, p, pi, pj, shape, spaceOffsetX, spaceOffsetY, tag, unalignedSrc, w, x, $s, $r, $c} = $restore(this, {unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		aligned = AlignPolygon2DToBoundingBox(unalignedSrc);
+		_tmp = 0;
+		_tmp$1 = 0;
+		w = _tmp;
+		h = _tmp$1;
+		shape = resolv.NewConvexPolygon(sliceType$12.nil);
+		_ref = aligned.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			i = _i;
+			pi = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_ref$1 = aligned.Points;
+			_i$1 = 0;
+			while (true) {
+				if (!(_i$1 < _ref$1.$length)) { break; }
+				j = _i$1;
+				pj = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+				if (i === j) {
+					_i$1++;
+					continue;
+				}
+				if (math.Abs(pj.X - pi.X) > w) {
+					w = math.Abs(pj.X - pi.X);
+				}
+				if (math.Abs(pj.Y - pi.Y) > h) {
+					h = math.Abs(pj.Y - pi.Y);
+				}
+				_i$1++;
+			}
+			_i++;
+		}
+		i$1 = 0;
+		while (true) {
+			if (!(i$1 < aligned.Points.$length)) { break; }
+			p = (x = aligned.Points, ((i$1 < 0 || i$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + i$1]));
+			shape.AddPoints(new sliceType$12([p.X, p.Y]));
+			i$1 = i$1 + (1) >> 0;
+		}
+		collider = resolv.NewObject(aligned.Anchor.X + spaceOffsetX, aligned.Anchor.Y + spaceOffsetY, w, h, new sliceType$4([tag]));
+		$r = collider.SetShape(shape); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		collider.Data = data;
+		$s = -1; return collider;
+		/* */ } return; } var $f = {$blk: GenerateConvexPolygonCollider, $c: true, $r, _i, _i$1, _ref, _ref$1, _tmp, _tmp$1, aligned, collider, data, h, i, i$1, j, p, pi, pj, shape, spaceOffsetX, spaceOffsetY, tag, unalignedSrc, w, x, $s};return $f;
+	};
+	$pkg.GenerateConvexPolygonCollider = GenerateConvexPolygonCollider;
+	AlignPolygon2DToBoundingBox = function(input) {
+		var _i, _i$1, _ref, _ref$1, boundingBoxBL, i, input, output, p, p$1, x;
+		boundingBoxBL = new Vec2D.ptr(1.7e+308, 1.7e+308);
+		_ref = input.Points;
+		_i = 0;
+		while (true) {
+			if (!(_i < _ref.$length)) { break; }
+			p = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (p.X < boundingBoxBL.X) {
+				boundingBoxBL.X = p.X;
+			}
+			if (p.Y < boundingBoxBL.Y) {
+				boundingBoxBL.Y = p.Y;
+			}
+			_i++;
+		}
+		output = new Polygon2D.ptr(new Vec2D.ptr(input.Anchor.X + boundingBoxBL.X, input.Anchor.Y + boundingBoxBL.Y), $makeSlice(sliceType$13, input.Points.$length));
+		_ref$1 = input.Points;
+		_i$1 = 0;
+		while (true) {
+			if (!(_i$1 < _ref$1.$length)) { break; }
+			i = _i$1;
+			p$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+			(x = output.Points, ((i < 0 || i >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + i] = new Vec2D.ptr(p$1.X - boundingBoxBL.X, p$1.Y - boundingBoxBL.Y)));
+			_i$1++;
+		}
+		return output;
+	};
+	$pkg.AlignPolygon2DToBoundingBox = AlignPolygon2DToBoundingBox;
+	NewMeleeBullet = function(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId) {
+		var activeFrames, blockStunFrames, blowUp, bulletLocalId, cancellableEdFrame, cancellableStFrame, damage, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, startupFrames, teamId;
+		return new MeleeBullet.ptr(new BulletConfig.ptr(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, false, teamId));
+	};
+	$pkg.NewMeleeBullet = NewMeleeBullet;
+	NewFireballBullet = function(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId) {
+		var activeFrames, blockStunFrames, blowUp, bulletLocalId, cancellableEdFrame, cancellableStFrame, damage, dirX, dirY, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, speciesId, speed, startupFrames, teamId, velX, velY, virtualGridX, virtualGridY;
+		return new FireballBullet.ptr(virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId, new BulletConfig.ptr(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, false, teamId));
+	};
+	$pkg.NewFireballBullet = NewFireballBullet;
+	ptrType$13.methods = [{prop: "Put", name: "Put", pkg: "", typ: $funcType([$emptyInterface], [], false)}, {prop: "Pop", name: "Pop", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetArrIdxByOffset", name: "GetArrIdxByOffset", pkg: "", typ: $funcType([$Int32], [$Int32], false)}, {prop: "GetByOffset", name: "GetByOffset", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "GetByFrameId", name: "GetByFrameId", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "SetByFrameId", name: "SetByFrameId", pkg: "", typ: $funcType([$emptyInterface, $Int32], [$Int32, $Int32, $Int32], false)}];
+	Vec2D.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
+	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$11, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$13, tag: ""}]);
+	PlayerDownsync.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleState", name: "BattleState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JoinIndex", name: "JoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ColliderRadius", name: "ColliderRadius", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Removed", name: "Removed", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Score", name: "Score", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LastMoveGmtMillis", name: "LastMoveGmtMillis", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesToRecover", name: "FramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInChState", name: "FramesInChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hp", name: "Hp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "MaxHp", name: "MaxHp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CharacterState", name: "CharacterState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InAir", name: "InAir", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "OnWall", name: "OnWall", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "OnWallNormX", name: "OnWallNormX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OnWallNormY", name: "OnWallNormY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveSkillId", name: "ActiveSkillId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveSkillHit", name: "ActiveSkillHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInvinsible", name: "FramesInvinsible", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BulletTeamId", name: "BulletTeamId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ChCollisionTeamId", name: "ChCollisionTeamId", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	InputFrameDecoded.init("", [{prop: "Dx", name: "Dx", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Dy", name: "Dy", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnALevel", name: "BtnALevel", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnBLevel", name: "BtnBLevel", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	Barrier.init("", [{prop: "Boundary", name: "Boundary", embedded: false, exported: true, typ: ptrType$12, tag: ""}]);
+	BulletConfig.init("", [{prop: "BulletLocalId", name: "BulletLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OriginatedRenderFrameId", name: "OriginatedRenderFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OffenderJoinIndex", name: "OffenderJoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StartupFrames", name: "StartupFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableStFrame", name: "CancellableStFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CancellableEdFrame", name: "CancellableEdFrame", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveFrames", name: "ActiveFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitStunFrames", name: "HitStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlockStunFrames", name: "BlockStunFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelX", name: "PushbackVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PushbackVelY", name: "PushbackVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Damage", name: "Damage", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelX", name: "SelfLockVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SelfLockVelY", name: "SelfLockVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetX", name: "HitboxOffsetX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxOffsetY", name: "HitboxOffsetY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeX", name: "HitboxSizeX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "HitboxSizeY", name: "HitboxSizeY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlowUp", name: "BlowUp", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "CancelTransit", name: "CancelTransit", embedded: false, exported: true, typ: mapType, tag: ""}, {prop: "TeamId", name: "TeamId", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	MeleeBullet.init("", [{prop: "Bullet", name: "Bullet", embedded: false, exported: true, typ: ptrType, tag: ""}]);
+	FireballBullet.init("", [{prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: false, exported: true, typ: ptrType, tag: ""}]);
+	Skill.init("", [{prop: "BattleLocalId", name: "BattleLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFrames", name: "RecoveryFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnBlock", name: "RecoveryFramesOnBlock", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnHit", name: "RecoveryFramesOnHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ReleaseTriggerType", name: "ReleaseTriggerType", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BoundChState", name: "BoundChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hits", name: "Hits", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
+	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$6, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$8, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BulletLocalIdCounter", name: "BulletLocalIdCounter", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$5, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
+	NpcPatrolCue.init("", [{prop: "FlAct", name: "FlAct", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "FrAct", name: "FrAct", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
+	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
+	SkillMapperType.init([$Int, ptrType$6], [$Int], false);
+	CharacterConfig.init("", [{prop: "SpeciesId", name: "SpeciesId", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "SpeciesName", name: "SpeciesName", embedded: false, exported: true, typ: $String, tag: ""}, {prop: "InAirIdleFrameIdxTurningPoint", name: "InAirIdleFrameIdxTurningPoint", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "InAirIdleFrameIdxTurnedCycle", name: "InAirIdleFrameIdxTurnedCycle", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "LayDownFrames", name: "LayDownFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LayDownFramesToRecover", name: "LayDownFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpInvinsibleFrames", name: "GetUpInvinsibleFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "GetUpFramesToRecover", name: "GetUpFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JumpingInitVelY", name: "JumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DashingEnabled", name: "DashingEnabled", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "OnWallEnabled", name: "OnWallEnabled", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "WallJumpingFramesToRecover", name: "WallJumpingFramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "WallJumpingInitVelX", name: "WallJumpingInitVelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "WallJumpingInitVelY", name: "WallJumpingInitVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "WallSlidingVelY", name: "WallSlidingVelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "SkillMapper", name: "SkillMapper", embedded: false, exported: true, typ: SkillMapperType, tag: ""}]);
+	SatResult.init("", [{prop: "Overlap", name: "Overlap", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapX", name: "OverlapX", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "OverlapY", name: "OverlapY", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "AContainedInB", name: "AContainedInB", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BContainedInA", name: "BContainedInA", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Axis", name: "Axis", embedded: false, exported: true, typ: resolv.Vector, tag: ""}]);
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		$r = math.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		$r = resolv.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		$pkg.DIRECTION_DECODER = new sliceType$1([new sliceType([0, 0]), new sliceType([0, 2]), new sliceType([0, -2]), new sliceType([2, 0]), new sliceType([-2, 0]), new sliceType([1, 1]), new sliceType([-1, -1]), new sliceType([1, -1]), new sliceType([-1, 1])]);
+		skills = $makeMap($Int.keyFor, [{ k: 1, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 5, -1, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 2 }]), 0))])) }, { k: 2, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 10, -1, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 3 }]), 0))])) }, { k: 3, v: new Skill.ptr(0, 50, 50, 50, 1, 12, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 8, 0, 0, 30, 999999999, 9, 200, 700, 10, 50, 500, 1600, 800, 3200, 3200, true, false, 0))])) }, { k: 4, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, 5, -1, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 5 }]), 0))])) }, { k: 5, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 10, -1, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 6 }]), 0))])) }, { k: 6, v: new Skill.ptr(0, 45, 45, 45, 1, 12, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 8, 0, 0, 28, 999999999, 9, 200, 300, 10, -1, -1, 2400, 0, 3200, 3200, true, false, 0))])) }, { k: 7, v: new Skill.ptr(0, 30, 30, 30, 1, 2, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 7, 13, 30, 22, 13, 9, 50, 0, 5, -1, -1, 1200, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 8 }]), 0))])) }, { k: 8, v: new Skill.ptr(0, 36, 36, 36, 1, 11, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 18, 22, 36, 18, 18, 9, 50, 0, 5, 10, -1, 1800, 0, 2400, 3200, false, $makeMap($Int.keyFor, [{ k: 1, v: 9 }]), 0))])) }, { k: 9, v: new Skill.ptr(0, 40, 40, 40, 1, 12, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 7, 0, 0, 30, 999999999, 9, 200, 400, 10, 100, -1, 1000, 0, 3200, 3200, true, false, 0))])) }, { k: 10, v: new Skill.ptr(0, 40, 40, 40, 1, 13, new sliceType$2([new FireballBullet.ptr(0, 0, 0, 0, 0, 0, 500, 1, new BulletConfig.ptr(0, 0, 0, 15, 0, 0, 999999999, 15, 9, 200, 0, 20, -1, -1, 1800, 500, 4800, 3200, false, false, 0))])) }, { k: 11, v: new Skill.ptr(0, 60, 60, 60, 1, 14, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 3, 0, 0, 25, 999999999, 9, 200, 700, 30, 100, 800, 800, 0, 4000, 6400, true, false, 0))])) }, { k: 255, v: new Skill.ptr(0, 30, 30, 30, 1, 6, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, -1, -1, 1200, 0, 3200, 2400, false, false, 0))])) }, { k: 256, v: new Skill.ptr(0, 20, 20, 20, 1, 6, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 3, 0, 0, 10, 15, 9, 50, 0, 5, -1, -1, 1200, 0, 3200, 2400, false, false, 0))])) }, { k: 257, v: new Skill.ptr(0, 30, 30, 30, 1, 6, new sliceType$2([new MeleeBullet.ptr(new BulletConfig.ptr(0, 0, 0, 3, 0, 0, 20, 18, 9, 50, 0, 5, -1, -1, 1200, 0, 3200, 2400, false, false, 0))])) }]);
+		$pkg.Characters = $makeMap($Int.keyFor, [{ k: 0, v: new CharacterConfig.ptr(0, "MonkGirl", 11, 1, 16, 16, 10, 27, 300, 800, false, false, 0, 0, 0, 0, (function(patternId, currPlayerDownsync) {
+			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
+			if (1 === patternId) {
+				if (0 === currPlayerDownsync.FramesToRecover) {
+					if (currPlayerDownsync.InAir) {
+						return 255;
+					} else {
+						return 1;
+					}
+				} else {
+					_tuple = (_entry = skills[$Int.keyFor(((currPlayerDownsync.ActiveSkillId >> 0)))], _entry !== undefined ? [_entry.v, true] : [ptrType$1.nil, false]);
+					skillConfig = _tuple[0];
+					existent1 = _tuple[1];
+					if (existent1) {
+						_ref = (x = skillConfig.Hits, x$1 = currPlayerDownsync.ActiveSkillHit, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]));
+						if ($assertType(_ref, ptrType$2, true)[1]) {
+							v = _ref.$val;
+							if (v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame) {
+								_tuple$1 = (_entry$1 = v.Bullet.CancelTransit[$Int.keyFor(patternId)], _entry$1 !== undefined ? [_entry$1.v, true] : [0, false]);
+								nextSkillId = _tuple$1[0];
+								existent2 = _tuple$1[1];
+								if (existent2) {
+									return nextSkillId;
+								}
+							}
+						}
+					}
+				}
+			}
+			return -1;
+		})) }, { k: 1, v: new CharacterConfig.ptr(1, "KnifeGirl", 9, 1, 16, 16, 10, 27, 400, 750, true, true, 9, 250, 700, -100, (function(patternId, currPlayerDownsync) {
+			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
+			if (1 === patternId) {
+				if (0 === currPlayerDownsync.FramesToRecover) {
+					if (currPlayerDownsync.InAir) {
+						return 256;
+					} else {
+						return 4;
+					}
+				} else {
+					_tuple = (_entry = skills[$Int.keyFor(((currPlayerDownsync.ActiveSkillId >> 0)))], _entry !== undefined ? [_entry.v, true] : [ptrType$1.nil, false]);
+					skillConfig = _tuple[0];
+					existent1 = _tuple[1];
+					if (existent1) {
+						_ref = (x = skillConfig.Hits, x$1 = currPlayerDownsync.ActiveSkillHit, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]));
+						if ($assertType(_ref, ptrType$2, true)[1]) {
+							v = _ref.$val;
+							if (v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame) {
+								_tuple$1 = (_entry$1 = v.Bullet.CancelTransit[$Int.keyFor(patternId)], _entry$1 !== undefined ? [_entry$1.v, true] : [0, false]);
+								nextSkillId = _tuple$1[0];
+								existent2 = _tuple$1[1];
+								if (existent2) {
+									return nextSkillId;
+								}
+							}
+						}
+					}
+				}
+			}
+			return -1;
+		})) }, { k: 4096, v: new CharacterConfig.ptr(4096, "Monk", 42, 2, 14, 14, 8, 30, 300, 750, false, false, 0, 0, 0, 0, (function(patternId, currPlayerDownsync) {
+			var _entry, _entry$1, _ref, _tuple, _tuple$1, currPlayerDownsync, existent1, existent2, nextSkillId, patternId, skillConfig, v, x, x$1;
+			if (1 === patternId) {
+				if (0 === currPlayerDownsync.FramesToRecover) {
+					if (currPlayerDownsync.InAir) {
+						return 257;
+					} else {
+						return 7;
+					}
+				} else {
+					_tuple = (_entry = skills[$Int.keyFor(((currPlayerDownsync.ActiveSkillId >> 0)))], _entry !== undefined ? [_entry.v, true] : [ptrType$1.nil, false]);
+					skillConfig = _tuple[0];
+					existent1 = _tuple[1];
+					if (existent1) {
+						_ref = (x = skillConfig.Hits, x$1 = currPlayerDownsync.ActiveSkillHit, ((x$1 < 0 || x$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + x$1]));
+						if ($assertType(_ref, ptrType$2, true)[1]) {
+							v = _ref.$val;
+							if (v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame) {
+								_tuple$1 = (_entry$1 = v.Bullet.CancelTransit[$Int.keyFor(patternId)], _entry$1 !== undefined ? [_entry$1.v, true] : [0, false]);
+								nextSkillId = _tuple$1[0];
+								existent2 = _tuple$1[1];
+								if (existent2) {
+									return nextSkillId;
+								}
+							}
+						}
+					}
+				}
+			} else if (2 === patternId) {
+				if (!currPlayerDownsync.InAir) {
+					return 11;
+				}
+			} else if (3 === patternId) {
+				if (!currPlayerDownsync.InAir) {
+					return 10;
+				}
+			}
+			return -1;
+		})) }]);
+		inAirSet = $makeMap($Int32.keyFor, [{ k: 4, v: true }, { k: 5, v: true }, { k: 6, v: true }, { k: 7, v: true }, { k: 8, v: true }, { k: 16, v: true }]);
+		noOpSet = $makeMap($Int32.keyFor, [{ k: 3, v: true }, { k: 7, v: true }, { k: 8, v: true }, { k: 9, v: true }]);
+		invinsibleSet = $makeMap($Int32.keyFor, [{ k: 8, v: true }, { k: 9, v: true }, { k: 10, v: true }]);
+		nonAttackingSet = $makeMap($Int32.keyFor, [{ k: 0, v: true }, { k: 1, v: true }, { k: 4, v: true }, { k: 5, v: true }, { k: 3, v: true }, { k: 7, v: true }, { k: 8, v: true }, { k: 9, v: true }, { k: 10, v: true }]);
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
+$packages["jsexport"] = (function() {
+	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, ptrType$6, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, funcType$11, funcType$12, ptrType$7, funcType$13, funcType$14, funcType$15, funcType$16, sliceType$6, funcType$17, ptrType$8, ptrType$9, ptrType$10, mapType, sliceType$7, funcType$18, funcType$19, funcType$20, mapType$1, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewFireballBulletJs, NewNpcPatrolCue, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateRectColliderJs, GenerateConvexPolygonColliderJs, GetCharacterConfigsOrderedByJoinIndex, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, main;
+	js = $packages["github.com/gopherjs/gopherjs/js"];
+	battle = $packages["jsexport/battle"];
+	resolv = $packages["resolv"];
+	sliceType = $sliceType($Uint64);
+	ptrType = $ptrType(battle.Vec2D);
+	sliceType$1 = $sliceType(ptrType);
+	ptrType$1 = $ptrType(battle.Polygon2D);
+	ptrType$2 = $ptrType(battle.PlayerDownsync);
+	sliceType$2 = $sliceType(ptrType$2);
+	ptrType$3 = $ptrType(battle.MeleeBullet);
+	sliceType$3 = $sliceType(ptrType$3);
+	ptrType$4 = $ptrType(battle.FireballBullet);
+	sliceType$4 = $sliceType(ptrType$4);
+	ptrType$5 = $ptrType(js.Object);
+	sliceType$5 = $sliceType(ptrType$5);
+	ptrType$6 = $ptrType(battle.CharacterConfig);
+	funcType = $funcType([$Float64, $Float64], [ptrType$5], false);
+	funcType$1 = $funcType([ptrType, sliceType$1], [ptrType$5], false);
+	funcType$2 = $funcType([ptrType$1], [ptrType$5], false);
+	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Bool, $Int32, $Int32, $Int32, $Int32], [ptrType$5], false);
+	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32], [ptrType$5], false);
+	funcType$5 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32], [ptrType$5], false);
+	funcType$6 = $funcType([$Uint64, $Uint64, $Float64, $Float64], [ptrType$5], false);
+	funcType$7 = $funcType([$Int32, sliceType$2, $Int32, sliceType$3, sliceType$4], [ptrType$5], false);
+	funcType$8 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
+	funcType$9 = $funcType([$Int32, sliceType, $Uint64], [ptrType$5], false);
+	funcType$10 = $funcType([$Int32], [ptrType$5], false);
+	funcType$11 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
+	funcType$12 = $funcType([ptrType$1, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
+	ptrType$7 = $ptrType(resolv.Space);
+	funcType$13 = $funcType([ptrType$7], [sliceType$5], false);
+	funcType$14 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64], [$Float64, $Float64], false);
+	funcType$15 = $funcType([$Float64, $Float64], [$Int32, $Int32], false);
+	funcType$16 = $funcType([$Int32, $Int32], [$Float64, $Float64], false);
+	sliceType$6 = $sliceType($Int);
+	funcType$17 = $funcType([sliceType$6], [sliceType$5], false);
+	ptrType$8 = $ptrType(battle.RingBuffer);
+	ptrType$9 = $ptrType(battle.RoomDownsyncFrame);
+	ptrType$10 = $ptrType(resolv.Object);
+	mapType = $mapType($Int32, ptrType$10);
+	sliceType$7 = $sliceType(ptrType$6);
+	funcType$18 = $funcType([ptrType$8, ptrType$9, ptrType$7, mapType, $Float64, $Float64, sliceType$7], [ptrType$5], false);
+	funcType$19 = $funcType([$Int32], [$Int32], false);
+	funcType$20 = $funcType([$Int32], [$Bool], false);
+	mapType$1 = $mapType($String, $emptyInterface);
+	NewInputFrameDownsync = function(inputFrameId, inputList, confirmedList) {
+		var {$24r, _r, confirmedList, inputFrameId, inputList, $s, $r, $c} = $restore(this, {inputFrameId, inputList, confirmedList});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(new battle.InputFrameDownsync.ptr(inputFrameId, inputList, confirmedList)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewInputFrameDownsync, $c: true, $r, $24r, _r, confirmedList, inputFrameId, inputList, $s};return $f;
+	};
+	$pkg.NewInputFrameDownsync = NewInputFrameDownsync;
+	NewRingBufferJs = function(n) {
+		var {$24r, _r, n, $s, $r, $c} = $restore(this, {n});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(battle.NewRingBuffer(n)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewRingBufferJs, $c: true, $r, $24r, _r, n, $s};return $f;
+	};
+	$pkg.NewRingBufferJs = NewRingBufferJs;
+	NewCollisionSpaceJs = function(spaceW, spaceH, minStepW, minStepH) {
+		var minStepH, minStepW, spaceH, spaceW;
+		return js.MakeWrapper(resolv.NewSpace(spaceW, spaceH, minStepW, minStepH));
+	};
+	$pkg.NewCollisionSpaceJs = NewCollisionSpaceJs;
+	NewVec2DJs = function(x, y) {
+		var {$24r, _r, x, y, $s, $r, $c} = $restore(this, {x, y});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(new battle.Vec2D.ptr(x, y)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewVec2DJs, $c: true, $r, $24r, _r, x, y, $s};return $f;
+	};
+	$pkg.NewVec2DJs = NewVec2DJs;
+	NewPolygon2DJs = function(anchor, points) {
+		var {$24r, _r, anchor, points, $s, $r, $c} = $restore(this, {anchor, points});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(new battle.Polygon2D.ptr(anchor, points)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewPolygon2DJs, $c: true, $r, $24r, _r, anchor, points, $s};return $f;
+	};
+	$pkg.NewPolygon2DJs = NewPolygon2DJs;
+	NewBarrierJs = function(boundary) {
+		var boundary;
+		return js.MakeWrapper(new battle.Barrier.ptr(boundary));
+	};
+	$pkg.NewBarrierJs = NewBarrierJs;
+	NewPlayerDownsyncJs = function(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir, onWall, onWallNormX, onWallNormY, bulletTeamId, chCollisionTeamId) {
+		var activeSkillHit, activeSkillId, battleState, bulletTeamId, chCollisionTeamId, characterState, colliderRadius, dirX, dirY, framesInChState, framesInvinsible, framesToRecover, hp, id, inAir, joinIndex, maxHp, onWall, onWallNormX, onWallNormY, speed, velX, velY, virtualGridX, virtualGridY;
+		return js.MakeWrapper(new battle.PlayerDownsync.ptr(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, battleState, joinIndex, colliderRadius, false, 0, 0, framesToRecover, framesInChState, hp, maxHp, characterState, inAir, onWall, onWallNormX, onWallNormY, activeSkillId, activeSkillHit, framesInvinsible, bulletTeamId, chCollisionTeamId));
+	};
+	$pkg.NewPlayerDownsyncJs = NewPlayerDownsyncJs;
+	NewMeleeBulletJs = function(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId) {
+		var activeFrames, blockStunFrames, blowUp, bulletLocalId, cancellableEdFrame, cancellableStFrame, damage, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, startupFrames, teamId;
+		return js.MakeWrapper(battle.NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId));
+	};
+	$pkg.NewMeleeBulletJs = NewMeleeBulletJs;
+	NewFireballBulletJs = function(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId) {
+		var activeFrames, blockStunFrames, blowUp, bulletLocalId, cancellableEdFrame, cancellableStFrame, damage, dirX, dirY, hitStunFrames, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, offenderJoinIndex, originatedRenderFrameId, pushbackVelX, pushbackVelY, selfLockVelX, selfLockVelY, speciesId, speed, startupFrames, teamId, velX, velY, virtualGridX, virtualGridY;
+		return js.MakeWrapper(battle.NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId));
+	};
+	$pkg.NewFireballBulletJs = NewFireballBulletJs;
+	NewNpcPatrolCue = function(flAct, frAct, x, y) {
+		var {$24r, _r, flAct, frAct, x, y, $s, $r, $c} = $restore(this, {flAct, frAct, x, y});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(new battle.NpcPatrolCue.ptr(flAct, frAct, x, y)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewNpcPatrolCue, $c: true, $r, $24r, _r, flAct, frAct, x, y, $s};return $f;
+	};
+	$pkg.NewNpcPatrolCue = NewNpcPatrolCue;
+	NewRoomDownsyncFrameJs = function(id, playersArr, bulletLocalIdCounter, meleeBullets, fireballBullets) {
+		var {$24r, _r, bulletLocalIdCounter, fireballBullets, id, meleeBullets, playersArr, $s, $r, $c} = $restore(this, {id, playersArr, bulletLocalIdCounter, meleeBullets, fireballBullets});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = js.MakeFullWrapper(new battle.RoomDownsyncFrame.ptr(id, playersArr, new $Int64(0, 0), meleeBullets, fireballBullets, new $Uint64(0, 0), false, bulletLocalIdCounter)); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		$24r = _r;
+		$s = 2; case 2: return $24r;
+		/* */ } return; } var $f = {$blk: NewRoomDownsyncFrameJs, $c: true, $r, $24r, _r, bulletLocalIdCounter, fireballBullets, id, meleeBullets, playersArr, $s};return $f;
+	};
+	$pkg.NewRoomDownsyncFrameJs = NewRoomDownsyncFrameJs;
+	GetCollisionSpaceObjsJs = function(space) {
+		var {_i, _r, _ref, obj, objs, ret, space, $s, $r, $c} = $restore(this, {space});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		objs = space.Objects();
+		ret = $makeSlice(sliceType$5, 0, objs.$length);
+		_ref = objs;
+		_i = 0;
+		/* while (true) { */ case 1:
+			/* if (!(_i < _ref.$length)) { break; } */ if(!(_i < _ref.$length)) { $s = 2; continue; }
+			obj = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_r = js.MakeFullWrapper(obj); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			ret = $append(ret, _r);
+			_i++;
+		$s = 1; continue;
+		case 2:
+		$s = -1; return ret;
+		/* */ } return; } var $f = {$blk: GetCollisionSpaceObjsJs, $c: true, $r, _i, _r, _ref, obj, objs, ret, space, $s};return $f;
+	};
+	$pkg.GetCollisionSpaceObjsJs = GetCollisionSpaceObjsJs;
+	GenerateRectColliderJs = function(wx, wy, w, h, spaceOffsetX, spaceOffsetY, data, tag) {
+		var {$24r, _r, _r$1, _tmp, _tmp$1, _tmp$2, _tmp$3, bottomPadding, data, h, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, tag, topPadding, w, wx, wy, $s, $r, $c} = $restore(this, {wx, wy, w, h, spaceOffsetX, spaceOffsetY, data, tag});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_tmp = 0.1;
+		_tmp$1 = 0.1;
+		_tmp$2 = 0.1;
+		_tmp$3 = 0.1;
+		topPadding = _tmp;
+		bottomPadding = _tmp$1;
+		leftPadding = _tmp$2;
+		rightPadding = _tmp$3;
+		_r = battle.GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		_r$1 = js.MakeFullWrapper(_r); /* */ $s = 2; case 2: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+		$24r = _r$1;
+		$s = 3; case 3: return $24r;
+		/* */ } return; } var $f = {$blk: GenerateRectColliderJs, $c: true, $r, $24r, _r, _r$1, _tmp, _tmp$1, _tmp$2, _tmp$3, bottomPadding, data, h, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, tag, topPadding, w, wx, wy, $s};return $f;
+	};
+	$pkg.GenerateRectColliderJs = GenerateRectColliderJs;
+	GenerateConvexPolygonColliderJs = function(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag) {
+		var {$24r, _r, _r$1, data, spaceOffsetX, spaceOffsetY, tag, unalignedSrc, $s, $r, $c} = $restore(this, {unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = battle.GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		_r$1 = js.MakeFullWrapper(_r); /* */ $s = 2; case 2: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+		$24r = _r$1;
+		$s = 3; case 3: return $24r;
+		/* */ } return; } var $f = {$blk: GenerateConvexPolygonColliderJs, $c: true, $r, $24r, _r, _r$1, data, spaceOffsetX, spaceOffsetY, tag, unalignedSrc, $s};return $f;
+	};
+	$pkg.GenerateConvexPolygonColliderJs = GenerateConvexPolygonColliderJs;
+	GetCharacterConfigsOrderedByJoinIndex = function(speciesIdList) {
+		var {_entry, _i, _r, _ref, i, ret, speciesId, speciesIdList, $s, $r, $c} = $restore(this, {speciesIdList});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		ret = $makeSlice(sliceType$5, speciesIdList.$length, speciesIdList.$length);
+		_ref = speciesIdList;
+		_i = 0;
+		/* while (true) { */ case 1:
+			/* if (!(_i < _ref.$length)) { break; } */ if(!(_i < _ref.$length)) { $s = 2; continue; }
+			i = _i;
+			speciesId = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			_r = js.MakeFullWrapper((_entry = battle.Characters[$Int.keyFor(speciesId)], _entry !== undefined ? _entry.v : ptrType$6.nil)); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			((i < 0 || i >= ret.$length) ? ($throwRuntimeError("index out of range"), undefined) : ret.$array[ret.$offset + i] = _r);
+			_i++;
+		$s = 1; continue;
+		case 2:
+		$s = -1; return ret;
+		/* */ } return; } var $f = {$blk: GetCharacterConfigsOrderedByJoinIndex, $c: true, $r, _entry, _i, _r, _ref, i, ret, speciesId, speciesIdList, $s};return $f;
+	};
+	$pkg.GetCharacterConfigsOrderedByJoinIndex = GetCharacterConfigsOrderedByJoinIndex;
+	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = function(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex) {
+		var {$24r, _r, _r$1, chConfigsOrderedByJoinIndex, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrame, inputsBuffer, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		_r = battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		_r$1 = js.MakeFullWrapper(_r); /* */ $s = 2; case 2: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+		$24r = _r$1;
+		$s = 3; case 3: return $24r;
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, $c: true, $r, $24r, _r, _r$1, chConfigsOrderedByJoinIndex, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrame, inputsBuffer, $s};return $f;
+	};
+	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs;
+	main = function() {
+		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewFireballBulletJs", v: new funcType$5(NewFireballBulletJs) }, { k: "NewNpcPatrolCue", v: new funcType$6(NewNpcPatrolCue) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$7(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$8(NewCollisionSpaceJs) }, { k: "NewInputFrameDownsync", v: new funcType$9(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$10(NewRingBufferJs) }, { k: "GenerateRectColliderJs", v: new funcType$11(GenerateRectColliderJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$12(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$13(GetCollisionSpaceObjsJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$14(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$14(battle.PolygonColliderBLToWorldPos) }, { k: "WorldToVirtualGridPos", v: new funcType$15(battle.WorldToVirtualGridPos) }, { k: "VirtualGridToWorldPos", v: new funcType$16(battle.VirtualGridToWorldPos) }, { k: "GetCharacterConfigsOrderedByJoinIndex", v: new funcType$17(GetCharacterConfigsOrderedByJoinIndex) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$18(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "ConvertToDelayedInputFrameId", v: new funcType$19(battle.ConvertToDelayedInputFrameId) }, { k: "ConvertToNoDelayInputFrameId", v: new funcType$19(battle.ConvertToNoDelayInputFrameId) }, { k: "ConvertToFirstUsedRenderFrameId", v: new funcType$19(battle.ConvertToFirstUsedRenderFrameId) }, { k: "ConvertToLastUsedRenderFrameId", v: new funcType$19(battle.ConvertToLastUsedRenderFrameId) }, { k: "ShouldGenerateInputFrameUpsync", v: new funcType$20(battle.ShouldGenerateInputFrameUpsync) }]), mapType$1);
+	};
+	$init = function() {
+		$pkg.$init = function() {};
+		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		$r = js.$init(); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		$r = battle.$init(); /* */ $s = 2; case 2: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		$r = resolv.$init(); /* */ $s = 3; case 3: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+		if ($pkg === $mainPkg) {
+			main();
+			$mainFinished = true;
+		}
+		/* */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;
+	};
+	$pkg.$init = $init;
+	return $pkg;
+})();
 $synthesizeMethods();
 $initAllLinknames();
 var $mainPkg = $packages["jsexport"];

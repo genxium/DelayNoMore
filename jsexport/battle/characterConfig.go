@@ -61,8 +61,8 @@ var Characters = map[int]*CharacterConfig{
 					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
 						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
 						case *MeleeBullet:
-							if v.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.CancellableEdFrame {
-								if nextSkillId, existent2 := v.CancelTransit[patternId]; existent2 {
+							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
 									return nextSkillId
 								}
 							}
@@ -93,7 +93,7 @@ var Characters = map[int]*CharacterConfig{
 
 		DashingEnabled:             true,
 		OnWallEnabled:              true,
-		WallJumpingFramesToRecover: int32(9), // 8 would be the minimum for an avg human
+		WallJumpingFramesToRecover: int32(9),                                          // 8 would be the minimum for an avg human
 		WallJumpingInitVelX:        int32(float64(2.5) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
 		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -111,8 +111,8 @@ var Characters = map[int]*CharacterConfig{
 					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
 						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
 						case *MeleeBullet:
-							if v.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.CancellableEdFrame {
-								if nextSkillId, existent2 := v.CancelTransit[patternId]; existent2 {
+							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
 									return nextSkillId
 								}
 							}
@@ -157,8 +157,8 @@ var Characters = map[int]*CharacterConfig{
 					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
 						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
 						case *MeleeBullet:
-							if v.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.CancellableEdFrame {
-								if nextSkillId, existent2 := v.CancelTransit[patternId]; existent2 {
+							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
 									return nextSkillId
 								}
 							}
@@ -190,7 +190,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
 					ActiveFrames:       int32(22),
 					HitStunFrames:      int32(13),
@@ -223,7 +223,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
 					ActiveFrames:       int32(18),
 					HitStunFrames:      int32(18),
@@ -254,7 +254,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(8),
 					ActiveFrames:    int32(30),
 					HitStunFrames:   MAX_INT32,
@@ -281,7 +281,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
 					ActiveFrames:       int32(22),
 					HitStunFrames:      int32(13),
@@ -314,7 +314,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
 					ActiveFrames:       int32(18),
 					HitStunFrames:      int32(18),
@@ -345,7 +345,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(8),
 					ActiveFrames:    int32(28),
 					HitStunFrames:   MAX_INT32,
@@ -372,7 +372,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
 					ActiveFrames:       int32(22),
 					HitStunFrames:      int32(13),
@@ -405,7 +405,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
 					ActiveFrames:       int32(18),
 					HitStunFrames:      int32(18),
@@ -436,7 +436,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(7),
 					ActiveFrames:    int32(30),
 					HitStunFrames:   MAX_INT32,
@@ -464,8 +464,8 @@ var skills = map[int]*Skill{
 		Hits: []interface{}{
 			&FireballBullet{
 				SpeciesId: int32(1),
-				Speed:     int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
-				Bullet: Bullet{
+				Speed:     int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(15),
 					ActiveFrames:    MAX_INT32,
 					HitStunFrames:   int32(15),
@@ -475,7 +475,7 @@ var skills = map[int]*Skill{
 					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
-					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(18) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxOffsetY:   int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -491,7 +491,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_ATK5,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
 					ActiveFrames:    int32(25),
 					HitStunFrames:   MAX_INT32,
@@ -518,7 +518,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
 					ActiveFrames:    int32(20),
 					HitStunFrames:   int32(18),
@@ -544,7 +544,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
 					ActiveFrames:    int32(10),
 					HitStunFrames:   int32(15),
@@ -570,7 +570,7 @@ var skills = map[int]*Skill{
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
 		Hits: []interface{}{
 			&MeleeBullet{
-				Bullet: Bullet{
+				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
 					ActiveFrames:    int32(20),
 					HitStunFrames:   int32(18),

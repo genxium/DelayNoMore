@@ -413,7 +413,7 @@ cc.Class({
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
-    self.showCriticalCoordinateLabels = true;
+    self.showCriticalCoordinateLabels = false;
 
     console.warn("+++++++ Map onLoad()");
 
@@ -1095,23 +1095,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   _renderFireballBullet(fireballBullet, rdf) {
     const self = this;
-    let pqNode = self.cachedFireballs.popAny(fireballBullet.Bullet.BulletLocalId);
-    const speciesName = `Fireball${fireballBullet.SpeciesId}`;
-
-    if (null == pqNode) {
-      pqNode = self.cachedFireballs.pop();
-    } else {
-      console.log(`Using a cached fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId}`);
-    }
-    const cachedFireball = pqNode.value;
-    cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
-    cachedFireball.lastUsed = self.renderFrameId;
-    cachedFireball.bulletLocalId = fireballBullet.Bullet.BulletLocalId;
-
-    const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
-    cachedFireball.node.setPosition(cc.v2(wx, wy));
-
-    self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, cachedFireball.bulletLocalId);
   },
 
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
@@ -1137,8 +1120,28 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const fireballBullets = rdf.FireballBullets;
     for (let k in fireballBullets) {
       const fireballBullet = fireballBullets[k];
-      if ((fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id) && (fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id)) {
-        self._renderFireballBullet(fireballBullet, rdf);
+      if (
+        fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
+        &&
+        fireballBullet.Bullet.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
+      ) {
+        let pqNode = self.cachedFireballs.popAny(fireballBullet.Bullet.BulletLocalId);
+        const speciesName = `Fireball${fireballBullet.SpeciesId}`;
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
+
+        if (null == pqNode) {
+          pqNode = self.cachedFireballs.pop();
+          console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.Bullet.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId} at wpos=(${wx},${wy})`);
+        } else {
+          console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.Bullet.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.Bullet.BulletLocalId} at wpos=(${wx},${wy})`);
+        }
+        const cachedFireball = pqNode.value;
+        cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
+        cachedFireball.lastUsed = self.renderFrameId;
+        cachedFireball.bulletLocalId = fireballBullet.Bullet.BulletLocalId;
+        cachedFireball.node.setPosition(cc.v2(wx, wy));
+
+        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.Bullet.BulletLocalId);
       }
     }
 
@@ -1263,7 +1266,12 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   playerDownsyncStr(playerDownsync) {
     if (null == playerDownsync) return "";
-    return `{${playerDownsync.JoinIndex},${playerDownsync.VirtualGridX},${playerDownsync.VirtualGridY},${playerDownsync.VelX},${playerDownsync.VelY},${playerDownsync.FramesToRecover},${playerDownsync.InAir ? 1 : 0}}`;
+    return `{${playerDownsync.JoinIndex},${playerDownsync.VirtualGridX},${playerDownsync.VirtualGridY},${playerDownsync.VelX},${playerDownsync.VelY},${playerDownsync.FramesToRecover},${playerDownsync.InAir ? 1 : 0},${playerDownsync.OnWall ? 1 : 0}}`;
+  },
+
+  fireballDownsyncStr(fireball) {
+    if (null == fireball) return "";
+    return `{${fireball.Bullet.BulletLocalId},${fireball.Bullet.OriginatedRenderFrameId},${fireball.Bullet.OffenderJoinIndex},${fireball.VirtualGridX},${fireball.VirtualGridY},${fireball.VelX},${fireball.VelY},${fireball.DirX},${fireball.DirY},${fireball.Bullet.HitboxSizeX},${fireball.Bullet.HitboxSizeY}}`;
   },
 
   inputFrameDownsyncStr(inputFrameDownsync) {
@@ -1292,8 +1300,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       for (let k in rdf.PlayersArr) {
         playersStrBldr.push(self.playerDownsyncStr(rdf.PlayersArr[k]));
       }
+      const fireballsStrBldr = [];
+      for (let k in rdf.FireballBullets) {
+        fireballsStrBldr.push(self.fireballDownsyncStr(rdf.FireballBullets[k]));
+      }
       s.push(`rdfId:${i}
 players:[${playersStrBldr.join(',')}]
+fireballs:[${fireballsStrBldr.join(',')}]
 actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
     }
 

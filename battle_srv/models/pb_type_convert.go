@@ -55,62 +55,62 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 	for i, last := range rdf.MeleeBullets {
 		pbBullet := &pb.MeleeBullet{
-			BulletLocalId:           last.BulletLocalId,
-			OriginatedRenderFrameId: last.OriginatedRenderFrameId,
-			OffenderJoinIndex:       last.OffenderJoinIndex,
+			BulletLocalId:           last.Bullet.BulletLocalId,
+			OriginatedRenderFrameId: last.Bullet.OriginatedRenderFrameId,
+			OffenderJoinIndex:       last.Bullet.OffenderJoinIndex,
 
-			StartupFrames:      last.StartupFrames,
-			CancellableStFrame: last.CancellableStFrame,
-			CancellableEdFrame: last.CancellableEdFrame,
-			ActiveFrames:       last.ActiveFrames,
+			StartupFrames:      last.Bullet.StartupFrames,
+			CancellableStFrame: last.Bullet.CancellableStFrame,
+			CancellableEdFrame: last.Bullet.CancellableEdFrame,
+			ActiveFrames:       last.Bullet.ActiveFrames,
 
-			HitStunFrames:   last.HitStunFrames,
-			BlockStunFrames: last.BlockStunFrames,
-			PushbackVelX:    last.PushbackVelX,
-			PushbackVelY:    last.PushbackVelY,
-			Damage:          last.Damage,
+			HitStunFrames:   last.Bullet.HitStunFrames,
+			BlockStunFrames: last.Bullet.BlockStunFrames,
+			PushbackVelX:    last.Bullet.PushbackVelX,
+			PushbackVelY:    last.Bullet.PushbackVelY,
+			Damage:          last.Bullet.Damage,
 
-			SelfLockVelX: last.SelfLockVelX,
-			SelfLockVelY: last.SelfLockVelY,
+			SelfLockVelX: last.Bullet.SelfLockVelX,
+			SelfLockVelY: last.Bullet.SelfLockVelY,
 
-			HitboxOffsetX: last.HitboxOffsetX,
-			HitboxOffsetY: last.HitboxOffsetY,
-			HitboxSizeX:   last.HitboxSizeX,
-			HitboxSizeY:   last.HitboxSizeY,
+			HitboxOffsetX: last.Bullet.HitboxOffsetX,
+			HitboxOffsetY: last.Bullet.HitboxOffsetY,
+			HitboxSizeX:   last.Bullet.HitboxSizeX,
+			HitboxSizeY:   last.Bullet.HitboxSizeY,
 
-			BlowUp: last.BlowUp,
-			TeamId: last.TeamId,
+			BlowUp: last.Bullet.BlowUp,
+			TeamId: last.Bullet.TeamId,
 		}
 		ret.MeleeBullets[i] = pbBullet
 	}
 
 	for i, last := range rdf.FireballBullets {
 		pbBullet := &pb.FireballBullet{
-			BulletLocalId:           last.BulletLocalId,
-			OriginatedRenderFrameId: last.OriginatedRenderFrameId,
-			OffenderJoinIndex:       last.OffenderJoinIndex,
+			BulletLocalId:           last.Bullet.BulletLocalId,
+			OriginatedRenderFrameId: last.Bullet.OriginatedRenderFrameId,
+			OffenderJoinIndex:       last.Bullet.OffenderJoinIndex,
 
-			StartupFrames:      last.StartupFrames,
-			CancellableStFrame: last.CancellableStFrame,
-			CancellableEdFrame: last.CancellableEdFrame,
-			ActiveFrames:       last.ActiveFrames,
+			StartupFrames:      last.Bullet.StartupFrames,
+			CancellableStFrame: last.Bullet.CancellableStFrame,
+			CancellableEdFrame: last.Bullet.CancellableEdFrame,
+			ActiveFrames:       last.Bullet.ActiveFrames,
 
-			HitStunFrames:   last.HitStunFrames,
-			BlockStunFrames: last.BlockStunFrames,
-			PushbackVelX:    last.PushbackVelX,
-			PushbackVelY:    last.PushbackVelY,
-			Damage:          last.Damage,
+			HitStunFrames:   last.Bullet.HitStunFrames,
+			BlockStunFrames: last.Bullet.BlockStunFrames,
+			PushbackVelX:    last.Bullet.PushbackVelX,
+			PushbackVelY:    last.Bullet.PushbackVelY,
+			Damage:          last.Bullet.Damage,
 
-			SelfLockVelX: last.SelfLockVelX,
-			SelfLockVelY: last.SelfLockVelY,
+			SelfLockVelX: last.Bullet.SelfLockVelX,
+			SelfLockVelY: last.Bullet.SelfLockVelY,
 
-			HitboxOffsetX: last.HitboxOffsetX,
-			HitboxOffsetY: last.HitboxOffsetY,
-			HitboxSizeX:   last.HitboxSizeX,
-			HitboxSizeY:   last.HitboxSizeY,
+			HitboxOffsetX: last.Bullet.HitboxOffsetX,
+			HitboxOffsetY: last.Bullet.HitboxOffsetY,
+			HitboxSizeX:   last.Bullet.HitboxSizeX,
+			HitboxSizeY:   last.Bullet.HitboxSizeY,
 
-			BlowUp: last.BlowUp,
-			TeamId: last.TeamId,
+			BlowUp: last.Bullet.BlowUp,
+			TeamId: last.Bullet.TeamId,
 
 			VirtualGridX: last.VirtualGridX,
 			VirtualGridY: last.VirtualGridY,

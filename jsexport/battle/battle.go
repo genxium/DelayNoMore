@@ -3,6 +3,7 @@ package battle
 import (
 	"math"
 	"resolv"
+	//"fmt"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -360,22 +361,22 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 
 func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) *[]Vec2D {
 	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
-    virtualGripToWall := float64(0) 
-    if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && 0 == thatPlayerInNextFrame.VelX && currPlayerDownsync.DirX == thatPlayerInNextFrame.DirX {
-        /*
-        I'm not sure whether this is a bug of "resolv_tailored" (maybe due to my changes), on the x-axis a playerCollider whose right edge reaches "1680.1" is not deemed collided with a side wall whose left edge is "1680.0", while the same extent of intersection is OK in y-axis. 
-        
-        The workaround here is to grant a "virtualGripToWall" in x-axis to guarantee that if 
-        - "currPlayerDownsync" is on wall, and 
-        - "thatPlayerInNextFrame.VelX" is 0 (i.e. no proactive move against the wall), and
-        - there's no change in player facing direction 
-        */
-        xfac := float64(1)
-        if 0 > thatPlayerInNextFrame.DirX {
-            xfac = -xfac
-        }
-        virtualGripToWall = xfac*float64(currPlayerDownsync.Speed)*VIRTUAL_GRID_TO_WORLD_RATIO
-    }
+	virtualGripToWall := float64(0)
+	if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && 0 == thatPlayerInNextFrame.VelX && currPlayerDownsync.DirX == thatPlayerInNextFrame.DirX {
+		/*
+		   I'm not sure whether this is a bug of "resolv_tailored" (maybe due to my changes), on the x-axis a playerCollider whose right edge reaches "1680.1" is not deemed collided with a side wall whose left edge is "1680.0", while the same extent of intersection is OK in y-axis.
+
+		   The workaround here is to grant a "virtualGripToWall" in x-axis to guarantee that if
+		   - "currPlayerDownsync" is on wall, and
+		   - "thatPlayerInNextFrame.VelX" is 0 (i.e. no proactive move against the wall), and
+		   - there's no change in player facing direction
+		*/
+		xfac := float64(1)
+		if 0 > thatPlayerInNextFrame.DirX {
+			xfac = -xfac
+		}
+		virtualGripToWall = xfac * float64(currPlayerDownsync.Speed) * VIRTUAL_GRID_TO_WORLD_RATIO
+	}
 	collision := playerCollider.Check(virtualGripToWall, 0)
 	if nil == collision {
 		return &ret
@@ -498,8 +499,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			ActiveSkillHit:   currPlayerDownsync.ActiveSkillHit,
 			FramesInvinsible: currPlayerDownsync.FramesInvinsible - 1,
 			ColliderRadius:   currPlayerDownsync.ColliderRadius,
-            OnWallNormX:      currPlayerDownsync.OnWallNormX, 
-            OnWallNormY:      currPlayerDownsync.OnWallNormY,
+			OnWallNormX:      currPlayerDownsync.OnWallNormX,
+			OnWallNormY:      currPlayerDownsync.OnWallNormY,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -509,6 +510,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 	}
 
+	// [WARNING] For rollback compatibility, MeleeBullets are composed of only static BulletConfig data and move along with the offenders, therefore they can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets move on their own and must be copies of instances for each RenderFrame!
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	nextRenderFrameFireballBullets := make([]*FireballBullet, 0, len(currRenderFrame.FireballBullets))
 	effPushbacks := make([]Vec2D, roomCapacity)
@@ -539,38 +541,39 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
 				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.BulletLocalId = bulletLocalId
+				newBullet.Bullet.BulletLocalId = bulletLocalId
 				bulletLocalId++
-				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
-				newBullet.OffenderJoinIndex = joinIndex
+				newBullet.Bullet.OriginatedRenderFrameId = currRenderFrame.Id
+				newBullet.Bullet.OffenderJoinIndex = joinIndex
 				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
-				if NO_LOCK_VEL != v.SelfLockVelX {
+				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
-					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
+					thatPlayerInNextFrame.VelX = xfac * v.Bullet.SelfLockVelX
 				}
-				if NO_LOCK_VEL != v.SelfLockVelY {
+				if NO_LOCK_VEL != v.Bullet.SelfLockVelY {
 					hasLockVel = true
-					thatPlayerInNextFrame.VelY = v.SelfLockVelY
+					thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY
 				}
 			case *FireballBullet:
 				var newBullet FireballBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.BulletLocalId = bulletLocalId
+				newBullet.Bullet.BulletLocalId = bulletLocalId
 				bulletLocalId++
-				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+newBullet.HitboxOffsetY
-				newBullet.OriginatedRenderFrameId = currRenderFrame.Id
-				newBullet.OffenderJoinIndex = joinIndex
+				newBullet.Bullet.OriginatedRenderFrameId = currRenderFrame.Id
+				newBullet.Bullet.OffenderJoinIndex = joinIndex
+				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.Bullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+newBullet.Bullet.HitboxOffsetY
 				newBullet.DirX = xfac
 				newBullet.DirY = 0
 				newBullet.VelX = newBullet.Speed * xfac
 				newBullet.VelY = 0
 				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, &newBullet)
-				if NO_LOCK_VEL != v.SelfLockVelX {
+				//fmt.Printf("Created new fireball @currRenderFrame.Id=%d, %p, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, offenderVpos=(%d,%d)\n", currRenderFrame.Id, &newBullet, bulletLocalId, newBullet.VirtualGridX, newBullet.VirtualGridY, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY)
+				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
-					thatPlayerInNextFrame.VelX = xfac * v.SelfLockVelX
+					thatPlayerInNextFrame.VelX = xfac * v.Bullet.SelfLockVelX
 				}
-				if NO_LOCK_VEL != v.SelfLockVelY {
+				if NO_LOCK_VEL != v.Bullet.SelfLockVelY {
 					hasLockVel = true
-					thatPlayerInNextFrame.VelY = v.SelfLockVelY
+					thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY
 				}
 			}
 
@@ -616,12 +619,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if jumpedOrNotList[i] {
 			// We haven't proceeded with "OnWall" calculation for "thatPlayerInNextFrame", thus use "currPlayerDownsync.OnWall" for checking
 			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
-                if 0 < currPlayerDownsync.VelX * currPlayerDownsync.OnWallNormX {
-                    newVx -= currPlayerDownsync.VelX // Cancel the alleged horizontal movement pointing to same direction of wall inward norm first
-                }
+				if 0 < currPlayerDownsync.VelX*currPlayerDownsync.OnWallNormX {
+					newVx -= currPlayerDownsync.VelX // Cancel the alleged horizontal movement pointing to same direction of wall inward norm first
+				}
 				xfac := int32(-1)
 				if 0 > currPlayerDownsync.OnWallNormX {
-                    // Always jump to the opposite direction of wall inward norm
+					// Always jump to the opposite direction of wall inward norm
 					xfac = -xfac
 				}
 				newVx += xfac * chConfig.WallJumpingInitVelX
@@ -666,31 +669,43 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// 3. Add bullet colliders into collision system
 	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for _, meleeBullet := range currRenderFrame.MeleeBullets {
-		if (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id) {
-			offender := currRenderFrame.PlayersArr[meleeBullet.OffenderJoinIndex-1]
+		if (meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
+			offender := currRenderFrame.PlayersArr[meleeBullet.Bullet.OffenderJoinIndex-1]
 
 			xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
 			if 0 > offender.DirX {
 				xfac = -xfac
 			}
-			bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.HitboxOffsetX, offender.VirtualGridY)
-			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.HitboxSizeX, meleeBullet.HitboxSizeY)
+			bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
+			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
 			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if meleeBullet.OriginatedRenderFrameId+meleeBullet.StartupFrames+meleeBullet.ActiveFrames > currRenderFrame.Id {
+		} else if meleeBullet.Bullet.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id {
 			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
 		}
 	}
 
-	for _, fireballBullet := range currRenderFrame.FireballBullets {
-		if (fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames+fireballBullet.ActiveFrames > currRenderFrame.Id) {
+	for _, prevFireball := range currRenderFrame.FireballBullets {
+		fireballBullet := &FireballBullet{
+			VirtualGridX: prevFireball.VirtualGridX,
+			VirtualGridY: prevFireball.VirtualGridY,
+			DirX:         prevFireball.DirX,
+			DirY:         prevFireball.DirY,
+			VelX:         prevFireball.VelX,
+			VelY:         prevFireball.VelY,
+			Speed:        prevFireball.Speed,
+			SpeciesId:    prevFireball.SpeciesId,
+			Bullet:       prevFireball.Bullet,
+		}
+		if (fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
 			bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
-			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.HitboxSizeX, fireballBullet.HitboxSizeY)
+			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
 			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
 			collisionSys.Add(newBulletCollider)
 			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if fireballBullet.OriginatedRenderFrameId+fireballBullet.StartupFrames+fireballBullet.ActiveFrames > currRenderFrame.Id {
+		} else if fireballBullet.Bullet.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id {
+			// fmt.Printf("Pushing static fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d\n", currRenderFrame.Id, fireballBullet.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
 			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
 		}
 	}
@@ -786,36 +801,36 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			}
 		}
 
-        if chConfig.OnWallEnabled {
-            if thatPlayerInNextFrame.InAir {
-                // [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
-                if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
-                    // [WARNING] Sticking to wall could only be triggered by proactive player input
-                    for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
-                        normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
-                        normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
-                        if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
-                            thatPlayerInNextFrame.OnWall = true
-                            thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
-                            break
-                        }
-                        if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 {
-                            thatPlayerInNextFrame.OnWall = true
-                            thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
-                            break
-                        }
-                    }
+		if chConfig.OnWallEnabled {
+			if thatPlayerInNextFrame.InAir {
+				// [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
+				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
+					// [WARNING] Sticking to wall could only be triggered by proactive player input
+					for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
+						normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
+						normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
+						if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
+							thatPlayerInNextFrame.OnWall = true
+							thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
+							break
+						}
+						if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon2 {
+							thatPlayerInNextFrame.OnWall = true
+							thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = int32(hardPushbackNorm.X), int32(hardPushbackNorm.Y)
+							break
+						}
+					}
 
-                    if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
-                        // To avoid mysterious climbing up the wall after sticking on it
-                        thatPlayerInNextFrame.VelY = 0
-                    }
-                }
-            }
-            if !thatPlayerInNextFrame.OnWall {
-                thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = 0, 0
-            }
-        }
+					if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
+						// To avoid mysterious climbing up the wall after sticking on it
+						thatPlayerInNextFrame.VelY = 0
+					}
+				}
+			}
+			if !thatPlayerInNextFrame.OnWall {
+				thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = 0, 0
+			}
+		}
 
 	}
 
@@ -828,12 +843,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			switch v := bulletCollider.Data.(type) {
 			case *MeleeBullet:
 				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
+				offender := currRenderFrame.PlayersArr[v.Bullet.OffenderJoinIndex-1]
 				for _, obj := range collision.Objects {
 					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 					switch t := obj.Data.(type) {
 					case *PlayerDownsync:
-						if v.OffenderJoinIndex == t.JoinIndex {
+						if v.Bullet.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
 						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
@@ -851,18 +866,18 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if 0 > offender.DirX {
 							xfac = -xfac
 						}
-						pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
+						pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
 						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
 						atkedPlayerInNextFrame.VelX = pushbackVelX
 						atkedPlayerInNextFrame.VelY = pushbackVelY
-						if v.BlowUp {
+						if v.Bullet.BlowUp {
 							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
 						} else {
 							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
 						}
 						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-						if v.HitStunFrames > oldFramesToRecover {
-							atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
+						if v.Bullet.HitStunFrames > oldFramesToRecover {
+							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
 						}
 					default:
 						addToNextRenderFrame = false
@@ -870,12 +885,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				}
 			case *FireballBullet:
 				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.OffenderJoinIndex-1]
+				offender := currRenderFrame.PlayersArr[v.Bullet.OffenderJoinIndex-1]
 				for _, obj := range collision.Objects {
 					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 					switch t := obj.Data.(type) {
 					case *PlayerDownsync:
-						if v.OffenderJoinIndex == t.JoinIndex {
+						if v.Bullet.OffenderJoinIndex == t.JoinIndex {
 							continue
 						}
 						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
@@ -893,18 +908,18 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if 0 > offender.DirX {
 							xfac = -xfac
 						}
-						pushbackVelX, pushbackVelY := xfac*v.PushbackVelX, v.PushbackVelY
+						pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
 						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
 						atkedPlayerInNextFrame.VelX = pushbackVelX
 						atkedPlayerInNextFrame.VelY = pushbackVelY
-						if v.BlowUp {
+						if v.Bullet.BlowUp {
 							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
 						} else {
 							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
 						}
 						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-						if v.HitStunFrames > oldFramesToRecover {
-							atkedPlayerInNextFrame.FramesToRecover = v.HitStunFrames
+						if v.Bullet.HitStunFrames > oldFramesToRecover {
+							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
 						}
 					default:
 						addToNextRenderFrame = false
@@ -1052,4 +1067,78 @@ func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
 	}
 
 	return output
+}
+
+func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *MeleeBullet {
+	return &MeleeBullet{
+		Bullet: &BulletConfig{
+			BulletLocalId:           bulletLocalId,
+			OriginatedRenderFrameId: originatedRenderFrameId,
+			OffenderJoinIndex:       offenderJoinIndex,
+
+			StartupFrames:      startupFrames,
+			CancellableStFrame: cancellableStFrame,
+			CancellableEdFrame: cancellableEdFrame,
+			ActiveFrames:       activeFrames,
+
+			HitStunFrames:   hitStunFrames,
+			BlockStunFrames: blockStunFrames,
+			PushbackVelX:    pushbackVelX,
+			PushbackVelY:    pushbackVelY,
+			Damage:          damage,
+
+			SelfLockVelX: selfLockVelX,
+			SelfLockVelY: selfLockVelY,
+
+			HitboxOffsetX: hitboxOffsetX,
+			HitboxOffsetY: hitboxOffsetY,
+			HitboxSizeX:   hitboxSizeX,
+			HitboxSizeY:   hitboxSizeY,
+
+			BlowUp: blowUp,
+
+			TeamId: teamId,
+		},
+	}
+}
+
+func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId int32) *FireballBullet {
+	return &FireballBullet{
+		VirtualGridX: virtualGridX,
+		VirtualGridY: virtualGridY,
+		DirX:         dirX,
+		DirY:         dirY,
+		VelX:         velX,
+		VelY:         velY,
+		Speed:        speed,
+		SpeciesId:    speciesId,
+		Bullet: &BulletConfig{
+			BulletLocalId:           bulletLocalId,
+			OriginatedRenderFrameId: originatedRenderFrameId,
+			OffenderJoinIndex:       offenderJoinIndex,
+
+			StartupFrames:      startupFrames,
+			CancellableStFrame: cancellableStFrame,
+			CancellableEdFrame: cancellableEdFrame,
+			ActiveFrames:       activeFrames,
+
+			HitStunFrames:   hitStunFrames,
+			BlockStunFrames: blockStunFrames,
+			PushbackVelX:    pushbackVelX,
+			PushbackVelY:    pushbackVelY,
+			Damage:          damage,
+
+			SelfLockVelX: selfLockVelX,
+			SelfLockVelY: selfLockVelY,
+
+			HitboxOffsetX: hitboxOffsetX,
+			HitboxOffsetY: hitboxOffsetY,
+			HitboxSizeX:   hitboxSizeX,
+			HitboxSizeY:   hitboxSizeY,
+
+			BlowUp: blowUp,
+
+			TeamId: teamId,
+		},
+	}
 }
