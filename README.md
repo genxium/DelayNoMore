@@ -2,18 +2,19 @@
 
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
 
-_(the following gifs are sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress)_
+The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout [this demo video](https://pan.baidu.com/s/1_DAEuE66s5Obf2GwtVul4Q?pwd=mfpq) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
 ![gif_demo](./charts/internet_fireball_wallmoveset_spedup.gif)
 
 ![gif_demo](./charts/jump_sync_spedup.gif)
 
-Please also checkout [this demo video](https://pan.baidu.com/s/1_DAEuE66s5Obf2GwtVul4Q?pwd=mfpq) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
+All gifs are sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress!
 
-The video mainly shows the following features.
-- The backend receives inputs from frontend peers and broadcasts back for synchronization.
-- The game is recovered for a player upon reconnection.
-- Both backend(Golang) and frontend(JavaScript) execute collision detection and handle collision contacts by the same algorithm. The backend dynamics is togglable by [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.5.2/battle_srv/models/room.go#L813), but **when turned off the game couldn't support recovery upon reconnection**.
+# Notable Features
+- Backend dynamics toggle via [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.5.2/battle_srv/models/room.go#L813)
+- Recovery upon reconnection (only if backend dynamics is ON)
+- Automatically correction for "slow ticker", especially "active slow ticker" which is well-known to be a headache for input synchronization
+- Frame data logging toggle for both frontend & backend, useful for debugging out of sync entities when developing new features
 
 _(how input delay roughly works)_
 
@@ -22,6 +23,8 @@ _(how input delay roughly works)_
 _(how rollback-and-chase in this project roughly works)_
 
 ![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)
+
+(By use of [GopherJs](https://github.com/gopherjs/gopherjs), the frontend codes for dynamics are now automatically generated)
 ![floating_point_accumulation_err](./charts/AvoidingFloatingPointAccumulationErr.jpg)
 
 # 1. Building & running
