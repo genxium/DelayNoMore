@@ -2,9 +2,9 @@
 
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
 
-The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout [this demo video](https://pan.baidu.com/s/1_DAEuE66s5Obf2GwtVul4Q?pwd=mfpq) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
+The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout [this demo video](https://pan.baidu.com/s/1ML6hNupaPHPJRd5rcTvQvw?pwd=8ruc) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
-![gif_demo_1](./charts/internet_fireball_wallmoveset_spedup.gif)
+![gif_demo_1](./charts/internet_fireball_explosion_wallmove_spedup.gif)
 
 ![gif_demo_2](./charts/jump_sync_spedup.gif)
 
