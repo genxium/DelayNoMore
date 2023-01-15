@@ -1,0 +1,55 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Fireball1Explosion",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.1,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "f4ad4f9f-4890-450b-9334-68fe6b903893"
+            }
+          },
+          {
+            "frame": 0.016666666666666666,
+            "value": {
+              "__uuid__": "c6a5994f-251d-4191-a550-dfef979bab59"
+            }
+          },
+          {
+            "frame": 0.03333333333333333,
+            "value": {
+              "__uuid__": "417e58d9-e364-47f7-9364-f31ad3452adc"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "8b566f26-b34d-4da6-bdaa-078358a5b685"
+            }
+          },
+          {
+            "frame": 0.06666666666666667,
+            "value": {
+              "__uuid__": "6ec5f75d-307e-4292-b667-cbbb5a52c2f6"
+            }
+          },
+          {
+            "frame": 0.08333333333333333,
+            "value": {
+              "__uuid__": "d89977f1-d927-4a08-9591-9feb1daf68c8"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

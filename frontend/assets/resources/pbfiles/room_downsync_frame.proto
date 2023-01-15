@@ -6,11 +6,11 @@ import "geometry.proto"; // The import path here is only w.r.t. the proto file, 
 
 message PlayerDownsync {
   int32 id = 1;
-  int32 virtualGridX = 2; 
-  int32 virtualGridY = 3; 
+  int32 virtualGridX = 2;
+  int32 virtualGridY = 3;
   int32 dirX = 4;
   int32 dirY = 5; // "dirX" and "dirY" determines character facing  
-  int32 velX = 6; 
+  int32 velX = 6;
   int32 velY = 7; // "velX" and "velY" is used to record the accumulated effect by accelerations (including gravity)
   int32 speed = 8; // this is the instantaneous scalar attribute of a character, different from but will be accounted in "velX" and "velY" 
   int32 battleState = 9;
@@ -60,97 +60,106 @@ message InputFrameDownsync {
 }
 
 message HeartbeatUpsync {
-  int64 clientTimestamp = 1;     
+  int64 clientTimestamp = 1;
 }
 
 message WsReq {
   int32 msgId = 1;
   int32 playerId = 2;
-  int32 act = 3;    
+  int32 act = 3;
   int32 joinIndex = 4;
   int32 ackingFrameId = 5;
   int32 ackingInputFrameId = 6;
-  repeated InputFrameUpsync inputFrameUpsyncBatch = 7; 
-  HeartbeatUpsync hb = 8; 
+  repeated InputFrameUpsync inputFrameUpsyncBatch = 7;
+  HeartbeatUpsync hb = 8;
 }
 
 message WsResp {
   int32 ret = 1;
-  int32 echoedMsgId = 2;    
-  int32 act = 3; 
-  RoomDownsyncFrame rdf = 4; 
+  int32 echoedMsgId = 2;
+  int32 act = 3;
+  RoomDownsyncFrame rdf = 4;
   repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
-  BattleColliderInfo bciFrame = 6; 
+  BattleColliderInfo bciFrame = 6;
 }
 
 message InputsBufferSnapshot {
-  int32 refRenderFrameId = 1;    
+  int32 refRenderFrameId = 1;
   uint64 unconfirmedMask = 2;
   repeated InputFrameDownsync toSendInputFrameDownsyncs = 3;
   bool shouldForceResync = 4;
 }
 
-message MeleeBullet { 
+message MeleeBullet {
   // Jargon reference https://www.thegamer.com/fighting-games-frame-data-explained/
   // ALL lengths are in world coordinate
 
   // for offender  
-  int32 originatedRenderFrameId = 1; 
-  int32 offenderJoinIndex = 2;    
+  int32 originatedRenderFrameId = 1;
+  int32 offenderJoinIndex = 2;
 
-  int32 startupFrames = 3; 
+  int32 startupFrames = 3;
   int32 cancellableStFrame = 4;
   int32 cancellableEdFrame = 5;
-  int32 activeFrames = 6;  
+  int32 activeFrames = 6;
 
-  int32 hitStunFrames = 7; 
-  int32 blockStunFrames = 8; 
-  int32 pushbackVelX = 9;  
-  int32 pushbackVelY = 10;  
-  int32 damage = 11;   
+  int32 hitStunFrames = 7;
+  int32 blockStunFrames = 8;
+  int32 pushbackVelX = 9;
+  int32 pushbackVelY = 10;
+  int32 damage = 11;
 
-  int32 selfLockVelX = 12;  
-  int32 selfLockVelY = 13;  
+  int32 selfLockVelX = 12;
+  int32 selfLockVelY = 13;
 
-  int32 hitboxOffsetX = 14;  
-  int32 hitboxOffsetY = 15;  
-  int32 hitboxSizeX = 16; 
+  int32 hitboxOffsetX = 14;
+  int32 hitboxOffsetY = 15;
+  int32 hitboxSizeX = 16;
   int32 hitboxSizeY = 17;
 
   bool blowUp = 18;
   int32 teamId = 19;
 
-  int32 bulletLocalId = 20; 
-} 
+  int32 bulletLocalId = 20;
+  int32 speciesId = 21;
+  int32 explosionFrames = 22;
 
-message FireballBullet { 
-  int32 originatedRenderFrameId = 1; 
-  int32 offenderJoinIndex = 2;    
+  int32 blState = 23;
+  int32 framesInBlState = 24;
+}
 
-  int32 startupFrames = 3; 
+message FireballBullet {
+  int32 originatedRenderFrameId = 1;
+  int32 offenderJoinIndex = 2;
+
+  int32 startupFrames = 3;
   int32 cancellableStFrame = 4;
   int32 cancellableEdFrame = 5;
-  int32 activeFrames = 6;  
+  int32 activeFrames = 6;
 
-  int32 hitStunFrames = 7; 
-  int32 blockStunFrames = 8; 
-  int32 pushbackVelX = 9;  
-  int32 pushbackVelY = 10;  
-  int32 damage = 11;   
+  int32 hitStunFrames = 7;
+  int32 blockStunFrames = 8;
+  int32 pushbackVelX = 9;
+  int32 pushbackVelY = 10;
+  int32 damage = 11;
 
-  int32 selfLockVelX = 12;  
-  int32 selfLockVelY = 13;  
+  int32 selfLockVelX = 12;
+  int32 selfLockVelY = 13;
 
-  int32 hitboxOffsetX = 14;  
-  int32 hitboxOffsetY = 15;  
-  int32 hitboxSizeX = 16; 
+  int32 hitboxOffsetX = 14;
+  int32 hitboxOffsetY = 15;
+  int32 hitboxSizeX = 16;
   int32 hitboxSizeY = 17;
 
   bool blowUp = 18;
   int32 teamId = 19;
 
-  int32 bulletLocalId = 20; 
-  int32 speciesId = 21; 
+  int32 bulletLocalId = 20;
+  int32 speciesId = 21;
+  int32 explosionFrames = 22;
+
+  int32 blState = 23;
+  int32 framesInBlState = 24;
 
   int32 virtualGridX = 999;
   int32 virtualGridY = 1000;
@@ -159,20 +168,20 @@ message FireballBullet {
   int32 velX = 1003;
   int32 velY = 1004;
   int32 speed = 1005;
-} 
+}
 
 message BattleColliderInfo {
   string stageName = 1;
 
-  int32 intervalToPing        = 2;
+  int32 intervalToPing = 2;
   int32 willKickIfInactiveFor = 3;
-  int32 boundRoomId           = 4;
-  int64 battleDurationNanos   = 5;
-  int32 inputFrameUpsyncDelayTolerance = 6;  
+  int32 boundRoomId = 4;
+  int64 battleDurationNanos = 5;
+  int32 inputFrameUpsyncDelayTolerance = 6;
   int32 maxChasingRenderFramesPerUpdate = 7;
   double rollbackEstimatedDtMillis = 8;
   int64 rollbackEstimatedDtNanos = 9;
- 
+
   int32 renderCacheSize = 10;
   double spaceOffsetX = 11;
   double spaceOffsetY = 12;
@@ -186,7 +195,7 @@ message RoomDownsyncFrame {
   repeated PlayerDownsync playersArr = 2;
   int64 countdownNanos = 3;
   repeated MeleeBullet meleeBullets = 4; // I don't know how to mimic inheritance/composition in protobuf by far, thus using an array for each type of bullet as a compromise 
-  repeated FireballBullet fireballBullets = 5; 
+  repeated FireballBullet fireballBullets = 5;
 
   uint64 backendUnconfirmedMask = 1024; // Indexed by "joinIndex", same compression concern as stated in InputFrameDownsync
   bool shouldForceResync = 1025;

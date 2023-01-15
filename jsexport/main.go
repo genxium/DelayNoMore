@@ -72,12 +72,12 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 	})
 }
 
-func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *js.Object {
-	return js.MakeWrapper(NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId))
+func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId, blState, framesInBlState, explosionFrames, speciesId int32) *js.Object {
+	return js.MakeWrapper(NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, blState, framesInBlState, explosionFrames, speciesId))
 }
 
-func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId int32) *js.Object {
-	return js.MakeWrapper(NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId))
+func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, blState, framesInBlState, explosionFrames, speciesId int32) *js.Object {
+	return js.MakeWrapper(NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY, blowUp, teamId, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, blState, framesInBlState, explosionFrames, speciesId))
 }
 
 func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
@@ -171,5 +171,9 @@ func main() {
 		"ConvertToFirstUsedRenderFrameId":                      ConvertToFirstUsedRenderFrameId,
 		"ConvertToLastUsedRenderFrameId":                       ConvertToLastUsedRenderFrameId,
 		"ShouldGenerateInputFrameUpsync":                       ShouldGenerateInputFrameUpsync,
+		"IsMeleeBulletActive":                                  IsMeleeBulletActive,
+		"IsMeleeBulletAlive":                                   IsMeleeBulletAlive,
+		"IsFireballBulletActive":                               IsFireballBulletActive,
+		"IsFireballBulletAlive":                                IsFireballBulletAlive,
 	})
 }

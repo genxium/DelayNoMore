@@ -4187,6 +4187,10 @@ $root.protos = (function() {
          * @property {boolean|null} [blowUp] MeleeBullet blowUp
          * @property {number|null} [teamId] MeleeBullet teamId
          * @property {number|null} [bulletLocalId] MeleeBullet bulletLocalId
+         * @property {number|null} [speciesId] MeleeBullet speciesId
+         * @property {number|null} [explosionFrames] MeleeBullet explosionFrames
+         * @property {number|null} [blState] MeleeBullet blState
+         * @property {number|null} [framesInBlState] MeleeBullet framesInBlState
          */
 
         /**
@@ -4365,6 +4369,38 @@ $root.protos = (function() {
         MeleeBullet.prototype.bulletLocalId = 0;
 
         /**
+         * MeleeBullet speciesId.
+         * @member {number} speciesId
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.speciesId = 0;
+
+        /**
+         * MeleeBullet explosionFrames.
+         * @member {number} explosionFrames
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.explosionFrames = 0;
+
+        /**
+         * MeleeBullet blState.
+         * @member {number} blState
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.blState = 0;
+
+        /**
+         * MeleeBullet framesInBlState.
+         * @member {number} framesInBlState
+         * @memberof protos.MeleeBullet
+         * @instance
+         */
+        MeleeBullet.prototype.framesInBlState = 0;
+
+        /**
          * Creates a new MeleeBullet instance using the specified properties.
          * @function create
          * @memberof protos.MeleeBullet
@@ -4428,6 +4464,14 @@ $root.protos = (function() {
                 writer.uint32(/* id 19, wireType 0 =*/152).int32(message.teamId);
             if (message.bulletLocalId != null && Object.hasOwnProperty.call(message, "bulletLocalId"))
                 writer.uint32(/* id 20, wireType 0 =*/160).int32(message.bulletLocalId);
+            if (message.speciesId != null && Object.hasOwnProperty.call(message, "speciesId"))
+                writer.uint32(/* id 21, wireType 0 =*/168).int32(message.speciesId);
+            if (message.explosionFrames != null && Object.hasOwnProperty.call(message, "explosionFrames"))
+                writer.uint32(/* id 22, wireType 0 =*/176).int32(message.explosionFrames);
+            if (message.blState != null && Object.hasOwnProperty.call(message, "blState"))
+                writer.uint32(/* id 23, wireType 0 =*/184).int32(message.blState);
+            if (message.framesInBlState != null && Object.hasOwnProperty.call(message, "framesInBlState"))
+                writer.uint32(/* id 24, wireType 0 =*/192).int32(message.framesInBlState);
             return writer;
         };
 
@@ -4542,6 +4586,22 @@ $root.protos = (function() {
                         message.bulletLocalId = reader.int32();
                         break;
                     }
+                case 21: {
+                        message.speciesId = reader.int32();
+                        break;
+                    }
+                case 22: {
+                        message.explosionFrames = reader.int32();
+                        break;
+                    }
+                case 23: {
+                        message.blState = reader.int32();
+                        break;
+                    }
+                case 24: {
+                        message.framesInBlState = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4637,6 +4697,18 @@ $root.protos = (function() {
             if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
                 if (!$util.isInteger(message.bulletLocalId))
                     return "bulletLocalId: integer expected";
+            if (message.speciesId != null && message.hasOwnProperty("speciesId"))
+                if (!$util.isInteger(message.speciesId))
+                    return "speciesId: integer expected";
+            if (message.explosionFrames != null && message.hasOwnProperty("explosionFrames"))
+                if (!$util.isInteger(message.explosionFrames))
+                    return "explosionFrames: integer expected";
+            if (message.blState != null && message.hasOwnProperty("blState"))
+                if (!$util.isInteger(message.blState))
+                    return "blState: integer expected";
+            if (message.framesInBlState != null && message.hasOwnProperty("framesInBlState"))
+                if (!$util.isInteger(message.framesInBlState))
+                    return "framesInBlState: integer expected";
             return null;
         };
 
@@ -4692,6 +4764,14 @@ $root.protos = (function() {
                 message.teamId = object.teamId | 0;
             if (object.bulletLocalId != null)
                 message.bulletLocalId = object.bulletLocalId | 0;
+            if (object.speciesId != null)
+                message.speciesId = object.speciesId | 0;
+            if (object.explosionFrames != null)
+                message.explosionFrames = object.explosionFrames | 0;
+            if (object.blState != null)
+                message.blState = object.blState | 0;
+            if (object.framesInBlState != null)
+                message.framesInBlState = object.framesInBlState | 0;
             return message;
         };
 
@@ -4729,6 +4809,10 @@ $root.protos = (function() {
                 object.blowUp = false;
                 object.teamId = 0;
                 object.bulletLocalId = 0;
+                object.speciesId = 0;
+                object.explosionFrames = 0;
+                object.blState = 0;
+                object.framesInBlState = 0;
             }
             if (message.originatedRenderFrameId != null && message.hasOwnProperty("originatedRenderFrameId"))
                 object.originatedRenderFrameId = message.originatedRenderFrameId;
@@ -4770,6 +4854,14 @@ $root.protos = (function() {
                 object.teamId = message.teamId;
             if (message.bulletLocalId != null && message.hasOwnProperty("bulletLocalId"))
                 object.bulletLocalId = message.bulletLocalId;
+            if (message.speciesId != null && message.hasOwnProperty("speciesId"))
+                object.speciesId = message.speciesId;
+            if (message.explosionFrames != null && message.hasOwnProperty("explosionFrames"))
+                object.explosionFrames = message.explosionFrames;
+            if (message.blState != null && message.hasOwnProperty("blState"))
+                object.blState = message.blState;
+            if (message.framesInBlState != null && message.hasOwnProperty("framesInBlState"))
+                object.framesInBlState = message.framesInBlState;
             return object;
         };
 
@@ -4829,6 +4921,9 @@ $root.protos = (function() {
          * @property {number|null} [teamId] FireballBullet teamId
          * @property {number|null} [bulletLocalId] FireballBullet bulletLocalId
          * @property {number|null} [speciesId] FireballBullet speciesId
+         * @property {number|null} [explosionFrames] FireballBullet explosionFrames
+         * @property {number|null} [blState] FireballBullet blState
+         * @property {number|null} [framesInBlState] FireballBullet framesInBlState
          * @property {number|null} [virtualGridX] FireballBullet virtualGridX
          * @property {number|null} [virtualGridY] FireballBullet virtualGridY
          * @property {number|null} [dirX] FireballBullet dirX
@@ -5022,6 +5117,30 @@ $root.protos = (function() {
         FireballBullet.prototype.speciesId = 0;
 
         /**
+         * FireballBullet explosionFrames.
+         * @member {number} explosionFrames
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.explosionFrames = 0;
+
+        /**
+         * FireballBullet blState.
+         * @member {number} blState
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.blState = 0;
+
+        /**
+         * FireballBullet framesInBlState.
+         * @member {number} framesInBlState
+         * @memberof protos.FireballBullet
+         * @instance
+         */
+        FireballBullet.prototype.framesInBlState = 0;
+
+        /**
          * FireballBullet virtualGridX.
          * @member {number} virtualGridX
          * @memberof protos.FireballBullet
@@ -5143,6 +5262,12 @@ $root.protos = (function() {
                 writer.uint32(/* id 20, wireType 0 =*/160).int32(message.bulletLocalId);
             if (message.speciesId != null && Object.hasOwnProperty.call(message, "speciesId"))
                 writer.uint32(/* id 21, wireType 0 =*/168).int32(message.speciesId);
+            if (message.explosionFrames != null && Object.hasOwnProperty.call(message, "explosionFrames"))
+                writer.uint32(/* id 22, wireType 0 =*/176).int32(message.explosionFrames);
+            if (message.blState != null && Object.hasOwnProperty.call(message, "blState"))
+                writer.uint32(/* id 23, wireType 0 =*/184).int32(message.blState);
+            if (message.framesInBlState != null && Object.hasOwnProperty.call(message, "framesInBlState"))
+                writer.uint32(/* id 24, wireType 0 =*/192).int32(message.framesInBlState);
             if (message.virtualGridX != null && Object.hasOwnProperty.call(message, "virtualGridX"))
                 writer.uint32(/* id 999, wireType 0 =*/7992).int32(message.virtualGridX);
             if (message.virtualGridY != null && Object.hasOwnProperty.call(message, "virtualGridY"))
@@ -5275,6 +5400,18 @@ $root.protos = (function() {
                         message.speciesId = reader.int32();
                         break;
                     }
+                case 22: {
+                        message.explosionFrames = reader.int32();
+                        break;
+                    }
+                case 23: {
+                        message.blState = reader.int32();
+                        break;
+                    }
+                case 24: {
+                        message.framesInBlState = reader.int32();
+                        break;
+                    }
                 case 999: {
                         message.virtualGridX = reader.int32();
                         break;
@@ -5401,6 +5538,15 @@ $root.protos = (function() {
             if (message.speciesId != null && message.hasOwnProperty("speciesId"))
                 if (!$util.isInteger(message.speciesId))
                     return "speciesId: integer expected";
+            if (message.explosionFrames != null && message.hasOwnProperty("explosionFrames"))
+                if (!$util.isInteger(message.explosionFrames))
+                    return "explosionFrames: integer expected";
+            if (message.blState != null && message.hasOwnProperty("blState"))
+                if (!$util.isInteger(message.blState))
+                    return "blState: integer expected";
+            if (message.framesInBlState != null && message.hasOwnProperty("framesInBlState"))
+                if (!$util.isInteger(message.framesInBlState))
+                    return "framesInBlState: integer expected";
             if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
                 if (!$util.isInteger(message.virtualGridX))
                     return "virtualGridX: integer expected";
@@ -5479,6 +5625,12 @@ $root.protos = (function() {
                 message.bulletLocalId = object.bulletLocalId | 0;
             if (object.speciesId != null)
                 message.speciesId = object.speciesId | 0;
+            if (object.explosionFrames != null)
+                message.explosionFrames = object.explosionFrames | 0;
+            if (object.blState != null)
+                message.blState = object.blState | 0;
+            if (object.framesInBlState != null)
+                message.framesInBlState = object.framesInBlState | 0;
             if (object.virtualGridX != null)
                 message.virtualGridX = object.virtualGridX | 0;
             if (object.virtualGridY != null)
@@ -5531,6 +5683,9 @@ $root.protos = (function() {
                 object.teamId = 0;
                 object.bulletLocalId = 0;
                 object.speciesId = 0;
+                object.explosionFrames = 0;
+                object.blState = 0;
+                object.framesInBlState = 0;
                 object.virtualGridX = 0;
                 object.virtualGridY = 0;
                 object.dirX = 0;
@@ -5581,6 +5736,12 @@ $root.protos = (function() {
                 object.bulletLocalId = message.bulletLocalId;
             if (message.speciesId != null && message.hasOwnProperty("speciesId"))
                 object.speciesId = message.speciesId;
+            if (message.explosionFrames != null && message.hasOwnProperty("explosionFrames"))
+                object.explosionFrames = message.explosionFrames;
+            if (message.blState != null && message.hasOwnProperty("blState"))
+                object.blState = message.blState;
+            if (message.framesInBlState != null && message.hasOwnProperty("framesInBlState"))
+                object.framesInBlState = message.framesInBlState;
             if (message.virtualGridX != null && message.hasOwnProperty("virtualGridX"))
                 object.virtualGridX = message.virtualGridX;
             if (message.virtualGridY != null && message.hasOwnProperty("virtualGridY"))

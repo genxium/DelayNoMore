@@ -1,12 +1,7 @@
-cc.Class({
-  extends: cc.Component,
+const Bullet = require("./Bullet");
 
-  properties: {
-    animNode: {
-      type: cc.Node,
-      default: null
-    },
-  },
+cc.Class({
+  extends: Bullet,
 
   ctor() {
     this.lastUsed = -1;
@@ -27,22 +22,8 @@ cc.Class({
     this.speciesName = speciesName;
     this.effAnimNode = this.animNode.getChildByName(this.speciesName);
     this.effAnimNode.active = true;
-    this.updateAnim(speciesName, fireballBullet, rdf);
   },
 
   onLoad() {},
 
-  updateAnim(speciesName, fireballBullet, rdf) {
-    this.animComp = this.effAnimNode.getComponent(cc.Animation);
-    // Update directions
-    if (this.animComp && this.animComp.node) {
-      if (0 > fireballBullet.DirX) {
-        this.animNode.scaleX = (-1.0);
-      } else if (0 < fireballBullet.DirX) {
-        this.animNode.scaleX = (1.0);
-      }
-    }
-
-    this.animComp.play(speciesName);
-  },
 });

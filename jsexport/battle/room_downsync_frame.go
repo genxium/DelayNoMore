@@ -83,7 +83,9 @@ type BulletConfig struct {
 	HitboxSizeX   int32
 	HitboxSizeY   int32
 
-	BlowUp bool
+	BlowUp          bool
+	ExplosionFrames int32
+	SpeciesId       int32 // For fireball, this SpeciesId specifies both the active animation and the explosion animation, for melee it specifies the explosion animation
 
 	CancelTransit map[int]int
 }
@@ -98,21 +100,24 @@ type BulletBattleAttr struct {
 }
 
 type MeleeBullet struct {
-	BattleAttr *BulletBattleAttr
-	Bullet     *BulletConfig
+	BlState         int32 // bullet state, e.g. STARTUP, ACTIVE, EXPLODING
+	FramesInBlState int32
+	BattleAttr      *BulletBattleAttr
+	Bullet          *BulletConfig
 }
 
 type FireballBullet struct {
-	VirtualGridX int32
-	VirtualGridY int32
-	DirX         int32
-	DirY         int32
-	VelX         int32
-	VelY         int32
-	Speed        int32
-	SpeciesId    int32
-	BattleAttr   *BulletBattleAttr
-	Bullet       *BulletConfig
+	VirtualGridX    int32
+	VirtualGridY    int32
+	DirX            int32
+	DirY            int32
+	VelX            int32
+	VelY            int32
+	Speed           int32
+	BlState         int32 // bullet state, e.g. STARTUP, ACTIVE, EXPLODING
+	FramesInBlState int32
+	BattleAttr      *BulletBattleAttr
+	Bullet          *BulletConfig
 }
 
 type Skill struct {
@@ -123,6 +128,7 @@ type Skill struct {
 	ReleaseTriggerType    int32 // 1: rising-edge, 2: falling-edge
 	BoundChState          int32
 	Hits                  []interface{} // Hits within a "Skill" are automatically triggered
+	// [WARN] Multihit of a fireball is more difficult to handle than that of melee, because we have to count from the fireball's first hit; the situation becomes even more complicated when a multihit fireball is in a crowd -- remains to be designed
 }
 
 type RoomDownsyncFrame struct {
