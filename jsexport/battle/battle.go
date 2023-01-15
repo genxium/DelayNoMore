@@ -1,9 +1,9 @@
 package battle
 
 import (
+	//"fmt"
 	"math"
 	"resolv"
-	//"fmt"
 )
 
 const (
@@ -50,6 +50,12 @@ var DIRECTION_DECODER = [][]int32{
 	{+1, -1},
 	{-1, +1},
 }
+
+const (
+	BULLET_STARTUP   = int32(0)
+	BULLET_ACTIVE    = int32(1)
+	BULLET_EXPLODING = int32(2)
+)
 
 const (
 	ATK_CHARACTER_STATE_IDLE1               = int32(0)
@@ -218,6 +224,34 @@ func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 	}
 
 	return true
+}
+
+func IsMeleeBulletActive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
+	if BULLET_EXPLODING == meleeBullet.BlState {
+		return false
+	}
+	return (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id)
+}
+
+func IsMeleeBulletAlive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
+	if BULLET_EXPLODING == meleeBullet.BlState {
+		return meleeBullet.FramesInBlState < meleeBullet.Bullet.ExplosionFrames
+	}
+	return (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id)
+}
+
+func IsFireballBulletActive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {
+	if BULLET_EXPLODING == fireballBullet.BlState {
+		return false
+	}
+	return (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id)
+}
+
+func IsFireballBulletAlive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {
+	if BULLET_EXPLODING == fireballBullet.BlState {
+		return fireballBullet.FramesInBlState < fireballBullet.Bullet.ExplosionFrames
+	}
+	return (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id)
 }
 
 func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, result *SatResult) bool {
@@ -510,7 +544,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 	}
 
-	// [WARNING] For rollback compatibility, MeleeBullets are composed of only static BulletConfig data and move along with the offenders, therefore they can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets move on their own and must be copies of instances for each RenderFrame!
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	nextRenderFrameFireballBullets := make([]*FireballBullet, 0, len(currRenderFrame.FireballBullets))
 	effPushbacks := make([]Vec2D, roomCapacity)
@@ -548,6 +581,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					TeamId:                  currPlayerDownsync.BulletTeamId,
 				}
 				bulletLocalId++
+				newBullet.BlState = BULLET_STARTUP
 				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
@@ -571,6 +605,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				newBullet.DirY = 0
 				newBullet.VelX = newBullet.Speed * xfac
 				newBullet.VelY = 0
+
+				newBullet.BlState = BULLET_STARTUP
 				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, &newBullet)
 				//fmt.Printf("Created new fireball @currRenderFrame.Id=%d, %p, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, offenderVpos=(%d,%d)\n", currRenderFrame.Id, &newBullet, bulletLocalId, newBullet.VirtualGridX, newBullet.VirtualGridY, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY)
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
@@ -673,46 +709,68 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	// 3. Add bullet colliders into collision system
-	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
-	for _, meleeBullet := range currRenderFrame.MeleeBullets {
-		if (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
-			offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
 
-			xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
-			if 0 > offender.DirX {
-				xfac = -xfac
+	// [WARNING] For rollback compatibility, static data of "BulletConfig" & "BattleAttr(static since instantiated)" can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets movement data as well as bullet animation data must be copies of instances for each RenderFrame!
+	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
+	for _, prevMelee := range currRenderFrame.MeleeBullets {
+		meleeBullet := &MeleeBullet{
+			Bullet:          prevMelee.Bullet,
+			BattleAttr:      prevMelee.BattleAttr,
+			FramesInBlState: prevMelee.FramesInBlState + 1,
+			BlState:         prevMelee.BlState,
+		}
+		if IsMeleeBulletAlive(meleeBullet, currRenderFrame) {
+			if IsMeleeBulletActive(meleeBullet, currRenderFrame) {
+				offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
+
+				xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+				if 0 > offender.DirX {
+					xfac = -xfac
+				}
+				bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
+				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
+				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+				collisionSys.Add(newBulletCollider)
+				bulletColliders = append(bulletColliders, newBulletCollider)
+				meleeBullet.BlState = BULLET_ACTIVE
+				if meleeBullet.BlState != prevMelee.BlState {
+					meleeBullet.FramesInBlState = 0
+				}
 			}
-			bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
-			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
-			collisionSys.Add(newBulletCollider)
-			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id {
 			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
 		}
 	}
 
 	for _, prevFireball := range currRenderFrame.FireballBullets {
 		fireballBullet := &FireballBullet{
-			VirtualGridX: prevFireball.VirtualGridX,
-			VirtualGridY: prevFireball.VirtualGridY,
-			DirX:         prevFireball.DirX,
-			DirY:         prevFireball.DirY,
-			VelX:         prevFireball.VelX,
-			VelY:         prevFireball.VelY,
-			Speed:        prevFireball.Speed,
-			SpeciesId:    prevFireball.SpeciesId,
-			Bullet:       prevFireball.Bullet,
-			BattleAttr:   prevFireball.BattleAttr,
+			VirtualGridX:    prevFireball.VirtualGridX,
+			VirtualGridY:    prevFireball.VirtualGridY,
+			DirX:            prevFireball.DirX,
+			DirY:            prevFireball.DirY,
+			VelX:            prevFireball.VelX,
+			VelY:            prevFireball.VelY,
+			Speed:           prevFireball.Speed,
+			Bullet:          prevFireball.Bullet,
+			BattleAttr:      prevFireball.BattleAttr,
+			FramesInBlState: prevFireball.FramesInBlState + 1,
+			BlState:         prevFireball.BlState,
 		}
-		if (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id) {
-			bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
-			hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
-			newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
-			collisionSys.Add(newBulletCollider)
-			bulletColliders = append(bulletColliders, newBulletCollider)
-		} else if fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id {
-			// fmt.Printf("Pushing static fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
+		if IsFireballBulletAlive(fireballBullet, currRenderFrame) {
+			if IsFireballBulletActive(fireballBullet, currRenderFrame) {
+				bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
+				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
+				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
+				collisionSys.Add(newBulletCollider)
+				bulletColliders = append(bulletColliders, newBulletCollider)
+				fireballBullet.BlState = BULLET_ACTIVE
+				if fireballBullet.BlState != prevFireball.BlState {
+					fireballBullet.FramesInBlState = 0
+				}
+				fireballBullet.VirtualGridX, fireballBullet.VirtualGridY = fireballBullet.VirtualGridX+fireballBullet.VelX, fireballBullet.VirtualGridY+fireballBullet.VelY
+				//fmt.Printf("Pushing active fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY, fireballBullet.BlState)
+			} else {
+				//fmt.Printf("Pushing non-active fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY, fireballBullet.BlState)
+			}
 			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
 		}
 	}
@@ -845,7 +903,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	for _, bulletCollider := range bulletColliders {
 		collision := bulletCollider.Check(0, 0)
 		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
-		addToNextRenderFrame := true
+		exploded := false
 		if nil != collision {
 			switch v := bulletCollider.Data.(type) {
 			case *MeleeBullet:
@@ -862,7 +920,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if !overlapped {
 							continue
 						}
-						addToNextRenderFrame = false
+						exploded = true
 						if _, existent := invinsibleSet[t.CharacterState]; existent {
 							continue
 						}
@@ -886,8 +944,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if v.Bullet.HitStunFrames > oldFramesToRecover {
 							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
 						}
-					default:
-						addToNextRenderFrame = false
 					}
 				}
 			case *FireballBullet:
@@ -904,7 +960,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if !overlapped {
 							continue
 						}
-						addToNextRenderFrame = false
+						exploded = true
 						if _, existent := invinsibleSet[t.CharacterState]; existent {
 							continue
 						}
@@ -929,18 +985,21 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
 						}
 					default:
-						addToNextRenderFrame = false
+						exploded = true
 					}
 				}
 			}
 		}
-		if addToNextRenderFrame {
+		if exploded {
 			switch v := bulletCollider.Data.(type) {
 			case *MeleeBullet:
-				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, v)
+				v.BlState = BULLET_EXPLODING
+				v.FramesInBlState = 0
+				//fmt.Printf("melee exploded @currRenderFrame.Id=%d, bulletLocalId=%d, blState=%d\n", currRenderFrame.Id, v.BattleAttr.BulletLocalId, v.BlState)
 			case *FireballBullet:
-				v.VirtualGridX, v.VirtualGridY = v.VirtualGridX+v.VelX, v.VirtualGridY+v.VelY
-				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, v)
+				v.BlState = BULLET_EXPLODING
+				v.FramesInBlState = 0
+				//fmt.Printf("fireball exploded @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, v.BattleAttr.BulletLocalId, v.VirtualGridX, v.VirtualGridY, v.BlState)
 			}
 		}
 	}
@@ -1076,8 +1135,10 @@ func AlignPolygon2DToBoundingBox(input *Polygon2D) *Polygon2D {
 	return output
 }
 
-func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32) *MeleeBullet {
+func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId, blState, framesInBlState, explosionFrames, speciesId int32) *MeleeBullet {
 	return &MeleeBullet{
+		BlState:         blState,
+		FramesInBlState: framesInBlState,
 		BattleAttr: &BulletBattleAttr{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
@@ -1104,12 +1165,14 @@ func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, s
 			HitboxSizeX:   hitboxSizeX,
 			HitboxSizeY:   hitboxSizeY,
 
-			BlowUp: blowUp,
+			BlowUp:          blowUp,
+			ExplosionFrames: explosionFrames,
+			SpeciesId:       speciesId,
 		},
 	}
 }
 
-func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, speciesId int32) *FireballBullet {
+func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, blState, framesInBlState, explosionFrames, speciesId int32) *FireballBullet {
 	return &FireballBullet{
 		VirtualGridX: virtualGridX,
 		VirtualGridY: virtualGridY,
@@ -1118,7 +1181,6 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 		VelX:         velX,
 		VelY:         velY,
 		Speed:        speed,
-		SpeciesId:    speciesId,
 		BattleAttr: &BulletBattleAttr{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
@@ -1145,7 +1207,9 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 			HitboxSizeX:   hitboxSizeX,
 			HitboxSizeY:   hitboxSizeY,
 
-			BlowUp: blowUp,
+			BlowUp:          blowUp,
+			ExplosionFrames: explosionFrames,
+			SpeciesId:       speciesId,
 		},
 	}
 }

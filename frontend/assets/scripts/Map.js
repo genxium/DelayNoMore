@@ -613,13 +613,13 @@ cc.Class({
     const jsMeleeBulletsArr = new Array(pbRdf.meleeBullets.length).fill(null);
     for (let k = 0; k < pbRdf.meleeBullets.length; ++k) {
       const pbBullet = pbRdf.meleeBullets[k];
-      const jsMeleeBullet = gopkgs.NewMeleeBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId);
+      const jsMeleeBullet = gopkgs.NewMeleeBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.blState, pbBullet.framesInBlState, pbBullet.explosionFrames, pbBullet.speciesId);
       jsMeleeBulletsArr[k] = jsMeleeBullet;
     }
     const jsFireballBulletsArr = new Array(pbRdf.fireballBullets.length).fill(null);
     for (let k = 0; k < pbRdf.fireballBullets.length; ++k) {
       const pbBullet = pbRdf.fireballBullets[k];
-      const jsFireballBullet = gopkgs.NewFireballBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.virtualGridX, pbBullet.virtualGridY, pbBullet.dirX, pbBullet.dirY, pbBullet.velX, pbBullet.velY, pbBullet.speed, pbBullet.speciesId);
+      const jsFireballBullet = gopkgs.NewFireballBulletJs(pbBullet.bulletLocalId, pbBullet.originatedRenderFrameId, pbBullet.offenderJoinIndex, pbBullet.startupFrames, pbBullet.cancellableStFrame, pbBullet.cancellableEdFrame, pbBullet.activeFrames, pbBullet.hitStunFrames, pbBullet.blockStunFrames, pbBullet.pushbackVelX, pbBullet.pushbackVelY, pbBullet.damage, pbBullet.selfLockVelX, pbBullet.selfLockVelY, pbBullet.hitboxOffsetX, pbBullet.hitboxOffsetY, pbBullet.hitboxSizeX, pbBullet.hitboxSizeY, pbBullet.blowUp, pbBullet.teamId, pbBullet.virtualGridX, pbBullet.virtualGridY, pbBullet.dirX, pbBullet.dirY, pbBullet.velX, pbBullet.velY, pbBullet.speed, pbBullet.blState, pbBullet.framesInBlState, pbBullet.explosionFrames, pbBullet.speciesId);
       jsFireballBulletsArr[k] = jsFireballBullet;
     }
 
@@ -763,7 +763,6 @@ cc.Class({
     if (lhs.VelX != rhs.VelX) return false;
     if (lhs.VelY != rhs.VelY) return false;
     if (lhs.Speed != rhs.Speed) return false;
-    if (lhs.SpeciesId != rhs.SpeciesId) return false;
 
     return true;
   },
@@ -1114,25 +1113,61 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       const fireball = pqNode.value;
       fireball.node.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
     }
+    for (let k in rdf.MeleeBullets) {
+      const meleeBullet = rdf.MeleeBullets[k];
+      const isExploding = (window.BULLET_STATE.Exploding == meleeBullet.BlState);
+      if (isExploding) {
+        let pqNode = self.cachedFireballs.popAny(meleeBullet.BattleAttr.BulletLocalId);
+        let speciesName = `MeleeExplosion`;
+        let animName = `MeleeExplosion${meleeBullet.Bullet.SpeciesId}`;
+
+        const offender = rdf.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex - 1];
+        let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
+        if (0 > offender.DirX) {
+          xfac = -1;
+        }
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
+
+        if (null == pqNode) {
+          pqNode = self.cachedFireballs.pop();
+        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+        } else {
+          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, using a cached fireball node for rendering for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+        }
+        const cachedFireball = pqNode.value;
+        cachedFireball.setSpecies(speciesName, meleeBullet, rdf);
+        const newAnimIdx = meleeBullet.Bullet.SpeciesId - 1;
+        cachedFireball.updateAnim(animName, meleeBullet.FramesInBlState, offender.DirX, false, rdf, newAnimIdx);
+        cachedFireball.lastUsed = self.renderFrameId;
+        cachedFireball.bulletLocalId = meleeBullet.BattleAttr.BulletLocalId;
+        cachedFireball.node.setPosition(cc.v2(wx, wy));
+
+        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, meleeBullet.BattleAttr.BulletLocalId);
+      } else {
+        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, activeFrames=${meleeBullet.Bullet.ActiveFrames}, not rendering melee node for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId}`);
+      }
+    }
     for (let k in rdf.FireballBullets) {
       const fireballBullet = rdf.FireballBullets[k];
-      if (
-        fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
-        &&
-        fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
-      ) {
+      const isExploding = (window.BULLET_STATE.Exploding == fireballBullet.BlState);
+      if (gopkgs.IsFireballBulletActive(fireballBullet, rdf) || isExploding) {
         let pqNode = self.cachedFireballs.popAny(fireballBullet.BattleAttr.BulletLocalId);
-        const speciesName = `Fireball${fireballBullet.SpeciesId}`;
+        let speciesName = `Fireball${fireballBullet.Bullet.SpeciesId}`;
+        let animName = (BULLET_STATE.Exploding == fireballBullet.BlState ? `Fireball${fireballBullet.Bullet.SpeciesId}Explosion` : speciesName);
+
         const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
-          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
         } else {
           //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
         }
         const cachedFireball = pqNode.value;
         cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
+        const spontaneousLooping = !isExploding;
+        const newAnimIdx = (spontaneousLooping ? 0 : 1);
+        cachedFireball.updateAnim(animName, fireballBullet.FramesInBlState, fireballBullet.DirX, spontaneousLooping, rdf, newAnimIdx);
         cachedFireball.lastUsed = self.renderFrameId;
         cachedFireball.bulletLocalId = fireballBullet.BattleAttr.BulletLocalId;
         cachedFireball.node.setPosition(cc.v2(wx, wy));
@@ -1363,11 +1398,7 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
 
       for (let k in rdf.MeleeBullets) {
         const meleeBullet = rdf.MeleeBullets[k];
-        if (
-          meleeBullet.BattleAttr.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames <= rdf.Id
-          &&
-          meleeBullet.BattleAttr.OriginatedRenderFrameId + meleeBullet.Bullet.StartupFrames + meleeBullet.Bullet.ActiveFrames > rdf.Id
-        ) {
+        if (gopkgs.IsMeleeBulletActive(meleeBullet, rdf)) {
           const offender = rdf.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex - 1];
           if (1 == offender.JoinIndex) {
             g2.strokeColor = cc.Color.BLUE;
@@ -1395,11 +1426,7 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
 
       for (let k in rdf.FireballBullets) {
         const fireballBullet = rdf.FireballBullets[k];
-        if (
-          fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames <= rdf.Id
-          &&
-          fireballBullet.BattleAttr.OriginatedRenderFrameId + fireballBullet.Bullet.StartupFrames + fireballBullet.Bullet.ActiveFrames > rdf.Id
-        ) {
+        if (gopkgs.IsFireballBulletActive(fireballBullet, rdf)) {
           const offender = rdf.PlayersArr[fireballBullet.BattleAttr.OffenderJoinIndex - 1];
           if (1 == offender.JoinIndex) {
             g2.strokeColor = cc.Color.BLUE;

@@ -80,6 +80,12 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			HitboxSizeY:   last.Bullet.HitboxSizeY,
 
 			BlowUp: last.Bullet.BlowUp,
+
+            SpeciesId: last.Bullet.SpeciesId,
+            ExplosionFrames: last.Bullet.ExplosionFrames,
+
+            BlState: last.BlState,
+            FramesInBlState: last.FramesInBlState,
 		}
 		ret.MeleeBullets[i] = pbBullet
 	}
@@ -112,6 +118,12 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 			BlowUp: last.Bullet.BlowUp,
 
+            SpeciesId: last.Bullet.SpeciesId,
+            ExplosionFrames: last.Bullet.ExplosionFrames,
+
+            BlState: last.BlState,
+            FramesInBlState: last.FramesInBlState,
+
 			VirtualGridX: last.VirtualGridX,
 			VirtualGridY: last.VirtualGridY,
 			DirX:         last.DirX,
@@ -119,7 +131,6 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			VelX:         last.VelX,
 			VelY:         last.VelY,
 			Speed:        last.Speed,
-			SpeciesId:    last.SpeciesId,
 		}
 		ret.FireballBullets[i] = pbBullet
 	}
