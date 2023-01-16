@@ -106,6 +106,7 @@ cc.Class({
     this.cachedBtnDownLevel = 0;
     this.cachedBtnLeftLevel = 0;
     this.cachedBtnRightLevel = 0;
+
     this.cachedBtnALevel = 0;
     this.cachedBtnBLevel = 0;
 
@@ -167,11 +168,11 @@ cc.Class({
         evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_END, function(evt) {
-        self.cachedBtnALevel = 0;
+        //self.cachedBtnALevel = 0;
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
-        self.cachedBtnALevel = 0;
+        //self.cachedBtnALevel = 0;
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
     }
@@ -182,11 +183,11 @@ cc.Class({
         evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_END, function(evt) {
-        self.cachedBtnBLevel = 0;
+        //self.cachedBtnBLevel = 0;
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
-        self.cachedBtnBLevel = 0;
+        //self.cachedBtnBLevel = 0;
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
     }
@@ -247,12 +248,14 @@ cc.Class({
         case cc.macro.KEY.d:
           self.cachedBtnRightLevel = 0;
           break;
+        /*
         case cc.macro.KEY.h:
           self.cachedBtnALevel = 0;
           break;
         case cc.macro.KEY.j:
           self.cachedBtnBLevel = 0;
           break;
+        */
         default:
           break;
       }
@@ -464,6 +467,9 @@ cc.Class({
     const discretizedDir = this.discretizeDirection(this.stickhead.x, this.stickhead.y, this.joyStickEps).encodedIdx; // There're only 9 dirs, thus using only the lower 4-bits
     const btnALevel = (this.cachedBtnALevel << 4);
     const btnBLevel = (this.cachedBtnBLevel << 5);
+
+    this.cachedBtnALevel = 0;
+    this.cachedBtnBLevel = 0;
     return (btnBLevel + btnALevel + discretizedDir);
   },
 

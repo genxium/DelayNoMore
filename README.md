@@ -1,6 +1,6 @@
 # Preface 
 
-This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md).
+This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md). As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- not necessarily correct but that's indeed a question to face :)
 
 The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout [this demo video](https://pan.baidu.com/s/1ML6hNupaPHPJRd5rcTvQvw?pwd=8ruc) to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
