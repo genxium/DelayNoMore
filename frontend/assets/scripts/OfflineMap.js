@@ -94,7 +94,7 @@ cc.Class({
       const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
       const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
 
-      const speciesIdList = [4096, 1];
+      const speciesIdList = [1, 4096];
       const chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(speciesIdList);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({

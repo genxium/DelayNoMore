@@ -152,7 +152,6 @@ cc.Class({
       prefabbedInputList[k] = (prefabbedInputList[k] & 15);
     }
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
-    //console.log(`@rdf.Id=${self.renderFrameId}, currSelfInput=${currSelfInput}`);
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     while (self.recentInputCache.EdFrameId <= inputFrameId) {
       // Fill the gap
@@ -924,6 +923,12 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
           [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
         }
 
+        const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
+        if (null == self.recentInputCache.GetByFrameId(delayedInputFrameId)) {
+          // Possible edge case after resync
+          self.getOrPrefabInputFrameUpsync(delayedInputFrameId);
+        }
+
         let t0 = performance.now();
         if (self.shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, self.lastUpsyncInputFrameId, noDelayInputFrameId)) {
           // TODO: Is the following statement run asynchronously in an implicit manner? Should I explicitly run it asynchronously?
@@ -1196,7 +1201,25 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
-      const delayedInputFrame = self.getOrPrefabInputFrameUpsync(j);
+      const delayedInputFrame = self.recentInputCache.GetByFrameId(j);
+      /*
+      const prevJ = gopkgs.ConvertToDelayedInputFrameId(i - 1);
+      const prevDelayedInputFrame = self.recentInputCache.GetByFrameId(prevJ);
+      const prevBtnALevel = (null == prevDelayedInputFrame ? 0 : ((prevDelayedInputFrame.InputList[self.selfPlayerInfo.JoinIndex - 1] >> 4) & 1));
+      const btnALevel = ((delayedInputFrame.InputList[self.selfPlayerInfo.JoinIndex - 1] >> 4) & 1);
+      if (
+          ATK_CHARACTER_STATE.Atk1[0] == currRdf.PlayersArr[self.selfPlayerInfo.JoinIndex - 1].CharacterState
+          ||
+          ATK_CHARACTER_STATE.Atk2[0] == currRdf.PlayersArr[self.selfPlayerInfo.JoinIndex - 1].CharacterState
+        ) {
+          console.log(`rdf.Id=${i}, (btnALevel,j)=(${btnALevel},${j}), (prevBtnALevel,prevJ) is (${prevBtnALevel},${prevJ}), in cancellable atk!`);
+      } 
+      if (btnALevel > 0) {
+        if (btnALevel > prevBtnALevel) {
+          console.log(`rdf.Id=${i}, rising edge of btnA triggered`);
+        }
+      }  
+      */
 
       if (self.frameDataLoggingEnabled) {
         const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
