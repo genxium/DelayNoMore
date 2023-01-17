@@ -409,6 +409,9 @@ cc.Class({
   },
 
   onLoad() {
+    cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
+    cc.view.enableAutoFullScreen(true);
+
     const self = this;
     window.mapIns = self;
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
@@ -912,7 +915,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
         // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
         // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
-        return;
+        //return;
       }
       try {
         let st = performance.now();

@@ -78,9 +78,6 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 27
-      },
-      {
         "__id__": 28
       },
       {
@@ -91,6 +88,9 @@
       },
       {
         "__id__": 31
+      },
+      {
+        "__id__": 32
       }
     ],
     "_prefab": null,
@@ -104,8 +104,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 1024,
-      "height": 1920
+      "width": 960,
+      "height": 640
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -116,8 +116,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        512,
-        960,
+        480,
+        320,
         0,
         0,
         0,
@@ -172,8 +172,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 2048,
-      "height": 2048
+      "width": 960,
+      "height": 640
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -191,8 +191,8 @@
         0,
         0,
         1,
-        1.2,
-        1.2,
+        1,
+        1,
         1
       ]
     },
@@ -293,13 +293,13 @@
     },
     "_children": [
       {
-        "__id__": 21
+        "__id__": 22
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 26
+        "__id__": 27
       }
     ],
     "_prefab": null,
@@ -325,16 +325,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
-        -500,
+        -176.065,
+        -136.209,
         0,
         0,
         0,
         0,
         1,
-        0.66667,
-        0.66667,
-        0.66667
+        0.4,
+        0.4,
+        1
       ]
     },
     "_eulerAngles": {
@@ -372,7 +372,11 @@
       }
     ],
     "_active": true,
-    "_components": [],
+    "_components": [
+      {
+        "__id__": 21
+      }
+    ],
     "_prefab": null,
     "_opacity": 255,
     "_color": {
@@ -464,7 +468,7 @@
       "array": [
         0,
         0,
-        210.57636167057314,
+        210.4394431281402,
         0,
         0,
         0,
@@ -652,16 +656,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        143.689,
-        -584.849,
+        178,
+        -156.017,
         0,
         0,
         0,
         0,
         1,
-        0.66667,
-        0.66667,
-        0.66667
+        0.5,
+        0.5,
+        1
       ]
     },
     "_eulerAngles": {
@@ -840,16 +844,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        370.368,
-        -424.647,
+        395,
+        -109.038,
         0,
         0,
         0,
         0,
         1,
-        0.66667,
-        0.66667,
-        0.66667
+        0.5,
+        0.5,
+        1
       ]
     },
     "_eulerAngles": {
@@ -992,6 +996,33 @@
     "_id": "5fVLGAIhROj6UDGotnneup"
   },
   {
+    "__type__": "cc.Widget",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 8
+    },
+    "_enabled": true,
+    "alignMode": 1,
+    "_target": null,
+    "_alignFlags": 0,
+    "_left": 0,
+    "_right": 0,
+    "_top": 0,
+    "_bottom": 0,
+    "_verticalCenter": 0,
+    "_horizontalCenter": 0,
+    "_isAbsLeft": true,
+    "_isAbsRight": true,
+    "_isAbsTop": true,
+    "_isAbsBottom": true,
+    "_isAbsHorizontalCenter": true,
+    "_isAbsVerticalCenter": true,
+    "_originalWidth": 0,
+    "_originalHeight": 0,
+    "_id": "acC7AyRb5LRpSBPNBaQiwi"
+  },
+  {
     "__type__": "cc.Node",
     "_name": "JoystickBG",
     "_objFlags": 0,
@@ -1000,16 +1031,16 @@
     },
     "_children": [
       {
-        "__id__": 22
+        "__id__": 23
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 24
+        "__id__": 25
       },
       {
-        "__id__": 25
+        "__id__": 26
       }
     ],
     "_prefab": null,
@@ -1065,13 +1096,13 @@
     "_name": "Joystick",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 21
+      "__id__": 22
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 23
+        "__id__": 24
       }
     ],
     "_prefab": null,
@@ -1127,7 +1158,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 22
+      "__id__": 23
     },
     "_enabled": true,
     "_materials": [
@@ -1161,7 +1192,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 21
+      "__id__": 22
     },
     "_enabled": true,
     "_materials": [
@@ -1195,7 +1226,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 21
+      "__id__": 22
     },
     "_enabled": true,
     "alignMode": 0,
@@ -1225,12 +1256,12 @@
       "__id__": 7
     },
     "_enabled": true,
-    "alignMode": 0,
+    "alignMode": 1,
     "_target": null,
     "_alignFlags": 0,
-    "_left": 278,
-    "_right": 480.0000000000002,
-    "_top": 544,
+    "_left": 0,
+    "_right": 0,
+    "_top": 0,
     "_bottom": 0,
     "_verticalCenter": 0,
     "_horizontalCenter": 0,
@@ -1240,9 +1271,9 @@
     "_isAbsBottom": true,
     "_isAbsHorizontalCenter": true,
     "_isAbsVerticalCenter": true,
-    "_originalWidth": 480,
+    "_originalWidth": 0,
     "_originalHeight": 0,
-    "_id": "2cxYjEIwNO6rUtXX4WcfnV"
+    "_id": "d6b0+dLHZPRazfYJU9laKD"
   },
   {
     "__type__": "cc.Canvas",
@@ -1254,8 +1285,8 @@
     "_enabled": true,
     "_designResolution": {
       "__type__": "cc.Size",
-      "width": 1024,
-      "height": 1920
+      "width": 960,
+      "height": 640
     },
     "_fitWidth": true,
     "_fitHeight": false,
@@ -1330,10 +1361,10 @@
       "__id__": 3
     },
     "stickhead": {
-      "__id__": 22
+      "__id__": 23
     },
     "base": {
-      "__id__": 21
+      "__id__": 22
     },
     "joyStickEps": 0.1,
     "magicLeanLowerBound": 0.414,

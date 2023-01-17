@@ -68,6 +68,8 @@ cc.Class({
   // LIFE-CYCLE CALLBACKS:
 
   onLoad() {
+    cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
+    cc.view.enableAutoFullScreen(true);
 
     window.atFirstLocationHref = window.location.href.split('#')[0];
     const self = this;

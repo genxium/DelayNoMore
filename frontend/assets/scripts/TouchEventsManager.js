@@ -173,11 +173,11 @@ cc.Class({
       });
       self.btnA.on(cc.Node.EventType.TOUCH_END, function(evt) {
         self._triggerEdgeBtnA(false);
-        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
         self._triggerEdgeBtnA(false);
-        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
     }
 
@@ -188,11 +188,11 @@ cc.Class({
       });
       self.btnB.on(cc.Node.EventType.TOUCH_END, function(evt) {
         self._triggerEdgeBtnB(false);
-        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
         self._triggerEdgeBtnB(false);
-        evt.target.runAction(cc.scaleTo(0.1, 1.0));
+        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
     }
 

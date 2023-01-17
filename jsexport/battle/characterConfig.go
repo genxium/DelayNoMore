@@ -302,7 +302,7 @@ var skills = map[int]*Skill{
 					HitboxOffsetY:      int32(0),
 					HitboxSizeX:        int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:        int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					CancellableStFrame: int32(8),
+					CancellableStFrame: int32(13),
 					CancellableEdFrame: int32(30),
 
 					CancelTransit: map[int]int{
@@ -337,7 +337,7 @@ var skills = map[int]*Skill{
 					HitboxOffsetY:      int32(0),
 					HitboxSizeX:        int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:        int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					CancellableStFrame: int32(19),
+					CancellableStFrame: int32(23),
 					CancellableEdFrame: int32(36),
 					CancelTransit: map[int]int{
 						1: 6,

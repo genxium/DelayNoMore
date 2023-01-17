@@ -11,6 +11,8 @@ cc.Class({
   },
 
   onLoad() {
+    cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
+    cc.view.enableAutoFullScreen(true);
     const self = this;
     window.mapIns = self;
     self.showCriticalCoordinateLabels = false;
@@ -94,7 +96,7 @@ cc.Class({
       const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
       const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
 
-      const speciesIdList = [1, 4096];
+      const speciesIdList = [4096, 1];
       const chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(speciesIdList);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({
@@ -154,7 +156,7 @@ cc.Class({
       if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
         // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
         // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
-        return;
+        //return;
       }
       try {
         let st = performance.now();
