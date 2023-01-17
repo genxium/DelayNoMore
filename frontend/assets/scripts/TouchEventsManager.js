@@ -107,8 +107,10 @@ cc.Class({
     this.cachedBtnLeftLevel = 0;
     this.cachedBtnRightLevel = 0;
 
+    this.realtimeBtnALevel = 0;
     this.cachedBtnALevel = 0;
     this.btnAEdgeTriggerLock = false;
+    this.realtimeBtnBLevel = 0;
     this.cachedBtnBLevel = 0;
     this.btnBEdgeTriggerLock = false;
 
@@ -468,6 +470,9 @@ cc.Class({
     const btnALevel = (this.cachedBtnALevel << 4);
     const btnBLevel = (this.cachedBtnBLevel << 5);
 
+    this.cachedBtnALevel = this.realtimeBtnALevel;
+    this.cachedBtnBLevel = this.realtimeBtnBLevel;
+
     this.btnAEdgeTriggerLock = false;
     this.btnBEdgeTriggerLock = false;
     return (btnBLevel + btnALevel + discretizedDir);
@@ -490,15 +495,17 @@ cc.Class({
   },
 
   _triggerEdgeBtnA(rising) {
-    if (!this.btnAEdgeTriggerLock && (rising ? 0 : 1) == this.cachedBtnALevel) {
-      this.cachedBtnALevel = (rising ? 1 : 0);
+    this.realtimeBtnALevel = (rising ? 1 : 0);
+    if (!this.btnAEdgeTriggerLock && (1 - this.realtimeBtnALevel) == this.cachedBtnALevel) {
+      this.cachedBtnALevel = this.realtimeBtnALevel;
       this.btnAEdgeTriggerLock = true;
     }
   },
 
   _triggerEdgeBtnB(rising) {
-    if (!this.btnBEdgeTriggerLock && (rising ? 0 : 1) == this.cachedBtnBLevel) {
-      this.cachedBtnBLevel = (rising ? 1 : 0);
+    this.realtimeBtnBLevel = (rising ? 1 : 0);
+    if (!this.btnBEdgeTriggerLock && (1 - this.realtimeBtnBLevel) == this.cachedBtnBLevel) {
+      this.cachedBtnBLevel = this.realtimeBtnBLevel;
       this.btnBEdgeTriggerLock = true;
     }
   },
