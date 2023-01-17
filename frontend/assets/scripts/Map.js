@@ -918,7 +918,11 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       try {
         let st = performance.now();
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
-        const [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
+        let prevSelfInput = null,
+          currSelfInput = null;
+        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
+          [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
+        }
 
         let t0 = performance.now();
         if (self.shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, self.lastUpsyncInputFrameId, noDelayInputFrameId)) {
@@ -1192,13 +1196,8 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
-      const delayedInputFrame = self.recentInputCache.GetByFrameId(j); // Don't make prediction here, the inputFrameDownsyncs in recentInputCache was already predicted while prefabbing
-      if (null == delayedInputFrame) {
-        // Shouldn't happen!
-        throw `Failed to get cached delayedInputFrame for i=${i}, j=${j}, renderFrameId=${self.renderFrameId}, lastUpsyncInputFrameId=${self.lastUpsyncInputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, chaserRenderFrameId=${self.chaserRenderFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
-      }
+      const delayedInputFrame = self.getOrPrefabInputFrameUpsync(j);
 
-      const jPrev = gopkgs.ConvertToDelayedInputFrameId(i - 1);
       if (self.frameDataLoggingEnabled) {
         const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
         const inputFrameDownsyncClone = {
