@@ -108,7 +108,9 @@ cc.Class({
     this.cachedBtnRightLevel = 0;
 
     this.cachedBtnALevel = 0;
+    this.btnAEdgeTriggerLock = false;
     this.cachedBtnBLevel = 0;
+    this.btnBEdgeTriggerLock = false;
 
     this.canvasNode = this.mapNode.parent;
     this.mainCameraNode = this.canvasNode.getChildByName("Main Camera"); // Cannot drag and assign the `mainCameraNode` from CocosCreator EDITOR directly, otherwise it'll cause an infinite loading time, till v2.1.0.
@@ -164,30 +166,30 @@ cc.Class({
 
     if (self.btnA) {
       self.btnA.on(cc.Node.EventType.TOUCH_START, function(evt) {
-        self.cachedBtnALevel = 1;
+        self._triggerEdgeBtnA(true);
         evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_END, function(evt) {
-        //self.cachedBtnALevel = 0;
+        self._triggerEdgeBtnA(false);
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
-        //self.cachedBtnALevel = 0;
+        self._triggerEdgeBtnA(false);
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
     }
 
     if (self.btnB) {
       self.btnB.on(cc.Node.EventType.TOUCH_START, function(evt) {
-        self.cachedBtnBLevel = 1;
+        self._triggerEdgeBtnB(true);
         evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_END, function(evt) {
-        //self.cachedBtnBLevel = 0;
+        self._triggerEdgeBtnB(false);
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
-        //self.cachedBtnBLevel = 0;
+        self._triggerEdgeBtnB(false);
         evt.target.runAction(cc.scaleTo(0.1, 1.0));
       });
     }
@@ -224,10 +226,10 @@ cc.Class({
           self.cachedBtnRightLevel = 1;
           break;
         case cc.macro.KEY.h:
-          self.cachedBtnALevel = 1;
+          self._triggerEdgeBtnA(true);
           break;
         case cc.macro.KEY.j:
-          self.cachedBtnBLevel = 1;
+          self._triggerEdgeBtnB(true);
           break;
         default:
           break;
@@ -248,14 +250,12 @@ cc.Class({
         case cc.macro.KEY.d:
           self.cachedBtnRightLevel = 0;
           break;
-        /*
         case cc.macro.KEY.h:
-          self.cachedBtnALevel = 0;
+          self._triggerEdgeBtnA(false);
           break;
         case cc.macro.KEY.j:
-          self.cachedBtnBLevel = 0;
+          self._triggerEdgeBtnB(false);
           break;
-        */
         default:
           break;
       }
@@ -468,8 +468,8 @@ cc.Class({
     const btnALevel = (this.cachedBtnALevel << 4);
     const btnBLevel = (this.cachedBtnBLevel << 5);
 
-    this.cachedBtnALevel = 0;
-    this.cachedBtnBLevel = 0;
+    this.btnAEdgeTriggerLock = false;
+    this.btnBEdgeTriggerLock = false;
     return (btnBLevel + btnALevel + discretizedDir);
   },
 
@@ -487,5 +487,19 @@ cc.Class({
       btnALevel: btnALevel,
       btnBLevel: btnBLevel,
     });
+  },
+
+  _triggerEdgeBtnA(rising) {
+    if (!this.btnAEdgeTriggerLock && (rising ? 0 : 1) == this.cachedBtnALevel) {
+      this.cachedBtnALevel = (rising ? 1 : 0);
+      this.btnAEdgeTriggerLock = true;
+    }
+  },
+
+  _triggerEdgeBtnB(rising) {
+    if (!this.btnBEdgeTriggerLock && (rising ? 0 : 1) == this.cachedBtnBLevel) {
+      this.cachedBtnBLevel = (rising ? 1 : 0);
+      this.btnBEdgeTriggerLock = true;
+    }
   },
 });

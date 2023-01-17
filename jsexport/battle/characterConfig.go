@@ -302,7 +302,7 @@ var skills = map[int]*Skill{
 					HitboxOffsetY:      int32(0),
 					HitboxSizeX:        int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:        int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					CancellableStFrame: int32(13),
+					CancellableStFrame: int32(8),
 					CancellableEdFrame: int32(30),
 
 					CancelTransit: map[int]int{
@@ -337,7 +337,7 @@ var skills = map[int]*Skill{
 					HitboxOffsetY:      int32(0),
 					HitboxSizeX:        int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:        int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					CancellableStFrame: int32(22),
+					CancellableStFrame: int32(19),
 					CancellableEdFrame: int32(36),
 					CancelTransit: map[int]int{
 						1: 6,
@@ -500,7 +500,7 @@ var skills = map[int]*Skill{
 					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          false,
-					ExplosionFrames: 5,
+					ExplosionFrames: 15,
 					SpeciesId:       int32(1),
 				},
 			},

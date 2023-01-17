@@ -134,7 +134,7 @@ cc.Class({
     previousSelfInput = (null == previousInputFrameDownsync ? null : previousInputFrameDownsync.InputList[joinIndex - 1]);
     if (null != existingInputFrame) {
       // This could happen upon either [type#1] or [type#2] forceConfirmation, where "refRenderFrame" is accompanied by some "inputFrameDownsyncs". The check here also guarantees that we don't override history 
-      console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
+      //console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
       return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
     }
 
@@ -152,6 +152,7 @@ cc.Class({
       prefabbedInputList[k] = (prefabbedInputList[k] & 15);
     }
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
+    //console.log(`@rdf.Id=${self.renderFrameId}, currSelfInput=${currSelfInput}`);
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     while (self.recentInputCache.EdFrameId <= inputFrameId) {
       // Fill the gap
@@ -916,12 +917,8 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       }
       try {
         let st = performance.now();
-        let prevSelfInput = null,
-          currSelfInput = null;
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
-        if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
-        }
+        const [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
 
         let t0 = performance.now();
         if (self.shouldSendInputFrameUpsyncBatch(prevSelfInput, currSelfInput, self.lastUpsyncInputFrameId, noDelayInputFrameId)) {

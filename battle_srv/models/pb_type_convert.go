@@ -58,7 +58,7 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			BulletLocalId:           last.BattleAttr.BulletLocalId,
 			OriginatedRenderFrameId: last.BattleAttr.OriginatedRenderFrameId,
 			OffenderJoinIndex:       last.BattleAttr.OffenderJoinIndex,
-			TeamId: last.BattleAttr.TeamId,
+			TeamId:                  last.BattleAttr.TeamId,
 
 			StartupFrames:      last.Bullet.StartupFrames,
 			CancellableStFrame: last.Bullet.CancellableStFrame,
@@ -81,11 +81,11 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 			BlowUp: last.Bullet.BlowUp,
 
-            SpeciesId: last.Bullet.SpeciesId,
-            ExplosionFrames: last.Bullet.ExplosionFrames,
+			SpeciesId:       last.Bullet.SpeciesId,
+			ExplosionFrames: last.Bullet.ExplosionFrames,
 
-            BlState: last.BlState,
-            FramesInBlState: last.FramesInBlState,
+			BlState:         last.BlState,
+			FramesInBlState: last.FramesInBlState,
 		}
 		ret.MeleeBullets[i] = pbBullet
 	}
@@ -95,7 +95,7 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			BulletLocalId:           last.BattleAttr.BulletLocalId,
 			OriginatedRenderFrameId: last.BattleAttr.OriginatedRenderFrameId,
 			OffenderJoinIndex:       last.BattleAttr.OffenderJoinIndex,
-			TeamId: last.BattleAttr.TeamId,
+			TeamId:                  last.BattleAttr.TeamId,
 
 			StartupFrames:      last.Bullet.StartupFrames,
 			CancellableStFrame: last.Bullet.CancellableStFrame,
@@ -118,11 +118,11 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 
 			BlowUp: last.Bullet.BlowUp,
 
-            SpeciesId: last.Bullet.SpeciesId,
-            ExplosionFrames: last.Bullet.ExplosionFrames,
+			SpeciesId:       last.Bullet.SpeciesId,
+			ExplosionFrames: last.Bullet.ExplosionFrames,
 
-            BlState: last.BlState,
-            FramesInBlState: last.FramesInBlState,
+			BlState:         last.BlState,
+			FramesInBlState: last.FramesInBlState,
 
 			VirtualGridX: last.VirtualGridX,
 			VirtualGridY: last.VirtualGridY,
