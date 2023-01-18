@@ -2360,6 +2360,7 @@ $root.protos = (function() {
          * @interface IInputFrameUpsync
          * @property {number|null} [inputFrameId] InputFrameUpsync inputFrameId
          * @property {number|Long|null} [encoded] InputFrameUpsync encoded
+         * @property {number|null} [joinIndex] InputFrameUpsync joinIndex
          */
 
         /**
@@ -2394,6 +2395,14 @@ $root.protos = (function() {
         InputFrameUpsync.prototype.encoded = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
+         * InputFrameUpsync joinIndex.
+         * @member {number} joinIndex
+         * @memberof protos.InputFrameUpsync
+         * @instance
+         */
+        InputFrameUpsync.prototype.joinIndex = 0;
+
+        /**
          * Creates a new InputFrameUpsync instance using the specified properties.
          * @function create
          * @memberof protos.InputFrameUpsync
@@ -2421,6 +2430,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.inputFrameId);
             if (message.encoded != null && Object.hasOwnProperty.call(message, "encoded"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.encoded);
+            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.joinIndex);
             return writer;
         };
 
@@ -2461,6 +2472,10 @@ $root.protos = (function() {
                     }
                 case 2: {
                         message.encoded = reader.uint64();
+                        break;
+                    }
+                case 3: {
+                        message.joinIndex = reader.int32();
                         break;
                     }
                 default:
@@ -2504,6 +2519,9 @@ $root.protos = (function() {
             if (message.encoded != null && message.hasOwnProperty("encoded"))
                 if (!$util.isInteger(message.encoded) && !(message.encoded && $util.isInteger(message.encoded.low) && $util.isInteger(message.encoded.high)))
                     return "encoded: integer|Long expected";
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+                if (!$util.isInteger(message.joinIndex))
+                    return "joinIndex: integer expected";
             return null;
         };
 
@@ -2530,6 +2548,8 @@ $root.protos = (function() {
                     message.encoded = object.encoded;
                 else if (typeof object.encoded === "object")
                     message.encoded = new $util.LongBits(object.encoded.low >>> 0, object.encoded.high >>> 0).toNumber(true);
+            if (object.joinIndex != null)
+                message.joinIndex = object.joinIndex | 0;
             return message;
         };
 
@@ -2553,6 +2573,7 @@ $root.protos = (function() {
                     object.encoded = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.encoded = options.longs === String ? "0" : 0;
+                object.joinIndex = 0;
             }
             if (message.inputFrameId != null && message.hasOwnProperty("inputFrameId"))
                 object.inputFrameId = message.inputFrameId;
@@ -2561,6 +2582,8 @@ $root.protos = (function() {
                     object.encoded = options.longs === String ? String(message.encoded) : message.encoded;
                 else
                     object.encoded = options.longs === String ? $util.Long.prototype.toString.call(message.encoded) : options.longs === Number ? new $util.LongBits(message.encoded.low >>> 0, message.encoded.high >>> 0).toNumber(true) : message.encoded;
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+                object.joinIndex = message.joinIndex;
             return object;
         };
 
@@ -3513,6 +3536,7 @@ $root.protos = (function() {
          * @property {protos.RoomDownsyncFrame|null} [rdf] WsResp rdf
          * @property {Array.<protos.InputFrameDownsync>|null} [inputFrameDownsyncBatch] WsResp inputFrameDownsyncBatch
          * @property {protos.BattleColliderInfo|null} [bciFrame] WsResp bciFrame
+         * @property {number|null} [peerJoinIndex] WsResp peerJoinIndex
          */
 
         /**
@@ -3580,6 +3604,14 @@ $root.protos = (function() {
         WsResp.prototype.bciFrame = null;
 
         /**
+         * WsResp peerJoinIndex.
+         * @member {number} peerJoinIndex
+         * @memberof protos.WsResp
+         * @instance
+         */
+        WsResp.prototype.peerJoinIndex = 0;
+
+        /**
          * Creates a new WsResp instance using the specified properties.
          * @function create
          * @memberof protos.WsResp
@@ -3616,6 +3648,8 @@ $root.protos = (function() {
                     $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
                 $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+            if (message.peerJoinIndex != null && Object.hasOwnProperty.call(message, "peerJoinIndex"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.peerJoinIndex);
             return writer;
         };
 
@@ -3674,6 +3708,10 @@ $root.protos = (function() {
                     }
                 case 6: {
                         message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 7: {
+                        message.peerJoinIndex = reader.int32();
                         break;
                     }
                 default:
@@ -3739,6 +3777,9 @@ $root.protos = (function() {
                 if (error)
                     return "bciFrame." + error;
             }
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                if (!$util.isInteger(message.peerJoinIndex))
+                    return "peerJoinIndex: integer expected";
             return null;
         };
 
@@ -3780,6 +3821,8 @@ $root.protos = (function() {
                     throw TypeError(".protos.WsResp.bciFrame: object expected");
                 message.bciFrame = $root.protos.BattleColliderInfo.fromObject(object.bciFrame);
             }
+            if (object.peerJoinIndex != null)
+                message.peerJoinIndex = object.peerJoinIndex | 0;
             return message;
         };
 
@@ -3804,6 +3847,7 @@ $root.protos = (function() {
                 object.act = 0;
                 object.rdf = null;
                 object.bciFrame = null;
+                object.peerJoinIndex = 0;
             }
             if (message.ret != null && message.hasOwnProperty("ret"))
                 object.ret = message.ret;
@@ -3820,6 +3864,8 @@ $root.protos = (function() {
             }
             if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
                 object.bciFrame = $root.protos.BattleColliderInfo.toObject(message.bciFrame, options);
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                object.peerJoinIndex = message.peerJoinIndex;
             return object;
         };
 
@@ -3862,6 +3908,7 @@ $root.protos = (function() {
          * @property {number|Long|null} [unconfirmedMask] InputsBufferSnapshot unconfirmedMask
          * @property {Array.<protos.InputFrameDownsync>|null} [toSendInputFrameDownsyncs] InputsBufferSnapshot toSendInputFrameDownsyncs
          * @property {boolean|null} [shouldForceResync] InputsBufferSnapshot shouldForceResync
+         * @property {number|null} [peerJoinIndex] InputsBufferSnapshot peerJoinIndex
          */
 
         /**
@@ -3913,6 +3960,14 @@ $root.protos = (function() {
         InputsBufferSnapshot.prototype.shouldForceResync = false;
 
         /**
+         * InputsBufferSnapshot peerJoinIndex.
+         * @member {number} peerJoinIndex
+         * @memberof protos.InputsBufferSnapshot
+         * @instance
+         */
+        InputsBufferSnapshot.prototype.peerJoinIndex = 0;
+
+        /**
          * Creates a new InputsBufferSnapshot instance using the specified properties.
          * @function create
          * @memberof protos.InputsBufferSnapshot
@@ -3945,6 +4000,8 @@ $root.protos = (function() {
                     $root.protos.InputFrameDownsync.encode(message.toSendInputFrameDownsyncs[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.shouldForceResync != null && Object.hasOwnProperty.call(message, "shouldForceResync"))
                 writer.uint32(/* id 4, wireType 0 =*/32).bool(message.shouldForceResync);
+            if (message.peerJoinIndex != null && Object.hasOwnProperty.call(message, "peerJoinIndex"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.peerJoinIndex);
             return writer;
         };
 
@@ -3995,6 +4052,10 @@ $root.protos = (function() {
                     }
                 case 4: {
                         message.shouldForceResync = reader.bool();
+                        break;
+                    }
+                case 5: {
+                        message.peerJoinIndex = reader.int32();
                         break;
                     }
                 default:
@@ -4050,6 +4111,9 @@ $root.protos = (function() {
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 if (typeof message.shouldForceResync !== "boolean")
                     return "shouldForceResync: boolean expected";
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                if (!$util.isInteger(message.peerJoinIndex))
+                    return "peerJoinIndex: integer expected";
             return null;
         };
 
@@ -4088,6 +4152,8 @@ $root.protos = (function() {
             }
             if (object.shouldForceResync != null)
                 message.shouldForceResync = Boolean(object.shouldForceResync);
+            if (object.peerJoinIndex != null)
+                message.peerJoinIndex = object.peerJoinIndex | 0;
             return message;
         };
 
@@ -4114,6 +4180,7 @@ $root.protos = (function() {
                 } else
                     object.unconfirmedMask = options.longs === String ? "0" : 0;
                 object.shouldForceResync = false;
+                object.peerJoinIndex = 0;
             }
             if (message.refRenderFrameId != null && message.hasOwnProperty("refRenderFrameId"))
                 object.refRenderFrameId = message.refRenderFrameId;
@@ -4129,6 +4196,8 @@ $root.protos = (function() {
             }
             if (message.shouldForceResync != null && message.hasOwnProperty("shouldForceResync"))
                 object.shouldForceResync = message.shouldForceResync;
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                object.peerJoinIndex = message.peerJoinIndex;
             return object;
         };
 

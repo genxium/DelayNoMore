@@ -51,6 +51,7 @@ message InputFrameDecoded {
 message InputFrameUpsync {
   int32 inputFrameId = 1;
   uint64 encoded = 2;
+  int32 joinIndex = 3;
 }
 
 message InputFrameDownsync {
@@ -81,6 +82,7 @@ message WsResp {
   RoomDownsyncFrame rdf = 4;
   repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
   BattleColliderInfo bciFrame = 6;
+  int32 peerJoinIndex = 7; // Only used when "InputsBufferSnapshot.peerJoinIndex" is used.
 }
 
 message InputsBufferSnapshot {
@@ -88,6 +90,7 @@ message InputsBufferSnapshot {
   uint64 unconfirmedMask = 2;
   repeated InputFrameDownsync toSendInputFrameDownsyncs = 3;
   bool shouldForceResync = 4;
+  int32 peerJoinIndex = 5; // Only used when "WsResp.peerJoinIndex" is used.
 }
 
 message MeleeBullet {

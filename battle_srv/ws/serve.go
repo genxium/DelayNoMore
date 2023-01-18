@@ -46,6 +46,7 @@ func Serve(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+
 	boundRoomId := 0
 	expectedRoomId := 0
 	var err error
@@ -394,4 +395,90 @@ func Serve(c *gin.Context) {
 
 	startOrFeedHeartbeatWatchdog(conn)
 	go receivingLoopAgainstPlayer()
+}
+
+func HandleSecondaryWsSessionForPlayer(c *gin.Context) {
+	token, ok := c.GetQuery("intAuthToken")
+	if !ok {
+		Logger.Warn("Secondary ws session req must have intAuthToken param!")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	boundRoomId := 0
+	var err error = nil
+	if boundRoomIdStr, hasBoundRoomId := c.GetQuery("boundRoomId"); hasBoundRoomId {
+		boundRoomId, err = strconv.Atoi(boundRoomIdStr)
+		if err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	} else {
+		Logger.Warn("Secondary ws session req must have boundRoomId param:", zap.Any("intAuthToken", token))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	var pRoom *models.Room = nil
+	// Deliberately querying playerId after querying room, because the former is against persistent storage and could be slow!
+	if tmpPRoom, existent := (*models.RoomMapManagerIns)[int32(boundRoomId)]; !existent {
+		Logger.Warn("Secondary ws session failed to get:\n", zap.Any("intAuthToken", token), zap.Any("forBoundRoomId", boundRoomId))
+		c.AbortWithStatus(http.StatusBadRequest)
+	} else {
+		pRoom = tmpPRoom
+	}
+
+	// TODO: Wrap the following 2 stmts by sql transaction!
+	playerId, err := models.GetPlayerIdByToken(token)
+	if err != nil || playerId == 0 {
+		// TODO: Abort with specific message.
+		Logger.Warn("Secondary ws session playerLogin record not found for ws authentication:", zap.Any("intAuthToken", token))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	Logger.Info("Secondary ws session playerLogin record has been found for ws authentication:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId))
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		Logger.Error("Secondary ws session upgrade:", zap.Error(err), zap.Any("playerId", playerId))
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	connHasBeenSignaledToClose := int32(0)
+	pConnHasBeenSignaledToClose := &connHasBeenSignaledToClose
+
+	signalToCloseConnOfThisPlayer := func(customRetCode int, customRetMsg string) {
+		if swapped := atomic.CompareAndSwapInt32(pConnHasBeenSignaledToClose, 0, 1); !swapped {
+			return
+		}
+		Logger.Warn("Secondary ws session signalToCloseConnOfThisPlayer:", zap.Any("playerId", playerId), zap.Any("customRetCode", customRetCode), zap.Any("customRetMsg", customRetMsg))
+		defer func() {
+			if r := recover(); r != nil {
+				Logger.Error("Secondary ws session recovered from: ", zap.Any("panic", r))
+			}
+		}()
+
+		closeMessage := websocket.FormatCloseMessage(customRetCode, customRetMsg)
+		err := conn.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(time.Millisecond*(ConstVals.Ws.WillKickIfInactiveFor)))
+		if err != nil {
+			Logger.Error("Secondary ws session unable to send the CloseFrame control message to player(client-side):", zap.Any("playerId", playerId), zap.Error(err))
+		}
+
+		time.AfterFunc(3*time.Second, func() {
+			// To actually terminates the underlying TCP connection which might be in `CLOSE_WAIT` state if inspected by `netstat`.
+			conn.Close()
+		})
+	}
+
+	onReceivedCloseMessageFromClient := func(code int, text string) error {
+		Logger.Warn("Secondary ws session triggered `onReceivedCloseMessageFromClient`:", zap.Any("code", code), zap.Any("playerId", playerId), zap.Any("message", text))
+		signalToCloseConnOfThisPlayer(code, text)
+		return nil
+	}
+
+	conn.SetCloseHandler(onReceivedCloseMessageFromClient)
+
+	pRoom.SetSecondarySession(int32(playerId), conn, signalToCloseConnOfThisPlayer)
 }

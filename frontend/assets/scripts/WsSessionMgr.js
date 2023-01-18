@@ -11,6 +11,7 @@ window.DOWNSYNC_MSG_ACT_HB_REQ = 1;
 window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
 window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED = 3;
 window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
+window.DOWNSYNC_MSG_ACT_PEER_INPUT_BATCH = 5;
 
 window.sendSafely = function(msgStr) {
   /**
@@ -65,6 +66,7 @@ window.handleHbRequirements = function(resp) {
   }
 
   if (window.handleBattleColliderInfo) {
+    window.initSecondarySession(null, window.boundRoomId);
     window.handleBattleColliderInfo(resp.bciFrame);
   }
 };
@@ -129,8 +131,6 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       urlToConnect = urlToConnect + "&boundRoomId=" + window.boundRoomId;
     }
   }
-
-  const currentHistoryState = window.history && window.history.state ? window.history.state : {};
 
   const clientSession = new WebSocket(urlToConnect);
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
@@ -240,3 +240,56 @@ window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdIn
   cc.director.loadScene('login');
 };
 
+// For secondary ws session
+window.initSecondarySession = function(onopenCb, boundRoomId) {
+  if (window.secondarySession && window.secondarySession.readyState == WebSocket.OPEN) {
+    if (null != onopenCb) {
+      onopenCb();
+    }
+    return;
+  }
+
+  const selfPlayerStr = cc.sys.localStorage.getItem("selfPlayer");
+  const selfPlayer = null == selfPlayerStr ? null : JSON.parse(selfPlayerStr);
+  const intAuthToken = null == selfPlayer ? "" : selfPlayer.intAuthToken;
+
+  let urlToConnect = backendAddress.PROTOCOL.replace('http', 'ws') + '://' + backendAddress.HOST + ":" + backendAddress.PORT + "/tsrhtSecondary?isSecondary=true&intAuthToken=" + intAuthToken + "&boundRoomId=" + boundRoomId;
+
+  const clientSession = new WebSocket(urlToConnect);
+  clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
+
+  clientSession.onopen = function(evt) {
+    console.warn("The secondary WS clientSession is opened.");
+    window.secondarySession = clientSession;
+    if (null == onopenCb) return;
+    onopenCb();
+  };
+
+  clientSession.onmessage = function(evt) {
+    if (null == evt || null == evt.data) {
+      return;
+    }
+    try {
+      const resp = window.pb.protos.WsResp.decode(new Uint8Array(evt.data));
+      //console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
+      switch (resp.act) {
+        case window.DOWNSYNC_MSG_ACT_PEER_INPUT_BATCH:
+          mapIns.onPeerInputFrameUpsync(resp.peerJoinIndex, resp.inputFrameDownsyncBatch);
+          break;
+        default:
+          break;
+      }
+    } catch (e) {
+      console.error("Secondary ws session, unexpected error when parsing data of:", evt.data, e);
+    }
+  };
+
+  clientSession.onerror = function(evt) {
+    console.error("Secondary ws session, error caught on the WS clientSession: ", evt);
+  };
+
+  clientSession.onclose = function(evt) {
+    // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
+    console.warn(`Secondary ws session is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
+  };
+};

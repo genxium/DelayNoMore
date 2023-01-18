@@ -89,6 +89,7 @@ func setRouter(router *gin.Engine) {
 	router.StaticFS("/asset", http.Dir(filepath.Join(Conf.General.AppRoot, "asset")))
 	router.GET("/ping", f)
 	router.GET("/tsrht", ws.Serve)
+	router.GET("/tsrhtSecondary", ws.HandleSecondaryWsSessionForPlayer)
 
 	apiRouter := router.Group("/api")
 	{

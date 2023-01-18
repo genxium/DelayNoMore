@@ -846,6 +846,33 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     self.chaserRenderFrameId = renderFrameId1;
   },
 
+  onPeerInputFrameUpsync(peerJoinIndex, batch /* []*pb.InputFrameDownsync */ ) {
+    // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
+    // See `<proj-root>/ConcerningEdgeCases.md` for why this method exists.
+    if (null == batch) {
+      return;
+    }
+    const self = this;
+    if (!self.recentInputCache) {
+      return;
+    }
+    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
+      return;
+    }
+
+    for (let k in batch) {
+      const inputFrameDownsync = batch[k];
+      const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
+      if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
+        continue;
+      }
+      self.getOrPrefabInputFrameUpsync(inputFrameDownsyncId); // Make sure that inputFrame exists locally
+      const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
+      existingInputFrame.InputList[peerJoinIndex - 1] = inputFrameDownsync.inputList[peerJoinIndex - 1]; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
+      self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameDownsyncId);
+    }
+  },
+
   onPlayerAdded(rdf /* pb.RoomDownsyncFrame */ ) {
     const self = this;
     // Update the "finding player" GUI and show it if not previously present
