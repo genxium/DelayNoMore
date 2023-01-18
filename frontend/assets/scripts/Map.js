@@ -839,7 +839,7 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    console.warn(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
+    console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
 batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
@@ -860,6 +860,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       return;
     }
 
+    //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
       const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
