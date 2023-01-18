@@ -42,7 +42,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:           int32(float64(3.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(2.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		DashingEnabled: false,
@@ -88,7 +88,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:           int32(float64(4.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(2.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		DashingEnabled:             true,
@@ -138,7 +138,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(8),
 		GetUpFramesToRecover:  int32(30),
 
-		Speed:           int32(float64(3.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:           int32(float64(1.9) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY: int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		DashingEnabled: false,

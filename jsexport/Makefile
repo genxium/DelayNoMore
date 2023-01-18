@@ -6,16 +6,22 @@ all: help
 GOPROXY=https://goproxy.io
 
 serve:
-	gopherjs clean
 	gopherjs serve $(PROJECTNAME)
 
-build:
-	gopherjs build $(PROJECTNAME)
-	rm ../frontend/assets/plugin_scripts/jsexport.js && mv ./jsexport.js ../frontend/assets/plugin_scripts/jsexport.js
+clean: 
+	gopherjs clean
+	rm -f ../frontend/assets/plugin_scripts/jsexport.js
+	rm -f ../frontend/assets/plugin_scripts/jsexport.js.map
 
-build-min:
+build: clean
+	gopherjs build $(PROJECTNAME)
+	mv ./jsexport.js ../frontend/assets/plugin_scripts/	
+	mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
+
+build-min: clean
 	gopherjs build -m $(PROJECTNAME)
-	rm ../frontend/assets/plugin_scripts/jsexport.js && mv ./jsexport.js ../frontend/assets/plugin_scripts/jsexport.js
+	mv ./jsexport.js ../frontend/assets/plugin_scripts/	
+	mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
 
 .PHONY: help
 

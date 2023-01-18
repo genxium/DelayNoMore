@@ -476,7 +476,6 @@ cc.Class({
       console.log(`Received parsedBattleColliderInfo via ws`);
       // TODO: Upon reconnection, the backend might have already been sending down data that'd trigger "onRoomDownsyncFrame & onInputFrameDownsyncBatch", but frontend could reject those data due to "battleState != PlayerBattleState.ACTIVE".
       Object.assign(self, parsedBattleColliderInfo);
-      self.tooFastDtIntervalMillis = 0.5 * self.rollbackEstimatedDtMillis;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -911,12 +910,13 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
   update(dt) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
-      const elapsedMillisSinceLastFrameIdTriggered = performance.now() - self.lastRenderFrameIdTriggeredAt;
-      if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
-        // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
-        // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
-        //return;
-      }
+      /*
+      [WARNING] Different devices might differ in the rate of calling "update(dt)", and the game engine is responsible of keeping this rate statistically constant. 
+
+      Significantly different rates of calling "update(dt)" among players in a same battle would result in frequent [type#1 forceConfirmation], if you have any doubt on troubles caused by this, sample the FPS curve from all players in that battle. 
+
+      Kindly note that Significantly different network bandwidths or delay fluctuations would result in frequent [type#1 forceConfirmation] too, but CAUSE FROM DIFFERENT LOCAL "update(dt)" RATE SHOULD BE THE FIRST TO INVESTIGATE AND ELIMINATE -- because we have control on it, but no one has control on the internet. 
+      */
       try {
         let st = performance.now();
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);

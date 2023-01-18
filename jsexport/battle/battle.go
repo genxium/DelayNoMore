@@ -22,7 +22,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -489,19 +489,19 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	}
 
 	patternId := PATTERN_ID_NO_OP
-    if 0 < decodedInput.BtnALevel {
-        if decodedInput.BtnALevel > prevBtnALevel {
-            if 0 > effDy {
-                patternId = 3
-            } else if 0 < effDy {
-                patternId = 2
-            } else {
-                patternId = 1
-            }
-        } else {
-            patternId = 4 // Holding
-        }
-    }
+	if 0 < decodedInput.BtnALevel {
+		if decodedInput.BtnALevel > prevBtnALevel {
+			if 0 > effDy {
+				patternId = 3
+			} else if 0 < effDy {
+				patternId = 2
+			} else {
+				patternId = 1
+			}
+		} else {
+			patternId = 4 // Holding
+		}
+	}
 
 	return patternId, jumpedOrNot, effDx, effDy
 }
