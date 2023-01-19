@@ -72,7 +72,7 @@ user@proj-root/battle_srv/configs> cp -r ./configs.template ./configs
 user@proj-root/frontend/assets/plugin_scripts> cp ./conf.js.template ./conf.js
 ```
 
-## 1.2 Actual building & running
+## 1.3 Actual building & running
 ### Backend 
 ```
 ### The following command runs mysql-server in foreground, it's almost NEVER run in such a way, please find a proper way to run it for yourself
@@ -101,3 +101,11 @@ ErrFatal        {"err": "MISCONF Redis is configured to save RDB snapshots, but 
 ```
 
 Just restart your `redis-server` process.
+
+### 2.2 Why not show "PING value" on frontend display? 
+The most important reason for not showing "PING value" is simple: in most games the "PING value" is collected by a dedicated kernel thread which doesn't interfere the UI thread or the primary networking thread. As this demo primarily runs on browser by far, I don't have this capability easily.
+
+Moreover, in practice I found that to spot sync anomalies, the following tools are much more useful than the "PING VALUE".  
+- Detection of [prediction mismatch on the frontend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/frontend/assets/scripts/Map.js#L842).
+- Detection of [type#1 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1246).
+- Detection of [type#2 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1259).
