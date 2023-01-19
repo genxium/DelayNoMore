@@ -169,30 +169,24 @@ cc.Class({
     if (self.btnA) {
       self.btnA.on(cc.Node.EventType.TOUCH_START, function(evt) {
         self._triggerEdgeBtnA(true);
-        evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_END, function(evt) {
         self._triggerEdgeBtnA(false);
-        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
       self.btnA.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
         self._triggerEdgeBtnA(false);
-        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
     }
 
     if (self.btnB) {
       self.btnB.on(cc.Node.EventType.TOUCH_START, function(evt) {
         self._triggerEdgeBtnB(true);
-        evt.target.runAction(cc.scaleTo(0.1, 0.3));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_END, function(evt) {
         self._triggerEdgeBtnB(false);
-        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
       self.btnB.on(cc.Node.EventType.TOUCH_CANCEL, function(evt) {
         self._triggerEdgeBtnB(false);
-        evt.target.runAction(cc.scaleTo(0.1, 0.5));
       });
     }
 
@@ -500,13 +494,23 @@ cc.Class({
       this.cachedBtnALevel = this.realtimeBtnALevel;
       this.btnAEdgeTriggerLock = true;
     }
+    if (rising) {
+      this.btnA.runAction(cc.scaleTo(0.1, 0.3));
+    } else {
+      this.btnA.runAction(cc.scaleTo(0.1, 0.5));
+    }
   },
 
-  _triggerEdgeBtnB(rising) {
+  _triggerEdgeBtnB(rising, evt) {
     this.realtimeBtnBLevel = (rising ? 1 : 0);
     if (!this.btnBEdgeTriggerLock && (1 - this.realtimeBtnBLevel) == this.cachedBtnBLevel) {
       this.cachedBtnBLevel = this.realtimeBtnBLevel;
       this.btnBEdgeTriggerLock = true;
+    }
+    if (rising) {
+      this.btnB.runAction(cc.scaleTo(0.1, 0.3));
+    } else {
+      this.btnB.runAction(cc.scaleTo(0.1, 0.5));
     }
   },
 });

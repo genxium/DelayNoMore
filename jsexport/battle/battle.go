@@ -631,20 +631,34 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 
 		if 0 == currPlayerDownsync.FramesToRecover {
+			isWallJumping := (currPlayerDownsync.Speed < intAbs(currPlayerDownsync.VelX))
+			/*
+			   if isWallJumping {
+			       fmt.Printf("joinIndex=%d is wall jumping\n{renderFrame.id: %d, currPlayerDownsync.Speed: %d, currPlayerDownsync.VelX: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, currPlayerDownsync.Speed, currPlayerDownsync.VelX)
+			   }
+			*/
 			if 0 != effDx {
-				xfac := int32(1)
-				if 0 > effDx {
-					xfac = -xfac
-				}
-				thatPlayerInNextFrame.DirX = effDx
-				thatPlayerInNextFrame.DirY = effDy
+				if !isWallJumping && 0 > effDx*thatPlayerInNextFrame.DirX {
+					// [WARNING] A "turn-around", or in more generic direction schema a "change in direction" is a hurdle for our current "prediction+rollback" approach, yet applying a "FramesToRecover" for "turn-around" can alleviate the graphical inconsistence to a huge extent! For better operational experience, this is intentionally NOT APPLIED TO WALL JUMPING!
+					thatPlayerInNextFrame.DirX = effDx
+					thatPlayerInNextFrame.VelX = 0
+					thatPlayerInNextFrame.FramesToRecover = chConfig.TurnAroundFramesToRecover
+				} else {
+					xfac := int32(1)
+					if 0 > effDx {
+						xfac = -xfac
+					}
+					thatPlayerInNextFrame.DirX = effDx
+					thatPlayerInNextFrame.DirY = effDy
 
-				thatPlayerInNextFrame.VelX = xfac * currPlayerDownsync.Speed
-				if intAbs(thatPlayerInNextFrame.VelX) < intAbs(currPlayerDownsync.VelX) {
-					// Wall jumping
-					thatPlayerInNextFrame.VelX = xfac * intAbs(currPlayerDownsync.VelX)
+					if isWallJumping {
+						//fmt.Printf("joinIndex=%d is controlling while wall jumping\n{renderFrame.id: %d, currPlayerDownsync.Speed: %d, currPlayerDownsync.VelX: %d, effDx: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, currPlayerDownsync.Speed, currPlayerDownsync.VelX, effDx)
+						thatPlayerInNextFrame.VelX = xfac * intAbs(currPlayerDownsync.VelX)
+					} else {
+						thatPlayerInNextFrame.VelX = xfac * currPlayerDownsync.Speed
+					}
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
 				}
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
 			} else {
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
 				thatPlayerInNextFrame.VelX = 0
