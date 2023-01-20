@@ -11,17 +11,17 @@ serve:
 clean: 
 	gopherjs clean
 	rm -f ../frontend/assets/plugin_scripts/jsexport.js
-	rm -f ../frontend/assets/plugin_scripts/jsexport.js.map
+	#rm -f ../frontend/assets/plugin_scripts/jsexport.js.map
 
 build: clean
 	gopherjs build $(PROJECTNAME)
 	mv ./jsexport.js ../frontend/assets/plugin_scripts/	
-	mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
+	#mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
 
 build-min: clean
 	gopherjs build -m $(PROJECTNAME)
 	mv ./jsexport.js ../frontend/assets/plugin_scripts/	
-	mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
+	#mv ./jsexport.js.map ../frontend/assets/plugin_scripts/
 
 .PHONY: help
 

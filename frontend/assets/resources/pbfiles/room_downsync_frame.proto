@@ -9,9 +9,9 @@ message PlayerDownsync {
   int32 virtualGridX = 2;
   int32 virtualGridY = 3;
   int32 dirX = 4;
-  int32 dirY = 5; // "dirX" and "dirY" determines character facing  
+  int32 dirY = 5;   
   int32 velX = 6;
-  int32 velY = 7; // "velX" and "velY" is used to record the accumulated effect by accelerations (including gravity)
+  int32 velY = 7; // "velX" and "velY" is used to record the accumulated effect by inertia and accelerations (including gravity)
   int32 speed = 8; // this is the instantaneous scalar attribute of a character, different from but will be accounted in "velX" and "velY" 
   int32 battleState = 9;
   int32 joinIndex = 10;
@@ -35,6 +35,8 @@ message PlayerDownsync {
   bool onWall = 26; // like "inAir", it’s by design a standalone field only inferred by the collision result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState", because we need check the transition for "characterState" from this field, i.e. "onWall (prev -> curr)"
   int32 onWallNormX = 27;
   int32 onWallNormY = 28;
+
+  bool capturedByInertia = 29; // like "inAir", it’s by design a standalone field only inferred by the calc result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState"
 
   string name = 997;
   string displayName = 998;

@@ -42,7 +42,7 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 	})
 }
 
-func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY, bulletTeamId, chCollisionTeamId int32) *js.Object {
+func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId int32) *js.Object {
 	return js.MakeWrapper(&PlayerDownsync{
 		Id:                id,
 		VirtualGridX:      virtualGridX,
@@ -67,6 +67,7 @@ func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY,
 		OnWall:            onWall,
 		OnWallNormX:       onWallNormX,
 		OnWallNormY:       onWallNormY,
+		CapturedByInertia: capturedByInertia,
 		BulletTeamId:      bulletTeamId,
 		ChCollisionTeamId: chCollisionTeamId,
 	})

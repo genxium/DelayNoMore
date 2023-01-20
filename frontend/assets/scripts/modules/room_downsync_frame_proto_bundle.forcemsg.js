@@ -1219,6 +1219,7 @@ $root.protos = (function() {
          * @property {boolean|null} [onWall] PlayerDownsync onWall
          * @property {number|null} [onWallNormX] PlayerDownsync onWallNormX
          * @property {number|null} [onWallNormY] PlayerDownsync onWallNormY
+         * @property {boolean|null} [capturedByInertia] PlayerDownsync capturedByInertia
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1464,6 +1465,14 @@ $root.protos = (function() {
         PlayerDownsync.prototype.onWallNormY = 0;
 
         /**
+         * PlayerDownsync capturedByInertia.
+         * @member {boolean} capturedByInertia
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.capturedByInertia = false;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1567,6 +1576,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 27, wireType 0 =*/216).int32(message.onWallNormX);
             if (message.onWallNormY != null && Object.hasOwnProperty.call(message, "onWallNormY"))
                 writer.uint32(/* id 28, wireType 0 =*/224).int32(message.onWallNormY);
+            if (message.capturedByInertia != null && Object.hasOwnProperty.call(message, "capturedByInertia"))
+                writer.uint32(/* id 29, wireType 0 =*/232).bool(message.capturedByInertia);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1719,6 +1730,10 @@ $root.protos = (function() {
                         message.onWallNormY = reader.int32();
                         break;
                     }
+                case 29: {
+                        message.capturedByInertia = reader.bool();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1850,6 +1865,9 @@ $root.protos = (function() {
             if (message.onWallNormY != null && message.hasOwnProperty("onWallNormY"))
                 if (!$util.isInteger(message.onWallNormY))
                     return "onWallNormY: integer expected";
+            if (message.capturedByInertia != null && message.hasOwnProperty("capturedByInertia"))
+                if (typeof message.capturedByInertia !== "boolean")
+                    return "capturedByInertia: boolean expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1930,6 +1948,8 @@ $root.protos = (function() {
                 message.onWallNormX = object.onWallNormX | 0;
             if (object.onWallNormY != null)
                 message.onWallNormY = object.onWallNormY | 0;
+            if (object.capturedByInertia != null)
+                message.capturedByInertia = Boolean(object.capturedByInertia);
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -1981,6 +2001,7 @@ $root.protos = (function() {
                 object.onWall = false;
                 object.onWallNormX = 0;
                 object.onWallNormY = 0;
+                object.capturedByInertia = false;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -2041,6 +2062,8 @@ $root.protos = (function() {
                 object.onWallNormX = message.onWallNormX;
             if (message.onWallNormY != null && message.hasOwnProperty("onWallNormY"))
                 object.onWallNormY = message.onWallNormY;
+            if (message.capturedByInertia != null && message.hasOwnProperty("capturedByInertia"))
+                object.capturedByInertia = message.capturedByInertia;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))

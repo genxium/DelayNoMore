@@ -308,7 +308,7 @@ cc.Class({
       const newFireball = newFireballNode.getComponent("Fireball");
       newFireballNode.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
       safelyAddChild(self.node, newFireballNode);
-      setLocalZOrder(newFireballNode, 5);
+      setLocalZOrder(newFireballNode, 10);
       newFireball.lastUsed = -1;
       newFireball.bulletLocalId = -1;
       const initLookupKey = -(k + 1); // there's definitely no suck "bulletLocalId"
@@ -609,7 +609,7 @@ cc.Class({
     const jsPlayersArr = new Array(pbRdf.playersArr.length).fill(null);
     for (let k = 0; k < pbRdf.playersArr.length; ++k) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.onWallNormX, pbPlayer.onWallNormY, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.onWallNormX, pbPlayer.onWallNormY, pbPlayer.capturedByInertia, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = new Array(pbRdf.meleeBullets.length).fill(null);

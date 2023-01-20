@@ -41,6 +41,7 @@ func toPbRoomDownsyncFrame(rdf *battle.RoomDownsyncFrame) *pb.RoomDownsyncFrame 
 			OnWall:            last.OnWall,
 			OnWallNormX:       last.OnWallNormX,
 			OnWallNormY:       last.OnWallNormY,
+			CapturedByInertia: last.CapturedByInertia,
 			JoinIndex:         last.JoinIndex,
 			BulletTeamId:      last.BulletTeamId,
 			ChCollisionTeamId: last.ChCollisionTeamId,
@@ -165,6 +166,7 @@ func toPbPlayers(modelInstances map[int32]*Player, withMetaInfo bool) []*pb.Play
 			OnWall:            last.OnWall,
 			OnWallNormX:       last.OnWallNormX,
 			OnWallNormY:       last.OnWallNormY,
+			CapturedByInertia: last.CapturedByInertia,
 			JoinIndex:         last.JoinIndex,
 			BulletTeamId:      last.BulletTeamId,
 			ChCollisionTeamId: last.ChCollisionTeamId,
@@ -216,6 +218,7 @@ func toJsPlayers(modelInstances map[int32]*Player) []*battle.PlayerDownsync {
 			OnWall:            last.OnWall,
 			OnWallNormX:       last.OnWallNormX,
 			OnWallNormY:       last.OnWallNormY,
+			CapturedByInertia: last.CapturedByInertia,
 			Score:             last.Score,
 			Removed:           last.Removed,
 		}

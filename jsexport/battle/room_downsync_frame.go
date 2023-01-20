@@ -37,6 +37,8 @@ type PlayerDownsync struct {
 	OnWallNormX       int32
 	OnWallNormY       int32
 
+	CapturedByInertia bool
+
 	ActiveSkillId  int32
 	ActiveSkillHit int32
 

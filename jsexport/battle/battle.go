@@ -77,6 +77,8 @@ const (
 
 	ATK_CHARACTER_STATE_DASHING = int32(15)
 	ATK_CHARACTER_STATE_ONWALL  = int32(16)
+
+	ATK_CHARACTER_STATE_TURNAROUND = int32(17)
 )
 
 var inAirSet = map[int32]bool{
@@ -514,31 +516,32 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:               currPlayerDownsync.Id,
-			VirtualGridX:     currPlayerDownsync.VirtualGridX,
-			VirtualGridY:     currPlayerDownsync.VirtualGridY,
-			DirX:             currPlayerDownsync.DirX,
-			DirY:             currPlayerDownsync.DirY,
-			VelX:             currPlayerDownsync.VelX,
-			VelY:             currPlayerDownsync.VelY,
-			CharacterState:   currPlayerDownsync.CharacterState,
-			InAir:            true,
-			OnWall:           false,
-			Speed:            currPlayerDownsync.Speed,
-			BattleState:      currPlayerDownsync.BattleState,
-			Score:            currPlayerDownsync.Score,
-			Removed:          currPlayerDownsync.Removed,
-			JoinIndex:        currPlayerDownsync.JoinIndex,
-			Hp:               currPlayerDownsync.Hp,
-			MaxHp:            currPlayerDownsync.MaxHp,
-			FramesToRecover:  currPlayerDownsync.FramesToRecover - 1,
-			FramesInChState:  currPlayerDownsync.FramesInChState + 1,
-			ActiveSkillId:    currPlayerDownsync.ActiveSkillId,
-			ActiveSkillHit:   currPlayerDownsync.ActiveSkillHit,
-			FramesInvinsible: currPlayerDownsync.FramesInvinsible - 1,
-			ColliderRadius:   currPlayerDownsync.ColliderRadius,
-			OnWallNormX:      currPlayerDownsync.OnWallNormX,
-			OnWallNormY:      currPlayerDownsync.OnWallNormY,
+			Id:                currPlayerDownsync.Id,
+			VirtualGridX:      currPlayerDownsync.VirtualGridX,
+			VirtualGridY:      currPlayerDownsync.VirtualGridY,
+			DirX:              currPlayerDownsync.DirX,
+			DirY:              currPlayerDownsync.DirY,
+			VelX:              currPlayerDownsync.VelX,
+			VelY:              currPlayerDownsync.VelY,
+			CharacterState:    currPlayerDownsync.CharacterState,
+			InAir:             true,
+			OnWall:            false,
+			Speed:             currPlayerDownsync.Speed,
+			BattleState:       currPlayerDownsync.BattleState,
+			Score:             currPlayerDownsync.Score,
+			Removed:           currPlayerDownsync.Removed,
+			JoinIndex:         currPlayerDownsync.JoinIndex,
+			Hp:                currPlayerDownsync.Hp,
+			MaxHp:             currPlayerDownsync.MaxHp,
+			FramesToRecover:   currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState:   currPlayerDownsync.FramesInChState + 1,
+			ActiveSkillId:     currPlayerDownsync.ActiveSkillId,
+			ActiveSkillHit:    currPlayerDownsync.ActiveSkillHit,
+			FramesInvinsible:  currPlayerDownsync.FramesInvinsible - 1,
+			ColliderRadius:    currPlayerDownsync.ColliderRadius,
+			OnWallNormX:       currPlayerDownsync.OnWallNormX,
+			OnWallNormY:       currPlayerDownsync.OnWallNormY,
+			CapturedByInertia: currPlayerDownsync.CapturedByInertia,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -631,19 +634,34 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		}
 
 		if 0 == currPlayerDownsync.FramesToRecover {
+			prevCapturedByInertia := currPlayerDownsync.CapturedByInertia
 			isWallJumping := (currPlayerDownsync.Speed < intAbs(currPlayerDownsync.VelX))
 			/*
 			   if isWallJumping {
 			       fmt.Printf("joinIndex=%d is wall jumping\n{renderFrame.id: %d, currPlayerDownsync.Speed: %d, currPlayerDownsync.VelX: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, currPlayerDownsync.Speed, currPlayerDownsync.VelX)
 			   }
 			*/
-			if 0 != effDx {
-				if !isWallJumping && 0 > effDx*thatPlayerInNextFrame.DirX {
-					// [WARNING] A "turn-around", or in more generic direction schema a "change in direction" is a hurdle for our current "prediction+rollback" approach, yet applying a "FramesToRecover" for "turn-around" can alleviate the graphical inconsistence to a huge extent! For better operational experience, this is intentionally NOT APPLIED TO WALL JUMPING!
-					thatPlayerInNextFrame.DirX = effDx
-					thatPlayerInNextFrame.VelX = 0
-					thatPlayerInNextFrame.FramesToRecover = chConfig.TurnAroundFramesToRecover
-				} else {
+			alignedWithInertia := true
+			if 0 == effDx && 0 != thatPlayerInNextFrame.VelX {
+				alignedWithInertia = false
+			} else if 0 != effDx && 0 == thatPlayerInNextFrame.VelX {
+				alignedWithInertia = false
+			} else if 0 > effDx*thatPlayerInNextFrame.VelX {
+				alignedWithInertia = false
+			}
+
+			if !isWallJumping && !prevCapturedByInertia && !alignedWithInertia {
+				/*
+				   [WARNING] A "turn-around", or in more generic direction schema a "change in direction" is a hurdle for our current "prediction+rollback" approach, yet applying a "FramesToRecover" for "turn-around" can alleviate the graphical inconsistence to a huge extent! For better operational experience, this is intentionally NOT APPLIED TO WALL JUMPING!
+
+				   When "false == alignedWithInertia", we're GUARANTEED TO BE WRONG AT INPUT PREDICTION ON THE FRONTEND, but we COULD STILL BE RIGHT AT POSITION PREDICTION WITHIN "InertiaFramesToRecover" -- which together with "INPUT_DELAY_FRAMES" grants the frontend a big chance to be graphically consistent even upon wrong prediction!
+				*/
+				//fmt.Printf("joinIndex=%d is not wall jumping and not aligned w/ inertia\n{renderFrame.id: %d, effDx: %d, thatPlayerInNextFrame.VelX: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, effDx, thatPlayerInNextFrame.VelX)
+				thatPlayerInNextFrame.CapturedByInertia = true
+				thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
+			} else {
+				thatPlayerInNextFrame.CapturedByInertia = false
+				if 0 != effDx {
 					xfac := int32(1)
 					if 0 > effDx {
 						xfac = -xfac
@@ -658,11 +676,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						thatPlayerInNextFrame.VelX = xfac * currPlayerDownsync.Speed
 					}
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
+				} else {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+					thatPlayerInNextFrame.VelX = 0
 				}
-			} else {
-				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
-				thatPlayerInNextFrame.VelX = 0
 			}
+
 		}
 	}
 

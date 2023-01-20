@@ -26,7 +26,7 @@ type CharacterConfig struct {
 	WallJumpingInitVelY        int32
 	WallSlidingVelY            int32
 
-	TurnAroundFramesToRecover int32
+	InertiaFramesToRecover int32
 
 	SkillMapper SkillMapperType
 }
@@ -49,7 +49,7 @@ var Characters = map[int]*CharacterConfig{
 		JumpingInitVelY:        int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		TurnAroundFramesToRecover: int32(4),
+		InertiaFramesToRecover: int32(5),
 
 		DashingEnabled: false,
 		OnWallEnabled:  false,
@@ -98,7 +98,7 @@ var Characters = map[int]*CharacterConfig{
 		JumpingInitVelY:        int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		TurnAroundFramesToRecover: int32(4),
+		InertiaFramesToRecover: int32(5),
 
 		DashingEnabled:             true,
 		OnWallEnabled:              true,
@@ -151,7 +151,7 @@ var Characters = map[int]*CharacterConfig{
 		JumpingInitVelY:        int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		TurnAroundFramesToRecover: int32(4),
+		InertiaFramesToRecover: int32(5),
 
 		DashingEnabled: false,
 		OnWallEnabled:  false,
