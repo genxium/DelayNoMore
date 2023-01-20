@@ -956,7 +956,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 
         const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
         if (null == self.recentInputCache.GetByFrameId(delayedInputFrameId)) {
-          // Possible edge case after resync
+          // Possible edge case after resync, kindly note that it's OK to prefab a "future inputFrame" here, because "sendInputFrameUpsyncBatch" would be capped by "noDelayInputFrameId from self.renderFrameId". 
           self.getOrPrefabInputFrameUpsync(delayedInputFrameId);
         }
 

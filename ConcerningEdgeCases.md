@@ -69,4 +69,10 @@ To summarize, if UDP is used we need
 When using UDP, it's also necessary to verify authorization of each incoming packet, e.g. by simple time limited symmetric key, due to being connectionless.
 
 ## Why not hybrid?
-Instead of replacing all use of TCP by UDP, it's more reasonable to keep using TCP for login and the "all-confirmed downsync inputFrames" from server to players (and possibly "upsync inputFrames" from player to server, but tradeoff on that remains to be discussed), while using UDP for broadcasting inputFrames of each individual player asap (either using p2p or not) just for **better prediction performance**!
+Instead of replacing all use of TCP by UDP, it's more reasonable to keep using TCP for login and the "all-confirmed downsync inputFrames" from server to players (and possibly "upsync inputFrames" from player to server, but tradeoff on that remains to be discussed), while using a `UDP secondary session` for broadcasting inputFrames of each individual player asap (either using p2p or not) just for **better prediction performance**!
+
+## How do you actually implement the `UDP secondary session`?
+It's not a global consensus, but in practice many UDP communications are platform specific due to their paired asynchronous I/O choices, e.g. epoll in Linux and kqueue in BSD-ish. Of course there're many 3rd party higher level encapsulated tools for cross-platform use but that introduces extra debugging when things go wrong.
+
+Therefore, the following plan doesn't assume use of any specific 3rd party encapsulation of UDP communication.
+![UDP_secondary_session](./charts/UDPEssentials.jpg)
