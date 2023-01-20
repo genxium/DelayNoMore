@@ -45,11 +45,11 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:                  int32(float64(2.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:                  int32(float64(2.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingInitVelY:        int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		InertiaFramesToRecover: int32(5),
+		InertiaFramesToRecover: int32(8),
 
 		DashingEnabled: false,
 		OnWallEnabled:  false,
@@ -94,11 +94,11 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:                  int32(float64(2.6) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:                  int32(float64(2.19) * WORLD_TO_VIRTUAL_GRID_RATIO), // I don't know why "2.2" is so special that it throws a compile error
 		JumpingInitVelY:        int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		InertiaFramesToRecover: int32(5),
+		InertiaFramesToRecover: int32(8),
 
 		DashingEnabled:             true,
 		OnWallEnabled:              true,
@@ -128,6 +128,8 @@ var Characters = map[int]*CharacterConfig{
 						}
 					}
 				}
+			} else if 5 == patternId {
+				return 12
 			}
 
 			// By default no skill can be fired
@@ -147,11 +149,11 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(8),
 		GetUpFramesToRecover:  int32(30),
 
-		Speed:                  int32(float64(2.0) * WORLD_TO_VIRTUAL_GRID_RATIO),
-		JumpingInitVelY:        int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		Speed:                  int32(float64(1.8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		JumpingInitVelY:        int32(float64(7.8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
-		InertiaFramesToRecover: int32(5),
+		InertiaFramesToRecover: int32(8),
 
 		DashingEnabled: false,
 		OnWallEnabled:  false,
@@ -543,6 +545,33 @@ var skills = map[int]*Skill{
 					BlowUp:          true,
 					ExplosionFrames: 15,
 					SpeciesId:       int32(3),
+				},
+			},
+		},
+	},
+	12: &Skill{
+		RecoveryFrames:        int32(15),
+		RecoveryFramesOnBlock: int32(15),
+		RecoveryFramesOnHit:   int32(15),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_DASHING,
+		Hits: []interface{}{
+			&MeleeBullet{
+				Bullet: &BulletConfig{
+					StartupFrames:   int32(0),
+					ActiveFrames:    int32(0),
+					HitStunFrames:   MAX_INT32,
+					BlockStunFrames: int32(0),
+					Damage:          int32(0),
+					SelfLockVelX:    int32(float64(9) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    int32(0),
+					PushbackVelX:    NO_LOCK_VEL,
+					PushbackVelY:    NO_LOCK_VEL,
+					HitboxOffsetX:   int32(0),
+					HitboxOffsetY:   int32(0),
+					HitboxSizeX:     int32(0),
+					HitboxSizeY:     int32(0),
+					BlowUp:          false,
 				},
 			},
 		},

@@ -18,6 +18,7 @@ window.ATK_CHARACTER_STATE = {
   Atk5: [14, "Atk5"],
   Dashing: [15, "Dashing"],
   OnWall: [16, "OnWall"],
+  TurnAround1: [17, "TurnAround1"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];
@@ -93,7 +94,7 @@ cc.Class({
       } else if (0 < rdfPlayer.DirX) {
         this.animNode.scaleX = (+1.0);
       }
-      if (ATK_CHARACTER_STATE.OnWall[0] == newCharacterState) {
+      if (ATK_CHARACTER_STATE.OnWall[0] == newCharacterState || ATK_CHARACTER_STATE.TurnAround1[0] == newCharacterState) {
         if (0 < rdfPlayer.OnWallNormX) {
           this.animNode.scaleX = (-1.0);
         } else {

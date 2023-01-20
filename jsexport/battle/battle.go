@@ -16,13 +16,13 @@ const (
 	PATTERN_ID_UNABLE_TO_OP = -2
 	PATTERN_ID_NO_OP        = -1
 
-	WORLD_TO_VIRTUAL_GRID_RATIO = float64(100)
+	WORLD_TO_VIRTUAL_GRID_RATIO = float64(100.0)
 	VIRTUAL_GRID_TO_WORLD_RATIO = float64(1.0) / WORLD_TO_VIRTUAL_GRID_RATIO
 
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -448,7 +448,7 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 	return &ret
 }
 
-func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
 	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
 	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id - 1)
@@ -478,11 +478,14 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		prevBtnBLevel = prevDecodedInput.BtnBLevel
 	}
 
-	if 0 == currPlayerDownsync.FramesToRecover {
-		// Jumping and moving are only allowed here
+	patternId := PATTERN_ID_NO_OP
+	if 0 == currPlayerDownsync.FramesToRecover || currPlayerDownsync.CapturedByInertia {
+		// Jumping is allowed within "CapturedByInertia", but moving is only allowed when "0 == FramesToRecover" (constrained later in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame")
 		effDx, effDy = decodedInput.Dx, decodedInput.Dy
 		if decodedInput.BtnBLevel > prevBtnBLevel {
-			if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
+			if chConfig.DashingEnabled && 0 > effDy {
+				patternId = 5
+			} else if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
 				jumpedOrNot = true
 			} else if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
 				jumpedOrNot = true
@@ -490,18 +493,19 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		}
 	}
 
-	patternId := PATTERN_ID_NO_OP
-	if 0 < decodedInput.BtnALevel {
-		if decodedInput.BtnALevel > prevBtnALevel {
-			if 0 > effDy {
-				patternId = 3
-			} else if 0 < effDy {
-				patternId = 2
+	if PATTERN_ID_NO_OP == patternId {
+		if 0 < decodedInput.BtnALevel {
+			if decodedInput.BtnALevel > prevBtnALevel {
+				if 0 > effDy {
+					patternId = 3
+				} else if 0 < effDy {
+					patternId = 2
+				} else {
+					patternId = 1
+				}
 			} else {
-				patternId = 1
+				patternId = 4 // Holding
 			}
-		} else {
-			patternId = 4 // Holding
 		}
 	}
 
@@ -562,7 +566,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, inputsBuffer)
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, chConfig, inputsBuffer)
 
 		jumpedOrNotList[i] = jumpedOrNot
 		joinIndex := currPlayerDownsync.JoinIndex
@@ -642,15 +646,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			   }
 			*/
 			alignedWithInertia := true
+			exactTurningAround := false
 			if 0 == effDx && 0 != thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
 			} else if 0 != effDx && 0 == thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
 			} else if 0 > effDx*thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
+				exactTurningAround = true
 			}
 
-			if !isWallJumping && !prevCapturedByInertia && !alignedWithInertia {
+			if !jumpedOrNot && !isWallJumping && !prevCapturedByInertia && !alignedWithInertia {
 				/*
 				   [WARNING] A "turn-around", or in more generic direction schema a "change in direction" is a hurdle for our current "prediction+rollback" approach, yet applying a "FramesToRecover" for "turn-around" can alleviate the graphical inconsistence to a huge extent! For better operational experience, this is intentionally NOT APPLIED TO WALL JUMPING!
 
@@ -659,6 +665,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				//fmt.Printf("joinIndex=%d is not wall jumping and not aligned w/ inertia\n{renderFrame.id: %d, effDx: %d, thatPlayerInNextFrame.VelX: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, effDx, thatPlayerInNextFrame.VelX)
 				thatPlayerInNextFrame.CapturedByInertia = true
 				thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
+				if exactTurningAround {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_TURNAROUND
+				}
 			} else {
 				thatPlayerInNextFrame.CapturedByInertia = false
 				if 0 != effDx {
@@ -1053,7 +1062,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if thatPlayerInNextFrame.InAir {
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
 			switch oldNextCharacterState {
-			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING:
+			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING, ATK_CHARACTER_STATE_TURNAROUND:
 				if thatPlayerInNextFrame.OnWall {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ONWALL
 				} else if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
