@@ -6,6 +6,8 @@ The following video is recorded over INTERNET using an input delay of 4 frames a
 - [source video of the first gif](https://pan.baidu.com/s/1ML6hNupaPHPJRd5rcTvQvw?pwd=8ruc) 
 - [phone v.s. PC over internet battle#1](https://pan.baidu.com/s/1NuGxuMwrV_jalcToyUZPLg?pwd=kfkr) 
 - [phone v.s. PC over internet battle#2](https://pan.baidu.com/s/1kMiFdwDHyJpZJ0GGU1Y3eA?pwd=46gd) 
+- [PC Wifi viewing Phone 4g](https://pan.baidu.com/s/1PJEtC9iB_fcabMWhbx2oAg?pwd=tp7k) 
+- [PC Wifi viewing Phone Wifi (over internet of course)](https://pan.baidu.com/s/108rvC1CcUdiQeMauXWsLJg?pwd=mn39) 
 
 to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
