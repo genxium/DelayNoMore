@@ -10,9 +10,7 @@ to see how this demo carries out a full 60fps synchronization with the help of _
 
 ![gif_demo_1](./charts/internet_fireball_explosion_wallmove_spedup.gif)
 
-![gif_demo_2](./charts/internet_dash_turnaround_spedup.gif)
-
-All gifs are sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress!
+![gif_demo_2](./charts/internet_dash_turnaround_cut_spedup.gif)
 
 # Notable Features
 - Backend dynamics toggle via [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.9.14/battle_srv/models/room.go#L786)
@@ -108,3 +106,5 @@ Moreover, in practice I found that to spot sync anomalies, the following tools a
 - Detection of [prediction mismatch on the frontend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/frontend/assets/scripts/Map.js#L842).
 - Detection of [type#1 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1246).
 - Detection of [type#2 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1259).
+
+There's also some useful information displayed on the frontend when `true == Map.showNetworkDoctorInfo`.

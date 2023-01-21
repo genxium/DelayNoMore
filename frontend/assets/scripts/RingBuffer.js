@@ -13,9 +13,12 @@ var RingBuffer = function(capacity) {
 };
 
 RingBuffer.prototype.put = function(item) {
+  let firstPopped = null;
   while (0 < this.cnt && this.cnt >= this.n) {
     // Make room for the new element
-    this.pop();
+    const popped = this.pop();
+    if (null == firstPopped)
+      firstPopped = popped;
   }
   this.eles[this.ed] = item
   this.edFrameId++;
@@ -24,6 +27,7 @@ RingBuffer.prototype.put = function(item) {
   if (this.ed >= this.n) {
     this.ed -= this.n; // Deliberately not using "%" operator for performance concern
   }
+  return firstPopped;
 };
 
 RingBuffer.prototype.pop = function() {

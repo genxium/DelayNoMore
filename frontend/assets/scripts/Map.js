@@ -2,6 +2,7 @@ const i18n = require('LanguageData');
 i18n.init(window.language); // languageID should be equal to the one we input in New Language ID input field
 
 const RingBuffer = require('./RingBuffer');
+const NetworkDoctor = require('./NetworkDoctor');
 const PriorityQueue = require("./PriorityQueue");
 
 window.ALL_MAP_STATES = {
@@ -96,15 +97,21 @@ cc.Class({
       type: cc.Integer,
       default: 4 // implies (renderFrameIdLagTolerance >> inputScaleFrames) count of inputFrameIds
     },
-    jigglingEps1D: {
-      type: cc.Float,
-      default: 1e-3
+    sendingQLabel: {
+      type: cc.Label,
+      default: null
     },
-    bulletTriggerEnabled: {
-      default: false
+    inputFrameDownsyncQLabel: {
+      type: cc.Label,
+      default: null
     },
-    closeOnForcedtoResyncNotSelf: {
-      default: true
+    peerInputFrameUpsyncQLabel: {
+      type: cc.Label,
+      default: null
+    },
+    rollbackFramesLabel: {
+      type: cc.Label,
+      default: null
     },
   },
 
@@ -184,6 +191,7 @@ cc.Class({
       // Upon resync, "self.lastUpsyncInputFrameId" might not have been updated properly.
       batchInputFrameIdSt = self.recentInputCache.StFrameId;
     }
+    self.networkDoctor.logSending(batchInputFrameIdSt, latestLocalInputFrameId);
     for (let i = batchInputFrameIdSt; i <= latestLocalInputFrameId; ++i) {
       const inputFrameDownsync = self.recentInputCache.GetByFrameId(i);
       if (null == inputFrameDownsync) {
@@ -342,6 +350,8 @@ cc.Class({
     self.othersForcedDownsyncRenderFrameDict = new Map();
     self.rdfIdToActuallyUsedInput = new Map();
 
+    self.networkDoctor = new NetworkDoctor(20);
+
     self.countdownNanos = null;
     if (self.countdownLabel) {
       self.countdownLabel.string = "";
@@ -409,6 +419,7 @@ cc.Class({
   },
 
   onLoad() {
+    cc.game.setFrameRate(60);
     cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
     cc.view.enableAutoFullScreen(true);
 
@@ -417,6 +428,7 @@ cc.Class({
     window.forceBigEndianFloatingNumDecoding = self.forceBigEndianFloatingNumDecoding;
 
     self.showCriticalCoordinateLabels = false;
+    self.showNetworkDoctorInfo = true;
 
     console.warn("+++++++ Map onLoad()");
 
@@ -796,6 +808,7 @@ cc.Class({
       return;
     }
 
+    self.networkDoctor.logInputFrameDownsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     let firstPredictedYetIncorrectInputFrameId = null;
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
@@ -839,6 +852,7 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
+    self.networkDoctor.immediateRollbackFrames = (self.renderFrameId - renderFrameId1);
     console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
@@ -860,6 +874,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       return;
     }
 
+    self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
@@ -1005,6 +1020,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         }
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         self.showDebugBoundaries(rdf);
+        if (self.showNetworkDoctorInfo) {
+          self.showNetworkDoctorLabels();
+        }
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
@@ -1498,5 +1516,13 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
         }
       }
     }
+  },
+
+  showNetworkDoctorLabels() {
+    const self = this;
+    self.sendingQLabel.string = self.networkDoctor.statSending();
+    self.inputFrameDownsyncQLabel.string = self.networkDoctor.statInputFrameDownsync();
+    self.peerInputFrameUpsyncQLabel.string = self.networkDoctor.statPeerInputFrameUpsync();
+    self.rollbackFramesLabel.string = self.networkDoctor.statRollbackFrames();
   },
 });

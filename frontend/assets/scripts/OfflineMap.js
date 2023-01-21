@@ -11,11 +11,13 @@ cc.Class({
   },
 
   onLoad() {
+    cc.game.setFrameRate(60);
     cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
     cc.view.enableAutoFullScreen(true);
     const self = this;
     window.mapIns = self;
     self.showCriticalCoordinateLabels = false;
+    self.showNetworkDoctorInfo = true;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;
