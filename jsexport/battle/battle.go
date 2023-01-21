@@ -478,12 +478,16 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		prevBtnBLevel = prevDecodedInput.BtnBLevel
 	}
 
-	patternId := PATTERN_ID_NO_OP
-	if 0 == currPlayerDownsync.FramesToRecover || currPlayerDownsync.CapturedByInertia {
-		// Jumping is allowed within "CapturedByInertia", but moving is only allowed when "0 == FramesToRecover" (constrained later in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame")
+	// Jumping is partially allowed within "CapturedByInertia", but moving is only allowed when "0 == FramesToRecover" (constrained later in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame")
+	if 0 == currPlayerDownsync.FramesToRecover {
 		effDx, effDy = decodedInput.Dx, decodedInput.Dy
+	}
+
+	patternId := PATTERN_ID_NO_OP
+	canJumpWithinInertia := currPlayerDownsync.CapturedByInertia && ((chConfig.InertiaFramesToRecover >> 1) > currPlayerDownsync.FramesToRecover)
+	if 0 == currPlayerDownsync.FramesToRecover || canJumpWithinInertia {
 		if decodedInput.BtnBLevel > prevBtnBLevel {
-			if chConfig.DashingEnabled && 0 > effDy {
+			if chConfig.DashingEnabled && 0 > decodedInput.Dy {
 				// Checking "DashingEnabled" here to allow jumping when dashing-disabled players pressed "DOWN + BtnB"
 				patternId = 5
 			} else if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
@@ -497,9 +501,9 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	if PATTERN_ID_NO_OP == patternId {
 		if 0 < decodedInput.BtnALevel {
 			if decodedInput.BtnALevel > prevBtnALevel {
-				if 0 > effDy {
+				if 0 > decodedInput.Dy {
 					patternId = 3
-				} else if 0 < effDy {
+				} else if 0 < decodedInput.Dy {
 					patternId = 2
 				} else {
 					patternId = 1

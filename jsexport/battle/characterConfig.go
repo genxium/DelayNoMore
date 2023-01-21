@@ -511,7 +511,7 @@ var skills = map[int]*Skill{
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
 					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetY:   int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          false,
