@@ -3,17 +3,14 @@
 This project is a demo for a websocket-based rollback netcode inspired by [GGPO](https://github.com/pond3r/ggpo/blob/master/doc/README.md). As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- not necessarily correct but that's indeed a question to face :)
 
 The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout these demo videos
-- [source video of the first gif](https://pan.baidu.com/s/1ML6hNupaPHPJRd5rcTvQvw?pwd=8ruc) 
-- [phone v.s. PC over internet battle#1](https://pan.baidu.com/s/1NuGxuMwrV_jalcToyUZPLg?pwd=kfkr) 
-- [phone v.s. PC over internet battle#2](https://pan.baidu.com/s/1kMiFdwDHyJpZJ0GGU1Y3eA?pwd=46gd) 
-- [PC Wifi viewing Phone 4g](https://pan.baidu.com/s/1PJEtC9iB_fcabMWhbx2oAg?pwd=tp7k) 
-- [PC Wifi viewing Phone Wifi (over internet of course)](https://pan.baidu.com/s/108rvC1CcUdiQeMauXWsLJg?pwd=mn39) 
+- [source video of the first gif (earlier version)](https://pan.baidu.com/s/1ML6hNupaPHPJRd5rcTvQvw?pwd=8ruc) 
+- [source video of the second gif (added turn-around optimization & dashing)](https://pan.baidu.com/s/1isMcLvxax4NNkDgitV_FDg?pwd=s1i6) 
 
 to see how this demo carries out a full 60fps synchronization with the help of _batched input upsync/downsync_ for satisfying network I/O performance.
 
 ![gif_demo_1](./charts/internet_fireball_explosion_wallmove_spedup.gif)
 
-![gif_demo_2](./charts/jump_sync_spedup.gif)
+![gif_demo_2](./charts/internet_dash_turnaround_spedup.gif)
 
 All gifs are sped up to ~1.5x for file size reduction, kindly note that animations are resumed from a partial progress!
 
