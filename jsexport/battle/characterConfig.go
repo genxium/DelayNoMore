@@ -129,6 +129,7 @@ var Characters = map[int]*CharacterConfig{
 					}
 				}
 			} else if 5 == patternId {
+				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
 				return 12
 			}
 
@@ -180,11 +181,11 @@ var Characters = map[int]*CharacterConfig{
 					}
 				}
 			} else if 2 == patternId {
-				if !currPlayerDownsync.InAir {
+				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
 					return 11
 				}
 			} else if 3 == patternId {
-				if !currPlayerDownsync.InAir {
+				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
 					return 10
 				}
 			}

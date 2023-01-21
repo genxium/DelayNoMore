@@ -484,6 +484,7 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 		effDx, effDy = decodedInput.Dx, decodedInput.Dy
 		if decodedInput.BtnBLevel > prevBtnBLevel {
 			if chConfig.DashingEnabled && 0 > effDy {
+				// Checking "DashingEnabled" here to allow jumping when dashing-disabled players pressed "DOWN + BtnB"
 				patternId = 5
 			} else if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
 				jumpedOrNot = true
