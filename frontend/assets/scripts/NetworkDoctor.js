@@ -14,7 +14,7 @@ NetworkDoctor.prototype.reset = function(capacity) {
 
   this.inputRateThreshold = gopkgs.ConvertToNoDelayInputFrameId(60);
   this.peerUpsyncThreshold = 8;
-  this.rollbackFramesThreshold = 8; // Roughly the same as TurnAroundFramesToRecover
+  this.rollbackFramesThreshold = 4; // Slightly smaller than the minimum "TurnAroundFramesToRecover".
 };
 
 NetworkDoctor.prototype.logSending = function(stFrameId, edFrameId) {
@@ -83,8 +83,8 @@ NetworkDoctor.prototype.isTooFast = function() {
   const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold && srvDownsyncFps >= this.inputRateThreshold) {
     // At least my network is OK for both TX & RX directions. 
-    if (rollbackFrames >= this.rollbackFramesThreshold && peerUpsyncFps < this.peerUpsyncThreshold) {
-      // I got many frames rolled back while none of my peers effectively helped my preciction.  
+    if (rollbackFrames >= this.rollbackFramesThreshold) {
+      // I got many frames rolled back while none of my peers effectively helped my preciction. Deliberately not using "peerUpsyncThreshold" here because when using UDP p2p upsync broadcasting, we expect to receive effective p2p upsyncs from every other player.   
       return true;
     }
   }
