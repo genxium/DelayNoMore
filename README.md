@@ -108,3 +108,4 @@ Moreover, in practice I found that to spot sync anomalies, the following tools a
 - Detection of [type#2 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1259).
 
 There's also some useful information displayed on the frontend when `true == Map.showNetworkDoctorInfo`.
+![networkstats](./charts/networkstats.png)

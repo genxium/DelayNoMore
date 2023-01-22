@@ -22,7 +22,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(8)  // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(4)  // in the count of render frames
 	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 	NST_DELAY_FRAMES   = int32(16) // network-single-trip delay in the count of render frames, proposed to be (InputDelayFrames >> 1) because we expect a round-trip delay to be exactly "InputDelayFrames"
 
@@ -644,7 +644,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 
 		if 0 == currPlayerDownsync.FramesToRecover {
 			prevCapturedByInertia := currPlayerDownsync.CapturedByInertia
-			isWallJumping := (currPlayerDownsync.Speed < intAbs(currPlayerDownsync.VelX))
+			isWallJumping := (chConfig.OnWallEnabled && chConfig.WallJumpingInitVelX == intAbs(currPlayerDownsync.VelX))
 			/*
 			   if isWallJumping {
 			       fmt.Printf("joinIndex=%d is wall jumping\n{renderFrame.id: %d, currPlayerDownsync.Speed: %d, currPlayerDownsync.VelX: %d}\n", currPlayerDownsync.JoinIndex, currRenderFrame.Id, currPlayerDownsync.Speed, currPlayerDownsync.VelX)
@@ -752,6 +752,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && !jumpedOrNotList[i] {
 				thatPlayerInNextFrame.VelX += GRAVITY_X
 				thatPlayerInNextFrame.VelY = chConfig.WallSlidingVelY
+			} else if ATK_CHARACTER_STATE_DASHING == currPlayerDownsync.CharacterState {
+				thatPlayerInNextFrame.VelX += GRAVITY_X
 			} else {
 				thatPlayerInNextFrame.VelX += GRAVITY_X
 				thatPlayerInNextFrame.VelY += GRAVITY_Y

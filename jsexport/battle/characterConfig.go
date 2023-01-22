@@ -551,9 +551,9 @@ var skills = map[int]*Skill{
 		},
 	},
 	12: &Skill{
-		RecoveryFrames:        int32(15),
-		RecoveryFramesOnBlock: int32(15),
-		RecoveryFramesOnHit:   int32(15),
+		RecoveryFrames:        int32(12),
+		RecoveryFramesOnBlock: int32(12),
+		RecoveryFramesOnHit:   int32(12),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_DASHING,
 		Hits: []interface{}{

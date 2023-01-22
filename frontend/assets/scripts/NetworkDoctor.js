@@ -10,6 +10,11 @@ NetworkDoctor.prototype.reset = function(capacity) {
   this.peerInputFrameUpsyncQ = new RingBuffer(capacity);
   this.peerInputFrameUpsyncCnt = 0;
   this.immediateRollbackFrames = 0;
+  this.skippedRenderFrameCnt = 0;
+
+  this.inputRateThreshold = gopkgs.ConvertToNoDelayInputFrameId(60);
+  this.peerUpsyncThreshold = 8;
+  this.rollbackFramesThreshold = 8; // Roughly the same as TurnAroundFramesToRecover
 };
 
 NetworkDoctor.prototype.logSending = function(stFrameId, edFrameId) {
@@ -40,35 +45,50 @@ NetworkDoctor.prototype.logPeerInputFrameUpsync = function(stFrameId, edFrameId)
   this.peerInputFrameUpsyncCnt += (edFrameId - stFrameId + 1);
 };
 
-NetworkDoctor.prototype.statSending = function() {
-  if (1 >= this.sendingQ.cnt) return `0 fps sending`;
-  const st = this.sendingQ.getByFrameId(this.sendingQ.stFrameId);
-  const ed = this.sendingQ.getByFrameId(this.sendingQ.edFrameId - 1);
-  const elapsedMillis = ed.t - st.t;
-  const fps = Math.round((ed.j - st.i) * 1000 / elapsedMillis);
-  return `${fps} fps sending`;
+NetworkDoctor.prototype.logRollbackFrames = function(x) {
+  this.immediateRollbackFrames = x;
 };
 
-NetworkDoctor.prototype.statInputFrameDownsync = function() {
-  if (1 >= this.inputFrameDownsyncQ.cnt) return `0 fps srv downsync`;
-  const st = this.inputFrameDownsyncQ.getByFrameId(this.inputFrameDownsyncQ.stFrameId);
-  const ed = this.inputFrameDownsyncQ.getByFrameId(this.inputFrameDownsyncQ.edFrameId - 1);
-  const elapsedMillis = ed.t - st.t;
-  const fps = Math.round((ed.j - st.i) * 1000 / elapsedMillis);
-  return `${fps} fps srv downsync`;
+NetworkDoctor.prototype.stats = function() {
+  let sendingFps = 0,
+    srvDownsyncFps = 0,
+    peerUpsyncFps = 0,
+    rollbackFrames = this.immediateRollbackFrames;
+  if (1 < this.sendingQ.cnt) {
+    const st = this.sendingQ.getByFrameId(this.sendingQ.stFrameId);
+    const ed = this.sendingQ.getByFrameId(this.sendingQ.edFrameId - 1);
+    const elapsedMillis = ed.t - st.t;
+    sendingFps = Math.round((ed.j - st.i) * 1000 / elapsedMillis);
+  }
+  if (1 < this.inputFrameDownsyncQ.cnt) {
+    const st = this.inputFrameDownsyncQ.getByFrameId(this.inputFrameDownsyncQ.stFrameId);
+    const ed = this.inputFrameDownsyncQ.getByFrameId(this.inputFrameDownsyncQ.edFrameId - 1);
+    const elapsedMillis = ed.t - st.t;
+    srvDownsyncFps = Math.round((ed.j - st.i) * 1000 / elapsedMillis);
+  }
+  if (1 < this.peerInputFrameUpsyncQ.cnt) {
+    const st = this.peerInputFrameUpsyncQ.getByFrameId(this.peerInputFrameUpsyncQ.stFrameId);
+    const ed = this.peerInputFrameUpsyncQ.getByFrameId(this.peerInputFrameUpsyncQ.edFrameId - 1);
+    const elapsedMillis = ed.t - st.t;
+    peerUpsyncFps = Math.round(this.peerInputFrameUpsyncCnt * 1000 / elapsedMillis);
+  }
+  return [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, this.skippedRenderFrameCnt];
 };
 
-NetworkDoctor.prototype.statPeerInputFrameUpsync = function() {
-  if (1 >= this.peerInputFrameUpsyncQ.cnt) return `0 fps peer upsync`;
-  const st = this.peerInputFrameUpsyncQ.getByFrameId(this.peerInputFrameUpsyncQ.stFrameId);
-  const ed = this.peerInputFrameUpsyncQ.getByFrameId(this.peerInputFrameUpsyncQ.edFrameId - 1);
-  const elapsedMillis = ed.t - st.t;
-  const fps = Math.round(this.peerInputFrameUpsyncCnt * 1000 / elapsedMillis);
-  return `${fps} fps peer upsync`;
-};
+NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
+  this.skippedRenderFrameCnt += 1;
+}
 
-NetworkDoctor.prototype.statRollbackFrames = function() {
-  return `${this.immediateRollbackFrames} rollback frames`;
+NetworkDoctor.prototype.isTooFast = function() {
+  const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
+  if (sendingFps >= this.inputRateThreshold && srvDownsyncFps >= this.inputRateThreshold) {
+    // At least my network is OK for both TX & RX directions. 
+    if (rollbackFrames >= this.rollbackFramesThreshold && peerUpsyncFps < this.peerUpsyncThreshold) {
+      // I got many frames rolled back while none of my peers effectively helped my preciction.  
+      return true;
+    }
+  }
+  return false;
 };
 
 module.exports = NetworkDoctor;

@@ -113,6 +113,10 @@ cc.Class({
       type: cc.Label,
       default: null
     },
+    skippedRenderFrameCntLabel: {
+      type: cc.Label,
+      default: null
+    }
   },
 
   _inputFrameIdDebuggable(inputFrameId) {
@@ -351,6 +355,7 @@ cc.Class({
     self.rdfIdToActuallyUsedInput = new Map();
 
     self.networkDoctor = new NetworkDoctor(20);
+    self.skipRenderFrameFlag = false;
 
     self.countdownNanos = null;
     if (self.countdownLabel) {
@@ -702,6 +707,7 @@ cc.Class({
       self.lastRenderFrameIdTriggeredAt = performance.now();
       // In this case it must be true that "rdf.id > chaserRenderFrameId".
       self.chaserRenderFrameId = rdf.Id;
+      self.networkDoctor.logRollbackFrames(0);
 
       const canvasNode = self.canvasNode;
       self.ctrl = canvasNode.getComponent("TouchEventsManager");
@@ -852,12 +858,12 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    self.networkDoctor.immediateRollbackFrames = (self.renderFrameId - renderFrameId1);
     console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
 batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
     self.chaserRenderFrameId = renderFrameId1;
+    self.networkDoctor.logRollbackFrames(self.renderFrameId - self.chaserRenderFrameId);
   },
 
   onPeerInputFrameUpsync(peerJoinIndex, batch /* []*pb.InputFrameDownsync */ ) {
@@ -874,7 +880,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       return;
     }
 
-    self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
+    let effCnt = 0;
     //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
@@ -882,10 +888,14 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
         continue;
       }
+      effCnt += 1;
       self.getOrPrefabInputFrameUpsync(inputFrameDownsyncId); // Make sure that inputFrame exists locally
       const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
       existingInputFrame.InputList[peerJoinIndex - 1] = inputFrameDownsync.inputList[peerJoinIndex - 1]; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
       self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameDownsyncId);
+    }
+    if (0 < effCnt) {
+      self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     }
   },
 
@@ -960,6 +970,11 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 
       Kindly note that Significantly different network bandwidths or delay fluctuations would result in frequent [type#1 forceConfirmation] too, but CAUSE FROM DIFFERENT LOCAL "update(dt)" RATE SHOULD BE THE FIRST TO INVESTIGATE AND ELIMINATE -- because we have control on it, but no one has control on the internet. 
       */
+      if (self.skipRenderFrameFlag) {
+        self.networkDoctor.logSkippedRenderFrameCnt();
+        self.skipRenderFrameFlag = false;
+        return;
+      }
       try {
         let st = performance.now();
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
@@ -996,6 +1011,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 
         // Inside the following "self.rollbackAndChase" actually ROLLS FORWARD w.r.t. the corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
         const latestRdfResults = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, false);
+        self.networkDoctor.logRollbackFrames(self.renderFrameId - self.chaserRenderFrameId);
         let prevRdf = latestRdfResults[0],
           rdf = latestRdfResults[1];
         /*
@@ -1026,6 +1042,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
+        self.skipRenderFrameFlag = self.networkDoctor.isTooFast();
       } catch (err) {
         console.error("Error during Map.update", err);
         self.onBattleStopped(); // TODO: Popup to ask player to refresh browser
@@ -1520,9 +1537,41 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
 
   showNetworkDoctorLabels() {
     const self = this;
-    self.sendingQLabel.string = self.networkDoctor.statSending();
-    self.inputFrameDownsyncQLabel.string = self.networkDoctor.statInputFrameDownsync();
-    self.peerInputFrameUpsyncQLabel.string = self.networkDoctor.statPeerInputFrameUpsync();
-    self.rollbackFramesLabel.string = self.networkDoctor.statRollbackFrames();
+    const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.stats();
+    if (self.sendingQLabel) {
+      self.sendingQLabel.string = `${sendingFps} fps sending`;
+      if (sendingFps < self.networkDoctor.inputRateThreshold) {
+        self.sendingQLabel.node.color = cc.Color.RED;
+      } else {
+        self.sendingQLabel.node.color = cc.Color.WHITE;
+      }
+    }
+    if (self.inputFrameDownsyncQLabel) {
+      self.inputFrameDownsyncQLabel.string = `${srvDownsyncFps} fps srv-downsync`;
+      if (srvDownsyncFps < self.networkDoctor.inputRateThreshold) {
+        self.inputFrameDownsyncQLabel.node.color = cc.Color.RED;
+      } else {
+        self.inputFrameDownsyncQLabel.node.color = cc.Color.WHITE;
+      }
+    }
+    if (self.peerInputFrameUpsyncQLabel) {
+      self.peerInputFrameUpsyncQLabel.string = `${peerUpsyncFps} fps peer-upsync`;
+      if (peerUpsyncFps > self.networkDoctor.peerUpsyncFps) {
+        self.peerInputFrameUpsyncQLabel.node.color = cc.Color.RED;
+      } else {
+        self.peerInputFrameUpsyncQLabel.node.color = cc.Color.WHITE;
+      }
+    }
+    if (self.rollbackFramesLabel) {
+      self.rollbackFramesLabel.string = `rollbackFrames: ${rollbackFrames}`
+      if (rollbackFrames > self.networkDoctor.rollbackFramesThreshold) {
+        self.rollbackFramesLabel.node.color = cc.Color.RED;
+      } else {
+        self.rollbackFramesLabel.node.color = cc.Color.WHITE;
+      }
+    }
+    if (self.skippedRenderFrameCntLabel) {
+      self.skippedRenderFrameCntLabel.string = `${skippedRenderFrameCnt} frames skipped`
+    }
   },
 });
