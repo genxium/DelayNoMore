@@ -15,16 +15,16 @@
     "orientation": "portrait",
     "subContext": ""
   },
-  "encryptJs": true,
+  "encryptJs": false,
   "excludeScenes": [
     "8491a86c-bec9-4813-968a-128ca01639e0"
   ],
   "fb-instant-games": {},
   "includeSDKBox": false,
   "inlineSpriteFrames": true,
-  "inlineSpriteFrames_native": true,
+  "inlineSpriteFrames_native": false,
   "md5Cache": false,
-  "mergeStartScene": true,
+  "mergeStartScene": false,
   "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
@@ -39,7 +39,7 @@
   },
   "startScene": "2ff474d9-0c9e-4fe3-87ec-fbff7cae85b4",
   "title": "DelayNoMore",
-  "webOrientation": "portrait",
+  "webOrientation": "landscape",
   "wechatgame": {
     "REMOTE_SERVER_ROOT": "https://bgmoba.lokcol.com/static/",
     "appid": "wxf497c910a2a25edc",
@@ -56,5 +56,6 @@
   "mac": {
     "packageName": "org.cocos2d.helloworld"
   },
-  "win32": {}
+  "win32": {},
+  "includeAnySDK": null
 }

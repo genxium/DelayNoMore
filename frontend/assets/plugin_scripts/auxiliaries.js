@@ -198,3 +198,6 @@ window.getOrCreateAnimationClipForGid = function(gid, tiledMapInfo, tilesElListU
     animationClip: animClip,
   };
 };
+
+// Node.js, this is a workaround to avoid accessing the non-existent "TextDecoder class" from "jsexport.js".
+window.fs = function() {};

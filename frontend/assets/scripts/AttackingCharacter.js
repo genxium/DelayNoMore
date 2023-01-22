@@ -75,10 +75,10 @@ cc.Class({
   onLoad() {
     BaseCharacter.prototype.onLoad.call(this);
     this.effAnimNode = this.animNode.getChildByName(this.speciesName);
-    this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
-    if (!this.animComp) {
-      this.animComp = this.effAnimNode.getComponent(cc.Animation);
-    }
+    //this.animComp = this.effAnimNode.getComponent(dragonBones.ArmatureDisplay);
+    //if (!this.animComp) {
+    this.animComp = this.effAnimNode.getComponent(cc.Animation);
+    //}
     this.effAnimNode.active = true;
   },
 
@@ -107,13 +107,13 @@ cc.Class({
     let playingAnimName = null;
     let underlyingAnimationCtrl = null;
 
-    if (this.animComp instanceof dragonBones.ArmatureDisplay) {
-      underlyingAnimationCtrl = this.animComp._armature.animation; // ALWAYS use the dragonBones api instead of ccc's wrapper!
-      playingAnimName = underlyingAnimationCtrl.lastAnimationName;
-    } else {
-      underlyingAnimationCtrl = this.animComp.currentClip;
-      playingAnimName = (!underlyingAnimationCtrl ? null : underlyingAnimationCtrl.name);
-    }
+    //if (this.animComp instanceof dragonBones.ArmatureDisplay) {
+    //  underlyingAnimationCtrl = this.animComp._armature.animation; // ALWAYS use the dragonBones api instead of ccc's wrapper!
+    //  playingAnimName = underlyingAnimationCtrl.lastAnimationName;
+    //} else {
+    underlyingAnimationCtrl = this.animComp.currentClip;
+    playingAnimName = (!underlyingAnimationCtrl ? null : underlyingAnimationCtrl.name);
+    //}
 
     // It turns out that "prevRdfPlayer.CharacterState" is not useful in this function :)
     if (newAnimName == playingAnimName && window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
@@ -122,11 +122,11 @@ cc.Class({
       return;
     }
 
-    if (this.animComp instanceof dragonBones.ArmatureDisplay) {
-      this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName, chConfig);
-    } else {
-      this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName, chConfig);
-    }
+    //if (this.animComp instanceof dragonBones.ArmatureDisplay) {
+    //  this._interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName, chConfig);
+    //} else {
+    this._interruptPlayingAnimAndPlayNewAnimFrameAnim(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, playingAnimName, chConfig);
+    //}
   },
 
   _interruptPlayingAnimAndPlayNewAnimDragonBones(rdfPlayer, prevRdfPlayer, newCharacterState, newAnimName, underlyingAnimationCtrl, playingAnimName, chConfig) {
