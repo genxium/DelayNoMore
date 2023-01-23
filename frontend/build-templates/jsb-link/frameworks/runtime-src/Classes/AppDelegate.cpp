@@ -33,7 +33,7 @@
 #include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
 #include "cocos/scripting/js-bindings/event/EventDispatcher.h"
 #include "cocos/scripting/js-bindings/manual/jsb_classtype.hpp"
-
+#include "udp_session_bridge.hpp"
 USING_NS_CC;
 
 AppDelegate::AppDelegate(int width, int height) : Application("Cocos Game", width, height)
@@ -61,6 +61,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     });
     
     jsb_register_all_modules();
+    se->addRegisterCallback(registerUdpSession);
     
     se->start();
     

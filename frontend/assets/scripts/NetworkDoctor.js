@@ -14,7 +14,7 @@ NetworkDoctor.prototype.reset = function(capacity) {
 
   this.inputRateThreshold = gopkgs.ConvertToNoDelayInputFrameId(60);
   this.peerUpsyncThreshold = 8;
-  this.rollbackFramesThreshold = 4; // Slightly smaller than the minimum "TurnAroundFramesToRecover".
+  this.rollbackFramesThreshold = 8; // Roughly the minimum "TurnAroundFramesToRecover".
 };
 
 NetworkDoctor.prototype.logSending = function(stFrameId, edFrameId) {

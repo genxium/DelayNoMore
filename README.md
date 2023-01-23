@@ -109,3 +109,26 @@ Moreover, in practice I found that to spot sync anomalies, the following tools a
 
 There's also some useful information displayed on the frontend when `true == Map.showNetworkDoctorInfo`.
 ![networkstats](./charts/networkstats.png)
+
+### 2.3 WIN32 platform tool versioning
+![visual_studio](./charts/VisualStudioSetup.png)
+When building for native platforms, it's much more convenient to trigger the CocosCreator project forming frmo CLI, e.g.
+```
+shell> cd <proj-root>
+shell> /path/to/CocosCreator.exe --path ./frontend --build "platform=win32;debug=true"
+```
+
+### 2.4 CococCreator native build reloading
+CocosCreator doesn't have perfect file cache management during native project building, use "Developer Tools > Reload" to reset the IDE status upon mysterious errors.
+![ccc_reload](./charts/NativeBuildReload.png)
+
+### 2.5 Checking UDP port binding result
+__*nix__
+``` 
+netstat -anp | grep <your_port>
+``` 
+
+__Windows__
+``` 
+netstat -ano | grep <your_port>
+``` 

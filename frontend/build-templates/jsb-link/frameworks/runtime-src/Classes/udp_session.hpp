@@ -3,16 +3,18 @@
 
 #include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
 
-typedef unsigned char const CBYTE;
+typedef unsigned char const BYTEC;
 typedef char const CHARC;
 
 namespace DelayNoMore {
     class UdpSession {
     public:
-        static bool upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, CHARC* const authKey);
+        static bool openUdpSession(int port);
+        static bool closeUdpSession();
+        static bool upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey);
         //static bool clearPeerUDPAddrList();
         //static void punchToServer(CBYTE* const bytes);
-        static void onMessage(CBYTE* const bytes);
+        static void onMessage(BYTEC* const bytes);
     };
 }
 #endif

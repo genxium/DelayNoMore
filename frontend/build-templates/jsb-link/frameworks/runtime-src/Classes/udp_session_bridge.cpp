@@ -2,6 +2,35 @@
 #include "base/ccMacros.h"
 #include "scripting/js-bindings/manual/jsb_conversions.hpp"
 
+bool openUdpSession(se::State& s) {
+    const auto& args = s.args();
+    size_t argc = args.size();
+    CC_UNUSED bool ok = true;
+    if (1 == argc) {
+        SE_PRECONDITION2(ok, false, "openUdpSession: Error processing arguments");
+        int port = args[0].toInt32();
+        return DelayNoMore::UdpSession::openUdpSession(port);
+    }
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d", (int)argc, 1);
+
+    return false;
+}
+SE_BIND_FUNC(openUdpSession)
+
+bool closeUdpSession(se::State& s) {
+    const auto& args = s.args();
+    size_t argc = args.size();
+    CC_UNUSED bool ok = true;
+    if (0 == argc) {
+        SE_PRECONDITION2(ok, false, "closeUdpSession: Error processing arguments");
+        return DelayNoMore::UdpSession::closeUdpSession();
+    }
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d", (int)argc, 0);
+
+    return false;
+}
+SE_BIND_FUNC(closeUdpSession)
+
 bool upsertPeerUdpAddr(se::State& s) {
     const auto& args = s.args();
     size_t argc = args.size();
@@ -11,13 +40,12 @@ bool upsertPeerUdpAddr(se::State& s) {
         int joinIndex = args[0].toInt32();
         CHARC* ip = args[1].toString().c_str();
         int port = args[2].toInt32();
-        CHARC* authKey = args[3].toString().c_str();
-        DelayNoMore::UdpSession::upsertPeerUdpAddr(joinIndex, ip, port, authKey);
-        return true;
+        uint32_t authKey = args[3].toUint32();
+        return DelayNoMore::UdpSession::upsertPeerUdpAddr(joinIndex, ip, port, authKey);
     }
     SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d", (int)argc, 4);
     
-    return true;
+    return false;
 }
 SE_BIND_FUNC(upsertPeerUdpAddr)
 
@@ -36,7 +64,7 @@ SE_BIND_FINALIZE_FUNC(udpSessionFinalize)
 
 se::Object* __jsb_udp_session_proto = nullptr;
 se::Class* __jsb_udp_session_class = nullptr;
-bool register_udp_session(se::Object* obj)
+bool registerUdpSession(se::Object* obj)
 {
     // Get the ns
     se::Value nsVal;
@@ -49,7 +77,9 @@ bool register_udp_session(se::Object* obj)
     
     se::Object* ns = nsVal.toObject();
     auto cls = se::Class::create("UdpSession", ns, nullptr, nullptr);
-    
+
+    cls->defineStaticFunction("openUdpSession", _SE(openUdpSession));
+    cls->defineStaticFunction("closeUdpSession", _SE(closeUdpSession));
     cls->defineStaticFunction("upsertPeerUdpAddr", _SE(upsertPeerUdpAddr));
     cls->defineFinalizeFunction(_SE(udpSessionFinalize));
     cls->install();

@@ -144,6 +144,11 @@ cc.Class({
         Id: 10,
         JoinIndex: 1,
       };
+      if (cc.sys.isNative) {
+        DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456);
+        const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.JoinIndex);
+        //const res2 = DelayNoMore.UdpSession.closeUdpSession();
+      }
       self.onRoomDownsyncFrame(startRdf);
 
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
@@ -154,12 +159,6 @@ cc.Class({
   update(dt) {
     const self = this;
     if (ALL_BATTLE_STATES.IN_BATTLE == self.battleState) {
-      const elapsedMillisSinceLastFrameIdTriggered = performance.now() - self.lastRenderFrameIdTriggeredAt;
-      if (elapsedMillisSinceLastFrameIdTriggered < self.tooFastDtIntervalMillis) {
-        // [WARNING] We should avoid a frontend ticking too fast to prevent cheating, as well as ticking too slow to cause a "resync avalanche" that impacts user experience!
-        // console.debug("Avoiding too fast frame@renderFrameId=", self.renderFrameId, ": elapsedMillisSinceLastFrameIdTriggered=", elapsedMillisSinceLastFrameIdTriggered);
-        //return;
-      }
       try {
         let st = performance.now();
         let prevSelfInput = null,

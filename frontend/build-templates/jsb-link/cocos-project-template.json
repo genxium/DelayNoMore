@@ -39,6 +39,7 @@
                 "frameworks/runtime-src/proj.android-studio/app/res/values/strings.xml",
                 "frameworks/runtime-src/Classes/udp_session.hpp",
                 "frameworks/runtime-src/Classes/udp_session.cpp",
+                "frameworks/runtime-src/Classes/udp_session_bridge.hpp",
                 "frameworks/runtime-src/Classes/udp_session_bridge.cpp",
                 "frameworks/runtime-src/Classes/AppDelegate.cpp"
             ]

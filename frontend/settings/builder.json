@@ -2,7 +2,7 @@
   "android-instant": {
     "REMOTE_SERVER_ROOT": "",
     "host": "",
-    "packageName": "org.cocos2d.helloworld",
+    "packageName": "org.genxium.delaynomore",
     "pathPattern": "",
     "recordPath": "",
     "scheme": "https",
@@ -17,15 +17,14 @@
   },
   "encryptJs": false,
   "excludeScenes": [
-    "2ff474d9-0c9e-4fe3-87ec-fbff7cae85b4",
-    "92160186-3e0d-4e0a-ae20-97286170ba58"
+    "8491a86c-bec9-4813-968a-128ca01639e0"
   ],
   "fb-instant-games": {},
   "includeSDKBox": false,
   "inlineSpriteFrames": true,
-  "inlineSpriteFrames_native": true,
+  "inlineSpriteFrames_native": false,
   "md5Cache": false,
-  "mergeStartScene": false,
+  "mergeStartScene": true,
   "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
@@ -33,12 +32,12 @@
     "portrait": false,
     "upsideDown": false
   },
-  "packageName": "org.cocos2d.helloworld",
+  "packageName": "org.genxium.delaynomore",
   "qqplay": {
     "REMOTE_SERVER_ROOT": "",
     "orientation": "portrait"
   },
-  "startScene": "8491a86c-bec9-4813-968a-128ca01639e0",
+  "startScene": "2ff474d9-0c9e-4fe3-87ec-fbff7cae85b4",
   "title": "DelayNoMore",
   "webOrientation": "landscape",
   "wechatgame": {
@@ -49,14 +48,14 @@
   "xxteaKey": "4d54a3d5-e6f3-49",
   "zipCompressJs": true,
   "android": {
-    "packageName": "org.cocos2d.tsrht"
+    "packageName": "org.genxium.delaynomore"
   },
   "ios": {
-    "packageName": "org.cocos2d.helloworld"
+    "packageName": "org.genxium.delaynomore"
   },
   "mac": {
-    "packageName": "org.cocos2d.helloworld"
+    "packageName": "org.genxium.delaynomore"
   },
   "win32": {},
-  "includeAnySDK": false
+  "includeAnySDK": null
 }
