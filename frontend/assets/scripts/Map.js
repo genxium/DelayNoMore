@@ -882,9 +882,14 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 
     let effCnt = 0;
     //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
+    const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
     for (let k in batch) {
       const inputFrameDownsync = batch[k];
       const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
+      if (inputFrameDownsyncId < renderedInputFrameIdUpper) {
+        // Avoid obfuscating already rendered history
+        continue;
+      }
       if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
         continue;
       }

@@ -80,12 +80,13 @@ NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
 }
 
 NetworkDoctor.prototype.isTooFast = function() {
+  return false;
   const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold + 2) {
     // Don't send too fast
     return true;
   } else if (sendingFps >= this.inputRateThreshold && srvDownsyncFps >= this.inputRateThreshold) {
-    // At least my network is OK for both TX & RX directions -- PING value might help as a supplement information here to confirm that the "selfPlayer" is not lagged in RX which results in the "rollbackFrames", but not necessary -- a significant lag within the "inputFrameDownsyncQ" will reduce "srvDownsyncFps". 
+    // An outstanding lag within the "inputFrameDownsyncQ" will reduce "srvDownsyncFps", HOWEVER, a constant lag wouldn't impact "srvDownsyncFps"! In native platforms we might use PING value might help as a supplement information to confirm that the "selfPlayer" is not lagged within the time accounted by "inputFrameDownsyncQ".  
     if (rollbackFrames >= this.rollbackFramesThreshold) {
       // I got many frames rolled back while none of my peers effectively helped my preciction. Deliberately not using "peerUpsyncThreshold" here because when using UDP p2p upsync broadcasting, we expect to receive effective p2p upsyncs from every other player.   
       return true;

@@ -808,7 +808,7 @@ func (pR *Room) OnDismissed() {
 	pR.BattleDurationFrames = int32(60 * serverFps)
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
-	pR.MaxChasingRenderFramesPerUpdate = 4                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame
+	pR.MaxChasingRenderFramesPerUpdate = 9                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame, roughly as the "turn-around frames to recover" is empirically OK
 
 	pR.BackendDynamicsEnabled = true              // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
