@@ -145,6 +145,16 @@ cc.Class({
         JoinIndex: 1,
       };
       if (cc.sys.isNative) {
+        window.onUdpMessage = (args) => {
+          const len = args.length;
+          const ui8Arr = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            ui8Arr[i] = args.charCodeAt(i);
+          }
+          cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
+          const echoed = window.pb.protos.HolePunchUpsync.decode(ui8Arr);
+          cc.log(`#2 Js called back by CPP: onUdpMessage: ${JSON.stringify(echoed)}`);
+        };
         DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456);
         const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.JoinIndex);
         const holePunchDate = window.pb.protos.HolePunchUpsync.encode({

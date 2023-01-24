@@ -26,6 +26,14 @@ func main() {
 		}
 
 		data := strings.TrimSpace(string(message[:rlen]))
-		fmt.Printf("received: %s from %s\n", data, remote)
+		fmt.Printf("received: %d bytes, content=%s from %s\n", rlen, data, remote)
+
+		// echo
+		rlen, wrerr := conn.WriteTo(message[0:rlen], remote)
+		if wrerr != nil {
+			fmt.Printf("net.WriteTo() error: %s\n", wrerr)
+		} else {
+			fmt.Printf("Wrote %d bytes to socket\n", rlen)
+		}
 	}
 }

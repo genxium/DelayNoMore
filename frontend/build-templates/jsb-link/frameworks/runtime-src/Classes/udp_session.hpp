@@ -14,7 +14,6 @@ namespace DelayNoMore {
         static bool upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey);
         //static bool clearPeerUDPAddrList();
         static bool punchToServer(BYTEC* const bytes);
-        static void onMessage(BYTEC* const bytes);
     };
 }
 #endif

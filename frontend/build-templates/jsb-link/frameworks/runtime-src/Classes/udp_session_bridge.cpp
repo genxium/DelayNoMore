@@ -9,6 +9,7 @@ bool openUdpSession(se::State& s) {
     if (1 == argc && args[0].isNumber()) {
         SE_PRECONDITION2(ok, false, "openUdpSession: Error processing arguments");
         int port = args[0].toInt32();
+
         return DelayNoMore::UdpSession::openUdpSession(port);
     }
     SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 1);
@@ -27,7 +28,10 @@ bool punchToServer(se::State& s) {
         memset(bytes, 0, sizeof bytes);
         se::Object* obj = args[0].toObject();
         size_t sz = 0;
-        obj->getTypedArrayData((uint8_t**)&bytes, &sz);
+        uint8_t* ptr;
+        obj->getTypedArrayData(&ptr, &sz);
+        memcpy(bytes, ptr, sz);
+        CCLOG("Should punch by %d bytes v.s. strlen(bytes)=%u.", sz, strlen(bytes));
         return DelayNoMore::UdpSession::punchToServer(bytes);
     }
     SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 1);

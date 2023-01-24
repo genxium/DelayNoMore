@@ -1,10 +1,12 @@
 #include "udp_session.hpp"
 #include "base/ccMacros.h"
+#include "cocos/platform/CCApplication.h"
+#include "cocos/base/CCScheduler.h"
 #include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
 #include "uv/uv.h"
-#include <thread>
 
 uv_udp_t* udpSocket = NULL;
+
 uv_loop_t* loop = NULL; // Only this loop is used for this simple PoC
 
 int const sendBufferLen = 1024;
@@ -18,12 +20,34 @@ void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct soc
         return;
     }
 
-    char sender[17] = { 0 };
-    uv_ip4_name((const struct sockaddr_in*)addr, sender, 16);
-    CCLOG("Recv from %s", sender);
+    char senderAddrStr[64] = { 0 };
+    uv_ip4_name((const struct sockaddr_in*)addr, senderAddrStr, 16);
 
+    //uv_udp_recv_stop(req);
+
+    int const gameThreadMsgSize = 256;
+    char* const gameThreadMsg = (char* const)malloc(gameThreadMsgSize);
+    memset(gameThreadMsg, 0, gameThreadMsgSize);
+    memcpy(gameThreadMsg, buf->base, nread);
+
+    CCLOG("Recv %d bytes from %s, converted to %d bytes for the JS callback", nread, senderAddrStr, strlen(gameThreadMsg));
     free(buf->base);
-    uv_udp_recv_stop(req);
+
+    cocos2d::Application::getInstance()->getScheduler()->performFunctionInCocosThread([=]() {
+        // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
+        se::Value onUdpMessageCb;
+        se::ScriptEngine::getInstance()->getGlobalObject()->getProperty("onUdpMessage", &onUdpMessageCb);
+        // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
+        se::AutoHandleScope hs;
+        se::ValueArray args = { se::Value(gameThreadMsg) };
+        if (onUdpMessageCb.isObject() && onUdpMessageCb.toObject()->isFunction()) {
+            bool ok = onUdpMessageCb.toObject()->call(args, NULL /* Temporarily assume that the "this" ptr within callback is NULL. */);
+            if (!ok) {
+                se::ScriptEngine::getInstance()->clearException();
+            }
+        }
+        free(gameThreadMsg);
+    });
 }
 
 static void _allocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -39,6 +63,7 @@ void startRecvLoop(void* arg) {
 }
 
 bool DelayNoMore::UdpSession::openUdpSession(int port) {
+    
     uv_mutex_init(&sendLock);
     uv_mutex_init(&recvLock);
 
@@ -86,22 +111,6 @@ bool DelayNoMore::UdpSession::upsertPeerUdpAddr(int joinIndex, CHARC* const ip, 
     return true;
 }
 
-void DelayNoMore::UdpSession::onMessage(BYTEC* const bytes) {
-    se::ScriptEngine* se = se::ScriptEngine::getInstance();
-    
-    se::Value func;
-    se->getGlobalObject()->getProperty("onUdpMessage", &func);
-    
-    se::ValueArray args;
-    args.push_back(se::Value(bytes));
-    if (func.isObject() && func.toObject()->isFunction()) {
-        bool ok = func.toObject()->call(args, NULL /* Temporarily assume that the "this" ptr within callback is NULL. */);
-        if (!ok) {
-            se::ScriptEngine::getInstance()->clearException();
-        }
-    }
-}
-
 void _onSend(uv_udp_send_t* req, int status) {
     free(req);
     if (status) {
@@ -110,12 +119,17 @@ void _onSend(uv_udp_send_t* req, int status) {
 }
 
 bool DelayNoMore::UdpSession::punchToServer(BYTEC* const bytes) {
-    uv_mutex_lock(&sendLock);
+    /*
+    [WARNING] The RAM space used for "bytes", either on stack or in heap, is preallocatedand managed by the caller.
+    
+    Moreover, there's no need to lock on "bytes". Only "udpSocket" is possibly accessed by multiple threads.
+    */
     uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
-    uv_buf_t sendBuffer = uv_buf_init(bytes, sizeof bytes); // [WARNING] The RAM space used for "bytes", either on stack or in heap, is preallocated and managed by the caller.
+    uv_buf_t sendBuffer = uv_buf_init(bytes, strlen(bytes)); 
 
     SOCKADDR_IN destAddr;
     uv_ip4_addr("127.0.0.1", 3000, &destAddr);
+    uv_mutex_lock(&sendLock);
     uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&destAddr, _onSend);
     uv_mutex_unlock(&sendLock);
     return true;

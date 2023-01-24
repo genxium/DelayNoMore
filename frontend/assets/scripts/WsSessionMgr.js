@@ -66,7 +66,9 @@ window.handleHbRequirements = function(resp) {
   }
 
   if (window.handleBattleColliderInfo) {
-    window.initSecondarySession(null, window.boundRoomId);
+    if (!cc.sys.isNative) {
+      window.initSecondarySession(null, window.boundRoomId);
+    }
     window.handleBattleColliderInfo(resp.bciFrame);
   }
 };
