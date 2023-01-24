@@ -11,6 +11,7 @@ extern se::Class* __jsb_udp_session_class;
 bool registerUdpSession(se::Object* obj);
 
 SE_DECLARE_FUNC(openUdpSession);
+SE_DECLARE_FUNC(punchToServer);
 SE_DECLARE_FUNC(closeUdpSession);
 SE_DECLARE_FUNC(upsertPeerUdpAddr);
 

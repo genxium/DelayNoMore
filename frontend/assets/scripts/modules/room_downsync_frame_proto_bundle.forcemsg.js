@@ -6916,6 +6916,279 @@ $root.protos = (function() {
         return RoomDownsyncFrame;
     })();
 
+    protos.HolePunchUpsync = (function() {
+
+        /**
+         * Properties of a HolePunchUpsync.
+         * @memberof protos
+         * @interface IHolePunchUpsync
+         * @property {number|null} [joinIndex] HolePunchUpsync joinIndex
+         * @property {string|null} [intAuthToken] HolePunchUpsync intAuthToken
+         * @property {number|null} [boundRoomId] HolePunchUpsync boundRoomId
+         * @property {number|null} [authKey] HolePunchUpsync authKey
+         */
+
+        /**
+         * Constructs a new HolePunchUpsync.
+         * @memberof protos
+         * @classdesc Represents a HolePunchUpsync.
+         * @implements IHolePunchUpsync
+         * @constructor
+         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
+         */
+        function HolePunchUpsync(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * HolePunchUpsync joinIndex.
+         * @member {number} joinIndex
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.joinIndex = 0;
+
+        /**
+         * HolePunchUpsync intAuthToken.
+         * @member {string} intAuthToken
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.intAuthToken = "";
+
+        /**
+         * HolePunchUpsync boundRoomId.
+         * @member {number} boundRoomId
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.boundRoomId = 0;
+
+        /**
+         * HolePunchUpsync authKey.
+         * @member {number} authKey
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.authKey = 0;
+
+        /**
+         * Creates a new HolePunchUpsync instance using the specified properties.
+         * @function create
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync instance
+         */
+        HolePunchUpsync.create = function create(properties) {
+            return new HolePunchUpsync(properties);
+        };
+
+        /**
+         * Encodes the specified HolePunchUpsync message. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * @function encode
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        HolePunchUpsync.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.joinIndex);
+            if (message.intAuthToken != null && Object.hasOwnProperty.call(message, "intAuthToken"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.intAuthToken);
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.boundRoomId);
+            if (message.authKey != null && Object.hasOwnProperty.call(message, "authKey"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.authKey);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified HolePunchUpsync message, length delimited. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        HolePunchUpsync.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a HolePunchUpsync message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        HolePunchUpsync.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.HolePunchUpsync();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.joinIndex = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.intAuthToken = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.authKey = reader.int32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a HolePunchUpsync message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        HolePunchUpsync.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a HolePunchUpsync message.
+         * @function verify
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        HolePunchUpsync.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+                if (!$util.isInteger(message.joinIndex))
+                    return "joinIndex: integer expected";
+            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
+                if (!$util.isString(message.intAuthToken))
+                    return "intAuthToken: string expected";
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                if (!$util.isInteger(message.boundRoomId))
+                    return "boundRoomId: integer expected";
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                if (!$util.isInteger(message.authKey))
+                    return "authKey: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a HolePunchUpsync message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         */
+        HolePunchUpsync.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.HolePunchUpsync)
+                return object;
+            var message = new $root.protos.HolePunchUpsync();
+            if (object.joinIndex != null)
+                message.joinIndex = object.joinIndex | 0;
+            if (object.intAuthToken != null)
+                message.intAuthToken = String(object.intAuthToken);
+            if (object.boundRoomId != null)
+                message.boundRoomId = object.boundRoomId | 0;
+            if (object.authKey != null)
+                message.authKey = object.authKey | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a HolePunchUpsync message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        HolePunchUpsync.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.joinIndex = 0;
+                object.intAuthToken = "";
+                object.boundRoomId = 0;
+                object.authKey = 0;
+            }
+            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
+                object.joinIndex = message.joinIndex;
+            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
+                object.intAuthToken = message.intAuthToken;
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                object.boundRoomId = message.boundRoomId;
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                object.authKey = message.authKey;
+            return object;
+        };
+
+        /**
+         * Converts this HolePunchUpsync to JSON.
+         * @function toJSON
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        HolePunchUpsync.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for HolePunchUpsync
+         * @function getTypeUrl
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        HolePunchUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.HolePunchUpsync";
+        };
+
+        return HolePunchUpsync;
+    })();
+
     return protos;
 })();
 

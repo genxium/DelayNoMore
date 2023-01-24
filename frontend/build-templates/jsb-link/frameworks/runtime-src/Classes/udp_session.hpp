@@ -3,7 +3,7 @@
 
 #include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
 
-typedef unsigned char const BYTEC;
+typedef char BYTEC;
 typedef char const CHARC;
 
 namespace DelayNoMore {
@@ -13,7 +13,7 @@ namespace DelayNoMore {
         static bool closeUdpSession();
         static bool upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey);
         //static bool clearPeerUDPAddrList();
-        //static void punchToServer(CBYTE* const bytes);
+        static bool punchToServer(BYTEC* const bytes);
         static void onMessage(BYTEC* const bytes);
     };
 }

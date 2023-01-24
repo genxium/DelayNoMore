@@ -208,3 +208,10 @@ message RoomDownsyncFrame {
 
   int32 bulletLocalIdCounter = 1027;
 }
+
+message HolePunchUpsync {
+ int32 joinIndex = 1;
+ string intAuthToken = 2;
+ int32 boundRoomId = 3;
+ int32 authKey = 4;
+}

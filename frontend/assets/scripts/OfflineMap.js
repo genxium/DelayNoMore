@@ -147,7 +147,14 @@ cc.Class({
       if (cc.sys.isNative) {
         DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456);
         const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.JoinIndex);
-        //const res2 = DelayNoMore.UdpSession.closeUdpSession();
+        const holePunchDate = window.pb.protos.HolePunchUpsync.encode({
+          joinIndex: self.selfPlayerInfo.JoinIndex,
+          boundRoomId: 22,
+          intAuthToken: "foobar",
+          authKey: Math.floor(Math.random() * 65535),
+        }).finish()
+        const res2 = DelayNoMore.UdpSession.punchToServer(holePunchDate);
+      //const res3 = DelayNoMore.UdpSession.closeUdpSession();
       }
       self.onRoomDownsyncFrame(startRdf);
 

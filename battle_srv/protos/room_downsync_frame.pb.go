@@ -1618,6 +1618,77 @@ func (x *RoomDownsyncFrame) GetBulletLocalIdCounter() int32 {
 	return 0
 }
 
+type HolePunchUpsync struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	JoinIndex    int32  `protobuf:"varint,1,opt,name=joinIndex,proto3" json:"joinIndex,omitempty"`
+	IntAuthToken string `protobuf:"bytes,2,opt,name=intAuthToken,proto3" json:"intAuthToken,omitempty"`
+	BoundRoomId  int32  `protobuf:"varint,3,opt,name=boundRoomId,proto3" json:"boundRoomId,omitempty"`
+	AuthKey      int32  `protobuf:"varint,4,opt,name=authKey,proto3" json:"authKey,omitempty"`
+}
+
+func (x *HolePunchUpsync) Reset() {
+	*x = HolePunchUpsync{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_room_downsync_frame_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *HolePunchUpsync) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HolePunchUpsync) ProtoMessage() {}
+
+func (x *HolePunchUpsync) ProtoReflect() protoreflect.Message {
+	mi := &file_room_downsync_frame_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HolePunchUpsync.ProtoReflect.Descriptor instead.
+func (*HolePunchUpsync) Descriptor() ([]byte, []int) {
+	return file_room_downsync_frame_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *HolePunchUpsync) GetJoinIndex() int32 {
+	if x != nil {
+		return x.JoinIndex
+	}
+	return 0
+}
+
+func (x *HolePunchUpsync) GetIntAuthToken() string {
+	if x != nil {
+		return x.IntAuthToken
+	}
+	return ""
+}
+
+func (x *HolePunchUpsync) GetBoundRoomId() int32 {
+	if x != nil {
+		return x.BoundRoomId
+	}
+	return 0
+}
+
+func (x *HolePunchUpsync) GetAuthKey() int32 {
+	if x != nil {
+		return x.AuthKey
+	}
+	return 0
+}
+
 var File_room_downsync_frame_proto protoreflect.FileDescriptor
 
 var file_room_downsync_frame_proto_rawDesc = []byte{
@@ -1968,8 +2039,17 @@ var file_room_downsync_frame_proto_rawDesc = []byte{
 	0x75, 0x6c, 0x6c, 0x65, 0x74, 0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x49, 0x64, 0x43, 0x6f, 0x75, 0x6e,
 	0x74, 0x65, 0x72, 0x18, 0x83, 0x08, 0x20, 0x01, 0x28, 0x05, 0x52, 0x14, 0x62, 0x75, 0x6c, 0x6c,
 	0x65, 0x74, 0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x49, 0x64, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72,
-	0x42, 0x13, 0x5a, 0x11, 0x62, 0x61, 0x74, 0x74, 0x6c, 0x65, 0x5f, 0x73, 0x72, 0x76, 0x2f, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x8f, 0x01, 0x0a, 0x0f, 0x48, 0x6f, 0x6c, 0x65, 0x50, 0x75, 0x6e, 0x63, 0x68, 0x55, 0x70,
+	0x73, 0x79, 0x6e, 0x63, 0x12, 0x1c, 0x0a, 0x09, 0x6a, 0x6f, 0x69, 0x6e, 0x49, 0x6e, 0x64, 0x65,
+	0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x6a, 0x6f, 0x69, 0x6e, 0x49, 0x6e, 0x64,
+	0x65, 0x78, 0x12, 0x22, 0x0a, 0x0c, 0x69, 0x6e, 0x74, 0x41, 0x75, 0x74, 0x68, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x69, 0x6e, 0x74, 0x41, 0x75, 0x74,
+	0x68, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x12, 0x20, 0x0a, 0x0b, 0x62, 0x6f, 0x75, 0x6e, 0x64, 0x52,
+	0x6f, 0x6f, 0x6d, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0b, 0x62, 0x6f, 0x75,
+	0x6e, 0x64, 0x52, 0x6f, 0x6f, 0x6d, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x75, 0x74, 0x68,
+	0x4b, 0x65, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x61, 0x75, 0x74, 0x68, 0x4b,
+	0x65, 0x79, 0x42, 0x13, 0x5a, 0x11, 0x62, 0x61, 0x74, 0x74, 0x6c, 0x65, 0x5f, 0x73, 0x72, 0x76,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1984,7 +2064,7 @@ func file_room_downsync_frame_proto_rawDescGZIP() []byte {
 	return file_room_downsync_frame_proto_rawDescData
 }
 
-var file_room_downsync_frame_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_room_downsync_frame_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_room_downsync_frame_proto_goTypes = []interface{}{
 	(*PlayerDownsync)(nil),       // 0: protos.PlayerDownsync
 	(*InputFrameDecoded)(nil),    // 1: protos.InputFrameDecoded
@@ -1998,6 +2078,7 @@ var file_room_downsync_frame_proto_goTypes = []interface{}{
 	(*FireballBullet)(nil),       // 9: protos.FireballBullet
 	(*BattleColliderInfo)(nil),   // 10: protos.BattleColliderInfo
 	(*RoomDownsyncFrame)(nil),    // 11: protos.RoomDownsyncFrame
+	(*HolePunchUpsync)(nil),      // 12: protos.HolePunchUpsync
 }
 var file_room_downsync_frame_proto_depIdxs = []int32{
 	2,  // 0: protos.WsReq.inputFrameUpsyncBatch:type_name -> protos.InputFrameUpsync
@@ -2166,6 +2247,18 @@ func file_room_downsync_frame_proto_init() {
 				return nil
 			}
 		}
+		file_room_downsync_frame_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*HolePunchUpsync); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2173,7 +2266,7 @@ func file_room_downsync_frame_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_room_downsync_frame_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
