@@ -3547,380 +3547,6 @@ $root.protos = (function() {
         return WsReq;
     })();
 
-    protos.WsResp = (function() {
-
-        /**
-         * Properties of a WsResp.
-         * @memberof protos
-         * @interface IWsResp
-         * @property {number|null} [ret] WsResp ret
-         * @property {number|null} [echoedMsgId] WsResp echoedMsgId
-         * @property {number|null} [act] WsResp act
-         * @property {protos.RoomDownsyncFrame|null} [rdf] WsResp rdf
-         * @property {Array.<protos.InputFrameDownsync>|null} [inputFrameDownsyncBatch] WsResp inputFrameDownsyncBatch
-         * @property {protos.BattleColliderInfo|null} [bciFrame] WsResp bciFrame
-         * @property {number|null} [peerJoinIndex] WsResp peerJoinIndex
-         */
-
-        /**
-         * Constructs a new WsResp.
-         * @memberof protos
-         * @classdesc Represents a WsResp.
-         * @implements IWsResp
-         * @constructor
-         * @param {protos.IWsResp=} [properties] Properties to set
-         */
-        function WsResp(properties) {
-            this.inputFrameDownsyncBatch = [];
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * WsResp ret.
-         * @member {number} ret
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.ret = 0;
-
-        /**
-         * WsResp echoedMsgId.
-         * @member {number} echoedMsgId
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.echoedMsgId = 0;
-
-        /**
-         * WsResp act.
-         * @member {number} act
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.act = 0;
-
-        /**
-         * WsResp rdf.
-         * @member {protos.RoomDownsyncFrame|null|undefined} rdf
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.rdf = null;
-
-        /**
-         * WsResp inputFrameDownsyncBatch.
-         * @member {Array.<protos.InputFrameDownsync>} inputFrameDownsyncBatch
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.inputFrameDownsyncBatch = $util.emptyArray;
-
-        /**
-         * WsResp bciFrame.
-         * @member {protos.BattleColliderInfo|null|undefined} bciFrame
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.bciFrame = null;
-
-        /**
-         * WsResp peerJoinIndex.
-         * @member {number} peerJoinIndex
-         * @memberof protos.WsResp
-         * @instance
-         */
-        WsResp.prototype.peerJoinIndex = 0;
-
-        /**
-         * Creates a new WsResp instance using the specified properties.
-         * @function create
-         * @memberof protos.WsResp
-         * @static
-         * @param {protos.IWsResp=} [properties] Properties to set
-         * @returns {protos.WsResp} WsResp instance
-         */
-        WsResp.create = function create(properties) {
-            return new WsResp(properties);
-        };
-
-        /**
-         * Encodes the specified WsResp message. Does not implicitly {@link protos.WsResp.verify|verify} messages.
-         * @function encode
-         * @memberof protos.WsResp
-         * @static
-         * @param {protos.WsResp} message WsResp message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        WsResp.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.ret != null && Object.hasOwnProperty.call(message, "ret"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.ret);
-            if (message.echoedMsgId != null && Object.hasOwnProperty.call(message, "echoedMsgId"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.echoedMsgId);
-            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
-            if (message.rdf != null && Object.hasOwnProperty.call(message, "rdf"))
-                $root.protos.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-            if (message.inputFrameDownsyncBatch != null && message.inputFrameDownsyncBatch.length)
-                for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i)
-                    $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
-            if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
-                $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
-            if (message.peerJoinIndex != null && Object.hasOwnProperty.call(message, "peerJoinIndex"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.peerJoinIndex);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified WsResp message, length delimited. Does not implicitly {@link protos.WsResp.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof protos.WsResp
-         * @static
-         * @param {protos.WsResp} message WsResp message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        WsResp.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a WsResp message from the specified reader or buffer.
-         * @function decode
-         * @memberof protos.WsResp
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {protos.WsResp} WsResp
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        WsResp.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.WsResp();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.ret = reader.int32();
-                        break;
-                    }
-                case 2: {
-                        message.echoedMsgId = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.act = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 5: {
-                        if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
-                            message.inputFrameDownsyncBatch = [];
-                        message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
-                        break;
-                    }
-                case 6: {
-                        message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 7: {
-                        message.peerJoinIndex = reader.int32();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a WsResp message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof protos.WsResp
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.WsResp} WsResp
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        WsResp.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a WsResp message.
-         * @function verify
-         * @memberof protos.WsResp
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        WsResp.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.ret != null && message.hasOwnProperty("ret"))
-                if (!$util.isInteger(message.ret))
-                    return "ret: integer expected";
-            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
-                if (!$util.isInteger(message.echoedMsgId))
-                    return "echoedMsgId: integer expected";
-            if (message.act != null && message.hasOwnProperty("act"))
-                if (!$util.isInteger(message.act))
-                    return "act: integer expected";
-            if (message.rdf != null && message.hasOwnProperty("rdf")) {
-                var error = $root.protos.RoomDownsyncFrame.verify(message.rdf);
-                if (error)
-                    return "rdf." + error;
-            }
-            if (message.inputFrameDownsyncBatch != null && message.hasOwnProperty("inputFrameDownsyncBatch")) {
-                if (!Array.isArray(message.inputFrameDownsyncBatch))
-                    return "inputFrameDownsyncBatch: array expected";
-                for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i) {
-                    var error = $root.protos.InputFrameDownsync.verify(message.inputFrameDownsyncBatch[i]);
-                    if (error)
-                        return "inputFrameDownsyncBatch." + error;
-                }
-            }
-            if (message.bciFrame != null && message.hasOwnProperty("bciFrame")) {
-                var error = $root.protos.BattleColliderInfo.verify(message.bciFrame);
-                if (error)
-                    return "bciFrame." + error;
-            }
-            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
-                if (!$util.isInteger(message.peerJoinIndex))
-                    return "peerJoinIndex: integer expected";
-            return null;
-        };
-
-        /**
-         * Creates a WsResp message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof protos.WsResp
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {protos.WsResp} WsResp
-         */
-        WsResp.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.WsResp)
-                return object;
-            var message = new $root.protos.WsResp();
-            if (object.ret != null)
-                message.ret = object.ret | 0;
-            if (object.echoedMsgId != null)
-                message.echoedMsgId = object.echoedMsgId | 0;
-            if (object.act != null)
-                message.act = object.act | 0;
-            if (object.rdf != null) {
-                if (typeof object.rdf !== "object")
-                    throw TypeError(".protos.WsResp.rdf: object expected");
-                message.rdf = $root.protos.RoomDownsyncFrame.fromObject(object.rdf);
-            }
-            if (object.inputFrameDownsyncBatch) {
-                if (!Array.isArray(object.inputFrameDownsyncBatch))
-                    throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: array expected");
-                message.inputFrameDownsyncBatch = [];
-                for (var i = 0; i < object.inputFrameDownsyncBatch.length; ++i) {
-                    if (typeof object.inputFrameDownsyncBatch[i] !== "object")
-                        throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: object expected");
-                    message.inputFrameDownsyncBatch[i] = $root.protos.InputFrameDownsync.fromObject(object.inputFrameDownsyncBatch[i]);
-                }
-            }
-            if (object.bciFrame != null) {
-                if (typeof object.bciFrame !== "object")
-                    throw TypeError(".protos.WsResp.bciFrame: object expected");
-                message.bciFrame = $root.protos.BattleColliderInfo.fromObject(object.bciFrame);
-            }
-            if (object.peerJoinIndex != null)
-                message.peerJoinIndex = object.peerJoinIndex | 0;
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a WsResp message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof protos.WsResp
-         * @static
-         * @param {protos.WsResp} message WsResp
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        WsResp.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.arrays || options.defaults)
-                object.inputFrameDownsyncBatch = [];
-            if (options.defaults) {
-                object.ret = 0;
-                object.echoedMsgId = 0;
-                object.act = 0;
-                object.rdf = null;
-                object.bciFrame = null;
-                object.peerJoinIndex = 0;
-            }
-            if (message.ret != null && message.hasOwnProperty("ret"))
-                object.ret = message.ret;
-            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
-                object.echoedMsgId = message.echoedMsgId;
-            if (message.act != null && message.hasOwnProperty("act"))
-                object.act = message.act;
-            if (message.rdf != null && message.hasOwnProperty("rdf"))
-                object.rdf = $root.protos.RoomDownsyncFrame.toObject(message.rdf, options);
-            if (message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length) {
-                object.inputFrameDownsyncBatch = [];
-                for (var j = 0; j < message.inputFrameDownsyncBatch.length; ++j)
-                    object.inputFrameDownsyncBatch[j] = $root.protos.InputFrameDownsync.toObject(message.inputFrameDownsyncBatch[j], options);
-            }
-            if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
-                object.bciFrame = $root.protos.BattleColliderInfo.toObject(message.bciFrame, options);
-            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
-                object.peerJoinIndex = message.peerJoinIndex;
-            return object;
-        };
-
-        /**
-         * Converts this WsResp to JSON.
-         * @function toJSON
-         * @memberof protos.WsResp
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        WsResp.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for WsResp
-         * @function getTypeUrl
-         * @memberof protos.WsResp
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        WsResp.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.WsResp";
-        };
-
-        return WsResp;
-    })();
-
     protos.InputsBufferSnapshot = (function() {
 
         /**
@@ -5899,6 +5525,7 @@ $root.protos = (function() {
          * @property {number|null} [spaceOffsetX] BattleColliderInfo spaceOffsetX
          * @property {number|null} [spaceOffsetY] BattleColliderInfo spaceOffsetY
          * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
+         * @property {number|null} [boundRoomCapacity] BattleColliderInfo boundRoomCapacity
          * @property {boolean|null} [frameDataLoggingEnabled] BattleColliderInfo frameDataLoggingEnabled
          */
 
@@ -6022,6 +5649,14 @@ $root.protos = (function() {
         BattleColliderInfo.prototype.collisionMinStep = 0;
 
         /**
+         * BattleColliderInfo boundRoomCapacity.
+         * @member {number} boundRoomCapacity
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.boundRoomCapacity = 0;
+
+        /**
          * BattleColliderInfo frameDataLoggingEnabled.
          * @member {boolean} frameDataLoggingEnabled
          * @memberof protos.BattleColliderInfo
@@ -6079,6 +5714,8 @@ $root.protos = (function() {
                 writer.uint32(/* id 12, wireType 1 =*/97).double(message.spaceOffsetY);
             if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
                 writer.uint32(/* id 13, wireType 0 =*/104).int32(message.collisionMinStep);
+            if (message.boundRoomCapacity != null && Object.hasOwnProperty.call(message, "boundRoomCapacity"))
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.boundRoomCapacity);
             if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
                 writer.uint32(/* id 1024, wireType 0 =*/8192).bool(message.frameDataLoggingEnabled);
             return writer;
@@ -6167,6 +5804,10 @@ $root.protos = (function() {
                         message.collisionMinStep = reader.int32();
                         break;
                     }
+                case 14: {
+                        message.boundRoomCapacity = reader.int32();
+                        break;
+                    }
                 case 1024: {
                         message.frameDataLoggingEnabled = reader.bool();
                         break;
@@ -6245,6 +5886,9 @@ $root.protos = (function() {
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 if (!$util.isInteger(message.collisionMinStep))
                     return "collisionMinStep: integer expected";
+            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
+                if (!$util.isInteger(message.boundRoomCapacity))
+                    return "boundRoomCapacity: integer expected";
             if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
                 if (typeof message.frameDataLoggingEnabled !== "boolean")
                     return "frameDataLoggingEnabled: boolean expected";
@@ -6303,6 +5947,8 @@ $root.protos = (function() {
                 message.spaceOffsetY = Number(object.spaceOffsetY);
             if (object.collisionMinStep != null)
                 message.collisionMinStep = object.collisionMinStep | 0;
+            if (object.boundRoomCapacity != null)
+                message.boundRoomCapacity = object.boundRoomCapacity | 0;
             if (object.frameDataLoggingEnabled != null)
                 message.frameDataLoggingEnabled = Boolean(object.frameDataLoggingEnabled);
             return message;
@@ -6343,6 +5989,7 @@ $root.protos = (function() {
                 object.spaceOffsetX = 0;
                 object.spaceOffsetY = 0;
                 object.collisionMinStep = 0;
+                object.boundRoomCapacity = 0;
                 object.frameDataLoggingEnabled = false;
             }
             if (message.stageName != null && message.hasOwnProperty("stageName"))
@@ -6377,6 +6024,8 @@ $root.protos = (function() {
                 object.spaceOffsetY = options.json && !isFinite(message.spaceOffsetY) ? String(message.spaceOffsetY) : message.spaceOffsetY;
             if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
                 object.collisionMinStep = message.collisionMinStep;
+            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
+                object.boundRoomCapacity = message.boundRoomCapacity;
             if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
                 object.frameDataLoggingEnabled = message.frameDataLoggingEnabled;
             return object;
@@ -6411,6 +6060,506 @@ $root.protos = (function() {
         return BattleColliderInfo;
     })();
 
+    protos.HolePunchUpsync = (function() {
+
+        /**
+         * Properties of a HolePunchUpsync.
+         * @memberof protos
+         * @interface IHolePunchUpsync
+         * @property {string|null} [intAuthToken] HolePunchUpsync intAuthToken
+         * @property {number|null} [boundRoomId] HolePunchUpsync boundRoomId
+         * @property {number|null} [authKey] HolePunchUpsync authKey
+         */
+
+        /**
+         * Constructs a new HolePunchUpsync.
+         * @memberof protos
+         * @classdesc Represents a HolePunchUpsync.
+         * @implements IHolePunchUpsync
+         * @constructor
+         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
+         */
+        function HolePunchUpsync(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * HolePunchUpsync intAuthToken.
+         * @member {string} intAuthToken
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.intAuthToken = "";
+
+        /**
+         * HolePunchUpsync boundRoomId.
+         * @member {number} boundRoomId
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.boundRoomId = 0;
+
+        /**
+         * HolePunchUpsync authKey.
+         * @member {number} authKey
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         */
+        HolePunchUpsync.prototype.authKey = 0;
+
+        /**
+         * Creates a new HolePunchUpsync instance using the specified properties.
+         * @function create
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync instance
+         */
+        HolePunchUpsync.create = function create(properties) {
+            return new HolePunchUpsync(properties);
+        };
+
+        /**
+         * Encodes the specified HolePunchUpsync message. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * @function encode
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        HolePunchUpsync.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.intAuthToken != null && Object.hasOwnProperty.call(message, "intAuthToken"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.intAuthToken);
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.boundRoomId);
+            if (message.authKey != null && Object.hasOwnProperty.call(message, "authKey"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.authKey);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified HolePunchUpsync message, length delimited. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        HolePunchUpsync.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a HolePunchUpsync message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        HolePunchUpsync.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.HolePunchUpsync();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.intAuthToken = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.authKey = reader.int32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a HolePunchUpsync message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        HolePunchUpsync.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a HolePunchUpsync message.
+         * @function verify
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        HolePunchUpsync.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
+                if (!$util.isString(message.intAuthToken))
+                    return "intAuthToken: string expected";
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                if (!$util.isInteger(message.boundRoomId))
+                    return "boundRoomId: integer expected";
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                if (!$util.isInteger(message.authKey))
+                    return "authKey: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a HolePunchUpsync message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         */
+        HolePunchUpsync.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.HolePunchUpsync)
+                return object;
+            var message = new $root.protos.HolePunchUpsync();
+            if (object.intAuthToken != null)
+                message.intAuthToken = String(object.intAuthToken);
+            if (object.boundRoomId != null)
+                message.boundRoomId = object.boundRoomId | 0;
+            if (object.authKey != null)
+                message.authKey = object.authKey | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a HolePunchUpsync message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {protos.HolePunchUpsync} message HolePunchUpsync
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        HolePunchUpsync.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.intAuthToken = "";
+                object.boundRoomId = 0;
+                object.authKey = 0;
+            }
+            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
+                object.intAuthToken = message.intAuthToken;
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                object.boundRoomId = message.boundRoomId;
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                object.authKey = message.authKey;
+            return object;
+        };
+
+        /**
+         * Converts this HolePunchUpsync to JSON.
+         * @function toJSON
+         * @memberof protos.HolePunchUpsync
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        HolePunchUpsync.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for HolePunchUpsync
+         * @function getTypeUrl
+         * @memberof protos.HolePunchUpsync
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        HolePunchUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.HolePunchUpsync";
+        };
+
+        return HolePunchUpsync;
+    })();
+
+    protos.PeerUdpAddr = (function() {
+
+        /**
+         * Properties of a PeerUdpAddr.
+         * @memberof protos
+         * @interface IPeerUdpAddr
+         * @property {string|null} [ip] PeerUdpAddr ip
+         * @property {number|null} [port] PeerUdpAddr port
+         * @property {number|null} [authKey] PeerUdpAddr authKey
+         */
+
+        /**
+         * Constructs a new PeerUdpAddr.
+         * @memberof protos
+         * @classdesc Represents a PeerUdpAddr.
+         * @implements IPeerUdpAddr
+         * @constructor
+         * @param {protos.IPeerUdpAddr=} [properties] Properties to set
+         */
+        function PeerUdpAddr(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * PeerUdpAddr ip.
+         * @member {string} ip
+         * @memberof protos.PeerUdpAddr
+         * @instance
+         */
+        PeerUdpAddr.prototype.ip = "";
+
+        /**
+         * PeerUdpAddr port.
+         * @member {number} port
+         * @memberof protos.PeerUdpAddr
+         * @instance
+         */
+        PeerUdpAddr.prototype.port = 0;
+
+        /**
+         * PeerUdpAddr authKey.
+         * @member {number} authKey
+         * @memberof protos.PeerUdpAddr
+         * @instance
+         */
+        PeerUdpAddr.prototype.authKey = 0;
+
+        /**
+         * Creates a new PeerUdpAddr instance using the specified properties.
+         * @function create
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {protos.IPeerUdpAddr=} [properties] Properties to set
+         * @returns {protos.PeerUdpAddr} PeerUdpAddr instance
+         */
+        PeerUdpAddr.create = function create(properties) {
+            return new PeerUdpAddr(properties);
+        };
+
+        /**
+         * Encodes the specified PeerUdpAddr message. Does not implicitly {@link protos.PeerUdpAddr.verify|verify} messages.
+         * @function encode
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {protos.PeerUdpAddr} message PeerUdpAddr message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PeerUdpAddr.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.ip != null && Object.hasOwnProperty.call(message, "ip"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.ip);
+            if (message.port != null && Object.hasOwnProperty.call(message, "port"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.port);
+            if (message.authKey != null && Object.hasOwnProperty.call(message, "authKey"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.authKey);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified PeerUdpAddr message, length delimited. Does not implicitly {@link protos.PeerUdpAddr.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {protos.PeerUdpAddr} message PeerUdpAddr message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PeerUdpAddr.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a PeerUdpAddr message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.PeerUdpAddr} PeerUdpAddr
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PeerUdpAddr.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.PeerUdpAddr();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.ip = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.port = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.authKey = reader.int32();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a PeerUdpAddr message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.PeerUdpAddr} PeerUdpAddr
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PeerUdpAddr.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a PeerUdpAddr message.
+         * @function verify
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        PeerUdpAddr.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.ip != null && message.hasOwnProperty("ip"))
+                if (!$util.isString(message.ip))
+                    return "ip: string expected";
+            if (message.port != null && message.hasOwnProperty("port"))
+                if (!$util.isInteger(message.port))
+                    return "port: integer expected";
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                if (!$util.isInteger(message.authKey))
+                    return "authKey: integer expected";
+            return null;
+        };
+
+        /**
+         * Creates a PeerUdpAddr message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.PeerUdpAddr} PeerUdpAddr
+         */
+        PeerUdpAddr.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.PeerUdpAddr)
+                return object;
+            var message = new $root.protos.PeerUdpAddr();
+            if (object.ip != null)
+                message.ip = String(object.ip);
+            if (object.port != null)
+                message.port = object.port | 0;
+            if (object.authKey != null)
+                message.authKey = object.authKey | 0;
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a PeerUdpAddr message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {protos.PeerUdpAddr} message PeerUdpAddr
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        PeerUdpAddr.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.ip = "";
+                object.port = 0;
+                object.authKey = 0;
+            }
+            if (message.ip != null && message.hasOwnProperty("ip"))
+                object.ip = message.ip;
+            if (message.port != null && message.hasOwnProperty("port"))
+                object.port = message.port;
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                object.authKey = message.authKey;
+            return object;
+        };
+
+        /**
+         * Converts this PeerUdpAddr to JSON.
+         * @function toJSON
+         * @memberof protos.PeerUdpAddr
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        PeerUdpAddr.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PeerUdpAddr
+         * @function getTypeUrl
+         * @memberof protos.PeerUdpAddr
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PeerUdpAddr.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.PeerUdpAddr";
+        };
+
+        return PeerUdpAddr;
+    })();
+
     protos.RoomDownsyncFrame = (function() {
 
         /**
@@ -6426,6 +6575,7 @@ $root.protos = (function() {
          * @property {boolean|null} [shouldForceResync] RoomDownsyncFrame shouldForceResync
          * @property {Array.<number>|null} [speciesIdList] RoomDownsyncFrame speciesIdList
          * @property {number|null} [bulletLocalIdCounter] RoomDownsyncFrame bulletLocalIdCounter
+         * @property {Array.<protos.PeerUdpAddr>|null} [peerUdpAddrList] RoomDownsyncFrame peerUdpAddrList
          */
 
         /**
@@ -6441,6 +6591,7 @@ $root.protos = (function() {
             this.meleeBullets = [];
             this.fireballBullets = [];
             this.speciesIdList = [];
+            this.peerUdpAddrList = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -6520,6 +6671,14 @@ $root.protos = (function() {
         RoomDownsyncFrame.prototype.bulletLocalIdCounter = 0;
 
         /**
+         * RoomDownsyncFrame peerUdpAddrList.
+         * @member {Array.<protos.PeerUdpAddr>} peerUdpAddrList
+         * @memberof protos.RoomDownsyncFrame
+         * @instance
+         */
+        RoomDownsyncFrame.prototype.peerUdpAddrList = $util.emptyArray;
+
+        /**
          * Creates a new RoomDownsyncFrame instance using the specified properties.
          * @function create
          * @memberof protos.RoomDownsyncFrame
@@ -6568,6 +6727,9 @@ $root.protos = (function() {
             }
             if (message.bulletLocalIdCounter != null && Object.hasOwnProperty.call(message, "bulletLocalIdCounter"))
                 writer.uint32(/* id 1027, wireType 0 =*/8216).int32(message.bulletLocalIdCounter);
+            if (message.peerUdpAddrList != null && message.peerUdpAddrList.length)
+                for (var i = 0; i < message.peerUdpAddrList.length; ++i)
+                    $root.protos.PeerUdpAddr.encode(message.peerUdpAddrList[i], writer.uint32(/* id 1028, wireType 2 =*/8226).fork()).ldelim();
             return writer;
         };
 
@@ -6649,6 +6811,12 @@ $root.protos = (function() {
                     }
                 case 1027: {
                         message.bulletLocalIdCounter = reader.int32();
+                        break;
+                    }
+                case 1028: {
+                        if (!(message.peerUdpAddrList && message.peerUdpAddrList.length))
+                            message.peerUdpAddrList = [];
+                        message.peerUdpAddrList.push($root.protos.PeerUdpAddr.decode(reader, reader.uint32()));
                         break;
                     }
                 default:
@@ -6735,6 +6903,15 @@ $root.protos = (function() {
             if (message.bulletLocalIdCounter != null && message.hasOwnProperty("bulletLocalIdCounter"))
                 if (!$util.isInteger(message.bulletLocalIdCounter))
                     return "bulletLocalIdCounter: integer expected";
+            if (message.peerUdpAddrList != null && message.hasOwnProperty("peerUdpAddrList")) {
+                if (!Array.isArray(message.peerUdpAddrList))
+                    return "peerUdpAddrList: array expected";
+                for (var i = 0; i < message.peerUdpAddrList.length; ++i) {
+                    var error = $root.protos.PeerUdpAddr.verify(message.peerUdpAddrList[i]);
+                    if (error)
+                        return "peerUdpAddrList." + error;
+                }
+            }
             return null;
         };
 
@@ -6811,6 +6988,16 @@ $root.protos = (function() {
             }
             if (object.bulletLocalIdCounter != null)
                 message.bulletLocalIdCounter = object.bulletLocalIdCounter | 0;
+            if (object.peerUdpAddrList) {
+                if (!Array.isArray(object.peerUdpAddrList))
+                    throw TypeError(".protos.RoomDownsyncFrame.peerUdpAddrList: array expected");
+                message.peerUdpAddrList = [];
+                for (var i = 0; i < object.peerUdpAddrList.length; ++i) {
+                    if (typeof object.peerUdpAddrList[i] !== "object")
+                        throw TypeError(".protos.RoomDownsyncFrame.peerUdpAddrList: object expected");
+                    message.peerUdpAddrList[i] = $root.protos.PeerUdpAddr.fromObject(object.peerUdpAddrList[i]);
+                }
+            }
             return message;
         };
 
@@ -6832,6 +7019,7 @@ $root.protos = (function() {
                 object.meleeBullets = [];
                 object.fireballBullets = [];
                 object.speciesIdList = [];
+                object.peerUdpAddrList = [];
             }
             if (options.defaults) {
                 object.id = 0;
@@ -6884,6 +7072,11 @@ $root.protos = (function() {
             }
             if (message.bulletLocalIdCounter != null && message.hasOwnProperty("bulletLocalIdCounter"))
                 object.bulletLocalIdCounter = message.bulletLocalIdCounter;
+            if (message.peerUdpAddrList && message.peerUdpAddrList.length) {
+                object.peerUdpAddrList = [];
+                for (var j = 0; j < message.peerUdpAddrList.length; ++j)
+                    object.peerUdpAddrList[j] = $root.protos.PeerUdpAddr.toObject(message.peerUdpAddrList[j], options);
+            }
             return object;
         };
 
@@ -6916,27 +7109,31 @@ $root.protos = (function() {
         return RoomDownsyncFrame;
     })();
 
-    protos.HolePunchUpsync = (function() {
+    protos.WsResp = (function() {
 
         /**
-         * Properties of a HolePunchUpsync.
+         * Properties of a WsResp.
          * @memberof protos
-         * @interface IHolePunchUpsync
-         * @property {number|null} [joinIndex] HolePunchUpsync joinIndex
-         * @property {string|null} [intAuthToken] HolePunchUpsync intAuthToken
-         * @property {number|null} [boundRoomId] HolePunchUpsync boundRoomId
-         * @property {number|null} [authKey] HolePunchUpsync authKey
+         * @interface IWsResp
+         * @property {number|null} [ret] WsResp ret
+         * @property {number|null} [echoedMsgId] WsResp echoedMsgId
+         * @property {number|null} [act] WsResp act
+         * @property {protos.RoomDownsyncFrame|null} [rdf] WsResp rdf
+         * @property {Array.<protos.InputFrameDownsync>|null} [inputFrameDownsyncBatch] WsResp inputFrameDownsyncBatch
+         * @property {protos.BattleColliderInfo|null} [bciFrame] WsResp bciFrame
+         * @property {number|null} [peerJoinIndex] WsResp peerJoinIndex
          */
 
         /**
-         * Constructs a new HolePunchUpsync.
+         * Constructs a new WsResp.
          * @memberof protos
-         * @classdesc Represents a HolePunchUpsync.
-         * @implements IHolePunchUpsync
+         * @classdesc Represents a WsResp.
+         * @implements IWsResp
          * @constructor
-         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
+         * @param {protos.IWsResp=} [properties] Properties to set
          */
-        function HolePunchUpsync(properties) {
+        function WsResp(properties) {
+            this.inputFrameDownsyncBatch = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -6944,117 +7141,162 @@ $root.protos = (function() {
         }
 
         /**
-         * HolePunchUpsync joinIndex.
-         * @member {number} joinIndex
-         * @memberof protos.HolePunchUpsync
+         * WsResp ret.
+         * @member {number} ret
+         * @memberof protos.WsResp
          * @instance
          */
-        HolePunchUpsync.prototype.joinIndex = 0;
+        WsResp.prototype.ret = 0;
 
         /**
-         * HolePunchUpsync intAuthToken.
-         * @member {string} intAuthToken
-         * @memberof protos.HolePunchUpsync
+         * WsResp echoedMsgId.
+         * @member {number} echoedMsgId
+         * @memberof protos.WsResp
          * @instance
          */
-        HolePunchUpsync.prototype.intAuthToken = "";
+        WsResp.prototype.echoedMsgId = 0;
 
         /**
-         * HolePunchUpsync boundRoomId.
-         * @member {number} boundRoomId
-         * @memberof protos.HolePunchUpsync
+         * WsResp act.
+         * @member {number} act
+         * @memberof protos.WsResp
          * @instance
          */
-        HolePunchUpsync.prototype.boundRoomId = 0;
+        WsResp.prototype.act = 0;
 
         /**
-         * HolePunchUpsync authKey.
-         * @member {number} authKey
-         * @memberof protos.HolePunchUpsync
+         * WsResp rdf.
+         * @member {protos.RoomDownsyncFrame|null|undefined} rdf
+         * @memberof protos.WsResp
          * @instance
          */
-        HolePunchUpsync.prototype.authKey = 0;
+        WsResp.prototype.rdf = null;
 
         /**
-         * Creates a new HolePunchUpsync instance using the specified properties.
+         * WsResp inputFrameDownsyncBatch.
+         * @member {Array.<protos.InputFrameDownsync>} inputFrameDownsyncBatch
+         * @memberof protos.WsResp
+         * @instance
+         */
+        WsResp.prototype.inputFrameDownsyncBatch = $util.emptyArray;
+
+        /**
+         * WsResp bciFrame.
+         * @member {protos.BattleColliderInfo|null|undefined} bciFrame
+         * @memberof protos.WsResp
+         * @instance
+         */
+        WsResp.prototype.bciFrame = null;
+
+        /**
+         * WsResp peerJoinIndex.
+         * @member {number} peerJoinIndex
+         * @memberof protos.WsResp
+         * @instance
+         */
+        WsResp.prototype.peerJoinIndex = 0;
+
+        /**
+         * Creates a new WsResp instance using the specified properties.
          * @function create
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
-         * @param {protos.IHolePunchUpsync=} [properties] Properties to set
-         * @returns {protos.HolePunchUpsync} HolePunchUpsync instance
+         * @param {protos.IWsResp=} [properties] Properties to set
+         * @returns {protos.WsResp} WsResp instance
          */
-        HolePunchUpsync.create = function create(properties) {
-            return new HolePunchUpsync(properties);
+        WsResp.create = function create(properties) {
+            return new WsResp(properties);
         };
 
         /**
-         * Encodes the specified HolePunchUpsync message. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * Encodes the specified WsResp message. Does not implicitly {@link protos.WsResp.verify|verify} messages.
          * @function encode
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
-         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {protos.WsResp} message WsResp message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        HolePunchUpsync.encode = function encode(message, writer) {
+        WsResp.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.joinIndex != null && Object.hasOwnProperty.call(message, "joinIndex"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.joinIndex);
-            if (message.intAuthToken != null && Object.hasOwnProperty.call(message, "intAuthToken"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.intAuthToken);
-            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.boundRoomId);
-            if (message.authKey != null && Object.hasOwnProperty.call(message, "authKey"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.authKey);
+            if (message.ret != null && Object.hasOwnProperty.call(message, "ret"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.ret);
+            if (message.echoedMsgId != null && Object.hasOwnProperty.call(message, "echoedMsgId"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.echoedMsgId);
+            if (message.act != null && Object.hasOwnProperty.call(message, "act"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.act);
+            if (message.rdf != null && Object.hasOwnProperty.call(message, "rdf"))
+                $root.protos.RoomDownsyncFrame.encode(message.rdf, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.inputFrameDownsyncBatch != null && message.inputFrameDownsyncBatch.length)
+                for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i)
+                    $root.protos.InputFrameDownsync.encode(message.inputFrameDownsyncBatch[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+            if (message.bciFrame != null && Object.hasOwnProperty.call(message, "bciFrame"))
+                $root.protos.BattleColliderInfo.encode(message.bciFrame, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+            if (message.peerJoinIndex != null && Object.hasOwnProperty.call(message, "peerJoinIndex"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.peerJoinIndex);
             return writer;
         };
 
         /**
-         * Encodes the specified HolePunchUpsync message, length delimited. Does not implicitly {@link protos.HolePunchUpsync.verify|verify} messages.
+         * Encodes the specified WsResp message, length delimited. Does not implicitly {@link protos.WsResp.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
-         * @param {protos.HolePunchUpsync} message HolePunchUpsync message or plain object to encode
+         * @param {protos.WsResp} message WsResp message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        HolePunchUpsync.encodeDelimited = function encodeDelimited(message, writer) {
+        WsResp.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
         /**
-         * Decodes a HolePunchUpsync message from the specified reader or buffer.
+         * Decodes a WsResp message from the specified reader or buffer.
          * @function decode
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @returns {protos.WsResp} WsResp
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        HolePunchUpsync.decode = function decode(reader, length) {
+        WsResp.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.HolePunchUpsync();
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.WsResp();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.joinIndex = reader.int32();
+                        message.ret = reader.int32();
                         break;
                     }
                 case 2: {
-                        message.intAuthToken = reader.string();
+                        message.echoedMsgId = reader.int32();
                         break;
                     }
                 case 3: {
-                        message.boundRoomId = reader.int32();
+                        message.act = reader.int32();
                         break;
                     }
                 case 4: {
-                        message.authKey = reader.int32();
+                        message.rdf = $root.protos.RoomDownsyncFrame.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        if (!(message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length))
+                            message.inputFrameDownsyncBatch = [];
+                        message.inputFrameDownsyncBatch.push($root.protos.InputFrameDownsync.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 6: {
+                        message.bciFrame = $root.protos.BattleColliderInfo.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 7: {
+                        message.peerJoinIndex = reader.int32();
                         break;
                     }
                 default:
@@ -7066,127 +7308,179 @@ $root.protos = (function() {
         };
 
         /**
-         * Decodes a HolePunchUpsync message from the specified reader or buffer, length delimited.
+         * Decodes a WsResp message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @returns {protos.WsResp} WsResp
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        HolePunchUpsync.decodeDelimited = function decodeDelimited(reader) {
+        WsResp.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
                 reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
-         * Verifies a HolePunchUpsync message.
+         * Verifies a WsResp message.
          * @function verify
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
-        HolePunchUpsync.verify = function verify(message) {
+        WsResp.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
-                if (!$util.isInteger(message.joinIndex))
-                    return "joinIndex: integer expected";
-            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
-                if (!$util.isString(message.intAuthToken))
-                    return "intAuthToken: string expected";
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                if (!$util.isInteger(message.boundRoomId))
-                    return "boundRoomId: integer expected";
-            if (message.authKey != null && message.hasOwnProperty("authKey"))
-                if (!$util.isInteger(message.authKey))
-                    return "authKey: integer expected";
+            if (message.ret != null && message.hasOwnProperty("ret"))
+                if (!$util.isInteger(message.ret))
+                    return "ret: integer expected";
+            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
+                if (!$util.isInteger(message.echoedMsgId))
+                    return "echoedMsgId: integer expected";
+            if (message.act != null && message.hasOwnProperty("act"))
+                if (!$util.isInteger(message.act))
+                    return "act: integer expected";
+            if (message.rdf != null && message.hasOwnProperty("rdf")) {
+                var error = $root.protos.RoomDownsyncFrame.verify(message.rdf);
+                if (error)
+                    return "rdf." + error;
+            }
+            if (message.inputFrameDownsyncBatch != null && message.hasOwnProperty("inputFrameDownsyncBatch")) {
+                if (!Array.isArray(message.inputFrameDownsyncBatch))
+                    return "inputFrameDownsyncBatch: array expected";
+                for (var i = 0; i < message.inputFrameDownsyncBatch.length; ++i) {
+                    var error = $root.protos.InputFrameDownsync.verify(message.inputFrameDownsyncBatch[i]);
+                    if (error)
+                        return "inputFrameDownsyncBatch." + error;
+                }
+            }
+            if (message.bciFrame != null && message.hasOwnProperty("bciFrame")) {
+                var error = $root.protos.BattleColliderInfo.verify(message.bciFrame);
+                if (error)
+                    return "bciFrame." + error;
+            }
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                if (!$util.isInteger(message.peerJoinIndex))
+                    return "peerJoinIndex: integer expected";
             return null;
         };
 
         /**
-         * Creates a HolePunchUpsync message from a plain object. Also converts values to their respective internal types.
+         * Creates a WsResp message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {protos.HolePunchUpsync} HolePunchUpsync
+         * @returns {protos.WsResp} WsResp
          */
-        HolePunchUpsync.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.HolePunchUpsync)
+        WsResp.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.WsResp)
                 return object;
-            var message = new $root.protos.HolePunchUpsync();
-            if (object.joinIndex != null)
-                message.joinIndex = object.joinIndex | 0;
-            if (object.intAuthToken != null)
-                message.intAuthToken = String(object.intAuthToken);
-            if (object.boundRoomId != null)
-                message.boundRoomId = object.boundRoomId | 0;
-            if (object.authKey != null)
-                message.authKey = object.authKey | 0;
+            var message = new $root.protos.WsResp();
+            if (object.ret != null)
+                message.ret = object.ret | 0;
+            if (object.echoedMsgId != null)
+                message.echoedMsgId = object.echoedMsgId | 0;
+            if (object.act != null)
+                message.act = object.act | 0;
+            if (object.rdf != null) {
+                if (typeof object.rdf !== "object")
+                    throw TypeError(".protos.WsResp.rdf: object expected");
+                message.rdf = $root.protos.RoomDownsyncFrame.fromObject(object.rdf);
+            }
+            if (object.inputFrameDownsyncBatch) {
+                if (!Array.isArray(object.inputFrameDownsyncBatch))
+                    throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: array expected");
+                message.inputFrameDownsyncBatch = [];
+                for (var i = 0; i < object.inputFrameDownsyncBatch.length; ++i) {
+                    if (typeof object.inputFrameDownsyncBatch[i] !== "object")
+                        throw TypeError(".protos.WsResp.inputFrameDownsyncBatch: object expected");
+                    message.inputFrameDownsyncBatch[i] = $root.protos.InputFrameDownsync.fromObject(object.inputFrameDownsyncBatch[i]);
+                }
+            }
+            if (object.bciFrame != null) {
+                if (typeof object.bciFrame !== "object")
+                    throw TypeError(".protos.WsResp.bciFrame: object expected");
+                message.bciFrame = $root.protos.BattleColliderInfo.fromObject(object.bciFrame);
+            }
+            if (object.peerJoinIndex != null)
+                message.peerJoinIndex = object.peerJoinIndex | 0;
             return message;
         };
 
         /**
-         * Creates a plain object from a HolePunchUpsync message. Also converts values to other types if specified.
+         * Creates a plain object from a WsResp message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
-         * @param {protos.HolePunchUpsync} message HolePunchUpsync
+         * @param {protos.WsResp} message WsResp
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        HolePunchUpsync.toObject = function toObject(message, options) {
+        WsResp.toObject = function toObject(message, options) {
             if (!options)
                 options = {};
             var object = {};
+            if (options.arrays || options.defaults)
+                object.inputFrameDownsyncBatch = [];
             if (options.defaults) {
-                object.joinIndex = 0;
-                object.intAuthToken = "";
-                object.boundRoomId = 0;
-                object.authKey = 0;
+                object.ret = 0;
+                object.echoedMsgId = 0;
+                object.act = 0;
+                object.rdf = null;
+                object.bciFrame = null;
+                object.peerJoinIndex = 0;
             }
-            if (message.joinIndex != null && message.hasOwnProperty("joinIndex"))
-                object.joinIndex = message.joinIndex;
-            if (message.intAuthToken != null && message.hasOwnProperty("intAuthToken"))
-                object.intAuthToken = message.intAuthToken;
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                object.boundRoomId = message.boundRoomId;
-            if (message.authKey != null && message.hasOwnProperty("authKey"))
-                object.authKey = message.authKey;
+            if (message.ret != null && message.hasOwnProperty("ret"))
+                object.ret = message.ret;
+            if (message.echoedMsgId != null && message.hasOwnProperty("echoedMsgId"))
+                object.echoedMsgId = message.echoedMsgId;
+            if (message.act != null && message.hasOwnProperty("act"))
+                object.act = message.act;
+            if (message.rdf != null && message.hasOwnProperty("rdf"))
+                object.rdf = $root.protos.RoomDownsyncFrame.toObject(message.rdf, options);
+            if (message.inputFrameDownsyncBatch && message.inputFrameDownsyncBatch.length) {
+                object.inputFrameDownsyncBatch = [];
+                for (var j = 0; j < message.inputFrameDownsyncBatch.length; ++j)
+                    object.inputFrameDownsyncBatch[j] = $root.protos.InputFrameDownsync.toObject(message.inputFrameDownsyncBatch[j], options);
+            }
+            if (message.bciFrame != null && message.hasOwnProperty("bciFrame"))
+                object.bciFrame = $root.protos.BattleColliderInfo.toObject(message.bciFrame, options);
+            if (message.peerJoinIndex != null && message.hasOwnProperty("peerJoinIndex"))
+                object.peerJoinIndex = message.peerJoinIndex;
             return object;
         };
 
         /**
-         * Converts this HolePunchUpsync to JSON.
+         * Converts this WsResp to JSON.
          * @function toJSON
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
-        HolePunchUpsync.prototype.toJSON = function toJSON() {
+        WsResp.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
-         * Gets the default type url for HolePunchUpsync
+         * Gets the default type url for WsResp
          * @function getTypeUrl
-         * @memberof protos.HolePunchUpsync
+         * @memberof protos.WsResp
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        HolePunchUpsync.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        WsResp.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/protos.HolePunchUpsync";
+            return typeUrlPrefix + "/protos.WsResp";
         };
 
-        return HolePunchUpsync;
+        return WsResp;
     })();
 
     return protos;

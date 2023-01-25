@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"jsexport/battle"
 	"math/rand"
+	"net"
 	"os"
 	"path/filepath"
 	"resolv"
@@ -32,6 +33,7 @@ const (
 	DOWNSYNC_MSG_ACT_BATTLE_STOPPED   = int32(3)
 	DOWNSYNC_MSG_ACT_FORCED_RESYNC    = int32(4)
 	DOWNSYNC_MSG_ACT_PEER_INPUT_BATCH = int32(5)
+	DOWNSYNC_MSG_ACT_PEER_UDP_ADDR    = int32(6)
 
 	DOWNSYNC_MSG_ACT_BATTLE_READY_TO_START = int32(-1)
 	DOWNSYNC_MSG_ACT_BATTLE_START          = int32(0)
@@ -176,6 +178,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 
 	defer pR.onPlayerAdded(playerId)
 
+	pPlayerFromDbInit.UdpAddr = nil
 	pPlayerFromDbInit.AckingFrameId = -1
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -215,6 +218,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	 */
 	defer pR.onPlayerReAdded(playerId)
 	pEffectiveInRoomPlayerInstance := pR.Players[playerId]
+	pEffectiveInRoomPlayerInstance.UdpAddr = nil
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
@@ -1068,7 +1072,9 @@ func (pR *Room) sendSafely(roomDownsyncFrame *pb.RoomDownsyncFrame, toSendInputF
 		panic(fmt.Sprintf("Error marshaling downsync message: roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 	}
 
-	if MAGIC_JOIN_INDEX_DEFAULT == peerJoinIndex {
+	shouldUseSecondaryWsSession := (MAGIC_JOIN_INDEX_DEFAULT != peerJoinIndex && DOWNSYNC_MSG_ACT_INPUT_BATCH == act) // FIXME: Simplify the condition
+	//Logger.Info(fmt.Sprintf("shouldUseSecondaryWsSession=%v: roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", shouldUseSecondaryWsSession, pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
+	if !shouldUseSecondaryWsSession {
 		if playerDownsyncSession, existent := pR.PlayerDownsyncSessionDict[playerId]; existent {
 			if err := playerDownsyncSession.WriteMessage(websocket.BinaryMessage, theBytes); nil != err {
 				panic(fmt.Sprintf("Error sending primary downsync message: roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v, err=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount, err))
@@ -1603,6 +1609,56 @@ func (pR *Room) SetSecondarySession(playerId int32, session *websocket.Conn, sig
 				Logger.Info(fmt.Sprintf("SetSecondarySession for roomId=%v, playerId=%d, pR.Players=%v", pR.Id, playerId, pR.Players))
 				pR.PlayerSecondaryDownsyncSessionDict[playerId] = session
 				pR.PlayerSecondarySignalToCloseDict[playerId] = signalToCloseConnOfThisPlayer
+			}
+		}
+	}
+}
+
+func (pR *Room) UpdatePeerUdpAddrList(playerId int32, peerAddr *net.UDPAddr, pReq *pb.HolePunchUpsync) {
+	// TODO: There's a chance that by now "player.JoinIndex" is not yet determined, use a lock to sync
+	if player, ok := pR.Players[playerId]; ok && MAGIC_JOIN_INDEX_DEFAULT != player.JoinIndex {
+		playerBattleState := atomic.LoadInt32(&(player.BattleState))
+		switch playerBattleState {
+		case PlayerBattleStateIns.DISCONNECTED, PlayerBattleStateIns.LOST, PlayerBattleStateIns.EXPELLED_DURING_GAME, PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+			// Kindly note that "PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK, PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK" are allowed
+			return
+		}
+		if _, existent := pR.PlayerDownsyncSessionDict[playerId]; existent {
+			player.UdpAddr = &pb.PeerUdpAddr{
+				Ip:      peerAddr.IP.String(),
+				Port:    int32(peerAddr.Port),
+				AuthKey: pReq.AuthKey,
+			}
+			Logger.Info(fmt.Sprintf("UpdatePeerUdpAddrList done for roomId=%v, playerId=%d, peerAddr=%s", pR.Id, playerId, peerAddr))
+
+			peerJoinIndex := player.JoinIndex
+			peerUdpAddrList := make([]*pb.PeerUdpAddr, pR.Capacity, pR.Capacity)
+
+			for _, otherPlayer := range pR.Players {
+				if MAGIC_JOIN_INDEX_DEFAULT == otherPlayer.JoinIndex {
+					// TODO: Again this shouldn't happen, apply proper locking
+					continue
+				}
+				// In case of highly concurrent update that might occur while later marshalling, use the ptr of a copy
+				peerUdpAddrList[otherPlayer.JoinIndex-1] = &pb.PeerUdpAddr{
+					Ip:      otherPlayer.UdpAddr.Ip,
+					Port:    otherPlayer.UdpAddr.Port,
+					AuthKey: otherPlayer.UdpAddr.AuthKey,
+				}
+			}
+
+			// Broadcast this new UDP addr to all the existing players
+			for otherPlayerId, otherPlayer := range pR.Players {
+				otherPlayerBattleState := atomic.LoadInt32(&(otherPlayer.BattleState))
+				switch otherPlayerBattleState {
+				case PlayerBattleStateIns.DISCONNECTED, PlayerBattleStateIns.LOST, PlayerBattleStateIns.EXPELLED_DURING_GAME, PlayerBattleStateIns.EXPELLED_IN_DISMISSAL:
+					continue
+				}
+
+				Logger.Info(fmt.Sprintf("Downsyncing peerUdpAddrList for roomId=%v, playerId=%d", pR.Id, otherPlayerId))
+				pR.sendSafely(&pb.RoomDownsyncFrame{
+					PeerUdpAddrList: peerUdpAddrList,
+				}, nil, DOWNSYNC_MSG_ACT_PEER_UDP_ADDR, otherPlayerId, false, peerJoinIndex)
 			}
 		}
 	}

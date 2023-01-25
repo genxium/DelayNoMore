@@ -336,7 +336,6 @@ cc.Class({
 
     self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
-    self.selfPlayerInfo = null; // This field is kept for distinguishing "self" and "others".
     self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
 
     self.gopkgsCollisionSys = gopkgs.NewCollisionSpaceJs((self.spaceOffsetX << 1), (self.spaceOffsetY << 1), self.collisionMinStep, self.collisionMinStep);
@@ -500,7 +499,7 @@ cc.Class({
       const fullPathOfTmxFile = cc.js.formatStr("map/%s/map", parsedBattleColliderInfo.stageName);
       cc.loader.loadRes(fullPathOfTmxFile, cc.TiledMapAsset, (err, tmxAsset) => {
         if (null != err) {
-          console.error(err);
+          console.error(`Error occurred when loading tiled stage ${parsedBattleColliderInfo.stageName}`, err);
           return;
         }
 
@@ -549,10 +548,6 @@ cc.Class({
           const collisionBarrierIndex = (self.collisionBarrierIndexPrefix + barrierIdCounter);
           self.gopkgsCollisionSysMap[collisionBarrierIndex] = newBarrierCollider;
         }
-        self.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer'));
-        Object.assign(self.selfPlayerInfo, {
-          Id: self.selfPlayerInfo.playerId
-        });
         self.initDebugDrawers();
         const reqData = window.pb.protos.WsReq.encode({
           msgId: Date.now(),
@@ -920,7 +915,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       return;
     }
     self._stringifyRdfIdToActuallyUsedInput();
-    window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED);
+    window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED, "");
     self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
     if (self.musicEffectManagerScriptIns) {
@@ -1273,24 +1268,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       }
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
       const delayedInputFrame = self.recentInputCache.GetByFrameId(j);
-      /*
-      const prevJ = gopkgs.ConvertToDelayedInputFrameId(i - 1);
-      const prevDelayedInputFrame = self.recentInputCache.GetByFrameId(prevJ);
-      const prevBtnALevel = (null == prevDelayedInputFrame ? 0 : ((prevDelayedInputFrame.InputList[self.selfPlayerInfo.JoinIndex - 1] >> 4) & 1));
-      const btnALevel = ((delayedInputFrame.InputList[self.selfPlayerInfo.JoinIndex - 1] >> 4) & 1);
-      if (
-          ATK_CHARACTER_STATE.Atk1[0] == currRdf.PlayersArr[self.selfPlayerInfo.JoinIndex - 1].CharacterState
-          ||
-          ATK_CHARACTER_STATE.Atk2[0] == currRdf.PlayersArr[self.selfPlayerInfo.JoinIndex - 1].CharacterState
-        ) {
-          console.log(`rdf.Id=${i}, (btnALevel,j)=(${btnALevel},${j}), (prevBtnALevel,prevJ) is (${prevBtnALevel},${prevJ}), in cancellable atk!`);
-      } 
-      if (btnALevel > 0) {
-        if (btnALevel > prevBtnALevel) {
-          console.log(`rdf.Id=${i}, rising edge of btnA triggered`);
-        }
-      }  
-      */
 
       if (self.frameDataLoggingEnabled) {
         const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
@@ -1336,7 +1313,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
       const selfPlayerId = self.selfPlayerInfo.Id;
       if (selfPlayerId == playerId) {
-        self.selfPlayerInfo.JoinIndex = immediatePlayerInfo.JoinIndex;
+        self.selfPlayerInfo.JoinIndex = immediatePlayerInfo.JoinIndex; // Update here in case of any change during WAITING phase
         nodeAndScriptIns[1].showArrowTipNode();
       }
     }

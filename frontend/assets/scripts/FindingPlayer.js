@@ -54,7 +54,7 @@ cc.Class({
 
   exitBtnOnClick(evt) {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-    window.closeWSConnection();
+    window.closeWSConnection(constants.RET_CODE.UNKNOWN_ERROR, "");
     cc.director.loadScene('login');
   },
 

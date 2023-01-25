@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
+	"net"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -256,17 +257,19 @@ func Serve(c *gin.Context) {
 			SpaceOffsetX: pRoom.SpaceOffsetX,
 			SpaceOffsetY: pRoom.SpaceOffsetY,
 
-			RenderCacheSize:  pRoom.RenderCacheSize,
-			CollisionMinStep: pRoom.CollisionMinStep,
+			RenderCacheSize:   pRoom.RenderCacheSize,
+			CollisionMinStep:  pRoom.CollisionMinStep,
+			BoundRoomCapacity: int32(pRoom.Capacity),
 
 			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
 		}
 
 		resp := &pb.WsResp{
-			Ret:         int32(Constants.RetCode.Ok),
-			EchoedMsgId: int32(0),
-			Act:         models.DOWNSYNC_MSG_ACT_HB_REQ,
-			BciFrame:    bciFrame,
+			Ret:           int32(Constants.RetCode.Ok),
+			EchoedMsgId:   int32(0),
+			Act:           models.DOWNSYNC_MSG_ACT_HB_REQ,
+			BciFrame:      bciFrame,
+			PeerJoinIndex: pThePlayer.JoinIndex,
 		}
 
 		Logger.Debug("Sending downsync HeartbeatRequirements:", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("resp", resp))
@@ -432,12 +435,12 @@ func HandleSecondaryWsSessionForPlayer(c *gin.Context) {
 	playerId, err := models.GetPlayerIdByToken(token)
 	if err != nil || playerId == 0 {
 		// TODO: Abort with specific message.
-		Logger.Warn("Secondary ws session playerLogin record not found for ws authentication:", zap.Any("intAuthToken", token))
+		Logger.Warn("Secondary ws session playerLogin record not found:", zap.Any("intAuthToken", token))
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	Logger.Info("Secondary ws session playerLogin record has been found for ws authentication:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId))
+	Logger.Info("Secondary ws session playerLogin record has been found:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId))
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -481,4 +484,33 @@ func HandleSecondaryWsSessionForPlayer(c *gin.Context) {
 	conn.SetCloseHandler(onReceivedCloseMessageFromClient)
 
 	pRoom.SetSecondarySession(int32(playerId), conn, signalToCloseConnOfThisPlayer)
+}
+
+func HandleUdpHolePunchingForPlayer(message []byte, peerAddr *net.UDPAddr) {
+	pReq := new(pb.HolePunchUpsync)
+	if unmarshalErr := proto.Unmarshal(message, pReq); nil != unmarshalErr {
+		Logger.Error("Udp session failed to unmarshal", zap.Error(unmarshalErr))
+		return
+	}
+
+	token := pReq.IntAuthToken
+	boundRoomId := pReq.BoundRoomId
+
+	pRoom, existent := (*models.RoomMapManagerIns)[int32(boundRoomId)]
+	// Deliberately querying playerId after querying room, because the former is against persistent storage and could be slow!
+	if !existent {
+		Logger.Warn("Udp session failed to get:\n", zap.Any("intAuthToken", token), zap.Any("forBoundRoomId", boundRoomId))
+		return
+	}
+
+	// TODO: Wrap the following 2 stmts by sql transaction!
+	playerId, err := models.GetPlayerIdByToken(token)
+	if err != nil || playerId == 0 {
+		// TODO: Abort with specific message.
+		Logger.Warn("Udp session playerLogin record not found for:", zap.Any("intAuthToken", token))
+		return
+	}
+
+	Logger.Info("Udp session playerLogin record has been found:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId), zap.Any("peerAddr", peerAddr))
+	pRoom.UpdatePeerUdpAddrList(int32(playerId), peerAddr, pReq)
 }

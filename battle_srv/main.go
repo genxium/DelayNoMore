@@ -23,6 +23,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"
 	"go.uber.org/zap"
+
+	"net"
 )
 
 func main() {
@@ -34,7 +36,7 @@ func main() {
 		env_tools.MergeTestPlayerAccounts()
 	}
 	models.InitRoomHeapManager()
-	startScheduler()
+	// startScheduler()
 	router := gin.Default()
 	setRouter(router)
 
@@ -54,6 +56,7 @@ func main() {
 		}
 		Logger.Info("Listening and serving HTTP on", zap.Any("Conf.Sio.HostAndPort", Conf.Sio.HostAndPort))
 	}()
+	go startUdpServer()
 	var gracefulStop = make(chan os.Signal)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
@@ -113,4 +116,27 @@ func startScheduler() {
 	c := cron.New()
 	//c.AddFunc("*/1 * * * * *", FuncName)
 	c.Start()
+}
+
+func startUdpServer() {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{
+		Port: Conf.Sio.UdpPort,
+		IP:   net.ParseIP(Conf.Sio.UdpHost),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	defer conn.Close()
+	Logger.Info(fmt.Sprintf("Udp server started at %s", conn.LocalAddr().String()))
+
+	for {
+		message := make([]byte, 2046)
+		rlen, remote, err := conn.ReadFromUDP(message[:])
+		if err != nil {
+			panic(err)
+		}
+		Logger.Info(fmt.Sprintf("received: %d bytes from %s\n", rlen, remote))
+		ws.HandleUdpHolePunchingForPlayer(message[0:rlen], remote)
+	}
 }

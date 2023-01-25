@@ -50,6 +50,8 @@ type Player struct {
 	LastSentInputFrameId     int32
 	AckingFrameId            int32
 	AckingInputFrameId       int32
+
+	UdpAddr *PeerUdpAddr
 }
 
 func ExistPlayerByName(name string) (bool, error) {

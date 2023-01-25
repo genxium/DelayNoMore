@@ -1,3 +1,5 @@
 {
-  "hostAndPort": "0.0.0.0:9992" 
+  "hostAndPort": "0.0.0.0:9992", 
+  "udpHost": "0.0.0.0", 
+  "udpPort": 3000 
 }

@@ -12,6 +12,7 @@ window.DOWNSYNC_MSG_ACT_INPUT_BATCH = 2;
 window.DOWNSYNC_MSG_ACT_BATTLE_STOPPED = 3;
 window.DOWNSYNC_MSG_ACT_FORCED_RESYNC = 4;
 window.DOWNSYNC_MSG_ACT_PEER_INPUT_BATCH = 5;
+window.DOWNSYNC_MSG_ACT_PEER_UDP_ADDR = 6;
 
 window.sendSafely = function(msgStr) {
   /**
@@ -46,9 +47,19 @@ window.getBoundRoomIdFromPersistentStorage = function() {
   return cc.sys.localStorage.getItem("boundRoomId");
 };
 
+window.getBoundRoomCapacityFromPersistentStorage = function() {
+  const boundRoomIdExpiresAt = parseInt(cc.sys.localStorage.getItem("boundRoomIdExpiresAt"));
+  if (!boundRoomIdExpiresAt || Date.now() >= boundRoomIdExpiresAt) {
+    window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+    return null;
+  }
+  return cc.sys.localStorage.getItem("boundRoomCapacity");
+};
+
 window.clearBoundRoomIdInBothVolatileAndPersistentStorage = function() {
   window.boundRoomId = null;
   cc.sys.localStorage.removeItem("boundRoomId");
+  cc.sys.localStorage.removeItem("boundRoomCapacity");
   cc.sys.localStorage.removeItem("boundRoomIdExpiresAt");
 };
 
@@ -57,19 +68,43 @@ window.clearSelfPlayer = function() {
 };
 
 window.boundRoomId = getBoundRoomIdFromPersistentStorage();
+window.boundRoomCapacity = getBoundRoomCapacityFromPersistentStorage();
 window.handleHbRequirements = function(resp) {
+  console.log(`Handle hb requirements #1`);
   if (constants.RET_CODE.OK != resp.ret) return;
-  if (null == window.boundRoomId) {
+  // The assignment of "window.mapIns" is inside "Map.onLoad", which precedes "initPersistentSessionClient".
+  window.mapIns.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer')); // This field is kept for distinguishing "self" and "others".
+  window.mapIns.selfPlayerInfo.Id = window.mapIns.selfPlayerInfo.playerId;
+  window.mapIns.selfPlayerInfo.JoinIndex = resp.peerJoinIndex;
+  console.log(`Handle hb requirements #2`);
+  if (null == window.boundRoomId || null == window.boundRoomCapacity) {
     window.boundRoomId = resp.bciFrame.boundRoomId;
+    window.boundRoomCapacity = resp.bciFrame.boundRoomCapacity;
     cc.sys.localStorage.setItem('boundRoomId', window.boundRoomId);
+    cc.sys.localStorage.setItem('boundRoomCapacity', window.boundRoomCapacity);
     cc.sys.localStorage.setItem('boundRoomIdExpiresAt', Date.now() + 10 * 60 * 1000); // Temporarily hardcoded, for `boundRoomId` only.
   }
-
+  console.log(`Handle hb requirements #3`);
   if (window.handleBattleColliderInfo) {
-    if (!cc.sys.isNative) {
-      window.initSecondarySession(null, window.boundRoomId);
-    }
     window.handleBattleColliderInfo(resp.bciFrame);
+  }
+  console.log(`Handle hb requirements #4`);
+
+  if (!cc.sys.isNative) {
+    console.log(`Handle hb requirements #5, web`);
+    window.initSecondarySession(null, window.boundRoomId);
+  } else {
+    console.log(`Handle hb requirements #5, native`);
+    const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + window.mapIns.selfPlayerInfo.JoinIndex);
+    const intAuthToken = window.mapIns.selfPlayerInfo.intAuthToken;
+    const authKey = Math.floor(Math.random() * 65535);
+    window.mapIns.selfPlayerInfo.authKey = authKey;
+    const holePunchData = window.pb.protos.HolePunchUpsync.encode({
+      boundRoomId: window.boundRoomId,
+      intAuthToken: intAuthToken,
+      authKey: authKey,
+    }).finish();
+    const res2 = DelayNoMore.UdpSession.punchToServer(backendAddress.HOST, 3000, holePunchData);
   }
 };
 
@@ -128,6 +163,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     urlToConnect = urlToConnect + "&expectedRoomId=" + expectedRoomId;
   } else {
     window.boundRoomId = getBoundRoomIdFromPersistentStorage();
+    window.boundRoomCapacity = getBoundRoomCapacityFromPersistentStorage();
     if (null != window.boundRoomId) {
       console.log("initPersistentSessionClient with boundRoomId == " + boundRoomId);
       urlToConnect = urlToConnect + "&boundRoomId=" + window.boundRoomId;
@@ -178,6 +214,16 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           }
           mapIns.onRoomDownsyncFrame(resp.rdf, resp.inputFrameDownsyncBatch);
           break;
+        case window.DOWNSYNC_MSG_ACT_PEER_UDP_ADDR:
+          console.warn(`Got DOWNSYNC_MSG_ACT_PEER_UDP_ADDR resp=${JSON.stringify(resp, null, 2)}`);
+          if (cc.sys.isNative) {
+            const peerJoinIndex = resp.peerJoinIndex;
+            const peerAddrList = resp.rdf.peerUdpAddrList;
+            const peerAddr = peerAddrList[peerJoinIndex - 1];
+            console.log(`Got DOWNSYNC_MSG_ACT_PEER_UDP_ADDR peerAddr=${peerAddr}; boundRoomCapacity=${window.boundRoomCapacity}, mapIns.selfPlayerInfo=${window.mapIns.selfPlayerInfo}`);
+            DelayNoMore.UdpSession.upsertPeerUdpAddr(peerJoinIndex, peerAddr.ip, peerAddr.port, peerAddr.authKey, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex);
+          }
+          break;
         default:
           break;
       }
@@ -224,6 +270,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       default:
         break;
     }
+    if (cc.sys.isNative) {
+      DelayNoMore.UdpSession.closeUdpSession();
+    }
   };
 };
 
@@ -234,7 +283,7 @@ window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdIn
     window.mapIns.musicEffectManagerScriptIns.stopAllMusic();
   }
 
-  window.closeWSConnection();
+  window.closeWSConnection(constants.RET_CODE.UNKNOWN_ERROR, "");
   window.clearSelfPlayer();
   if (true != shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();

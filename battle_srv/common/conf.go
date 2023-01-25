@@ -37,6 +37,8 @@ type mysqlConf struct {
 
 type sioConf struct {
 	HostAndPort string `json:"hostAndPort"`
+	UdpHost     string `json:"udpHost"`
+	UdpPort     int    `json:"udpPort"`
 }
 
 type botServerConf struct {

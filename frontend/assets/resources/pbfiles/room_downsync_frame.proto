@@ -77,22 +77,12 @@ message WsReq {
   HeartbeatUpsync hb = 8;
 }
 
-message WsResp {
-  int32 ret = 1;
-  int32 echoedMsgId = 2;
-  int32 act = 3;
-  RoomDownsyncFrame rdf = 4;
-  repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
-  BattleColliderInfo bciFrame = 6;
-  int32 peerJoinIndex = 7; // Only used when "InputsBufferSnapshot.peerJoinIndex" is used.
-}
-
 message InputsBufferSnapshot {
   int32 refRenderFrameId = 1;
   uint64 unconfirmedMask = 2;
   repeated InputFrameDownsync toSendInputFrameDownsyncs = 3;
   bool shouldForceResync = 4;
-  int32 peerJoinIndex = 5; // Only used when "WsResp.peerJoinIndex" is used.
+  int32 peerJoinIndex = 5;
 }
 
 message MeleeBullet {
@@ -191,8 +181,21 @@ message BattleColliderInfo {
   double spaceOffsetX = 11;
   double spaceOffsetY = 12;
   int32 collisionMinStep = 13;
+  int32 boundRoomCapacity = 14;
 
   bool frameDataLoggingEnabled = 1024;
+}
+
+message HolePunchUpsync {
+ string intAuthToken = 1;
+ int32 boundRoomId = 2;
+ int32 authKey = 3;
+}
+
+message PeerUdpAddr {
+ string ip = 1;
+ int32 port = 2;
+ int32 authKey = 3;
 }
 
 message RoomDownsyncFrame {
@@ -207,11 +210,15 @@ message RoomDownsyncFrame {
   repeated int32 speciesIdList = 1026;
 
   int32 bulletLocalIdCounter = 1027;
+  repeated PeerUdpAddr peerUdpAddrList = 1028;
 }
 
-message HolePunchUpsync {
- int32 joinIndex = 1;
- string intAuthToken = 2;
- int32 boundRoomId = 3;
- int32 authKey = 4;
+message WsResp {
+  int32 ret = 1;
+  int32 echoedMsgId = 2;
+  int32 act = 3;
+  RoomDownsyncFrame rdf = 4;
+  repeated InputFrameDownsync inputFrameDownsyncBatch = 5;
+  BattleColliderInfo bciFrame = 6;
+  int32 peerJoinIndex = 7;
 }
