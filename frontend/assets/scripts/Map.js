@@ -360,10 +360,6 @@ cc.Class({
     if (self.countdownLabel) {
       self.countdownLabel.string = "";
     }
-    if (self.findingPlayerNode) {
-      const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-      findingPlayerScriptIns.init();
-    }
     if (self.playersInfoNode) {
       safelyAddChild(self.widgetsAboveAllNode, self.playersInfoNode);
     }
@@ -470,7 +466,7 @@ cc.Class({
     self.findingPlayerNode.width = self.canvasNode.width;
     self.findingPlayerNode.height = self.canvasNode.height;
     const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-    findingPlayerScriptIns.init();
+    findingPlayerScriptIns.init(self);
 
     self.playersInfoNode = cc.instantiate(self.playersInfoPrefab);
 
@@ -1066,6 +1062,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
   logout(byClick /* The case where this param is "true" will be triggered within `ConfirmLogout.js`.*/ , shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
     const self = this;
     const localClearance = () => {
+      window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED, "");
       window.clearLocalStorageAndBackToLoginScene(shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage);
     }
 

@@ -6,7 +6,8 @@
 #include "uv/uv.h"
 
 uv_udp_t* udpSocket = NULL;
-
+uv_thread_t recvTid;
+uv_async_t uvLoopStopSig;
 uv_loop_t* loop = NULL; // Only this loop is used for this simple PoC
 
 int const maxPeerCnt = 10;
@@ -76,11 +77,25 @@ typedef struct client {
     short port;
 };
 
+void _onUvStopSig(uv_async_t* handle) {
+    uv_stop(loop);
+    CCLOG("UDP recv loop is signaled to stop in UvThread");
+}
+
+void _onWalkCleanup(uv_handle_t* handle, void* data) {
+    (void)data;
+    uv_close(handle, NULL);
+}
+
 void startRecvLoop(void* arg) {
     uv_loop_t* l = (uv_loop_t*)arg;
-    uv_run(l, UV_RUN_DEFAULT);
+    int uvRunRet1 = uv_run(l, UV_RUN_DEFAULT);
+    CCLOG("UDP recv loop is ended in UvThread, uvRunRet1=%d", uvRunRet1);
+    uv_walk(l, _onWalkCleanup, NULL);
+    int uvRunRet2 = uv_run(l, UV_RUN_DEFAULT);
 
-    CCLOG("UDP recv loop is ended!");
+    int uvCloseRet = uv_loop_close(l);
+    CCLOG("UDP recv loop is closed in UvThread, uvRunRet2=%d, uvCloseRet=%d", uvRunRet2, uvCloseRet);
 }
 
 bool DelayNoMore::UdpSession::openUdpSession(int port) {
@@ -96,19 +111,14 @@ bool DelayNoMore::UdpSession::openUdpSession(int port) {
     CCLOG("About to open UDP session at port=%d...", port);
     loop = uv_loop_new();
     uv_udp_init(loop, udpSocket);
+    uv_async_init(loop, &uvLoopStopSig, _onUvStopSig);
     uv_udp_recv_start(udpSocket, _allocBuffer, _onRead);
 
-    uv_thread_t recvTid;
     uv_thread_create(&recvTid, startRecvLoop, loop);
 
     CCLOG("Finished opening UDP session at port=%d", port);
 
     return true;
-}
-
-static void _onWalkCleanup(uv_handle_t* handle, void* data) {
-    (void)data;
-    uv_close(handle, NULL);
 }
 
 bool DelayNoMore::UdpSession::closeUdpSession() { 
@@ -118,17 +128,18 @@ bool DelayNoMore::UdpSession::closeUdpSession() {
         peerAddrList[i].authKey = -1; // hardcoded for now
         memset((char*)&peerAddrList[i].sockAddrIn, 0, sizeof(peerAddrList[i].sockAddrIn));
     }
+    uv_async_send(&uvLoopStopSig); // The few if not only guaranteed thread safe utility of libuv :) See http://docs.libuv.org/en/v1.x/async.html#c.uv_async_send
+    CCLOG("Signaling UvThread to end in GameThread...");
 
-    uv_stop(loop);
-    uv_walk(loop, _onWalkCleanup, NULL);
-    uv_loop_close(loop);
+    uv_thread_join(&recvTid);
+
     free(udpSocket);
     free(loop);
 
     uv_mutex_destroy(&sendLock);
     uv_mutex_destroy(&recvLock);
     
-    CCLOG("Closed udp session and dealloc all resources...");
+    CCLOG("Closed udp session and dealloc all resources in GameThread...");
 
     return true;
 }
@@ -141,7 +152,7 @@ void _onSend(uv_udp_send_t* req, int status) {
 }
 
 bool DelayNoMore::UdpSession::upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey, int roomCapacity, int selfJoinIndex) {
-    CCLOG("Called by js for joinIndex=%d, ip=%s, port=%d, authKey=%lu; roomCapacity=%d, selfJoinIndex=%d.", joinIndex, ip, port, authKey, roomCapacity, selfJoinIndex);
+    CCLOG("upsertPeerUdpAddr called by js for joinIndex=%d, ip=%s, port=%d, authKey=%lu; roomCapacity=%d, selfJoinIndex=%d.", joinIndex, ip, port, authKey, roomCapacity, selfJoinIndex);
     uv_ip4_addr(ip, port, &(peerAddrList[joinIndex - 1].sockAddrIn));
     peerAddrList[joinIndex - 1].authKey = authKey;
 

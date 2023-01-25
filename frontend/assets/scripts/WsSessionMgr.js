@@ -34,7 +34,7 @@ window.closeWSConnection = function(code, reason) {
     console.log(`"window.clientSession" is already closed or destroyed.`);
     return;
   }
-  console.log(`Closing "window.clientSession" from the client-side.`);
+  console.log(`Closing "window.clientSession" from the client-side with code=${code}.`);
   window.clientSession.close(code, reason);
 }
 
@@ -240,6 +240,12 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   clientSession.onclose = function(evt) {
     // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
     console.warn(`The WS clientSession is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
+    if (cc.sys.isNative) {
+      if (mapIns.frameDataLoggingEnabled) {
+        console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+      }
+      DelayNoMore.UdpSession.closeUdpSession();
+    }
     switch (evt.code) {
       case constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME:
         break;
@@ -261,7 +267,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.MYSQL_ERROR:
       case constants.RET_CODE.PLAYER_NOT_FOUND:
       case constants.RET_CODE.PLAYER_CHEATING:
-      case 1006: // Peer(i.e. the backend) gone unexpectedly 
+      case 1006: // Peer(i.e. the backend) gone unexpectedly, but not working for "cc.sys.isNative" 
         if (mapIns.frameDataLoggingEnabled) {
           console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
         }
@@ -270,24 +276,20 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       default:
         break;
     }
-    if (cc.sys.isNative) {
-      DelayNoMore.UdpSession.closeUdpSession();
-    }
   };
 };
 
 window.clearLocalStorageAndBackToLoginScene = function(shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
   console.warn("+++++++ Calling `clearLocalStorageAndBackToLoginScene`");
+  window.clearSelfPlayer();
+  if (true != shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
+    window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+  }
 
   if (window.mapIns && window.mapIns.musicEffectManagerScriptIns) {
     window.mapIns.musicEffectManagerScriptIns.stopAllMusic();
   }
 
-  window.closeWSConnection(constants.RET_CODE.UNKNOWN_ERROR, "");
-  window.clearSelfPlayer();
-  if (true != shouldRetainBoundRoomIdInBothVolatileAndPersistentStorage) {
-    window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-  }
   cc.director.loadScene('login');
 };
 

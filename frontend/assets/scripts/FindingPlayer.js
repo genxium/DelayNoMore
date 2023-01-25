@@ -23,7 +23,8 @@ cc.Class({
   // LIFE-CYCLE CALLBACKS:
   onLoad() {},
 
-  init() {
+  init(mapIns) {
+    this.mapIns = mapIns;
     if (null != this.firstPlayerInfoNode) {
       this.firstPlayerInfoNode.active = false;
     }
@@ -53,9 +54,10 @@ cc.Class({
   },
 
   exitBtnOnClick(evt) {
-    window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
-    window.closeWSConnection(constants.RET_CODE.UNKNOWN_ERROR, "");
-    cc.director.loadScene('login');
+    this.mapIns.hideFindingPlayersGUI();
+    cc.log(`FindingPlayers.exitBtnOnClick`);
+    window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED, "");
+    window.clearLocalStorageAndBackToLoginScene(false);
   },
 
   updatePlayersInfo(playerMetas) {
