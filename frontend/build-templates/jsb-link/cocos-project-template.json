@@ -50,6 +50,18 @@
                 "frameworks/runtime-src/proj.android-studio/app/build.gradle",
                 "frameworks/runtime-src/proj.android-studio/app/AndroidManifest.xml"
             ]
+        },
+        "project_replace_mac_bundleid": {
+            "src_bundle_id": "org.genxium.delaynomore",
+            "files": [
+                "frameworks/runtime-src/proj.ios_mac/mac/Info.plist"
+            ]
+        },
+        "project_replace_ios_bundleid": {
+            "src_bundle_id": "org.genxium.delaynomore",
+            "files": [
+                "frameworks/runtime-src/proj.ios_mac/ios/Info.plist"
+            ]
         }
     }
 }

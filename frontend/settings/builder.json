@@ -17,7 +17,8 @@
   },
   "encryptJs": false,
   "excludeScenes": [
-    "8491a86c-bec9-4813-968a-128ca01639e0"
+    "2ff474d9-0c9e-4fe3-87ec-fbff7cae85b4",
+    "92160186-3e0d-4e0a-ae20-97286170ba58"
   ],
   "fb-instant-games": {},
   "includeSDKBox": false,
@@ -37,7 +38,7 @@
     "REMOTE_SERVER_ROOT": "",
     "orientation": "portrait"
   },
-  "startScene": "2ff474d9-0c9e-4fe3-87ec-fbff7cae85b4",
+  "startScene": "8491a86c-bec9-4813-968a-128ca01639e0",
   "title": "DelayNoMore",
   "webOrientation": "landscape",
   "wechatgame": {
@@ -57,5 +58,5 @@
     "packageName": "org.genxium.delaynomore"
   },
   "win32": {},
-  "includeAnySDK": false
+  "includeAnySDK": null
 }

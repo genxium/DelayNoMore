@@ -122,6 +122,9 @@ shell> /path/to/CocosCreator.exe --path ./frontend --build "platform=win32;debug
 CocosCreator doesn't have perfect file cache management during native project building, use "Developer Tools > Reload" to reset the IDE status upon mysterious errors.
 ![ccc_reload](./charts/NativeBuildReload.png)
 
+Another issue is with the package name, see the screenshot below, kindly note that after successfully building with a blank package name, you can then re-fill the desired package name and build again! 
+![ccc_package_name](./charts/PackageNameIssueInCcc.png)
+
 ### 2.5 Checking UDP port binding result
 __*nix__
 ``` 
