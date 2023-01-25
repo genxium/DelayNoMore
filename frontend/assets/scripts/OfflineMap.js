@@ -155,7 +155,6 @@ cc.Class({
           const echoed = window.pb.protos.HolePunchUpsync.decode(ui8Arr);
           cc.log(`#2 Js called back by CPP: onUdpMessage: ${JSON.stringify(echoed)}`);
         };
-        DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456);
         const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.JoinIndex);
         const holePunchDate = window.pb.protos.HolePunchUpsync.encode({
           joinIndex: self.selfPlayerInfo.JoinIndex,
@@ -163,8 +162,9 @@ cc.Class({
           intAuthToken: "foobar",
           authKey: Math.floor(Math.random() * 65535),
         }).finish()
-        const res2 = DelayNoMore.UdpSession.punchToServer(holePunchDate);
-      //const res3 = DelayNoMore.UdpSession.closeUdpSession();
+        const res2 = DelayNoMore.UdpSession.punchToServer("127.0.0.1", 3000, holePunchDate);
+        const res3 = DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456, 2, self.selfPlayerInfo.JoinIndex);
+      //const res4 = DelayNoMore.UdpSession.closeUdpSession();
       }
       self.onRoomDownsyncFrame(startRdf);
 
