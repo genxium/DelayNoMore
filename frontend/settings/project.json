@@ -33,8 +33,6 @@
   "design-resolution-height": 640,
   "design-resolution-width": 960,
   "excluded-modules": [
-    "Audio",
-    "AudioSource",
     "Collider",
     "DragonBones",
     "Geom Utils",

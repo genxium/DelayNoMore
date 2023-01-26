@@ -17,6 +17,18 @@
         "append_file": [{
             "from": "cocos/scripting/js-bindings/manual/jsb_module_register.cpp",
             "to": "frameworks/runtime-src/Classes/jsb_module_register.cpp"
+        }, {
+            "from": "frameworks/runtime-src/Classes/udp_session.hpp",
+            "to": "frameworks/runtime-src/Classes/udp_session.hpp"
+        }, {
+            "from": "frameworks/runtime-src/Classes/udp_session.cpp",
+            "to": "frameworks/runtime-src/Classes/udp_session.cpp"
+        }, {
+            "from": "frameworks/runtime-src/Classes/udp_session_bridge.hpp",
+            "to": "frameworks/runtime-src/Classes/udp_session_bridge.hpp"
+        }, {
+            "from": "frameworks/runtime-src/Classes/udp_session_bridge.cpp",
+            "to": "frameworks/runtime-src/Classes/udp_session_bridge.cpp"
         }],
         "project_rename": {
             "src_project_name": "DelayNoMore",
@@ -37,10 +49,6 @@
                 "frameworks/runtime-src/proj.win32/main.cpp",
                 "frameworks/runtime-src/proj.android-studio/settings.gradle",
                 "frameworks/runtime-src/proj.android-studio/app/res/values/strings.xml",
-                "frameworks/runtime-src/Classes/udp_session.hpp",
-                "frameworks/runtime-src/Classes/udp_session.cpp",
-                "frameworks/runtime-src/Classes/udp_session_bridge.hpp",
-                "frameworks/runtime-src/Classes/udp_session_bridge.cpp",
                 "frameworks/runtime-src/Classes/AppDelegate.cpp"
             ]
         },

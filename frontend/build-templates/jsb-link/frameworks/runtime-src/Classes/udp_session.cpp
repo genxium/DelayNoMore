@@ -12,7 +12,7 @@ uv_loop_t* loop = NULL; // Only this loop is used for this simple PoC
 
 int const maxPeerCnt = 10;
 struct PeerAddr {
-    SOCKADDR_IN sockAddrIn;
+    struct sockaddr_in sockAddrIn;
     uint32_t authKey;
 };
 struct PeerAddr peerAddrList[maxPeerCnt];
@@ -30,7 +30,7 @@ void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct soc
         return;
     }
 
-    SOCKADDR_IN* sockAddr = (SOCKADDR_IN*)addr;
+    struct sockaddr_in* sockAddr = (struct sockaddr_in*)addr;
     char ip[64] = { 0 };
     uv_ip4_name(sockAddr, ip, sizeof ip);
     int port = sockAddr->sin_port;
@@ -104,7 +104,7 @@ bool DelayNoMore::UdpSession::openUdpSession(int port) {
     uv_mutex_init(&recvLock);
 
     udpSocket = (uv_udp_t*)malloc(sizeof(uv_udp_t));
-    SOCKADDR_IN recv_addr;
+    struct sockaddr_in recv_addr;
     uv_ip4_addr("0.0.0.0", port, &recv_addr);
     uv_udp_bind(udpSocket, (struct sockaddr const*)&recv_addr, UV_UDP_REUSEADDR);
     
@@ -182,7 +182,7 @@ bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPor
 
     uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
     uv_buf_t sendBuffer = uv_buf_init(bytes, strlen(bytes)); 
-    SOCKADDR_IN destAddr;
+    struct sockaddr_in destAddr;
     
     uv_ip4_addr(SRV_IP, SRV_PORT, &destAddr);
     uv_mutex_lock(&sendLock);
