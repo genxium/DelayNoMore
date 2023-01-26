@@ -40,7 +40,7 @@ void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct soc
     memset(gameThreadMsg, 0, gameThreadMsgSize);
     memcpy(gameThreadMsg, buf->base, nread);
 
-    CCLOG("Recv %d bytes from %s:%d, converted to %d bytes for the JS callback", nread, ip, port, strlen(gameThreadMsg));
+    CCLOG("UDP read %d bytes from %s:%d, converted to %d bytes for the JS callback", nread, ip, port, strlen(gameThreadMsg));
     free(buf->base);
     //uv_udp_recv_stop(req);
     
@@ -153,13 +153,13 @@ void _onSend(uv_udp_send_t* req, int status) {
 
 bool DelayNoMore::UdpSession::upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey, int roomCapacity, int selfJoinIndex) {
     CCLOG("upsertPeerUdpAddr called by js for joinIndex=%d, ip=%s, port=%d, authKey=%lu; roomCapacity=%d, selfJoinIndex=%d.", joinIndex, ip, port, authKey, roomCapacity, selfJoinIndex);
-    uv_ip4_addr(ip, port, &(peerAddrList[joinIndex - 1].sockAddrIn));
-    peerAddrList[joinIndex - 1].authKey = authKey;
 
     // Punching between existing peer-pairs for Address/Port-restricted Cone NAT (not need for Full Cone NAT) 
     uv_mutex_lock(&sendLock);
     for (int i = 0; i < roomCapacity; i++) {
         if (i == selfJoinIndex - 1) continue;
+        uv_ip4_addr(ip, port, &(peerAddrList[i].sockAddrIn));
+        peerAddrList[i].authKey = authKey;
         for (int j = 0; j < 10; j++) {
             uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
             uv_buf_t sendBuffer = uv_buf_init("foobar", 6); // hardcoded for now
@@ -171,7 +171,7 @@ bool DelayNoMore::UdpSession::upsertPeerUdpAddr(int joinIndex, CHARC* const ip, 
     return true;
 }
 
-bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes) {
+bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes, size_t bytesLen) {
     /*
     [WARNING] The RAM space used for "bytes", either on stack or in heap, is preallocatedand managed by the caller.
     
@@ -181,7 +181,7 @@ bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPor
     SRV_PORT = srvPort;
 
     uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
-    uv_buf_t sendBuffer = uv_buf_init(bytes, strlen(bytes)); 
+    uv_buf_t sendBuffer = uv_buf_init(bytes, bytesLen);
     struct sockaddr_in destAddr;
     
     uv_ip4_addr(SRV_IP, SRV_PORT, &destAddr);
@@ -189,5 +189,20 @@ bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPor
     uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&destAddr, _onSend);
     uv_mutex_unlock(&sendLock);
     
+    return true;
+}
+
+bool DelayNoMore::UdpSession::broadcastInputFrameUpsync(BYTEC* const bytes, size_t bytesLen, int roomCapacity, int selfJoinIndex) {
+    uv_mutex_lock(&sendLock);
+    for (int i = 0; i < roomCapacity; i++) {
+        if (i == selfJoinIndex - 1) continue;
+        for (int j = 0; j < 10; j++) {
+            uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
+            uv_buf_t sendBuffer = uv_buf_init(bytes, bytesLen);
+            uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&peerAddrList[i], _onSend);
+        }
+    }
+    uv_mutex_unlock(&sendLock);
+
     return true;
 }

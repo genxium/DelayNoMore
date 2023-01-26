@@ -30,16 +30,43 @@ bool punchToServer(se::State& s) {
         memset(bytes, 0, sizeof bytes);
         se::Object* obj = args[2].toObject();
         size_t sz = 0;
-        uint8_t* ptr;
+        uint8_t* ptr = NULL;
         obj->getTypedArrayData(&ptr, &sz);
-        memcpy(bytes, ptr, sz);
-        CCLOG("Should punch %s:%d by %d bytes v.s. strlen(bytes)=%u.", srvIp, srvPort, sz, strlen(bytes));
-        return DelayNoMore::UdpSession::punchToServer(srvIp, srvPort, bytes);
+        for (size_t i = 0; i < sz; i++) {
+            bytes[i] = (char)(*(ptr + i));
+        }
+        CCLOG("Should punch %s:%d by %d bytes.", srvIp, srvPort, sz);
+        return DelayNoMore::UdpSession::punchToServer(srvIp, srvPort, bytes, sz);
     }
     SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 3);
     return false;
 }
 SE_BIND_FUNC(punchToServer)
+
+bool broadcastInputFrameUpsync(se::State& s) {
+    const auto& args = s.args();
+    size_t argc = args.size();
+    CC_UNUSED bool ok = true;
+    if (3 == argc && args[0].toObject()->isTypedArray() && args[1].isNumber() && args[2].isNumber()) {
+        SE_PRECONDITION2(ok, false, "broadcastInputFrameUpsync: Error processing arguments");
+        BYTEC bytes[1024];
+        memset(bytes, 0, sizeof bytes);
+        se::Object* obj = args[0].toObject();
+        size_t sz = 0;
+        uint8_t* ptr = NULL;
+        obj->getTypedArrayData(&ptr, &sz);
+        for (size_t i = 0; i < sz; i++) {
+            bytes[i] = (char)(*(ptr + i));
+        }
+        int roomCapacity = args[1].toInt32();
+        int selfJoinIndex = args[2].toInt32();
+        CCLOG("Should broadcastInputFrameUpsync %u bytes; roomCapacity=%d, selfJoinIndex=%d.", sz, roomCapacity, selfJoinIndex);
+        return DelayNoMore::UdpSession::broadcastInputFrameUpsync(bytes, sz, roomCapacity, selfJoinIndex);
+    }
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 3);
+    return false;
+}
+SE_BIND_FUNC(broadcastInputFrameUpsync)
 
 bool closeUdpSession(se::State& s) {
     const auto& args = s.args();
@@ -106,6 +133,7 @@ bool registerUdpSession(se::Object* obj)
 
     cls->defineStaticFunction("openUdpSession", _SE(openUdpSession));
     cls->defineStaticFunction("punchToServer", _SE(punchToServer));
+    cls->defineStaticFunction("broadcastInputFrameUpsync", _SE(broadcastInputFrameUpsync));
     cls->defineStaticFunction("closeUdpSession", _SE(closeUdpSession));
     cls->defineStaticFunction("upsertPeerUdpAddr", _SE(upsertPeerUdpAddr));
     cls->defineFinalizeFunction(_SE(udpSessionFinalize));

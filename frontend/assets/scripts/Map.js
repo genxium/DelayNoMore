@@ -34,6 +34,44 @@ window.PlayerBattleState = {
   EXPELLED_IN_DISMISSAL: 6
 };
 
+window.onUdpMessage = (args) => {
+  const self = window.mapIns;
+  const len = args.length;
+  const ui8Arr = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    ui8Arr[i] = args.charCodeAt(i);
+  }
+  cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
+
+  if (6 == len) {
+    cc.log(`#2 Js called back by CPP for peer hole punching`);
+  } else {
+    const req = window.pb.protos.WsReq.decode(ui8Arr);
+    if (req) {
+      cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
+      if (req.act && window.UPSYNC_MSG_ACT_PLAYER_CMD == req.act) {
+        const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
+        const peerJoinIndex = req.joinIndex;
+        const batch = req.inputFrameUpsyncBatch;
+        for (let k in batch) {
+          const inputFrameUpsync = batch[k];
+          if (inputFrameUpsync.inputFrameId < renderedInputFrameIdUpper) {
+            // Avoid obfuscating already rendered history
+            continue;
+          }
+          if (inputFrameUpsync.inputFrameId <= self.lastAllConfirmedInputFrameId) {
+            continue;
+          }
+          self.getOrPrefabInputFrameUpsync(inputFrameUpsync.inputFrameId); // Make sure that inputFrame exists locally
+          const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameUpsync.inputFrameId);
+          existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
+          self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameUpsync.inputFrameId);
+        }
+      }
+    }
+  }
+};
+
 cc.Class({
   extends: cc.Component,
 
@@ -182,7 +220,7 @@ cc.Class({
     */
     if (null == currSelfInput) return false;
 
-    const shouldUpsyncForEarlyAllConfirmedOnBackend = (currInputFrameId - lastUpsyncInputFrameId >= this.inputFrameUpsyncDelayTolerance);
+    const shouldUpsyncForEarlyAllConfirmedOnBackend = (currInputFrameId - lastUpsyncInputFrameId >= 1);
     return shouldUpsyncForEarlyAllConfirmedOnBackend || (prevSelfInput != currSelfInput);
   },
 
@@ -218,6 +256,9 @@ cc.Class({
       ackingInputFrameId: self.lastAllConfirmedInputFrameId,
       inputFrameUpsyncBatch: inputFrameUpsyncBatch,
     }).finish();
+    if (cc.sys.isNative) {
+      DelayNoMore.UdpSession.broadcastInputFrameUpsync(reqData, window.boundRoomCapacity, self.selfPlayerInfo.JoinIndex);
+    }
     window.sendSafely(reqData);
     self.lastUpsyncInputFrameId = latestLocalInputFrameId;
     if (self.lastUpsyncInputFrameId >= self.recentInputCache.EdFrameId) {

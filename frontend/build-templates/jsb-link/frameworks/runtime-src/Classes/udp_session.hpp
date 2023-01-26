@@ -13,7 +13,8 @@ namespace DelayNoMore {
         static bool closeUdpSession();
         static bool upsertPeerUdpAddr(int joinIndex, CHARC* const ip, int port, uint32_t authKey, int roomCapacity, int selfJoinIndex);
         //static bool clearPeerUDPAddrList();
-        static bool punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes);
+        static bool punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes, size_t bytesLen);
+        static bool broadcastInputFrameUpsync(BYTEC* const bytes, size_t bytesLen, int roomCapacity, int selfJoinIndex);
     };
 }
 #endif

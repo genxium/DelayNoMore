@@ -12,6 +12,7 @@ bool registerUdpSession(se::Object* obj);
 
 SE_DECLARE_FUNC(openUdpSession);
 SE_DECLARE_FUNC(punchToServer);
+SE_DECLARE_FUNC(broadcastInputFrameUpsync);
 SE_DECLARE_FUNC(closeUdpSession);
 SE_DECLARE_FUNC(upsertPeerUdpAddr);
 
