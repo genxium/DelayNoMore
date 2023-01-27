@@ -162,7 +162,15 @@ cc.Class({
           authKey: Math.floor(Math.random() * 65535),
         }).finish()
         const res2 = DelayNoMore.UdpSession.punchToServer("127.0.0.1", 3000, holePunchData);
-        const res3 = DelayNoMore.UdpSession.upsertPeerUdpAddr(self.selfPlayerInfo.JoinIndex, "192.168.31.194", 6789, 123456, 2, self.selfPlayerInfo.JoinIndex);
+        const res3 = DelayNoMore.UdpSession.upsertPeerUdpAddr([window.pb.protos.PeerUdpAddr.create({
+          ip: "192.168.31.194",
+          port: 6789,
+          authKey: 123456,
+        }), window.pb.protos.PeerUdpAddr.create({
+          ip: "192.168.1.101",
+          port: 8771,
+          authKey: 654321,
+        })], 2, self.selfPlayerInfo.JoinIndex);
       //const res4 = DelayNoMore.UdpSession.closeUdpSession();
       }
       self.onRoomDownsyncFrame(startRdf);

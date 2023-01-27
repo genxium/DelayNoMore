@@ -82,21 +82,31 @@ bool closeUdpSession(se::State& s) {
 }
 SE_BIND_FUNC(closeUdpSession)
 
+struct PeerAddr newPeerAddrList[maxPeerCnt];
 bool upsertPeerUdpAddr(se::State& s) {
     const auto& args = s.args();
     size_t argc = args.size();
     CC_UNUSED bool ok = true;
-    if (6 == argc && args[0].isNumber() && args[1].isString() && args[2].isNumber() && args[3].isNumber() && args[4].isNumber() && args[5].isNumber()) {
+    if (3 == argc && args[0].isObject() && args[0].toObject()->isArray() && args[1].isNumber() && args[2].isNumber()) {
         SE_PRECONDITION2(ok, false, "upsertPeerUdpAddr: Error processing arguments");
-        int joinIndex = args[0].toInt32();
-        CHARC* ip = args[1].toString().c_str();
-        int port = args[2].toInt32();
-        uint32_t authKey = args[3].toUint32();
-        int roomCapacity = args[4].toInt32(); 
-        int selfJoinIndex = args[5].toInt32();
-        return DelayNoMore::UdpSession::upsertPeerUdpAddr(joinIndex, ip, port, authKey, roomCapacity, selfJoinIndex);
+        int roomCapacity = args[1].toInt32();
+        int selfJoinIndex = args[2].toInt32();
+        se::Object* newPeerAddrValArr = args[0].toObject();
+        for (int i = 0; i < roomCapacity; i++) {
+            se::Value newPeerAddrVal;
+            newPeerAddrValArr->getArrayElement(i, &newPeerAddrVal);
+            se::Object* newPeerAddrObj = newPeerAddrVal.toObject();
+            se::Value newIp, newPort, newAuthKey;
+            newPeerAddrObj->getProperty("ip", &newIp);
+            newPeerAddrObj->getProperty("port", &newPort);
+            newPeerAddrObj->getProperty("authKey", &newAuthKey);
+            uv_ip4_addr(newIp.toString().c_str(), newPort.toInt32(), &(newPeerAddrList[i].sockAddrIn));
+            newPeerAddrList[i].authKey = newAuthKey.toInt32();
+        }
+
+        return DelayNoMore::UdpSession::upsertPeerUdpAddr(newPeerAddrList, roomCapacity, selfJoinIndex);
     }
-    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 6);
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 3);
     
     return false;
 }
