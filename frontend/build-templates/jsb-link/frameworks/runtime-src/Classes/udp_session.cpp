@@ -32,26 +32,31 @@ void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct soc
     memset(gameThreadMsg, 0, gameThreadMsgSize);
     memcpy(gameThreadMsg, buf->base, nread);
 
-    CCLOG("UDP read %d bytes from %s:%d, converted to %d bytes for the JS callback", nread, ip, port, strlen(gameThreadMsg));
     free(buf->base);
     //uv_udp_recv_stop(req);
 
-    cocos2d::Application::getInstance()->getScheduler()->performFunctionInCocosThread([=]() {
-        // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
-        se::Value onUdpMessageCb;
-        se::ScriptEngine::getInstance()->getGlobalObject()->getProperty("onUdpMessage", &onUdpMessageCb);
-        // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
-        se::AutoHandleScope hs;
-        se::ValueArray args = { se::Value(gameThreadMsg) };
-        if (onUdpMessageCb.isObject() && onUdpMessageCb.toObject()->isFunction()) {
-            // Temporarily assume that the "this" ptr within callback is NULL.
-            bool ok = onUdpMessageCb.toObject()->call(args, NULL);
-            if (!ok) {
-                se::ScriptEngine::getInstance()->clearException();
+    if (6 != nread) {
+        // Non-holepunching
+        CCLOG("UDP received %d bytes from %s:%d, converted to %d bytes for the JS callback", nread, ip, port, strlen(gameThreadMsg));
+        cocos2d::Application::getInstance()->getScheduler()->performFunctionInCocosThread([=]() {
+            // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
+            se::Value onUdpMessageCb;
+            se::ScriptEngine::getInstance()->getGlobalObject()->getProperty("onUdpMessage", &onUdpMessageCb);
+            // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
+            se::AutoHandleScope hs;
+            se::ValueArray args = { se::Value(gameThreadMsg) };
+            if (onUdpMessageCb.isObject() && onUdpMessageCb.toObject()->isFunction()) {
+                // Temporarily assume that the "this" ptr within callback is NULL.
+                bool ok = onUdpMessageCb.toObject()->call(args, NULL);
+                if (!ok) {
+                    se::ScriptEngine::getInstance()->clearException();
+                }
             }
-        }
-        free(gameThreadMsg);
-    });
+            free(gameThreadMsg);
+        });
+    } else {
+        CCLOG("UDP received hole punching from %s:%d", ip, port);
+    }
 }
 
 static void _allocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -66,7 +71,9 @@ void _onUvStopSig(uv_async_t* handle) {
 }
 
 void _onSend(uv_udp_send_t* req, int status) {
+    CCLOG("UDP send about to free req for status:%d...", status);
     free(req); // No need to free "req->base", it'll be handled in each "_afterXxx" callback
+    CCLOG("UDP send freed req for status:%d...", status);
     if (status) {
         CCLOGERROR("uv_udp_send_cb error: %s\n", uv_strerror(status));
     }
@@ -92,8 +99,10 @@ void _punchServerOnUvThread(uv_work_t* wrapper) {
     uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&destAddr, _onSend);
 }
 void _afterPunchServer(uv_work_t* wrapper, int status) {
+    CCLOG("UDP send about to free PunchServerWork for status:%d...", status);
     PunchServerWork* work = (PunchServerWork*)wrapper->data;
     delete work;
+    CCLOG("UDP freed PunchServerWork for status:%d...", status);
 }
 
 class PunchPeerWork {
@@ -128,8 +137,10 @@ void _punchPeerOnUvThread(uv_work_t* wrapper) {
     }
 }
 void _afterPunchPeer(uv_work_t* wrapper, int status) {
+    CCLOG("UDP send about to free PunchPeerWork for status:%d...", status);
     PunchPeerWork* work = (PunchPeerWork*)wrapper->data;
     delete work;
+    CCLOG("UDP send freed PunchPeerWork for status:%d...", status);
 }
 
 class BroadcastInputFrameUpsyncWork {

@@ -135,3 +135,11 @@ __Windows__
 ``` 
 netstat -ano | grep <your_port>
 ``` 
+
+### 2.6 Checking native code crash on non-rooted Android phone 
+```
+DeveloperOs> adb bugreport ./logs.zip
+# The file "logs.zip" will be automatically pulled to current folder of the DeveloperOS, copy "logs/FS/data/tomestones" out of the zip, then use the binary "$NDK_ROOT/ndk-stack" to analyze whichever tombstone you're interested in, for example, I often use the following
+DeveloperOs> ${NDK_ROOT}/ndk-stack.cmd -sym \path\to\DelayNoMore\frontend\build\jsb-link\frameworks\runtime-src\proj.android-studio\app\build\intermediates\ndkBuild\debug\obj\local\arm64-v8a\objs-debug -dump \path\to\tombstones\tombstone_03  
+# The param "-sym \path\to\objs" tells "ndk-stack" to decode "tombstone_03" with symbols provided by all the files inside that "\path\to\objs".
+```
