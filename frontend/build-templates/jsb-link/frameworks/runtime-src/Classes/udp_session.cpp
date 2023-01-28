@@ -22,37 +22,45 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
         free(buf->base);
         return;
     }
-    CCLOG("UDP received %d bytes", nread);
+    char ip[INET_ADDRSTRLEN];
+    memset(ip, 0, sizeof ip);
+    int port = 0; 
+
     if (NULL != addr) {
         // The null check for "addr" is necessary, on Android there'd be such mysterious call to "_onRead"!
         switch (addr->sa_family) {
         case AF_INET: {
             struct sockaddr_in const* sockAddr = (struct sockaddr_in const*)addr;
-            char ip[INET_ADDRSTRLEN];
-            memset(ip, 0, sizeof ip);
-            //uv_ip4_name(sockAddr, ip, 16);
             uv_inet_ntop(sockAddr->sin_family, &(sockAddr->sin_addr), ip, INET_ADDRSTRLEN);
-            int port = ntohs(sockAddr->sin_port);
+            port = ntohs(sockAddr->sin_port);
             CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
             break;
         }
         default:
             break;
         }
+    } else {
+        CCLOG("UDP received %d bytes from unknown sender", nread);
     }
     
-    if (6 != nread) {
+    if (6 == nread) {
+        // holepunching
+    } else if (0 < nread) {
         // Non-holepunching
-        int const gameThreadMsgSize = 256;
-        char* const gameThreadMsg = (char* const)malloc(gameThreadMsgSize);
-        memset(gameThreadMsg, 0, gameThreadMsgSize);
-        memcpy(gameThreadMsg, buf->base, nread);
+        uint8_t* const ui8Arr = (uint8_t*)malloc(256*sizeof(uint8_t));
+        memset(ui8Arr, 0, sizeof ui8Arr);
+        for (int i = 0; i < nread; i++) {
+            *(ui8Arr+i) = *(buf->base + i);
+        }
         cocos2d::Application::getInstance()->getScheduler()->performFunctionInCocosThread([=]() {
             // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
             se::Value onUdpMessageCb;
             se::ScriptEngine::getInstance()->getGlobalObject()->getProperty("onUdpMessage", &onUdpMessageCb);
             // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
             se::AutoHandleScope hs;
+            CCLOG("UDP received %d bytes upsync -- 1", nread);
+            se::Object* const gameThreadMsg = se::Object::createTypedArray(se::Object::TypedArrayType::UINT8, ui8Arr, nread);
+            CCLOG("UDP received %d bytes upsync -- 2", nread);
             se::ValueArray args = { se::Value(gameThreadMsg) };
             if (onUdpMessageCb.isObject() && onUdpMessageCb.toObject()->isFunction()) {
                 // Temporarily assume that the "this" ptr within callback is NULL.
@@ -61,14 +69,21 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
                     se::ScriptEngine::getInstance()->clearException();
                 }
             }
-            free(gameThreadMsg);
+            CCLOG("UDP received %d bytes upsync -- 3", nread);
+            gameThreadMsg->decRef(); // Reference http://docs.cocos.com/creator/2.2/manual/en/advanced-topics/JSB2.0-learning.html#seobject
+            CCLOG("UDP received %d bytes upsync -- 4", nread);
+            free(ui8Arr);
+            CCLOG("UDP received %d bytes upsync -- 5", nread);
+
         });
-    } else {
-        CCLOG("UDP received hole punching");
     }
     free(buf->base);
+
+    /*
+    // [WARNING] Don't call either of the following statements! They will make "_onRead" no longer called for incoming packets!
     //uv_udp_recv_stop(req);
-    uv_close((uv_handle_t*)req, NULL);
+    //uv_close((uv_handle_t*)req, NULL);
+    */
 }
 
 static void _allocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -90,6 +105,11 @@ void _onSend(uv_udp_send_t* req, int status) {
         CCLOGERROR("uv_udp_send_cb error: %s\n", uv_strerror(status));
     }
 }
+
+void _onUvTimerClosed(uv_handle_t* timer) {
+    free(timer);
+}
+
 class PunchServerWork {
 public:
     BYTEC bytes[128]; // Wasting some RAM here thus no need for explicit recursive destruction
@@ -157,17 +177,24 @@ void _punchPeerOnUvThreadDelayed(uv_timer_t* timer, int status) {
         //CCLOG("UDP about to punch peer joinIndex:%d", i);
         char peerIp[17] = { 0 };
         uv_ip4_name((struct sockaddr_in*)&(peerAddrList[i].sockAddrIn), peerIp, sizeof peerIp);
-        uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
-        uv_buf_t sendBuffer = uv_buf_init("foobar", 6); // hardcoded for now
-        uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&peerAddrList[i], _onSend);
-        CCLOG("UDP punched peer %s:%d by 6 bytes", peerIp, ntohs(peerAddrList[i].sockAddrIn.sin_port));
+        int peerPortSt = ntohs(peerAddrList[i].sockAddrIn.sin_port) - 3;
+        int peerPortEd = ntohs(peerAddrList[i].sockAddrIn.sin_port) + 3;
+        for (int peerPort = peerPortSt; peerPort < peerPortEd; peerPort++) {
+            if (0 > peerPort) continue;
+            uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
+            uv_buf_t sendBuffer = uv_buf_init("foobar", 6); // hardcoded for now
+            struct sockaddr_in testPeerAddr;
+            uv_ip4_addr(peerIp, peerPort, &testPeerAddr);
+            uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&testPeerAddr, _onSend);
+            CCLOG("UDP punched peer %s:%d by 6 bytes", peerIp, peerPort);
+        }
     }
     uv_timer_stop(timer);
-    free(timer);
+    uv_close((uv_handle_t*)timer, _onUvTimerClosed);
     //CCLOG("_punchPeerOnUvThreadDelayed stopped...");
     work->refDecAndDelIfZero();
 }
-int const punchPeerCnt = 10;
+int const punchPeerCnt = 3;
 void _startPunchPeerTimerOnUvThread(uv_work_t* wrapper) {
     PunchPeerWork* work = (PunchPeerWork*)wrapper->data;
     int roomCapacity = work->roomCapacity;
@@ -204,6 +231,7 @@ public:
         this->selfJoinIndex = newSelfJoinIndex;
     }
 };
+int const broadcastUpsyncCnt = 1;
 void _broadcastInputFrameUpsyncOnUvThread(uv_work_t* wrapper) {
     BroadcastInputFrameUpsyncWork* work = (BroadcastInputFrameUpsyncWork*)wrapper->data;
     int roomCapacity = work->roomCapacity;
@@ -219,7 +247,7 @@ void _broadcastInputFrameUpsyncOnUvThread(uv_work_t* wrapper) {
         char peerIp[17] = { 0 };
         uv_ip4_name((struct sockaddr_in*)&(peerAddrList[i].sockAddrIn), peerIp, sizeof peerIp);
         // Might want to send several times for better arrival rate
-        for (int j = 0; j < 1; j++) {
+        for (int j = 0; j < broadcastUpsyncCnt; j++) {
             uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
             uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
             uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&peerAddrList[i], _onSend);
@@ -249,16 +277,22 @@ void startRecvLoop(void* arg) {
 }
 
 bool DelayNoMore::UdpSession::openUdpSession(int port) {
-
+    loop = uv_loop_new();
     udpSocket = (uv_udp_t*)malloc(sizeof(uv_udp_t));
+
+    int sockInitRes = uv_udp_init(loop, udpSocket); // "uv_udp_init" must precede that of "uv_udp_bind" for successful binding!
+
     struct sockaddr_in recv_addr;
     uv_ip4_addr("0.0.0.0", port, &recv_addr);
-    uv_udp_bind(udpSocket, (struct sockaddr const*)&recv_addr, UV_UDP_REUSEADDR);
+    int bindRes = uv_udp_bind(udpSocket, (struct sockaddr const*)&recv_addr, UV_UDP_REUSEADDR);
+    if (0 != bindRes) {
+        CCLOGERROR("Failed to bind port=%d; bind result=%d, reason=%s", port, bindRes, uv_strerror(bindRes));
+        exit(-1);
+    }
 
-    CCLOG("About to open UDP session at port=%d...", port);
-    loop = uv_loop_new();
-    uv_udp_init(loop, udpSocket);
     uv_async_init(loop, &uvLoopStopSig, _onUvStopSig);
+
+    CCLOG("About to open UDP session at port=%d; bind result=%d, sock init result=%d...", port, bindRes, sockInitRes);
 
     uv_udp_recv_start(udpSocket, _allocBuffer, _onRead);
 

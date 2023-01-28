@@ -36,11 +36,7 @@ window.PlayerBattleState = {
 
 window.onUdpMessage = (args) => {
   const self = window.mapIns;
-  const len = args.length;
-  const ui8Arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    ui8Arr[i] = args.charCodeAt(i);
-  }
+  const ui8Arr = args;
   cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
 
   cc.log(`#2 Js called back by CPP for upsync: trying to decode by WsReq...`);
@@ -48,6 +44,7 @@ window.onUdpMessage = (args) => {
   if (req) {
     cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
     if (req.act && window.UPSYNC_MSG_ACT_PLAYER_CMD == req.act) {
+      let effCnt = 0;
       const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
       const peerJoinIndex = req.joinIndex;
       const batch = req.inputFrameUpsyncBatch;
@@ -62,8 +59,16 @@ window.onUdpMessage = (args) => {
         }
         self.getOrPrefabInputFrameUpsync(inputFrameUpsync.inputFrameId); // Make sure that inputFrame exists locally
         const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameUpsync.inputFrameId);
-        existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
+        if (0 < (existingInputFrame.confirmedList & (1 << (peerJoinIndex - 1)))) {
+          continue;
+        }
+        effCnt += 1;
+        existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded;
+        existingInputFrame.confirmedList |= (1 << (peerJoinIndex - 1));
         self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameUpsync.inputFrameId);
+      }
+      if (0 < effCnt) {
+        self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
       }
     }
   }
@@ -922,9 +927,13 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
         continue;
       }
-      effCnt += 1;
       self.getOrPrefabInputFrameUpsync(inputFrameDownsyncId); // Make sure that inputFrame exists locally
       const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
+      if (0 < (existingInputFrame.confirmedList & (1 << (peerJoinIndex - 1)))) {
+        continue;
+      }
+      effCnt += 1;
+      existingInputFrame.confirmedList |= (1 << (peerJoinIndex - 1));
       existingInputFrame.InputList[peerJoinIndex - 1] = inputFrameDownsync.inputList[peerJoinIndex - 1]; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
       self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameDownsyncId);
     }
