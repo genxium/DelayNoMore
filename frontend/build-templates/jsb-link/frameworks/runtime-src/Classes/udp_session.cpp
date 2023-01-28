@@ -14,30 +14,37 @@ struct PeerAddr peerAddrList[maxPeerCnt];
 char SRV_IP[256];
 int SRV_PORT = 0;
 
-void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
+void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr const* addr, unsigned flags) {
     if (nread < 0) {
         CCLOGERROR("Read error %s", uv_err_name(nread));
         uv_close((uv_handle_t*)req, NULL);
         free(buf->base);
         return;
     }
-
-    struct sockaddr_in* sockAddr = (struct sockaddr_in*)addr;
-    char ip[17] = { 0 };
-    uv_ip4_name(sockAddr, ip, sizeof ip);
-    int port = ntohs(sockAddr->sin_port);
-
-    int const gameThreadMsgSize = 256;
-    char* const gameThreadMsg = (char* const)malloc(gameThreadMsgSize);
-    memset(gameThreadMsg, 0, gameThreadMsgSize);
-    memcpy(gameThreadMsg, buf->base, nread);
-
-    free(buf->base);
-    //uv_udp_recv_stop(req);
-
+    if (NULL != addr) {
+        // The null check for "addr" is necessary, on Android there'd be such mysterious call to "_onRead"!
+        switch (addr->sa_family) {
+        case AF_INET: {
+            struct sockaddr_in const* sockAddr = (struct sockaddr_in const*)addr;
+            char ip[INET_ADDRSTRLEN];
+            memset(ip, 0, sizeof ip);
+            //uv_ip4_name(sockAddr, ip, 16);
+            uv_inet_ntop(sockAddr->sin_family, &(sockAddr->sin_addr), ip, INET_ADDRSTRLEN);
+            int port = ntohs(sockAddr->sin_port);
+            CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    
     if (6 != nread) {
         // Non-holepunching
-        CCLOG("UDP received %d bytes from %s:%d, converted to %d bytes for the JS callback", nread, ip, port, strlen(gameThreadMsg));
+        int const gameThreadMsgSize = 256;
+        char* const gameThreadMsg = (char* const)malloc(gameThreadMsgSize);
+        memset(gameThreadMsg, 0, gameThreadMsgSize);
+        memcpy(gameThreadMsg, buf->base, nread);
         cocos2d::Application::getInstance()->getScheduler()->performFunctionInCocosThread([=]() {
             // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
             se::Value onUdpMessageCb;
@@ -55,8 +62,11 @@ void _onRead(uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct soc
             free(gameThreadMsg);
         });
     } else {
-        CCLOG("UDP received hole punching from %s:%d", ip, port);
+        CCLOG("UDP received hole punching");
     }
+    free(buf->base);
+    //uv_udp_recv_stop(req);
+    uv_close((uv_handle_t*)req, NULL);
 }
 
 static void _allocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {

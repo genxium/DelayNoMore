@@ -43,30 +43,27 @@ window.onUdpMessage = (args) => {
   }
   cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
 
-  if (6 == len) {
-    cc.log(`#2 Js called back by CPP for peer hole punching`);
-  } else {
-    const req = window.pb.protos.WsReq.decode(ui8Arr);
-    if (req) {
-      cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
-      if (req.act && window.UPSYNC_MSG_ACT_PLAYER_CMD == req.act) {
-        const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
-        const peerJoinIndex = req.joinIndex;
-        const batch = req.inputFrameUpsyncBatch;
-        for (let k in batch) {
-          const inputFrameUpsync = batch[k];
-          if (inputFrameUpsync.inputFrameId < renderedInputFrameIdUpper) {
-            // Avoid obfuscating already rendered history
-            continue;
-          }
-          if (inputFrameUpsync.inputFrameId <= self.lastAllConfirmedInputFrameId) {
-            continue;
-          }
-          self.getOrPrefabInputFrameUpsync(inputFrameUpsync.inputFrameId); // Make sure that inputFrame exists locally
-          const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameUpsync.inputFrameId);
-          existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
-          self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameUpsync.inputFrameId);
+  cc.log(`#2 Js called back by CPP for upsync: trying to decode by WsReq...`);
+  const req = window.pb.protos.WsReq.decode(ui8Arr);
+  if (req) {
+    cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
+    if (req.act && window.UPSYNC_MSG_ACT_PLAYER_CMD == req.act) {
+      const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
+      const peerJoinIndex = req.joinIndex;
+      const batch = req.inputFrameUpsyncBatch;
+      for (let k in batch) {
+        const inputFrameUpsync = batch[k];
+        if (inputFrameUpsync.inputFrameId < renderedInputFrameIdUpper) {
+          // Avoid obfuscating already rendered history
+          continue;
         }
+        if (inputFrameUpsync.inputFrameId <= self.lastAllConfirmedInputFrameId) {
+          continue;
+        }
+        self.getOrPrefabInputFrameUpsync(inputFrameUpsync.inputFrameId); // Make sure that inputFrame exists locally
+        const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameUpsync.inputFrameId);
+        existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
+        self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameUpsync.inputFrameId);
       }
     }
   }
