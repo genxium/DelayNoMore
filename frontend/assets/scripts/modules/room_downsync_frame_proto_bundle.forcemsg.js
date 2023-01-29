@@ -3169,6 +3169,7 @@ $root.protos = (function() {
          * @property {number|null} [ackingInputFrameId] WsReq ackingInputFrameId
          * @property {Array.<protos.InputFrameUpsync>|null} [inputFrameUpsyncBatch] WsReq inputFrameUpsyncBatch
          * @property {protos.HeartbeatUpsync|null} [hb] WsReq hb
+         * @property {number|null} [authKey] WsReq authKey
          */
 
         /**
@@ -3252,6 +3253,14 @@ $root.protos = (function() {
         WsReq.prototype.hb = null;
 
         /**
+         * WsReq authKey.
+         * @member {number} authKey
+         * @memberof protos.WsReq
+         * @instance
+         */
+        WsReq.prototype.authKey = 0;
+
+        /**
          * Creates a new WsReq instance using the specified properties.
          * @function create
          * @memberof protos.WsReq
@@ -3292,6 +3301,8 @@ $root.protos = (function() {
                     $root.protos.InputFrameUpsync.encode(message.inputFrameUpsyncBatch[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
             if (message.hb != null && Object.hasOwnProperty.call(message, "hb"))
                 $root.protos.HeartbeatUpsync.encode(message.hb, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+            if (message.authKey != null && Object.hasOwnProperty.call(message, "authKey"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int32(message.authKey);
             return writer;
         };
 
@@ -3358,6 +3369,10 @@ $root.protos = (function() {
                     }
                 case 8: {
                         message.hb = $root.protos.HeartbeatUpsync.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 9: {
+                        message.authKey = reader.int32();
                         break;
                     }
                 default:
@@ -3427,6 +3442,9 @@ $root.protos = (function() {
                 if (error)
                     return "hb." + error;
             }
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                if (!$util.isInteger(message.authKey))
+                    return "authKey: integer expected";
             return null;
         };
 
@@ -3469,6 +3487,8 @@ $root.protos = (function() {
                     throw TypeError(".protos.WsReq.hb: object expected");
                 message.hb = $root.protos.HeartbeatUpsync.fromObject(object.hb);
             }
+            if (object.authKey != null)
+                message.authKey = object.authKey | 0;
             return message;
         };
 
@@ -3495,6 +3515,7 @@ $root.protos = (function() {
                 object.ackingFrameId = 0;
                 object.ackingInputFrameId = 0;
                 object.hb = null;
+                object.authKey = 0;
             }
             if (message.msgId != null && message.hasOwnProperty("msgId"))
                 object.msgId = message.msgId;
@@ -3515,6 +3536,8 @@ $root.protos = (function() {
             }
             if (message.hb != null && message.hasOwnProperty("hb"))
                 object.hb = $root.protos.HeartbeatUpsync.toObject(message.hb, options);
+            if (message.authKey != null && message.hasOwnProperty("authKey"))
+                object.authKey = message.authKey;
             return object;
         };
 

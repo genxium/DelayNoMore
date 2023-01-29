@@ -184,6 +184,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 
 	pPlayerFromDbInit.UdpAddr = nil
 	pPlayerFromDbInit.BattleUdpTunnelAddr = nil
+	pPlayerFromDbInit.BattleUdpTunnelAuthKey = rand.Int31()
 	pPlayerFromDbInit.AckingFrameId = -1
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -225,6 +226,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance := pR.Players[playerId]
 	pEffectiveInRoomPlayerInstance.UdpAddr = nil
 	pEffectiveInRoomPlayerInstance.BattleUdpTunnelAddr = nil
+	pEffectiveInRoomPlayerInstance.BattleUdpTunnelAuthKey = rand.Int31()
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
@@ -1717,13 +1719,37 @@ func (pR *Room) startBattleUdpTunnel() {
 	}()
 	Logger.Info(fmt.Sprintf("`BattleUdpTunnel` started for roomId=%d at %s", pR.Id, conn.LocalAddr().String()))
 	for {
-		message := make([]byte, 2046)
+		message := make([]byte, 128)
 		rlen, remote, err := conn.ReadFromUDP(message[:]) // Would be unblocked when "conn.Close()" is called from another thread/goroutine, reference https://pkg.go.dev/net@go1.18.6#PacketConn
 		if nil != err {
 			// Should proceed to close the "conn" upon error here, if "conn" is already closed it'd just throw another error to be catched by "spot#2"
 			conn.Close()
 			panic(err)
 		}
-		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received %d bytes from %s\n", pR.Id, rlen, remote))
+		pReq := new(pb.WsReq)
+		if unmarshalErr := proto.Unmarshal(message[0:rlen], pReq); nil != unmarshalErr {
+			Logger.Warn("`BattleUdpTunnel` for roomId=%d failed to unmarshal", zap.Error(unmarshalErr))
+			continue
+		}
+		playerId := pReq.PlayerId
+		if player, exists1 := pR.Players[playerId]; exists1 {
+			authKey := pReq.AuthKey
+			if authKey != player.BattleUdpTunnelAuthKey {
+				Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received %d bytes for playerId=%d from %s, but (incomingAuthKey:%d != playerBattleUdpTunnelAuthKey:%d)\n", pR.Id, rlen, playerId, remote, authKey, player.BattleUdpTunnelAuthKey))
+				continue
+			}
+			if _, existent := pR.PlayerDownsyncSessionDict[playerId]; existent {
+				player.UdpAddr = &pb.PeerUdpAddr{
+					Ip:      remote.IP.String(),
+					Port:    int32(remote.Port),
+					AuthKey: pReq.AuthKey,
+				}
+				Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d updated battleUdpAddr for playerId=%d to be %s\n", pR.Id, playerId, remote))
+			} else {
+				Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received validated %d bytes for playerId=%d from %s, but primary downsync session for it doesn't exist\n", pR.Id, rlen, playerId, remote))
+			}
+		} else {
+			Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received invalid %d bytes for playerId=%d from %s, but it doesn't belong to this room!\n", pR.Id, rlen, playerId, remote))
+		}
 	}
 }

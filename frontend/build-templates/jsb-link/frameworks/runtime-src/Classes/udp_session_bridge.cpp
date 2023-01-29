@@ -22,7 +22,9 @@ bool punchToServer(se::State& s) {
     const auto& args = s.args();
     size_t argc = args.size();
     CC_UNUSED bool ok = true;
-    if (3 == argc && args[0].isString() && args[1].isNumber() && args[2].isObject() && args[2].toObject()->isTypedArray()) {
+    if (5 == argc && args[0].isString() && args[1].isNumber() && args[2].isObject() && args[2].toObject()->isTypedArray()
+        && args[3].isNumber() && args[4].isObject() && args[4].toObject()->isTypedArray()
+        ) {
         SE_PRECONDITION2(ok, false, "punchToServer: Error processing arguments");
         CHARC* srvIp = args[0].toString().c_str();
         int srvPort = args[1].toInt32();
@@ -35,10 +37,22 @@ bool punchToServer(se::State& s) {
         for (size_t i = 0; i < sz; i++) {
             bytes[i] = (char)(*(ptr + i));
         }
-        CCLOG("Should punch %s:%d by %d bytes.", srvIp, srvPort, sz);
-        return DelayNoMore::UdpSession::punchToServer(srvIp, srvPort, bytes, sz);
+
+        int udpTunnelSrvPort = args[3].toInt32();
+        BYTEC udpTunnelBytes[1024];
+        memset(udpTunnelBytes, 0, sizeof udpTunnelBytes);
+        se::Object* udpTunnelObj = args[4].toObject();
+        size_t udpTunnelSz = 0;
+        uint8_t* udpTunnelPtr = NULL;
+        obj->getTypedArrayData(&udpTunnelPtr, &udpTunnelSz);
+        for (size_t i = 0; i < udpTunnelSz; i++) {
+            udpTunnelBytes[i] = (char)(*(udpTunnelPtr + i));
+        }
+
+        CCLOG("Should punch %s:%d by %d bytes; should punch udp tunnel %s:%d by %d bytes.", srvIp, srvPort, sz, srvIp, udpTunnelSrvPort, udpTunnelSz);
+        return DelayNoMore::UdpSession::punchToServer(srvIp, srvPort, bytes, sz, udpTunnelSrvPort, udpTunnelBytes, udpTunnelSz);
     }
-    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 3);
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 5);
     return false;
 }
 SE_BIND_FUNC(punchToServer)

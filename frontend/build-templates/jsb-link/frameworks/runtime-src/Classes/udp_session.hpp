@@ -6,6 +6,7 @@
 
 typedef char BYTEC;
 typedef char const CHARC;
+int const maxUdpPayloadBytes = 128;
 
 int const maxPeerCnt = 10;
 struct PeerAddr {
@@ -20,7 +21,7 @@ namespace DelayNoMore {
         static bool closeUdpSession();
         static bool upsertPeerUdpAddr(struct PeerAddr* newPeerAddrList, int roomCapacity, int selfJoinIndex);
         //static bool clearPeerUDPAddrList();
-        static bool punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes, size_t bytesLen);
+        static bool punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes, size_t bytesLen, int const udpTunnelSrvPort, BYTEC* const udpTunnelBytes, size_t udpTunnelBytesBytesLen);
         static bool broadcastInputFrameUpsync(BYTEC* const bytes, size_t bytesLen, int roomCapacity, int selfJoinIndex);
     };
 }

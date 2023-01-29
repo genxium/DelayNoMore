@@ -264,7 +264,7 @@ func Serve(c *gin.Context) {
 			BattleUdpTunnel: &pb.PeerUdpAddr{
 				Ip:      pRoom.BattleUdpTunnelAddr.Ip,
 				Port:    pRoom.BattleUdpTunnelAddr.Port,
-				AuthKey: 0, // FIXME: Assign the backend generated authKey for this specific player
+				AuthKey: pThePlayer.BattleUdpTunnelAuthKey,
 			},
 
 			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
@@ -495,7 +495,7 @@ func HandleSecondaryWsSessionForPlayer(c *gin.Context) {
 func HandleUdpHolePunchingForPlayer(message []byte, peerAddr *net.UDPAddr) {
 	pReq := new(pb.HolePunchUpsync)
 	if unmarshalErr := proto.Unmarshal(message, pReq); nil != unmarshalErr {
-		Logger.Error("Udp session failed to unmarshal", zap.Error(unmarshalErr))
+		Logger.Error("`GrandUdpServer` failed to unmarshal", zap.Error(unmarshalErr))
 		return
 	}
 
@@ -505,7 +505,7 @@ func HandleUdpHolePunchingForPlayer(message []byte, peerAddr *net.UDPAddr) {
 	pRoom, existent := (*models.RoomMapManagerIns)[int32(boundRoomId)]
 	// Deliberately querying playerId after querying room, because the former is against persistent storage and could be slow!
 	if !existent {
-		Logger.Warn("Udp session failed to get:\n", zap.Any("intAuthToken", token), zap.Any("forBoundRoomId", boundRoomId))
+		Logger.Warn("`GrandUdpServer` failed to get:\n", zap.Any("intAuthToken", token), zap.Any("forBoundRoomId", boundRoomId))
 		return
 	}
 
@@ -513,10 +513,10 @@ func HandleUdpHolePunchingForPlayer(message []byte, peerAddr *net.UDPAddr) {
 	playerId, err := models.GetPlayerIdByToken(token)
 	if err != nil || playerId == 0 {
 		// TODO: Abort with specific message.
-		Logger.Warn("Udp session playerLogin record not found for:", zap.Any("intAuthToken", token))
+		Logger.Warn("`GrandUdpServer` playerLogin record not found for:", zap.Any("intAuthToken", token))
 		return
 	}
 
-	Logger.Info("Udp session playerLogin record has been found:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId), zap.Any("peerAddr", peerAddr))
+	Logger.Info("`GrandUdpServer` playerLogin record has been found:", zap.Any("playerId", playerId), zap.Any("intAuthToken", token), zap.Any("boundRoomId", boundRoomId), zap.Any("peerAddr", peerAddr))
 	pRoom.UpdatePeerUdpAddrList(int32(playerId), peerAddr, pReq)
 }

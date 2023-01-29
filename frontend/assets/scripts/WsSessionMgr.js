@@ -44,7 +44,7 @@ window.getBoundRoomIdFromPersistentStorage = function() {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     return null;
   }
-  const boundRoomIdStr = cc.sys.localStorage.getItem("boundRoomId"); 
+  const boundRoomIdStr = cc.sys.localStorage.getItem("boundRoomId");
   return (null == boundRoomIdStr ? null : parseInt(boundRoomIdStr));
 };
 
@@ -54,7 +54,7 @@ window.getBoundRoomCapacityFromPersistentStorage = function() {
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     return null;
   }
-  const boundRoomCapacityStr = cc.sys.localStorage.getItem("boundRoomCapacity"); 
+  const boundRoomCapacityStr = cc.sys.localStorage.getItem("boundRoomCapacity");
   return (null == boundRoomCapacityStr ? null : parseInt(boundRoomCapacityStr));
 };
 
@@ -96,7 +96,7 @@ window.handleHbRequirements = function(resp) {
     console.log(`Handle hb requirements #5, web`);
     window.initSecondarySession(null, window.boundRoomId);
   } else {
-    console.log(`Handle hb requirements #5, native`);
+    console.log(`Handle hb requirements #5, native, bciFrame.battleUdpTunnel=${resp.bciFrame.battleUdpTunnel}, selfPlayerInfo=${JSON.stringify(window.mapIns.selfPlayerInfo)}`);
     const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + window.mapIns.selfPlayerInfo.JoinIndex);
     const intAuthToken = window.mapIns.selfPlayerInfo.intAuthToken;
     const authKey = Math.floor(Math.random() * 65535);
@@ -106,7 +106,12 @@ window.handleHbRequirements = function(resp) {
       intAuthToken: intAuthToken,
       authKey: authKey,
     }).finish();
-    const res2 = DelayNoMore.UdpSession.punchToServer(backendAddress.HOST, 3000, holePunchData);
+    const udpTunnelHolePunchData = window.pb.protos.WsReq.encode({
+      playerId: window.mapIns.selfPlayerInfo.playerId,
+      joinIndex: window.mapIns.selfPlayerInfo.JoinIndex,
+      authKey: resp.bciFrame.battleUdpTunnel.authKey,
+    }).finish();
+    const res2 = DelayNoMore.UdpSession.punchToServer(backendAddress.HOST, 3000, holePunchData, resp.bciFrame.battleUdpTunnel.port, udpTunnelHolePunchData);
   }
 };
 

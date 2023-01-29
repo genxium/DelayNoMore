@@ -51,8 +51,9 @@ type Player struct {
 	AckingFrameId            int32
 	AckingInputFrameId       int32
 
-	UdpAddr             *PeerUdpAddr
-	BattleUdpTunnelAddr *PeerUdpAddr // This addr is used by backend only, not visible to frontend
+	UdpAddr                *PeerUdpAddr
+	BattleUdpTunnelAddr    *PeerUdpAddr // This addr is used by backend only, not visible to frontend
+	BattleUdpTunnelAuthKey int32
 }
 
 func ExistPlayerByName(name string) (bool, error) {

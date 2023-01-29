@@ -75,6 +75,7 @@ message WsReq {
   int32 ackingInputFrameId = 6;
   repeated InputFrameUpsync inputFrameUpsyncBatch = 7;
   HeartbeatUpsync hb = 8;
+  int32 authKey = 9;
 }
 
 message InputsBufferSnapshot {
