@@ -73,9 +73,9 @@ message WsReq {
   int32 joinIndex = 4;
   int32 ackingFrameId = 5;
   int32 ackingInputFrameId = 6;
-  repeated InputFrameUpsync inputFrameUpsyncBatch = 7;
-  HeartbeatUpsync hb = 8;
-  int32 authKey = 9;
+  int32 authKey = 7;
+  repeated InputFrameUpsync inputFrameUpsyncBatch = 8;
+  HeartbeatUpsync hb = 9;
 }
 
 message InputsBufferSnapshot {

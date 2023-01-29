@@ -1732,6 +1732,7 @@ func (pR *Room) startBattleUdpTunnel() {
 			continue
 		}
 		playerId := pReq.PlayerId
+        Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received decoded WsReq:", pR.Id), zap.Any("pReq", pReq))
 		if player, exists1 := pR.Players[playerId]; exists1 {
 			authKey := pReq.AuthKey
 			if authKey != player.BattleUdpTunnelAuthKey {

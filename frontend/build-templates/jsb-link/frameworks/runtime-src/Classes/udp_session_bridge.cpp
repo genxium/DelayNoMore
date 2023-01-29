@@ -28,7 +28,7 @@ bool punchToServer(se::State& s) {
         SE_PRECONDITION2(ok, false, "punchToServer: Error processing arguments");
         CHARC* srvIp = args[0].toString().c_str();
         int srvPort = args[1].toInt32();
-        BYTEC bytes[1024];
+        BYTEC bytes[maxUdpPayloadBytes];
         memset(bytes, 0, sizeof bytes);
         se::Object* obj = args[2].toObject();
         size_t sz = 0;
@@ -39,12 +39,12 @@ bool punchToServer(se::State& s) {
         }
 
         int udpTunnelSrvPort = args[3].toInt32();
-        BYTEC udpTunnelBytes[1024];
+        BYTEC udpTunnelBytes[maxUdpPayloadBytes];
         memset(udpTunnelBytes, 0, sizeof udpTunnelBytes);
         se::Object* udpTunnelObj = args[4].toObject();
         size_t udpTunnelSz = 0;
         uint8_t* udpTunnelPtr = NULL;
-        obj->getTypedArrayData(&udpTunnelPtr, &udpTunnelSz);
+        udpTunnelObj->getTypedArrayData(&udpTunnelPtr, &udpTunnelSz);
         for (size_t i = 0; i < udpTunnelSz; i++) {
             udpTunnelBytes[i] = (char)(*(udpTunnelPtr + i));
         }

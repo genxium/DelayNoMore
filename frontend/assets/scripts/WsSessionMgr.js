@@ -107,8 +107,9 @@ window.handleHbRequirements = function(resp) {
       authKey: authKey,
     }).finish();
     const udpTunnelHolePunchData = window.pb.protos.WsReq.encode({
-      playerId: window.mapIns.selfPlayerInfo.playerId,
-      joinIndex: window.mapIns.selfPlayerInfo.JoinIndex,
+      msgId: Date.now(),
+      playerId: window.mapIns.selfPlayerInfo.Id,
+      act: window.UPSYNC_MSG_ACT_PLAYER_CMD,
       authKey: resp.bciFrame.battleUdpTunnel.authKey,
     }).finish();
     const res2 = DelayNoMore.UdpSession.punchToServer(backendAddress.HOST, 3000, holePunchData, resp.bciFrame.battleUdpTunnel.port, udpTunnelHolePunchData);

@@ -161,7 +161,7 @@ cc.Class({
           intAuthToken: "foobar",
           authKey: Math.floor(Math.random() * 65535),
         }).finish()
-        const res2 = DelayNoMore.UdpSession.punchToServer("127.0.0.1", 3000, holePunchData);
+        //const res2 = DelayNoMore.UdpSession.punchToServer("127.0.0.1", 3000, holePunchData, 19999, holePunchData);
         const res3 = DelayNoMore.UdpSession.upsertPeerUdpAddr([window.pb.protos.PeerUdpAddr.create({
           ip: "192.168.31.194",
           port: 6789,
