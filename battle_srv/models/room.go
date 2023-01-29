@@ -158,6 +158,9 @@ type Room struct {
 
 	rdfIdToActuallyUsedInput           map[int32]*pb.InputFrameDownsync
 	LastIndividuallyConfirmedInputList []uint64
+
+	BattleUdpTunnelLock sync.Mutex // Guards "startBattleUdpTunnel"
+	BattleUdpTunnel     *net.UDPConn
 }
 
 func (pR *Room) updateScore() {
@@ -179,6 +182,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	defer pR.onPlayerAdded(playerId)
 
 	pPlayerFromDbInit.UdpAddr = nil
+	pPlayerFromDbInit.BattleUdpTunnelAddr = nil
 	pPlayerFromDbInit.AckingFrameId = -1
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -219,6 +223,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	defer pR.onPlayerReAdded(playerId)
 	pEffectiveInRoomPlayerInstance := pR.Players[playerId]
 	pEffectiveInRoomPlayerInstance.UdpAddr = nil
+	pEffectiveInRoomPlayerInstance.BattleUdpTunnelAddr = nil
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
@@ -666,6 +671,10 @@ func (pR *Room) StopBattleForSettlement() {
 	if RoomBattleStateIns.IN_BATTLE != pR.State {
 		return
 	}
+	pR.BattleUdpTunnelLock.Lock()
+	pR.BattleUdpTunnel.Close()
+	pR.BattleUdpTunnelLock.Unlock()
+
 	pR.State = RoomBattleStateIns.STOPPING_BATTLE_FOR_SETTLEMENT
 	Logger.Info("Stopping the `battleMainLoop` for:", zap.Any("roomId", pR.Id))
 	pR.RenderFrameId++
@@ -809,7 +818,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(serverFps) / dilutedServerFps)
-	pR.BattleDurationFrames = int32(60 * serverFps)
+	pR.BattleDurationFrames = int32(5 * serverFps)
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 9                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame, roughly as the "turn-around frames to recover" is empirically OK
@@ -818,12 +827,16 @@ func (pR *Room) OnDismissed() {
 	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
 
 	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
+	pR.BattleUdpTunnelLock.Lock()
+	pR.BattleUdpTunnel = nil
+	pR.BattleUdpTunnelLock.Unlock()
 
 	pR.ChooseStage()
 	pR.EffectivePlayerCount = 0
 
 	// [WARNING] It's deliberately ordered such that "pR.State = RoomBattleStateIns.IDLE" is put AFTER all the refreshing operations above.
 	pR.State = RoomBattleStateIns.IDLE
+	go pR.startBattleUdpTunnel() // Would reassign "pR.BattleUdpTunnel"
 	pR.updateScore()
 
 	Logger.Info("The room is completely dismissed(all playerDownsyncChan closed):", zap.Any("roomId", pR.Id))
@@ -1356,13 +1369,13 @@ func (pR *Room) printBarrier(barrierCollider *resolv.Object) {
 }
 
 func (pR *Room) doBattleMainLoopPerTickBackendDynamicsWithProperLocking(prevRenderFrameId int32, pDynamicsDuration *int64) {
-	Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock to about lock: roomId=%v", pR.Id))
+	//Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock to about lock: roomId=%v", pR.Id))
 	pR.InputsBufferLock.Lock()
-	Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock locked: roomId=%v", pR.Id))
+	//Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock locked: roomId=%v", pR.Id))
 
 	defer func() {
 		pR.InputsBufferLock.Unlock()
-		Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock unlocked: roomId=%v", pR.Id))
+		//Logger.Debug(fmt.Sprintf("doBattleMainLoopPerTickBackendDynamicsWithProperLocking-InputsBufferLock unlocked: roomId=%v", pR.Id))
 	}()
 
 	if ok, thatRenderFrameId := battle.ShouldPrefabInputFrameDownsync(prevRenderFrameId, pR.RenderFrameId); ok {
@@ -1661,5 +1674,45 @@ func (pR *Room) UpdatePeerUdpAddrList(playerId int32, peerAddr *net.UDPAddr, pRe
 				}, nil, DOWNSYNC_MSG_ACT_PEER_UDP_ADDR, otherPlayerId, false, peerJoinIndex)
 			}
 		}
+	}
+}
+
+func (pR *Room) startBattleUdpTunnel() {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Error("`BattleUdpTunnel` recovery spot#1, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
+		}
+		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` stopped for (roomId=%d)@renderFrameId=%v", pR.Id, pR.RenderFrameId))
+	}()
+
+	pR.BattleUdpTunnelLock.Lock()
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{
+		Port: 0,
+		IP:   net.ParseIP(Conf.Sio.UdpHost),
+	})
+	if nil != err {
+		// No need to close the "conn" upon error here
+		pR.BattleUdpTunnelLock.Unlock()
+		panic(err)
+	}
+	pR.BattleUdpTunnel = conn
+	pR.BattleUdpTunnelLock.Unlock()
+
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Warn("`BattleUdpTunnel` recovery spot#2, recovered from: ", zap.Any("roomId", pR.Id), zap.Any("panic", r))
+		}
+		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` closed for (roomId=%d)@renderFrameId=%v", pR.Id, pR.RenderFrameId))
+	}()
+	Logger.Info(fmt.Sprintf("`BattleUdpTunnel` started for roomId=%d at %s", pR.Id, conn.LocalAddr().String()))
+	for {
+		message := make([]byte, 2046)
+		rlen, remote, err := conn.ReadFromUDP(message[:]) // Would be unblocked when "conn.Close()" is called from another thread/goroutine, reference https://pkg.go.dev/net@go1.18.6#PacketConn
+		if nil != err {
+			// Should proceed to close the "conn" upon error here, if "conn" is already closed it'd just throw another error to be catched by "spot#2"
+			conn.Close()
+			panic(err)
+		}
+		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received %d bytes from %s\n", pR.Id, rlen, remote))
 	}
 }

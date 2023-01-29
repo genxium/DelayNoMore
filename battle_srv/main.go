@@ -56,7 +56,7 @@ func main() {
 		}
 		Logger.Info("Listening and serving HTTP on", zap.Any("Conf.Sio.HostAndPort", Conf.Sio.HostAndPort))
 	}()
-	go startUdpServer()
+	go startGrandUdpServer()
 	var gracefulStop = make(chan os.Signal)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
@@ -118,7 +118,7 @@ func startScheduler() {
 	c.Start()
 }
 
-func startUdpServer() {
+func startGrandUdpServer() {
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{
 		Port: Conf.Sio.UdpPort,
 		IP:   net.ParseIP(Conf.Sio.UdpHost),
@@ -127,8 +127,15 @@ func startUdpServer() {
 		panic(err)
 	}
 
-	defer conn.Close()
-	Logger.Info(fmt.Sprintf("Udp server started at %s", conn.LocalAddr().String()))
+	defer func() {
+		conn.Close()
+		if r := recover(); r != nil {
+			Logger.Error("`GrandUdpServer`, recovery spot#1, recovered from: ", zap.Any("panic", r))
+		}
+		Logger.Info(fmt.Sprintf("The `GrandUdpServer` is stopped"))
+	}()
+
+	Logger.Info(fmt.Sprintf("`GrandUdpServer` started at %s", conn.LocalAddr().String()))
 
 	for {
 		message := make([]byte, 2046)
@@ -136,7 +143,7 @@ func startUdpServer() {
 		if err != nil {
 			panic(err)
 		}
-		Logger.Info(fmt.Sprintf("received: %d bytes from %s\n", rlen, remote))
+		Logger.Info(fmt.Sprintf("`GrandUdpServer` received: %d bytes from %s\n", rlen, remote))
 		ws.HandleUdpHolePunchingForPlayer(message[0:rlen], remote)
 	}
 }

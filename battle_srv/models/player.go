@@ -51,7 +51,8 @@ type Player struct {
 	AckingFrameId            int32
 	AckingInputFrameId       int32
 
-	UdpAddr *PeerUdpAddr
+	UdpAddr             *PeerUdpAddr
+	BattleUdpTunnelAddr *PeerUdpAddr
 }
 
 func ExistPlayerByName(name string) (bool, error) {
