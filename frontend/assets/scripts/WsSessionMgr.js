@@ -98,6 +98,7 @@ window.handleHbRequirements = function(resp) {
   } else {
     console.log(`Handle hb requirements #5, native, bciFrame.battleUdpTunnel=${resp.bciFrame.battleUdpTunnel}, selfPlayerInfo=${JSON.stringify(window.mapIns.selfPlayerInfo)}`);
     const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + window.mapIns.selfPlayerInfo.JoinIndex);
+    window.mapIns.selfPlayerInfo.udpTunnelAuthKey = resp.bciFrame.battleUdpTunnel.authKey;
     const intAuthToken = window.mapIns.selfPlayerInfo.intAuthToken;
     const authKey = Math.floor(Math.random() * 65535);
     window.mapIns.selfPlayerInfo.authKey = authKey;

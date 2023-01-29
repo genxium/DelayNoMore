@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"net"
 )
 
 type PlayerBattleState struct {
@@ -52,7 +53,7 @@ type Player struct {
 	AckingInputFrameId       int32
 
 	UdpAddr                *PeerUdpAddr
-	BattleUdpTunnelAddr    *PeerUdpAddr // This addr is used by backend only, not visible to frontend
+	BattleUdpTunnelAddr    *net.UDPAddr // This addr is used by backend only, not visible to frontend
 	BattleUdpTunnelAuthKey int32
 }
 

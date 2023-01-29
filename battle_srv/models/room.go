@@ -159,7 +159,7 @@ type Room struct {
 	rdfIdToActuallyUsedInput           map[int32]*pb.InputFrameDownsync
 	LastIndividuallyConfirmedInputList []uint64
 
-	BattleUdpTunnelLock sync.Mutex // Guards "startBattleUdpTunnel"
+	BattleUdpTunnelLock sync.Mutex
 	BattleUdpTunnelAddr *pb.PeerUdpAddr
 	BattleUdpTunnel     *net.UDPConn
 }
@@ -327,8 +327,8 @@ func (pR *Room) InputsBufferString(allDetails bool) string {
 		// Appending of the array of strings can be very SLOW due to on-demand heap allocation! Use this printing with caution.
 		s := make([]string, 0)
 		s = append(s, fmt.Sprintf("{renderFrameId: %v, stInputFrameId: %v, edInputFrameId: %v, lastAllConfirmedInputFrameIdWithChange: %v, lastAllConfirmedInputFrameId: %v}", pR.RenderFrameId, pR.InputsBuffer.StFrameId, pR.InputsBuffer.EdFrameId, pR.LastAllConfirmedInputFrameIdWithChange, pR.LastAllConfirmedInputFrameId))
-		for playerId, player := range pR.PlayersArr {
-			s = append(s, fmt.Sprintf("{playerId: %v, ackingFrameId: %v, ackingInputFrameId: %v, lastSentInputFrameId: %v}", playerId, player.AckingFrameId, player.AckingInputFrameId, player.LastSentInputFrameId))
+		for _, player := range pR.PlayersArr {
+			s = append(s, fmt.Sprintf("{playerId: %v, ackingFrameId: %v, ackingInputFrameId: %v, lastSentInputFrameId: %v}", player.Id, player.AckingFrameId, player.AckingInputFrameId, player.LastSentInputFrameId))
 		}
 		for i := pR.InputsBuffer.StFrameId; i < pR.InputsBuffer.EdFrameId; i++ {
 			tmp := pR.InputsBuffer.GetByFrameId(i)
@@ -821,7 +821,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(serverFps) / dilutedServerFps)
-	pR.BattleDurationFrames = int32(5 * serverFps)
+	pR.BattleDurationFrames = int32(60 * serverFps)
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 9                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame, roughly as the "turn-around frames to recover" is empirically OK
@@ -1727,12 +1727,13 @@ func (pR *Room) startBattleUdpTunnel() {
 			panic(err)
 		}
 		pReq := new(pb.WsReq)
-		if unmarshalErr := proto.Unmarshal(message[0:rlen], pReq); nil != unmarshalErr {
+		bytes := message[0:rlen]
+		if unmarshalErr := proto.Unmarshal(bytes, pReq); nil != unmarshalErr {
 			Logger.Warn("`BattleUdpTunnel` for roomId=%d failed to unmarshal", zap.Error(unmarshalErr))
 			continue
 		}
 		playerId := pReq.PlayerId
-        Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received decoded WsReq:", pR.Id), zap.Any("pReq", pReq))
+		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received decoded WsReq:", pR.Id), zap.Any("pReq", pReq))
 		if player, exists1 := pR.Players[playerId]; exists1 {
 			authKey := pReq.AuthKey
 			if authKey != player.BattleUdpTunnelAuthKey {
@@ -1740,12 +1741,27 @@ func (pR *Room) startBattleUdpTunnel() {
 				continue
 			}
 			if _, existent := pR.PlayerDownsyncSessionDict[playerId]; existent {
-				player.UdpAddr = &pb.PeerUdpAddr{
-					Ip:      remote.IP.String(),
-					Port:    int32(remote.Port),
-					AuthKey: pReq.AuthKey,
-				}
+				player.BattleUdpTunnelAddr = remote
 				Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d updated battleUdpAddr for playerId=%d to be %s\n", pR.Id, playerId, remote))
+
+				nowBattleState := atomic.LoadInt32(&pR.State)
+				if RoomBattleStateIns.IN_BATTLE == nowBattleState {
+					batch := pReq.InputFrameUpsyncBatch
+					if nil != batch && 0 < len(batch) {
+						peerJoinIndex := pReq.JoinIndex
+						// Broadcast to every other player in the same room/battle
+						for _, otherPlayer := range pR.PlayersArr {
+							if otherPlayer.JoinIndex == peerJoinIndex {
+								continue
+							}
+							_, wrerr := conn.WriteTo(bytes, otherPlayer.BattleUdpTunnelAddr)
+							if nil != wrerr {
+								Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to forward upsync from (playerId:%d, joinIndex:%d, addr:%s) to (otherPlayerId:%d, otherPlayerJoinIndex:%d, otherPlayerAddr:%s)\n", pR.Id, playerId, peerJoinIndex, remote, otherPlayer.Id, otherPlayer.JoinIndex, otherPlayer.BattleUdpTunnelAddr))
+							}
+						}
+					}
+
+				}
 			} else {
 				Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received validated %d bytes for playerId=%d from %s, but primary downsync session for it doesn't exist\n", pR.Id, rlen, playerId, remote))
 			}

@@ -257,6 +257,7 @@ cc.Class({
       joinIndex: self.selfPlayerInfo.JoinIndex,
       ackingInputFrameId: self.lastAllConfirmedInputFrameId,
       inputFrameUpsyncBatch: inputFrameUpsyncBatch,
+      authKey: self.selfPlayerInfo.udpTunnelAuthKey,
     }).finish();
     if (cc.sys.isNative) {
       DelayNoMore.UdpSession.broadcastInputFrameUpsync(reqData, window.boundRoomCapacity, self.selfPlayerInfo.JoinIndex);

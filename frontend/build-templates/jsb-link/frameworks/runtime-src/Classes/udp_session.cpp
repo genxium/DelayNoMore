@@ -15,6 +15,7 @@ struct PeerAddr peerAddrList[maxPeerCnt];
 char SRV_IP[256];
 int SRV_PORT = 0;
 int UDP_TUNNEL_SRV_PORT = 0;
+struct PeerAddr udpTunnelAddr;
 
 void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr const* addr, unsigned flags) {
     if (nread < 0) {
@@ -145,6 +146,7 @@ void _punchServerOnUvThread(uv_work_t* wrapper) {
         uv_buf_t udpTunnelSendBuffer = uv_buf_init(work->udpTunnelBytes, work->udpTunnelBytesLen);
         struct sockaddr_in udpTunnelDestAddr;
         uv_ip4_addr(SRV_IP, UDP_TUNNEL_SRV_PORT, &udpTunnelDestAddr);
+        udpTunnelAddr.sockAddrIn = udpTunnelDestAddr;
         uv_udp_send(udpTunnelReq, udpSocket, &udpTunnelSendBuffer, 1, (struct sockaddr const*)&udpTunnelDestAddr, _onSend);
     }
 }
@@ -254,6 +256,14 @@ void _broadcastInputFrameUpsyncOnUvThread(uv_work_t* wrapper) {
     BroadcastInputFrameUpsyncWork* work = (BroadcastInputFrameUpsyncWork*)wrapper->data;
     int roomCapacity = work->roomCapacity;
     int selfJoinIndex = work->selfJoinIndex;
+    // Send to room udp tunnel in case of hole punching failure
+    for (int j = 0; j < broadcastUpsyncCnt; j++) {
+        uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
+        uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
+        uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&(udpTunnelAddr.sockAddrIn), _onSend);
+        CCLOG("UDP sent upsync to udp tunnel %s:%d by %u bytes round-%d", SRV_IP, UDP_TUNNEL_SRV_PORT, work->bytesLen, j);
+    }
+    
     for (int i = 0; i < roomCapacity; i++) {
         if (i + 1 == selfJoinIndex) {
             continue;
@@ -268,10 +278,11 @@ void _broadcastInputFrameUpsyncOnUvThread(uv_work_t* wrapper) {
         for (int j = 0; j < broadcastUpsyncCnt; j++) {
             uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
             uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
-            uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&peerAddrList[i], _onSend);
+            uv_udp_send(req, udpSocket, &sendBuffer, 1, (struct sockaddr const*)&(peerAddrList[i].sockAddrIn), _onSend);
             CCLOG("UDP broadcasted upsync to peer %s:%d by %u bytes round-%d", peerIp, ntohs(peerAddrList[i].sockAddrIn.sin_port), work->bytesLen, j);
         }
     }
+    
 }
 void _afterBroadcastInputFrameUpsync(uv_work_t* wrapper, int status) {
     BroadcastInputFrameUpsyncWork* work = (BroadcastInputFrameUpsyncWork*)wrapper->data;
