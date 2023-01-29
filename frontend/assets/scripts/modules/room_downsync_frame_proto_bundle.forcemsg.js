@@ -5506,560 +5506,6 @@ $root.protos = (function() {
         return FireballBullet;
     })();
 
-    protos.BattleColliderInfo = (function() {
-
-        /**
-         * Properties of a BattleColliderInfo.
-         * @memberof protos
-         * @interface IBattleColliderInfo
-         * @property {string|null} [stageName] BattleColliderInfo stageName
-         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
-         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
-         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
-         * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
-         * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
-         * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
-         * @property {number|null} [rollbackEstimatedDtMillis] BattleColliderInfo rollbackEstimatedDtMillis
-         * @property {number|Long|null} [rollbackEstimatedDtNanos] BattleColliderInfo rollbackEstimatedDtNanos
-         * @property {number|null} [renderCacheSize] BattleColliderInfo renderCacheSize
-         * @property {number|null} [spaceOffsetX] BattleColliderInfo spaceOffsetX
-         * @property {number|null} [spaceOffsetY] BattleColliderInfo spaceOffsetY
-         * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
-         * @property {number|null} [boundRoomCapacity] BattleColliderInfo boundRoomCapacity
-         * @property {boolean|null} [frameDataLoggingEnabled] BattleColliderInfo frameDataLoggingEnabled
-         */
-
-        /**
-         * Constructs a new BattleColliderInfo.
-         * @memberof protos
-         * @classdesc Represents a BattleColliderInfo.
-         * @implements IBattleColliderInfo
-         * @constructor
-         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
-         */
-        function BattleColliderInfo(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * BattleColliderInfo stageName.
-         * @member {string} stageName
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.stageName = "";
-
-        /**
-         * BattleColliderInfo intervalToPing.
-         * @member {number} intervalToPing
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.intervalToPing = 0;
-
-        /**
-         * BattleColliderInfo willKickIfInactiveFor.
-         * @member {number} willKickIfInactiveFor
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
-
-        /**
-         * BattleColliderInfo boundRoomId.
-         * @member {number} boundRoomId
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.boundRoomId = 0;
-
-        /**
-         * BattleColliderInfo battleDurationNanos.
-         * @member {number|Long} battleDurationNanos
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * BattleColliderInfo inputFrameUpsyncDelayTolerance.
-         * @member {number} inputFrameUpsyncDelayTolerance
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.inputFrameUpsyncDelayTolerance = 0;
-
-        /**
-         * BattleColliderInfo maxChasingRenderFramesPerUpdate.
-         * @member {number} maxChasingRenderFramesPerUpdate
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
-
-        /**
-         * BattleColliderInfo rollbackEstimatedDtMillis.
-         * @member {number} rollbackEstimatedDtMillis
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.rollbackEstimatedDtMillis = 0;
-
-        /**
-         * BattleColliderInfo rollbackEstimatedDtNanos.
-         * @member {number|Long} rollbackEstimatedDtNanos
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.rollbackEstimatedDtNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * BattleColliderInfo renderCacheSize.
-         * @member {number} renderCacheSize
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.renderCacheSize = 0;
-
-        /**
-         * BattleColliderInfo spaceOffsetX.
-         * @member {number} spaceOffsetX
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.spaceOffsetX = 0;
-
-        /**
-         * BattleColliderInfo spaceOffsetY.
-         * @member {number} spaceOffsetY
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.spaceOffsetY = 0;
-
-        /**
-         * BattleColliderInfo collisionMinStep.
-         * @member {number} collisionMinStep
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.collisionMinStep = 0;
-
-        /**
-         * BattleColliderInfo boundRoomCapacity.
-         * @member {number} boundRoomCapacity
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.boundRoomCapacity = 0;
-
-        /**
-         * BattleColliderInfo frameDataLoggingEnabled.
-         * @member {boolean} frameDataLoggingEnabled
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         */
-        BattleColliderInfo.prototype.frameDataLoggingEnabled = false;
-
-        /**
-         * Creates a new BattleColliderInfo instance using the specified properties.
-         * @function create
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
-         * @returns {protos.BattleColliderInfo} BattleColliderInfo instance
-         */
-        BattleColliderInfo.create = function create(properties) {
-            return new BattleColliderInfo(properties);
-        };
-
-        /**
-         * Encodes the specified BattleColliderInfo message. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
-         * @function encode
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        BattleColliderInfo.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
-            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.intervalToPing);
-            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.willKickIfInactiveFor);
-            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.boundRoomId);
-            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.battleDurationNanos);
-            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
-                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.inputFrameUpsyncDelayTolerance);
-            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
-                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.maxChasingRenderFramesPerUpdate);
-            if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
-                writer.uint32(/* id 8, wireType 1 =*/65).double(message.rollbackEstimatedDtMillis);
-            if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
-                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.rollbackEstimatedDtNanos);
-            if (message.renderCacheSize != null && Object.hasOwnProperty.call(message, "renderCacheSize"))
-                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.renderCacheSize);
-            if (message.spaceOffsetX != null && Object.hasOwnProperty.call(message, "spaceOffsetX"))
-                writer.uint32(/* id 11, wireType 1 =*/89).double(message.spaceOffsetX);
-            if (message.spaceOffsetY != null && Object.hasOwnProperty.call(message, "spaceOffsetY"))
-                writer.uint32(/* id 12, wireType 1 =*/97).double(message.spaceOffsetY);
-            if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
-                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.collisionMinStep);
-            if (message.boundRoomCapacity != null && Object.hasOwnProperty.call(message, "boundRoomCapacity"))
-                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.boundRoomCapacity);
-            if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
-                writer.uint32(/* id 1024, wireType 0 =*/8192).bool(message.frameDataLoggingEnabled);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified BattleColliderInfo message, length delimited. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        BattleColliderInfo.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a BattleColliderInfo message from the specified reader or buffer.
-         * @function decode
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {protos.BattleColliderInfo} BattleColliderInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        BattleColliderInfo.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        message.stageName = reader.string();
-                        break;
-                    }
-                case 2: {
-                        message.intervalToPing = reader.int32();
-                        break;
-                    }
-                case 3: {
-                        message.willKickIfInactiveFor = reader.int32();
-                        break;
-                    }
-                case 4: {
-                        message.boundRoomId = reader.int32();
-                        break;
-                    }
-                case 5: {
-                        message.battleDurationNanos = reader.int64();
-                        break;
-                    }
-                case 6: {
-                        message.inputFrameUpsyncDelayTolerance = reader.int32();
-                        break;
-                    }
-                case 7: {
-                        message.maxChasingRenderFramesPerUpdate = reader.int32();
-                        break;
-                    }
-                case 8: {
-                        message.rollbackEstimatedDtMillis = reader.double();
-                        break;
-                    }
-                case 9: {
-                        message.rollbackEstimatedDtNanos = reader.int64();
-                        break;
-                    }
-                case 10: {
-                        message.renderCacheSize = reader.int32();
-                        break;
-                    }
-                case 11: {
-                        message.spaceOffsetX = reader.double();
-                        break;
-                    }
-                case 12: {
-                        message.spaceOffsetY = reader.double();
-                        break;
-                    }
-                case 13: {
-                        message.collisionMinStep = reader.int32();
-                        break;
-                    }
-                case 14: {
-                        message.boundRoomCapacity = reader.int32();
-                        break;
-                    }
-                case 1024: {
-                        message.frameDataLoggingEnabled = reader.bool();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a BattleColliderInfo message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {protos.BattleColliderInfo} BattleColliderInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        BattleColliderInfo.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a BattleColliderInfo message.
-         * @function verify
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        BattleColliderInfo.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.stageName != null && message.hasOwnProperty("stageName"))
-                if (!$util.isString(message.stageName))
-                    return "stageName: string expected";
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                if (!$util.isInteger(message.intervalToPing))
-                    return "intervalToPing: integer expected";
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                if (!$util.isInteger(message.willKickIfInactiveFor))
-                    return "willKickIfInactiveFor: integer expected";
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                if (!$util.isInteger(message.boundRoomId))
-                    return "boundRoomId: integer expected";
-            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
-                if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
-                    return "battleDurationNanos: integer|Long expected";
-            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
-                if (!$util.isInteger(message.inputFrameUpsyncDelayTolerance))
-                    return "inputFrameUpsyncDelayTolerance: integer expected";
-            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
-                if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
-                    return "maxChasingRenderFramesPerUpdate: integer expected";
-            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
-                if (typeof message.rollbackEstimatedDtMillis !== "number")
-                    return "rollbackEstimatedDtMillis: number expected";
-            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
-                if (!$util.isInteger(message.rollbackEstimatedDtNanos) && !(message.rollbackEstimatedDtNanos && $util.isInteger(message.rollbackEstimatedDtNanos.low) && $util.isInteger(message.rollbackEstimatedDtNanos.high)))
-                    return "rollbackEstimatedDtNanos: integer|Long expected";
-            if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
-                if (!$util.isInteger(message.renderCacheSize))
-                    return "renderCacheSize: integer expected";
-            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
-                if (typeof message.spaceOffsetX !== "number")
-                    return "spaceOffsetX: number expected";
-            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
-                if (typeof message.spaceOffsetY !== "number")
-                    return "spaceOffsetY: number expected";
-            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
-                if (!$util.isInteger(message.collisionMinStep))
-                    return "collisionMinStep: integer expected";
-            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
-                if (!$util.isInteger(message.boundRoomCapacity))
-                    return "boundRoomCapacity: integer expected";
-            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
-                if (typeof message.frameDataLoggingEnabled !== "boolean")
-                    return "frameDataLoggingEnabled: boolean expected";
-            return null;
-        };
-
-        /**
-         * Creates a BattleColliderInfo message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {protos.BattleColliderInfo} BattleColliderInfo
-         */
-        BattleColliderInfo.fromObject = function fromObject(object) {
-            if (object instanceof $root.protos.BattleColliderInfo)
-                return object;
-            var message = new $root.protos.BattleColliderInfo();
-            if (object.stageName != null)
-                message.stageName = String(object.stageName);
-            if (object.intervalToPing != null)
-                message.intervalToPing = object.intervalToPing | 0;
-            if (object.willKickIfInactiveFor != null)
-                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
-            if (object.boundRoomId != null)
-                message.boundRoomId = object.boundRoomId | 0;
-            if (object.battleDurationNanos != null)
-                if ($util.Long)
-                    (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
-                else if (typeof object.battleDurationNanos === "string")
-                    message.battleDurationNanos = parseInt(object.battleDurationNanos, 10);
-                else if (typeof object.battleDurationNanos === "number")
-                    message.battleDurationNanos = object.battleDurationNanos;
-                else if (typeof object.battleDurationNanos === "object")
-                    message.battleDurationNanos = new $util.LongBits(object.battleDurationNanos.low >>> 0, object.battleDurationNanos.high >>> 0).toNumber();
-            if (object.inputFrameUpsyncDelayTolerance != null)
-                message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
-            if (object.maxChasingRenderFramesPerUpdate != null)
-                message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
-            if (object.rollbackEstimatedDtMillis != null)
-                message.rollbackEstimatedDtMillis = Number(object.rollbackEstimatedDtMillis);
-            if (object.rollbackEstimatedDtNanos != null)
-                if ($util.Long)
-                    (message.rollbackEstimatedDtNanos = $util.Long.fromValue(object.rollbackEstimatedDtNanos)).unsigned = false;
-                else if (typeof object.rollbackEstimatedDtNanos === "string")
-                    message.rollbackEstimatedDtNanos = parseInt(object.rollbackEstimatedDtNanos, 10);
-                else if (typeof object.rollbackEstimatedDtNanos === "number")
-                    message.rollbackEstimatedDtNanos = object.rollbackEstimatedDtNanos;
-                else if (typeof object.rollbackEstimatedDtNanos === "object")
-                    message.rollbackEstimatedDtNanos = new $util.LongBits(object.rollbackEstimatedDtNanos.low >>> 0, object.rollbackEstimatedDtNanos.high >>> 0).toNumber();
-            if (object.renderCacheSize != null)
-                message.renderCacheSize = object.renderCacheSize | 0;
-            if (object.spaceOffsetX != null)
-                message.spaceOffsetX = Number(object.spaceOffsetX);
-            if (object.spaceOffsetY != null)
-                message.spaceOffsetY = Number(object.spaceOffsetY);
-            if (object.collisionMinStep != null)
-                message.collisionMinStep = object.collisionMinStep | 0;
-            if (object.boundRoomCapacity != null)
-                message.boundRoomCapacity = object.boundRoomCapacity | 0;
-            if (object.frameDataLoggingEnabled != null)
-                message.frameDataLoggingEnabled = Boolean(object.frameDataLoggingEnabled);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a BattleColliderInfo message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {protos.BattleColliderInfo} message BattleColliderInfo
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        BattleColliderInfo.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.stageName = "";
-                object.intervalToPing = 0;
-                object.willKickIfInactiveFor = 0;
-                object.boundRoomId = 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.battleDurationNanos = options.longs === String ? "0" : 0;
-                object.inputFrameUpsyncDelayTolerance = 0;
-                object.maxChasingRenderFramesPerUpdate = 0;
-                object.rollbackEstimatedDtMillis = 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.rollbackEstimatedDtNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.rollbackEstimatedDtNanos = options.longs === String ? "0" : 0;
-                object.renderCacheSize = 0;
-                object.spaceOffsetX = 0;
-                object.spaceOffsetY = 0;
-                object.collisionMinStep = 0;
-                object.boundRoomCapacity = 0;
-                object.frameDataLoggingEnabled = false;
-            }
-            if (message.stageName != null && message.hasOwnProperty("stageName"))
-                object.stageName = message.stageName;
-            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
-                object.intervalToPing = message.intervalToPing;
-            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
-                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
-            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
-                object.boundRoomId = message.boundRoomId;
-            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
-                if (typeof message.battleDurationNanos === "number")
-                    object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;
-                else
-                    object.battleDurationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.battleDurationNanos) : options.longs === Number ? new $util.LongBits(message.battleDurationNanos.low >>> 0, message.battleDurationNanos.high >>> 0).toNumber() : message.battleDurationNanos;
-            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
-                object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
-            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
-                object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
-            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
-                object.rollbackEstimatedDtMillis = options.json && !isFinite(message.rollbackEstimatedDtMillis) ? String(message.rollbackEstimatedDtMillis) : message.rollbackEstimatedDtMillis;
-            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
-                if (typeof message.rollbackEstimatedDtNanos === "number")
-                    object.rollbackEstimatedDtNanos = options.longs === String ? String(message.rollbackEstimatedDtNanos) : message.rollbackEstimatedDtNanos;
-                else
-                    object.rollbackEstimatedDtNanos = options.longs === String ? $util.Long.prototype.toString.call(message.rollbackEstimatedDtNanos) : options.longs === Number ? new $util.LongBits(message.rollbackEstimatedDtNanos.low >>> 0, message.rollbackEstimatedDtNanos.high >>> 0).toNumber() : message.rollbackEstimatedDtNanos;
-            if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
-                object.renderCacheSize = message.renderCacheSize;
-            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
-                object.spaceOffsetX = options.json && !isFinite(message.spaceOffsetX) ? String(message.spaceOffsetX) : message.spaceOffsetX;
-            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
-                object.spaceOffsetY = options.json && !isFinite(message.spaceOffsetY) ? String(message.spaceOffsetY) : message.spaceOffsetY;
-            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
-                object.collisionMinStep = message.collisionMinStep;
-            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
-                object.boundRoomCapacity = message.boundRoomCapacity;
-            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
-                object.frameDataLoggingEnabled = message.frameDataLoggingEnabled;
-            return object;
-        };
-
-        /**
-         * Converts this BattleColliderInfo to JSON.
-         * @function toJSON
-         * @memberof protos.BattleColliderInfo
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        BattleColliderInfo.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for BattleColliderInfo
-         * @function getTypeUrl
-         * @memberof protos.BattleColliderInfo
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        BattleColliderInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/protos.BattleColliderInfo";
-        };
-
-        return BattleColliderInfo;
-    })();
-
     protos.HolePunchUpsync = (function() {
 
         /**
@@ -6558,6 +6004,588 @@ $root.protos = (function() {
         };
 
         return PeerUdpAddr;
+    })();
+
+    protos.BattleColliderInfo = (function() {
+
+        /**
+         * Properties of a BattleColliderInfo.
+         * @memberof protos
+         * @interface IBattleColliderInfo
+         * @property {string|null} [stageName] BattleColliderInfo stageName
+         * @property {number|null} [intervalToPing] BattleColliderInfo intervalToPing
+         * @property {number|null} [willKickIfInactiveFor] BattleColliderInfo willKickIfInactiveFor
+         * @property {number|null} [boundRoomId] BattleColliderInfo boundRoomId
+         * @property {number|Long|null} [battleDurationNanos] BattleColliderInfo battleDurationNanos
+         * @property {number|null} [inputFrameUpsyncDelayTolerance] BattleColliderInfo inputFrameUpsyncDelayTolerance
+         * @property {number|null} [maxChasingRenderFramesPerUpdate] BattleColliderInfo maxChasingRenderFramesPerUpdate
+         * @property {number|null} [rollbackEstimatedDtMillis] BattleColliderInfo rollbackEstimatedDtMillis
+         * @property {number|Long|null} [rollbackEstimatedDtNanos] BattleColliderInfo rollbackEstimatedDtNanos
+         * @property {number|null} [renderCacheSize] BattleColliderInfo renderCacheSize
+         * @property {number|null} [spaceOffsetX] BattleColliderInfo spaceOffsetX
+         * @property {number|null} [spaceOffsetY] BattleColliderInfo spaceOffsetY
+         * @property {number|null} [collisionMinStep] BattleColliderInfo collisionMinStep
+         * @property {number|null} [boundRoomCapacity] BattleColliderInfo boundRoomCapacity
+         * @property {protos.PeerUdpAddr|null} [battleUdpTunnel] BattleColliderInfo battleUdpTunnel
+         * @property {boolean|null} [frameDataLoggingEnabled] BattleColliderInfo frameDataLoggingEnabled
+         */
+
+        /**
+         * Constructs a new BattleColliderInfo.
+         * @memberof protos
+         * @classdesc Represents a BattleColliderInfo.
+         * @implements IBattleColliderInfo
+         * @constructor
+         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
+         */
+        function BattleColliderInfo(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * BattleColliderInfo stageName.
+         * @member {string} stageName
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.stageName = "";
+
+        /**
+         * BattleColliderInfo intervalToPing.
+         * @member {number} intervalToPing
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.intervalToPing = 0;
+
+        /**
+         * BattleColliderInfo willKickIfInactiveFor.
+         * @member {number} willKickIfInactiveFor
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.willKickIfInactiveFor = 0;
+
+        /**
+         * BattleColliderInfo boundRoomId.
+         * @member {number} boundRoomId
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.boundRoomId = 0;
+
+        /**
+         * BattleColliderInfo battleDurationNanos.
+         * @member {number|Long} battleDurationNanos
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.battleDurationNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * BattleColliderInfo inputFrameUpsyncDelayTolerance.
+         * @member {number} inputFrameUpsyncDelayTolerance
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.inputFrameUpsyncDelayTolerance = 0;
+
+        /**
+         * BattleColliderInfo maxChasingRenderFramesPerUpdate.
+         * @member {number} maxChasingRenderFramesPerUpdate
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.maxChasingRenderFramesPerUpdate = 0;
+
+        /**
+         * BattleColliderInfo rollbackEstimatedDtMillis.
+         * @member {number} rollbackEstimatedDtMillis
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.rollbackEstimatedDtMillis = 0;
+
+        /**
+         * BattleColliderInfo rollbackEstimatedDtNanos.
+         * @member {number|Long} rollbackEstimatedDtNanos
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.rollbackEstimatedDtNanos = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * BattleColliderInfo renderCacheSize.
+         * @member {number} renderCacheSize
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.renderCacheSize = 0;
+
+        /**
+         * BattleColliderInfo spaceOffsetX.
+         * @member {number} spaceOffsetX
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.spaceOffsetX = 0;
+
+        /**
+         * BattleColliderInfo spaceOffsetY.
+         * @member {number} spaceOffsetY
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.spaceOffsetY = 0;
+
+        /**
+         * BattleColliderInfo collisionMinStep.
+         * @member {number} collisionMinStep
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.collisionMinStep = 0;
+
+        /**
+         * BattleColliderInfo boundRoomCapacity.
+         * @member {number} boundRoomCapacity
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.boundRoomCapacity = 0;
+
+        /**
+         * BattleColliderInfo battleUdpTunnel.
+         * @member {protos.PeerUdpAddr|null|undefined} battleUdpTunnel
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.battleUdpTunnel = null;
+
+        /**
+         * BattleColliderInfo frameDataLoggingEnabled.
+         * @member {boolean} frameDataLoggingEnabled
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         */
+        BattleColliderInfo.prototype.frameDataLoggingEnabled = false;
+
+        /**
+         * Creates a new BattleColliderInfo instance using the specified properties.
+         * @function create
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {protos.IBattleColliderInfo=} [properties] Properties to set
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo instance
+         */
+        BattleColliderInfo.create = function create(properties) {
+            return new BattleColliderInfo(properties);
+        };
+
+        /**
+         * Encodes the specified BattleColliderInfo message. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
+         * @function encode
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        BattleColliderInfo.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.stageName != null && Object.hasOwnProperty.call(message, "stageName"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.stageName);
+            if (message.intervalToPing != null && Object.hasOwnProperty.call(message, "intervalToPing"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.intervalToPing);
+            if (message.willKickIfInactiveFor != null && Object.hasOwnProperty.call(message, "willKickIfInactiveFor"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.willKickIfInactiveFor);
+            if (message.boundRoomId != null && Object.hasOwnProperty.call(message, "boundRoomId"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.boundRoomId);
+            if (message.battleDurationNanos != null && Object.hasOwnProperty.call(message, "battleDurationNanos"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.battleDurationNanos);
+            if (message.inputFrameUpsyncDelayTolerance != null && Object.hasOwnProperty.call(message, "inputFrameUpsyncDelayTolerance"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.inputFrameUpsyncDelayTolerance);
+            if (message.maxChasingRenderFramesPerUpdate != null && Object.hasOwnProperty.call(message, "maxChasingRenderFramesPerUpdate"))
+                writer.uint32(/* id 7, wireType 0 =*/56).int32(message.maxChasingRenderFramesPerUpdate);
+            if (message.rollbackEstimatedDtMillis != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtMillis"))
+                writer.uint32(/* id 8, wireType 1 =*/65).double(message.rollbackEstimatedDtMillis);
+            if (message.rollbackEstimatedDtNanos != null && Object.hasOwnProperty.call(message, "rollbackEstimatedDtNanos"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.rollbackEstimatedDtNanos);
+            if (message.renderCacheSize != null && Object.hasOwnProperty.call(message, "renderCacheSize"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int32(message.renderCacheSize);
+            if (message.spaceOffsetX != null && Object.hasOwnProperty.call(message, "spaceOffsetX"))
+                writer.uint32(/* id 11, wireType 1 =*/89).double(message.spaceOffsetX);
+            if (message.spaceOffsetY != null && Object.hasOwnProperty.call(message, "spaceOffsetY"))
+                writer.uint32(/* id 12, wireType 1 =*/97).double(message.spaceOffsetY);
+            if (message.collisionMinStep != null && Object.hasOwnProperty.call(message, "collisionMinStep"))
+                writer.uint32(/* id 13, wireType 0 =*/104).int32(message.collisionMinStep);
+            if (message.boundRoomCapacity != null && Object.hasOwnProperty.call(message, "boundRoomCapacity"))
+                writer.uint32(/* id 14, wireType 0 =*/112).int32(message.boundRoomCapacity);
+            if (message.battleUdpTunnel != null && Object.hasOwnProperty.call(message, "battleUdpTunnel"))
+                $root.protos.PeerUdpAddr.encode(message.battleUdpTunnel, writer.uint32(/* id 15, wireType 2 =*/122).fork()).ldelim();
+            if (message.frameDataLoggingEnabled != null && Object.hasOwnProperty.call(message, "frameDataLoggingEnabled"))
+                writer.uint32(/* id 1024, wireType 0 =*/8192).bool(message.frameDataLoggingEnabled);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified BattleColliderInfo message, length delimited. Does not implicitly {@link protos.BattleColliderInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        BattleColliderInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a BattleColliderInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        BattleColliderInfo.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BattleColliderInfo();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.stageName = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.intervalToPing = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.willKickIfInactiveFor = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.boundRoomId = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.battleDurationNanos = reader.int64();
+                        break;
+                    }
+                case 6: {
+                        message.inputFrameUpsyncDelayTolerance = reader.int32();
+                        break;
+                    }
+                case 7: {
+                        message.maxChasingRenderFramesPerUpdate = reader.int32();
+                        break;
+                    }
+                case 8: {
+                        message.rollbackEstimatedDtMillis = reader.double();
+                        break;
+                    }
+                case 9: {
+                        message.rollbackEstimatedDtNanos = reader.int64();
+                        break;
+                    }
+                case 10: {
+                        message.renderCacheSize = reader.int32();
+                        break;
+                    }
+                case 11: {
+                        message.spaceOffsetX = reader.double();
+                        break;
+                    }
+                case 12: {
+                        message.spaceOffsetY = reader.double();
+                        break;
+                    }
+                case 13: {
+                        message.collisionMinStep = reader.int32();
+                        break;
+                    }
+                case 14: {
+                        message.boundRoomCapacity = reader.int32();
+                        break;
+                    }
+                case 15: {
+                        message.battleUdpTunnel = $root.protos.PeerUdpAddr.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 1024: {
+                        message.frameDataLoggingEnabled = reader.bool();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a BattleColliderInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        BattleColliderInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a BattleColliderInfo message.
+         * @function verify
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        BattleColliderInfo.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.stageName != null && message.hasOwnProperty("stageName"))
+                if (!$util.isString(message.stageName))
+                    return "stageName: string expected";
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                if (!$util.isInteger(message.intervalToPing))
+                    return "intervalToPing: integer expected";
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                if (!$util.isInteger(message.willKickIfInactiveFor))
+                    return "willKickIfInactiveFor: integer expected";
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                if (!$util.isInteger(message.boundRoomId))
+                    return "boundRoomId: integer expected";
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (!$util.isInteger(message.battleDurationNanos) && !(message.battleDurationNanos && $util.isInteger(message.battleDurationNanos.low) && $util.isInteger(message.battleDurationNanos.high)))
+                    return "battleDurationNanos: integer|Long expected";
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                if (!$util.isInteger(message.inputFrameUpsyncDelayTolerance))
+                    return "inputFrameUpsyncDelayTolerance: integer expected";
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                if (!$util.isInteger(message.maxChasingRenderFramesPerUpdate))
+                    return "maxChasingRenderFramesPerUpdate: integer expected";
+            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
+                if (typeof message.rollbackEstimatedDtMillis !== "number")
+                    return "rollbackEstimatedDtMillis: number expected";
+            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
+                if (!$util.isInteger(message.rollbackEstimatedDtNanos) && !(message.rollbackEstimatedDtNanos && $util.isInteger(message.rollbackEstimatedDtNanos.low) && $util.isInteger(message.rollbackEstimatedDtNanos.high)))
+                    return "rollbackEstimatedDtNanos: integer|Long expected";
+            if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
+                if (!$util.isInteger(message.renderCacheSize))
+                    return "renderCacheSize: integer expected";
+            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
+                if (typeof message.spaceOffsetX !== "number")
+                    return "spaceOffsetX: number expected";
+            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
+                if (typeof message.spaceOffsetY !== "number")
+                    return "spaceOffsetY: number expected";
+            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
+                if (!$util.isInteger(message.collisionMinStep))
+                    return "collisionMinStep: integer expected";
+            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
+                if (!$util.isInteger(message.boundRoomCapacity))
+                    return "boundRoomCapacity: integer expected";
+            if (message.battleUdpTunnel != null && message.hasOwnProperty("battleUdpTunnel")) {
+                var error = $root.protos.PeerUdpAddr.verify(message.battleUdpTunnel);
+                if (error)
+                    return "battleUdpTunnel." + error;
+            }
+            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
+                if (typeof message.frameDataLoggingEnabled !== "boolean")
+                    return "frameDataLoggingEnabled: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates a BattleColliderInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {protos.BattleColliderInfo} BattleColliderInfo
+         */
+        BattleColliderInfo.fromObject = function fromObject(object) {
+            if (object instanceof $root.protos.BattleColliderInfo)
+                return object;
+            var message = new $root.protos.BattleColliderInfo();
+            if (object.stageName != null)
+                message.stageName = String(object.stageName);
+            if (object.intervalToPing != null)
+                message.intervalToPing = object.intervalToPing | 0;
+            if (object.willKickIfInactiveFor != null)
+                message.willKickIfInactiveFor = object.willKickIfInactiveFor | 0;
+            if (object.boundRoomId != null)
+                message.boundRoomId = object.boundRoomId | 0;
+            if (object.battleDurationNanos != null)
+                if ($util.Long)
+                    (message.battleDurationNanos = $util.Long.fromValue(object.battleDurationNanos)).unsigned = false;
+                else if (typeof object.battleDurationNanos === "string")
+                    message.battleDurationNanos = parseInt(object.battleDurationNanos, 10);
+                else if (typeof object.battleDurationNanos === "number")
+                    message.battleDurationNanos = object.battleDurationNanos;
+                else if (typeof object.battleDurationNanos === "object")
+                    message.battleDurationNanos = new $util.LongBits(object.battleDurationNanos.low >>> 0, object.battleDurationNanos.high >>> 0).toNumber();
+            if (object.inputFrameUpsyncDelayTolerance != null)
+                message.inputFrameUpsyncDelayTolerance = object.inputFrameUpsyncDelayTolerance | 0;
+            if (object.maxChasingRenderFramesPerUpdate != null)
+                message.maxChasingRenderFramesPerUpdate = object.maxChasingRenderFramesPerUpdate | 0;
+            if (object.rollbackEstimatedDtMillis != null)
+                message.rollbackEstimatedDtMillis = Number(object.rollbackEstimatedDtMillis);
+            if (object.rollbackEstimatedDtNanos != null)
+                if ($util.Long)
+                    (message.rollbackEstimatedDtNanos = $util.Long.fromValue(object.rollbackEstimatedDtNanos)).unsigned = false;
+                else if (typeof object.rollbackEstimatedDtNanos === "string")
+                    message.rollbackEstimatedDtNanos = parseInt(object.rollbackEstimatedDtNanos, 10);
+                else if (typeof object.rollbackEstimatedDtNanos === "number")
+                    message.rollbackEstimatedDtNanos = object.rollbackEstimatedDtNanos;
+                else if (typeof object.rollbackEstimatedDtNanos === "object")
+                    message.rollbackEstimatedDtNanos = new $util.LongBits(object.rollbackEstimatedDtNanos.low >>> 0, object.rollbackEstimatedDtNanos.high >>> 0).toNumber();
+            if (object.renderCacheSize != null)
+                message.renderCacheSize = object.renderCacheSize | 0;
+            if (object.spaceOffsetX != null)
+                message.spaceOffsetX = Number(object.spaceOffsetX);
+            if (object.spaceOffsetY != null)
+                message.spaceOffsetY = Number(object.spaceOffsetY);
+            if (object.collisionMinStep != null)
+                message.collisionMinStep = object.collisionMinStep | 0;
+            if (object.boundRoomCapacity != null)
+                message.boundRoomCapacity = object.boundRoomCapacity | 0;
+            if (object.battleUdpTunnel != null) {
+                if (typeof object.battleUdpTunnel !== "object")
+                    throw TypeError(".protos.BattleColliderInfo.battleUdpTunnel: object expected");
+                message.battleUdpTunnel = $root.protos.PeerUdpAddr.fromObject(object.battleUdpTunnel);
+            }
+            if (object.frameDataLoggingEnabled != null)
+                message.frameDataLoggingEnabled = Boolean(object.frameDataLoggingEnabled);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a BattleColliderInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {protos.BattleColliderInfo} message BattleColliderInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        BattleColliderInfo.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.stageName = "";
+                object.intervalToPing = 0;
+                object.willKickIfInactiveFor = 0;
+                object.boundRoomId = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.battleDurationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.battleDurationNanos = options.longs === String ? "0" : 0;
+                object.inputFrameUpsyncDelayTolerance = 0;
+                object.maxChasingRenderFramesPerUpdate = 0;
+                object.rollbackEstimatedDtMillis = 0;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, false);
+                    object.rollbackEstimatedDtNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.rollbackEstimatedDtNanos = options.longs === String ? "0" : 0;
+                object.renderCacheSize = 0;
+                object.spaceOffsetX = 0;
+                object.spaceOffsetY = 0;
+                object.collisionMinStep = 0;
+                object.boundRoomCapacity = 0;
+                object.battleUdpTunnel = null;
+                object.frameDataLoggingEnabled = false;
+            }
+            if (message.stageName != null && message.hasOwnProperty("stageName"))
+                object.stageName = message.stageName;
+            if (message.intervalToPing != null && message.hasOwnProperty("intervalToPing"))
+                object.intervalToPing = message.intervalToPing;
+            if (message.willKickIfInactiveFor != null && message.hasOwnProperty("willKickIfInactiveFor"))
+                object.willKickIfInactiveFor = message.willKickIfInactiveFor;
+            if (message.boundRoomId != null && message.hasOwnProperty("boundRoomId"))
+                object.boundRoomId = message.boundRoomId;
+            if (message.battleDurationNanos != null && message.hasOwnProperty("battleDurationNanos"))
+                if (typeof message.battleDurationNanos === "number")
+                    object.battleDurationNanos = options.longs === String ? String(message.battleDurationNanos) : message.battleDurationNanos;
+                else
+                    object.battleDurationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.battleDurationNanos) : options.longs === Number ? new $util.LongBits(message.battleDurationNanos.low >>> 0, message.battleDurationNanos.high >>> 0).toNumber() : message.battleDurationNanos;
+            if (message.inputFrameUpsyncDelayTolerance != null && message.hasOwnProperty("inputFrameUpsyncDelayTolerance"))
+                object.inputFrameUpsyncDelayTolerance = message.inputFrameUpsyncDelayTolerance;
+            if (message.maxChasingRenderFramesPerUpdate != null && message.hasOwnProperty("maxChasingRenderFramesPerUpdate"))
+                object.maxChasingRenderFramesPerUpdate = message.maxChasingRenderFramesPerUpdate;
+            if (message.rollbackEstimatedDtMillis != null && message.hasOwnProperty("rollbackEstimatedDtMillis"))
+                object.rollbackEstimatedDtMillis = options.json && !isFinite(message.rollbackEstimatedDtMillis) ? String(message.rollbackEstimatedDtMillis) : message.rollbackEstimatedDtMillis;
+            if (message.rollbackEstimatedDtNanos != null && message.hasOwnProperty("rollbackEstimatedDtNanos"))
+                if (typeof message.rollbackEstimatedDtNanos === "number")
+                    object.rollbackEstimatedDtNanos = options.longs === String ? String(message.rollbackEstimatedDtNanos) : message.rollbackEstimatedDtNanos;
+                else
+                    object.rollbackEstimatedDtNanos = options.longs === String ? $util.Long.prototype.toString.call(message.rollbackEstimatedDtNanos) : options.longs === Number ? new $util.LongBits(message.rollbackEstimatedDtNanos.low >>> 0, message.rollbackEstimatedDtNanos.high >>> 0).toNumber() : message.rollbackEstimatedDtNanos;
+            if (message.renderCacheSize != null && message.hasOwnProperty("renderCacheSize"))
+                object.renderCacheSize = message.renderCacheSize;
+            if (message.spaceOffsetX != null && message.hasOwnProperty("spaceOffsetX"))
+                object.spaceOffsetX = options.json && !isFinite(message.spaceOffsetX) ? String(message.spaceOffsetX) : message.spaceOffsetX;
+            if (message.spaceOffsetY != null && message.hasOwnProperty("spaceOffsetY"))
+                object.spaceOffsetY = options.json && !isFinite(message.spaceOffsetY) ? String(message.spaceOffsetY) : message.spaceOffsetY;
+            if (message.collisionMinStep != null && message.hasOwnProperty("collisionMinStep"))
+                object.collisionMinStep = message.collisionMinStep;
+            if (message.boundRoomCapacity != null && message.hasOwnProperty("boundRoomCapacity"))
+                object.boundRoomCapacity = message.boundRoomCapacity;
+            if (message.battleUdpTunnel != null && message.hasOwnProperty("battleUdpTunnel"))
+                object.battleUdpTunnel = $root.protos.PeerUdpAddr.toObject(message.battleUdpTunnel, options);
+            if (message.frameDataLoggingEnabled != null && message.hasOwnProperty("frameDataLoggingEnabled"))
+                object.frameDataLoggingEnabled = message.frameDataLoggingEnabled;
+            return object;
+        };
+
+        /**
+         * Converts this BattleColliderInfo to JSON.
+         * @function toJSON
+         * @memberof protos.BattleColliderInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        BattleColliderInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for BattleColliderInfo
+         * @function getTypeUrl
+         * @memberof protos.BattleColliderInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        BattleColliderInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/protos.BattleColliderInfo";
+        };
+
+        return BattleColliderInfo;
     })();
 
     protos.RoomDownsyncFrame = (function() {

@@ -165,6 +165,18 @@ message FireballBullet {
   int32 speed = 1005;
 }
 
+message HolePunchUpsync {
+ string intAuthToken = 1;
+ int32 boundRoomId = 2;
+ int32 authKey = 3;
+}
+
+message PeerUdpAddr {
+ string ip = 1;
+ int32 port = 2;
+ int32 authKey = 3;
+}
+
 message BattleColliderInfo {
   string stageName = 1;
 
@@ -182,20 +194,9 @@ message BattleColliderInfo {
   double spaceOffsetY = 12;
   int32 collisionMinStep = 13;
   int32 boundRoomCapacity = 14;
+  PeerUdpAddr battleUdpTunnel = 15;
 
   bool frameDataLoggingEnabled = 1024;
-}
-
-message HolePunchUpsync {
- string intAuthToken = 1;
- int32 boundRoomId = 2;
- int32 authKey = 3;
-}
-
-message PeerUdpAddr {
- string ip = 1;
- int32 port = 2;
- int32 authKey = 3;
 }
 
 message RoomDownsyncFrame {

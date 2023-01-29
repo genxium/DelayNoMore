@@ -261,6 +261,12 @@ func Serve(c *gin.Context) {
 			CollisionMinStep:  pRoom.CollisionMinStep,
 			BoundRoomCapacity: int32(pRoom.Capacity),
 
+			BattleUdpTunnel: &pb.PeerUdpAddr{
+				Ip:      pRoom.BattleUdpTunnelAddr.Ip,
+				Port:    pRoom.BattleUdpTunnelAddr.Port,
+				AuthKey: 0, // FIXME: Assign the backend generated authKey for this specific player
+			},
+
 			FrameDataLoggingEnabled: pRoom.FrameDataLoggingEnabled,
 		}
 

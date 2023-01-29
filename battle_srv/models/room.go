@@ -160,6 +160,7 @@ type Room struct {
 	LastIndividuallyConfirmedInputList []uint64
 
 	BattleUdpTunnelLock sync.Mutex // Guards "startBattleUdpTunnel"
+	BattleUdpTunnelAddr *pb.PeerUdpAddr
 	BattleUdpTunnel     *net.UDPConn
 }
 
@@ -829,6 +830,7 @@ func (pR *Room) OnDismissed() {
 	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
 	pR.BattleUdpTunnelLock.Lock()
 	pR.BattleUdpTunnel = nil
+	pR.BattleUdpTunnelAddr = nil
 	pR.BattleUdpTunnelLock.Unlock()
 
 	pR.ChooseStage()
@@ -1696,6 +1698,15 @@ func (pR *Room) startBattleUdpTunnel() {
 		panic(err)
 	}
 	pR.BattleUdpTunnel = conn
+	switch v := conn.LocalAddr().(type) {
+	case (*net.UDPAddr):
+		pR.BattleUdpTunnelAddr = &pb.PeerUdpAddr{
+			Ip:      Conf.Sio.UdpHost,
+			Port:    int32(v.Port),
+			AuthKey: 0, // To be determined for each specific player upon joining and sent to it by BattleColliderInfo
+		}
+	}
+
 	pR.BattleUdpTunnelLock.Unlock()
 
 	defer func() {
