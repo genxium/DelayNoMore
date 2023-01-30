@@ -35,7 +35,7 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
             struct sockaddr_in const* sockAddr = (struct sockaddr_in const*)addr;
             uv_inet_ntop(sockAddr->sin_family, &(sockAddr->sin_addr), ip, INET_ADDRSTRLEN);
             port = ntohs(sockAddr->sin_port);
-            //CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
+            CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
             break;
         }
         default:
@@ -325,6 +325,7 @@ bool DelayNoMore::UdpSession::openUdpSession(int port) {
 
     uv_udp_recv_start(udpSocket, _allocBuffer, _onRead);
 
+    // TODO: Currently "sending" is also done in the "receiving loop thread", shall I segregate it to another dedicated thread?
     uv_thread_create(&recvTid, startRecvLoop, loop);
 
     CCLOG("Finished opening UDP session at port=%d", port);
@@ -363,8 +364,15 @@ bool DelayNoMore::UdpSession::punchToServer(CHARC* const srvIp, int const srvPor
     SRV_PORT = srvPort;
     UDP_TUNNEL_SRV_PORT = udpTunnelSrvPort;
     PunchServerWork* work = new PunchServerWork(bytes, bytesLen, udpTunnelBytes, udpTunnelBytesBytesLen);
+
+    /*
+    TODO: Libuv is really inconvenient here, neither "uv_queue_work" nor "uv_async_init" is threadsafe(http ://docs.libuv.org/en/v1.x/threadpool.html#c.uv_queue_work)! What's the point of such a queue? It's even more difficult than writing my own implementation -- again a threadsafe RingBuff could be used to the rescue, yet I'd like to investigate more into how to make the following threadsafe APIs with minimum cross-platform C++ codes
+    - _sendMessage(...), should be both non-blocking & threadsafe, called from GameThread
+    - _onRead(...), should be called first in UvThread in an edge-triggered manner like idiomatic "epoll" or "kqueue", then dispatch the received message to GameThread by a threadsafe RingBuff
+    */ 
     uv_work_t* wrapper = (uv_work_t*)malloc(sizeof(uv_work_t));
     wrapper->data = work;
+
     uv_queue_work(loop, wrapper, _punchServerOnUvThread, _afterPunchServer);
 
     return true;
