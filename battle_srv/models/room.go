@@ -622,17 +622,18 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 	inputsBufferSnapshot := pR.markConfirmationIfApplicable(inputFrameUpsyncBatch, playerId, player)
 	if nil != inputsBufferSnapshot {
 		pR.downsyncToAllPlayers(inputsBufferSnapshot)
-	} else {
-		// no new all-confirmed
-		toSendInputFrameDownsyncs := pR.cloneInputsBuffer(inputFrameUpsyncBatch[0].InputFrameId, inputFrameUpsyncBatch[len(inputFrameUpsyncBatch)-1].InputFrameId+1)
+	} /*else {
+	        // FIXME: Enable this block after we can proactively detect whether there's any "secondary ws session player" in the battle to avoid waste of resource in creating the snapshot
+			// no new all-confirmed
+			toSendInputFrameDownsyncs := pR.cloneInputsBuffer(inputFrameUpsyncBatch[0].InputFrameId, inputFrameUpsyncBatch[len(inputFrameUpsyncBatch)-1].InputFrameId+1)
 
-		inputsBufferSnapshot = &pb.InputsBufferSnapshot{
-			ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
-			PeerJoinIndex:             player.JoinIndex,
-		}
-		//Logger.Info(fmt.Sprintf("OnBattleCmdReceived no new all-confirmed: roomId=%v, fromPlayerId=%v, forming peer broadcasting snapshot=%v", pR.Id, playerId, inputsBufferSnapshot))
-		pR.broadcastPeerUpsyncForBetterPrediction(inputsBufferSnapshot)
-	}
+			inputsBufferSnapshot = &pb.InputsBufferSnapshot{
+				ToSendInputFrameDownsyncs: toSendInputFrameDownsyncs,
+				PeerJoinIndex:             player.JoinIndex,
+			}
+			//Logger.Info(fmt.Sprintf("OnBattleCmdReceived no new all-confirmed: roomId=%v, fromPlayerId=%v, forming peer broadcasting snapshot=%v", pR.Id, playerId, inputsBufferSnapshot))
+			pR.broadcastPeerUpsyncForBetterPrediction(inputsBufferSnapshot)
+		}*/
 }
 
 func (pR *Room) onInputFrameDownsyncAllConfirmed(inputFrameDownsync *battle.InputFrameDownsync, playerId int32) {
@@ -1733,7 +1734,7 @@ func (pR *Room) startBattleUdpTunnel() {
 			continue
 		}
 		playerId := pReq.PlayerId
-		Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received decoded WsReq:", pR.Id), zap.Any("pReq", pReq))
+		//Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d received decoded WsReq:", pR.Id), zap.Any("pReq", pReq))
 		if player, exists1 := pR.Players[playerId]; exists1 {
 			authKey := pReq.AuthKey
 			if authKey != player.BattleUdpTunnelAuthKey {
@@ -1742,7 +1743,7 @@ func (pR *Room) startBattleUdpTunnel() {
 			}
 			if _, existent := pR.PlayerDownsyncSessionDict[playerId]; existent {
 				player.BattleUdpTunnelAddr = remote
-				Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d updated battleUdpAddr for playerId=%d to be %s\n", pR.Id, playerId, remote))
+				//Logger.Info(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d updated battleUdpAddr for playerId=%d to be %s\n", pR.Id, playerId, remote))
 
 				nowBattleState := atomic.LoadInt32(&pR.State)
 				if RoomBattleStateIns.IN_BATTLE == nowBattleState {
@@ -1759,6 +1760,7 @@ func (pR *Room) startBattleUdpTunnel() {
 								Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to forward upsync from (playerId:%d, joinIndex:%d, addr:%s) to (otherPlayerId:%d, otherPlayerJoinIndex:%d, otherPlayerAddr:%s)\n", pR.Id, playerId, peerJoinIndex, remote, otherPlayer.Id, otherPlayer.JoinIndex, otherPlayer.BattleUdpTunnelAddr))
 							}
 						}
+						pR.OnBattleCmdReceived(pReq) // To help advance "pR.LastAllConfirmedInputFrameId" asap
 					}
 
 				}

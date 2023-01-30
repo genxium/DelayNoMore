@@ -37,39 +37,16 @@ window.PlayerBattleState = {
 window.onUdpMessage = (args) => {
   const self = window.mapIns;
   const ui8Arr = args;
-  cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
-
-  cc.log(`#2 Js called back by CPP for upsync: trying to decode by WsReq...`);
+  //cc.log(`#1 Js called back by CPP: onUdpMessage: args=${args}, typeof(args)=${typeof (args)}, argslen=${args.length}, ui8Arr=${ui8Arr}`);
   const req = window.pb.protos.WsReq.decode(ui8Arr);
   if (req) {
-    cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
+    //cc.log(`#2 Js called back by CPP for upsync: onUdpMessage: ${JSON.stringify(req)}`);
     if (req.act && window.UPSYNC_MSG_ACT_PLAYER_CMD == req.act) {
       let effCnt = 0;
       const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
       const peerJoinIndex = req.joinIndex;
       const batch = req.inputFrameUpsyncBatch;
-      for (let k in batch) {
-        const inputFrameUpsync = batch[k];
-        if (inputFrameUpsync.inputFrameId < renderedInputFrameIdUpper) {
-          // Avoid obfuscating already rendered history
-          continue;
-        }
-        if (inputFrameUpsync.inputFrameId <= self.lastAllConfirmedInputFrameId) {
-          continue;
-        }
-        self.getOrPrefabInputFrameUpsync(inputFrameUpsync.inputFrameId); // Make sure that inputFrame exists locally
-        const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameUpsync.inputFrameId);
-        if (0 < (existingInputFrame.confirmedList & (1 << (peerJoinIndex - 1)))) {
-          continue;
-        }
-        effCnt += 1;
-        existingInputFrame.InputList[inputFrameUpsync.joinIndex - 1] = inputFrameUpsync.encoded;
-        existingInputFrame.confirmedList |= (1 << (peerJoinIndex - 1));
-        self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameUpsync.inputFrameId);
-      }
-      if (0 < effCnt) {
-        self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
-      }
+      self.onPeerInputFrameUpsync(peerJoinIndex, batch);
     }
   }
 };
@@ -222,7 +199,7 @@ cc.Class({
     */
     if (null == currSelfInput) return false;
 
-    const shouldUpsyncForEarlyAllConfirmedOnBackend = (currInputFrameId - lastUpsyncInputFrameId >= 1);
+    const shouldUpsyncForEarlyAllConfirmedOnBackend = (currInputFrameId - lastUpsyncInputFrameId >= this.inputFrameUpsyncDelayTolerance);
     return shouldUpsyncForEarlyAllConfirmedOnBackend || (prevSelfInput != currSelfInput);
   },
 
@@ -532,6 +509,7 @@ cc.Class({
       console.log(`Received parsedBattleColliderInfo via ws`);
       // TODO: Upon reconnection, the backend might have already been sending down data that'd trigger "onRoomDownsyncFrame & onInputFrameDownsyncBatch", but frontend could reject those data due to "battleState != PlayerBattleState.ACTIVE".
       Object.assign(self, parsedBattleColliderInfo);
+      self.inputFrameUpsyncDelayTolerance = parsedBattleColliderInfo.inputFrameUpsyncDelayTolerance;
 
       const tiledMapIns = self.node.getComponent(cc.TiledMap);
 
@@ -911,7 +889,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     if (!self.recentInputCache) {
       return;
     }
-    if (ALL_BATTLE_STATES.IN_SETTLEMENT == self.battleState) {
+    if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
 
@@ -930,13 +908,19 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       }
       self.getOrPrefabInputFrameUpsync(inputFrameDownsyncId); // Make sure that inputFrame exists locally
       const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
-      if (0 < (existingInputFrame.confirmedList & (1 << (peerJoinIndex - 1)))) {
+      if (0 < (existingInputFrame.ConfirmedList & (1 << (peerJoinIndex - 1)))) {
         continue;
       }
       effCnt += 1;
-      existingInputFrame.confirmedList |= (1 << (peerJoinIndex - 1));
-      existingInputFrame.InputList[peerJoinIndex - 1] = inputFrameDownsync.inputList[peerJoinIndex - 1]; // No need to change "confirmedList", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
-      self.recentInputCache.SetByFrameId(existingInputFrame, inputFrameDownsyncId);
+      // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
+      let newInputList = new Array(self.playerRichInfoDict.size).fill(0);
+      for (let i in existingInputFrame.InputList) {
+        newInputList[i] = existingInputFrame.InputList[i];
+      }
+      let newConfirmedList = (existingInputFrame.confirmedList | (1 << (peerJoinIndex - 1)));
+      // No need to change "lastAllConfirmedInputFrameId", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
+      const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsyncId, newInputList, newConfirmedList);
+      self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameDownsyncId);
     }
     if (0 < effCnt) {
       self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);

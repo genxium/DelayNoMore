@@ -35,7 +35,7 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
             struct sockaddr_in const* sockAddr = (struct sockaddr_in const*)addr;
             uv_inet_ntop(sockAddr->sin_family, &(sockAddr->sin_addr), ip, INET_ADDRSTRLEN);
             port = ntohs(sockAddr->sin_port);
-            CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
+            //CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
             break;
         }
         default:
