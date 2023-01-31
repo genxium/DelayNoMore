@@ -574,7 +574,7 @@ func (pR *Room) StartBattle() {
 	})
 }
 
-func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
+func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq, fromUDP bool) {
 	/*
 	   [WARNING] This function "OnBattleCmdReceived" could be called by different ws sessions and thus from different threads!
 
@@ -619,7 +619,7 @@ func (pR *Room) OnBattleCmdReceived(pReq *pb.WsReq) {
 		//Logger.Debug(fmt.Sprintf("OnBattleCmdReceived-InputsBufferLock unlocked: roomId=%v, fromPlayerId=%v", pR.Id, playerId))
 	}()
 
-	inputsBufferSnapshot := pR.markConfirmationIfApplicable(inputFrameUpsyncBatch, playerId, player)
+	inputsBufferSnapshot := pR.markConfirmationIfApplicable(inputFrameUpsyncBatch, playerId, player, fromUDP)
 	if nil != inputsBufferSnapshot {
 		pR.downsyncToAllPlayers(inputsBufferSnapshot)
 	} /*else {
@@ -1159,7 +1159,7 @@ func (pR *Room) getOrPrefabInputFrameDownsync(inputFrameId int32) *battle.InputF
 	return currInputFrameDownsync
 }
 
-func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFrameUpsync, playerId int32, player *Player) *pb.InputsBufferSnapshot {
+func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFrameUpsync, playerId int32, player *Player, fromUDP bool) *pb.InputsBufferSnapshot {
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
 	// Step#1, put the received "inputFrameUpsyncBatch" into "pR.InputsBuffer"
 	for _, inputFrameUpsync := range inputFrameUpsyncBatch {
@@ -1182,11 +1182,14 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		targetInputFrameDownsync.InputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
 
-		player.LastReceivedInputFrameId = clientInputFrameId
-		pR.LastIndividuallyConfirmedInputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
-
-		if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
-			pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
+		if false == fromUDP {
+			// [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
+			player.LastReceivedInputFrameId = clientInputFrameId
+			if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
+				pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
+			}
+			// It's safe (in terms of getting an eventually correct "RenderFrameBuffer") to put the following update of "pR.LastIndividuallyConfirmedInputList" which is ONLY used for prediction in "InputsBuffer" out of "false == fromUDP" block, but I'm still putting it in for convenient debugging.
+			pR.LastIndividuallyConfirmedInputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		}
 	}
 
@@ -1760,7 +1763,7 @@ func (pR *Room) startBattleUdpTunnel() {
 								Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to forward upsync from (playerId:%d, joinIndex:%d, addr:%s) to (otherPlayerId:%d, otherPlayerJoinIndex:%d, otherPlayerAddr:%s)\n", pR.Id, playerId, peerJoinIndex, remote, otherPlayer.Id, otherPlayer.JoinIndex, otherPlayer.BattleUdpTunnelAddr))
 							}
 						}
-						pR.OnBattleCmdReceived(pReq) // To help advance "pR.LastAllConfirmedInputFrameId" asap
+						pR.OnBattleCmdReceived(pReq, true) // To help advance "pR.LastAllConfirmedInputFrameId" asap, and even if "pR.LastAllConfirmedInputFrameId" is not advanced due to packet loss, these UDP packets would help prefill the "InputsBuffer" with correct player "future inputs (compared to ws session)" such that when "forceConfirmation" occurs we have as many correct predictions as possible
 					}
 
 				}

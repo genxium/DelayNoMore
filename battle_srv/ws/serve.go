@@ -388,7 +388,7 @@ func Serve(c *gin.Context) {
 				startOrFeedHeartbeatWatchdog(conn)
 			case models.UPSYNC_MSG_ACT_PLAYER_CMD:
 				startOrFeedHeartbeatWatchdog(conn)
-				pRoom.OnBattleCmdReceived(pReq)
+				pRoom.OnBattleCmdReceived(pReq, false)
 			case models.UPSYNC_MSG_ACT_PLAYER_COLLIDER_ACK:
 				res := pRoom.OnPlayerBattleColliderAcked(int32(playerId))
 				if false == res {
