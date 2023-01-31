@@ -27,7 +27,7 @@ _(how input delay roughly works)_
 
 ![input_delay_intro](./charts/InputDelayIntro.jpg)
 
-_(how rollback-and-chase in this project roughly works, kindly note that by the current implementation, each frontend only maintains a `lastAllConfirmedInputFrameId` for all the other peers, because the backend only downsyncs all-confirmed inputFrames, see [markConfirmationIfApplicable](https://github.com/genxium/DelayNoMore/blob/v0.9.14/battle_srv/models/room.go#L1085) for more information -- if a serverless peer-to-peer communication is seriously needed here, consider porting [markConfirmationIfApplicable](https://github.com/genxium/DelayNoMore/blob/v0.9.14/battle_srv/models/room.go#L1085) into frontend for maintaining `lastAllConfirmedInputFrameId` under chaotic reception order of inputFrames from peers)_
+_(how rollback-and-chase in this project roughly works)_
 
 ![server_clients](./charts/ServerClients.jpg)
 ![rollback_and_chase_intro](./charts/RollbackAndChase.jpg)

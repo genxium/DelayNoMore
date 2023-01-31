@@ -136,7 +136,7 @@ type Room struct {
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
 	InputsBuffer                           *battle.RingBuffer // Indices are STRICTLY consecutive
-	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputList, player.LastReceivedInputFrameId]
+	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputList, player.LastReceivedInputFrameId, player.LastUdpReceivedInputFrameId]
 	RenderFrameBuffer                      *battle.RingBuffer // Indices are STRICTLY consecutive
 	LatestPlayerUpsyncedInputFrameId       int32
 	LastAllConfirmedInputFrameId           int32
@@ -189,6 +189,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.LastReceivedInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
+	pPlayerFromDbInit.LastUdpReceivedInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 
 	pPlayerFromDbInit.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
@@ -230,6 +231,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
+	// [WARNING] DON'T reset "player.LastReceivedInputFrameId" & "player.LastUdpReceivedInputFrameId" upon reconnection!
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
 
 	pEffectiveInRoomPlayerInstance.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
@@ -1170,6 +1172,7 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 			continue
 		}
 		if clientInputFrameId < player.LastReceivedInputFrameId {
+			// [WARNING] It's important for correctness that we use "player.LastReceivedInputFrameId" instead of "player.LastUdpReceivedInputFrameId" here!
 			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastReceivedInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastReceivedInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
@@ -1183,12 +1186,23 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
 
 		if false == fromUDP {
-			// [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
+			/*
+						   [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
+
+						   Moreover, only ws session upsyncs should advance "player.LastReceivedInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
+
+			               Kindly note that the updates of "player.LastReceivedInputFrameId" could be discrete before and after reconnection.
+			*/
 			player.LastReceivedInputFrameId = clientInputFrameId
 			if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
 				pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
 			}
-			// It's safe (in terms of getting an eventually correct "RenderFrameBuffer") to put the following update of "pR.LastIndividuallyConfirmedInputList" which is ONLY used for prediction in "InputsBuffer" out of "false == fromUDP" block, but I'm still putting it in for convenient debugging.
+		}
+
+		if clientInputFrameId > player.LastUdpReceivedInputFrameId {
+			// No need to update "player.LastUdpReceivedInputFrameId" only when "true == fromUDP", we should keep "player.LastUdpReceivedInputFrameId >= player.LastReceivedInputFrameId" at any moment.
+			player.LastUdpReceivedInputFrameId = clientInputFrameId
+			// It's safe (in terms of getting an eventually correct "RenderFrameBuffer") to put the following update of "pR.LastIndividuallyConfirmedInputList" which is ONLY used for prediction in "InputsBuffer" out of "false == fromUDP" block.
 			pR.LastIndividuallyConfirmedInputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		}
 	}
@@ -1256,6 +1270,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 	totPlayerCnt := uint32(pR.Capacity)
 	allConfirmedMask := uint64((1 << totPlayerCnt) - 1)
 	unconfirmedMask := uint64(0)
+	// As "pR.LastAllConfirmedInputFrameId" can be advanced by UDP but "pR.LatestPlayerUpsyncedInputFrameId" could only be advanced by ws session, when the following condition is met we know that the slow ticker is really in trouble!
 	if pR.LatestPlayerUpsyncedInputFrameId > (pR.LastAllConfirmedInputFrameId + pR.InputFrameUpsyncDelayTolerance + 1) {
 		// Type#1 check whether there's a significantly slow ticker among players
 		oldLastAllConfirmedInputFrameId := pR.LastAllConfirmedInputFrameId

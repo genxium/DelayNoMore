@@ -46,7 +46,7 @@ window.onUdpMessage = (args) => {
       const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
       const peerJoinIndex = req.joinIndex;
       const batch = req.inputFrameUpsyncBatch;
-      self.onPeerInputFrameUpsync(peerJoinIndex, batch);
+      self.onPeerInputFrameUpsync(peerJoinIndex, batch, true);
     }
   }
 };
@@ -166,16 +166,10 @@ cc.Class({
       return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
     }
 
-    const lastAllConfirmedInputFrame = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
     const prefabbedInputList = new Array(self.playerRichInfoDict.size).fill(0);
     // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "prefabbedInputList"
     for (let k in prefabbedInputList) {
-      if (null != previousInputFrameDownsync) {
-        prefabbedInputList[k] = previousInputFrameDownsync.InputList[k];
-      }
-      if (0 <= self.lastAllConfirmedInputFrameId && inputFrameId - 1 > self.lastAllConfirmedInputFrameId) {
-        prefabbedInputList[k] = lastAllConfirmedInputFrame.InputList[k];
-      }
+      prefabbedInputList[k] = self.lastIndividuallyConfirmedInputList[k];
       // Don't predict "btnA & btnB"!
       prefabbedInputList[k] = (prefabbedInputList[k] & 15);
     }
@@ -355,6 +349,8 @@ cc.Class({
     self.lastUpsyncInputFrameId = -1;
     self.chaserRenderFrameId = -1; // at any moment, "chaserRenderFrameId <= renderFrameId", but "chaserRenderFrameId" would fluctuate according to "onInputFrameDownsyncBatch"
 
+    self.lastIndividuallyConfirmedInputFrameId = new Array(window.boundRoomCapacity).fill(-1);
+    self.lastIndividuallyConfirmedInputList = new Array(window.boundRoomCapacity).fill(0);
     self.recentRenderCache = new RingBuffer(self.renderCacheSize);
 
     self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
@@ -814,6 +810,16 @@ cc.Class({
     return true;
   },
 
+  _markConfirmationIfApplicable() {
+    const self = this;
+    while (self.recentInputCache.StFrameId <= self.lastAllConfirmedInputFrameId && self.lastAllConfirmedInputFrameId < self.recentInputCache.EdFrameId) {
+      const inputFrameDownsync = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
+      if (null == inputFrameDownsync) break;
+      if (self._allConfirmed(inputFrameDownsync.ConfirmedList)) break;
+      ++self.lastAllConfirmedInputFrameId;
+    }
+  },
+
   onInputFrameDownsyncBatch(batch /* []*pb.InputFrameDownsync */ ) {
     // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
     if (null == batch) {
@@ -835,8 +841,6 @@ cc.Class({
       if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
         continue;
       }
-      // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
-      self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
       const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
       if (null != localInputFrame
         &&
@@ -846,14 +850,23 @@ cc.Class({
       ) {
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
+      // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
       inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
       const inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
+      for (let j in self.playerRichInfoArr) {
+        const jj = parseInt(j);
+        if (inputFrameDownsync.inputFrameId > self.lastIndividuallyConfirmedInputFrameId[jj]) {
+          self.lastIndividuallyConfirmedInputFrameId[jj] = inputFrameDownsync.inputFrameId;
+          self.lastIndividuallyConfirmedInputList[jj] = inputFrameDownsync.inputList[jj];
+        }
+      }
       //console.log(`Confirmed inputFrameId=${inputFrameDownsync.inputFrameId}`);
       const [ret, oldStFrameId, oldEdFrameId] = self.recentInputCache.SetByFrameId(inputFrameDownsyncLocal, inputFrameDownsync.inputFrameId);
       if (window.RING_BUFF_FAILED_TO_SET == ret) {
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
     }
+    self._markConfirmationIfApplicable();
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
     const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
@@ -879,7 +892,7 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     self.networkDoctor.logRollbackFrames(self.renderFrameId - self.chaserRenderFrameId);
   },
 
-  onPeerInputFrameUpsync(peerJoinIndex, batch /* []*pb.InputFrameDownsync */ ) {
+  onPeerInputFrameUpsync(peerJoinIndex, batch, fromUDP) {
     // TODO: find some kind of synchronization mechanism against "getOrPrefabInputFrameUpsync"!
     // See `<proj-root>/ConcerningEdgeCases.md` for why this method exists.
     if (null == batch) {
@@ -897,19 +910,25 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
     const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
     for (let k in batch) {
-      const inputFrameDownsync = batch[k];
-      const inputFrameDownsyncId = inputFrameDownsync.inputFrameId;
-      if (inputFrameDownsyncId < renderedInputFrameIdUpper) {
+      const inputFrame = batch[k]; // could be either "pb.InputFrameDownsync" or "pb.InputFrameUpsync", depending on "fromUDP"
+      const inputFrameId = inputFrame.inputFrameId;
+      if (inputFrameId < renderedInputFrameIdUpper) {
         // Avoid obfuscating already rendered history
         continue;
       }
-      if (inputFrameDownsyncId <= self.lastAllConfirmedInputFrameId) {
+      if (inputFrameId <= self.lastAllConfirmedInputFrameId) {
+        // [WARNING] Don't reject it by "inputFrameId <= self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex-1]", the arrival of UDP packets might not reserve their sending order!
         continue;
       }
-      self.getOrPrefabInputFrameUpsync(inputFrameDownsyncId); // Make sure that inputFrame exists locally
-      const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
+      self.getOrPrefabInputFrameUpsync(inputFrameId); // Make sure that inputFrame exists locally
+      const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
       if (0 < (existingInputFrame.ConfirmedList & (1 << (peerJoinIndex - 1)))) {
         continue;
+      }
+      const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
+      if (inputFrameId > self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1]) {
+        self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1] = inputFrameId;
+        self.lastIndividuallyConfirmedInputList[peerJoinIndex - 1] = peerEncodedInput;
       }
       effCnt += 1;
       // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
@@ -917,12 +936,13 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       for (let i in existingInputFrame.InputList) {
         newInputList[i] = existingInputFrame.InputList[i];
       }
+      newInputList[peerJoinIndex - 1] = peerEncodedInput;
       let newConfirmedList = (existingInputFrame.confirmedList | (1 << (peerJoinIndex - 1)));
-      // No need to change "lastAllConfirmedInputFrameId", leave it to "onInputFrameDownsyncBatch" -- we're just helping prediction here
-      const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsyncId, newInputList, newConfirmedList);
-      self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameDownsyncId);
+      const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
+      self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
     }
     if (0 < effCnt) {
+      self._markConfirmationIfApplicable();
       self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     }
   },

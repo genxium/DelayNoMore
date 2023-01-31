@@ -47,10 +47,11 @@ type Player struct {
 	TutorialStage int       `db:"tutorial_stage"`
 
 	// other in-battle info fields
-	LastReceivedInputFrameId int32
-	LastSentInputFrameId     int32
-	AckingFrameId            int32
-	AckingInputFrameId       int32
+	LastReceivedInputFrameId    int32
+	LastUdpReceivedInputFrameId int32
+	LastSentInputFrameId        int32
+	AckingFrameId               int32
+	AckingInputFrameId          int32
 
 	UdpAddr                *PeerUdpAddr
 	BattleUdpTunnelAddr    *net.UDPAddr // This addr is used by backend only, not visible to frontend

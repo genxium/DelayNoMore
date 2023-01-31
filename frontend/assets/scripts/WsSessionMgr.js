@@ -335,7 +335,7 @@ window.initSecondarySession = function(onopenCb, boundRoomId) {
       //console.log(`Got non-empty onmessage decoded: resp.act=${resp.act}`);
       switch (resp.act) {
         case window.DOWNSYNC_MSG_ACT_PEER_INPUT_BATCH:
-          mapIns.onPeerInputFrameUpsync(resp.peerJoinIndex, resp.inputFrameDownsyncBatch);
+          mapIns.onPeerInputFrameUpsync(resp.peerJoinIndex, resp.inputFrameDownsyncBatch, false);
           break;
         default:
           break;
