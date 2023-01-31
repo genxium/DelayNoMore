@@ -189,7 +189,7 @@ cc.Class({
           currSelfInput = null;
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId); // It's important that "inputDelayFrames == 0" here 
         if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
-          const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId);
+          const prevAndCurrInputs = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId, true);
           prevSelfInput = prevAndCurrInputs[0];
           currSelfInput = prevAndCurrInputs[1];
         }
