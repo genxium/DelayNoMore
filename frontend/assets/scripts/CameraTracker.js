@@ -29,6 +29,15 @@ cc.Class({
     if (!selfPlayerRichInfo) return;
     const selfPlayerNode = selfPlayerRichInfo.node;
     if (!selfPlayerNode) return;
-    self.mapNode.setPosition(cc.v2().sub(selfPlayerNode.position));
+    const dst = cc.v2().sub(selfPlayerNode.position);
+    const pDiff = dst.sub(self.mapNode.position);
+    const stepLength = dt * self.speed;
+    if (stepLength > pDiff.mag()) {
+      self.mapNode.setPosition(dst);
+    } else {
+      pDiff.normalizeSelf();
+      const newMapPos = self.mapNode.position.add(pDiff.mul(dt * self.speed));
+      self.mapNode.setPosition(newMapPos);
+    }
   }
 });
