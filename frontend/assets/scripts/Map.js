@@ -46,7 +46,7 @@ window.onUdpMessage = (args) => {
       const peerJoinIndex = req.joinIndex;
       if (peerJoinIndex == self.selfPlayerInfo.JoinIndex) return;
       const batch = req.inputFrameUpsyncBatch;
-      //self.onPeerInputFrameUpsync(peerJoinIndex, batch, true); // By now calling "self.onPeerInputFrameUpsync" from "onUdpMessage" seems to be overriding local inputs unexpectedly -- even after the local input has already arrived at the peer side via backend udp tunnel! Root cause remains to be investigated.
+      self.onPeerInputFrameUpsync(peerJoinIndex, batch, true);
     }
   }
 };
@@ -173,7 +173,7 @@ cc.Class({
 
     const prefabbedInputList = new Array(self.playerRichInfoDict.size).fill(0);
     // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "prefabbedInputList"
-    for (let k in prefabbedInputList) {
+    for (let k = 0; k < window.boundRoomCapacity; ++k) {
       if (null != existingInputFrame) {
         // When "null != existingInputFrame", it implies that "true == canConfirmSelf" here, we just have to assign "prefabbedInputList[(joinIndex-1)]" specifically and copy all others
         prefabbedInputList[k] = existingInputFrame.InputList[k];
@@ -893,7 +893,7 @@ cc.Class({
         throw `Failed to dump input cache (maybe recentInputCache too small)! inputFrameDownsync.inputFrameId=${inputFrameDownsync.inputFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
       }
     }
-    //self._markConfirmationIfApplicable();
+    self._markConfirmationIfApplicable();
 
     if (null == firstPredictedYetIncorrectInputFrameId) return;
     const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
@@ -939,16 +939,18 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     for (let k in batch) {
       const inputFrame = batch[k]; // could be either "pb.InputFrameDownsync" or "pb.InputFrameUpsync", depending on "fromUDP"
       const inputFrameId = inputFrame.inputFrameId;
-      if (inputFrameId < renderedInputFrameIdUpper) {
-        // Avoid obfuscating already rendered history
+      if (inputFrameId <= renderedInputFrameIdUpper) {
+        // [WARNING] Avoid obfuscating already rendered history, even at "inputFrameId == renderedInputFrameIdUpper", due to the use of "INPUT_SCALE_FRAMES" some previous render frames might already be rendered with "inputFrameId"!   
         continue;
       }
       if (inputFrameId <= self.lastAllConfirmedInputFrameId) {
         // [WARNING] Don't reject it by "inputFrameId <= self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex-1]", the arrival of UDP packets might not reserve their sending order!
         continue;
       }
-      const existingInputFrame = self.getOrPrefabInputFrameUpsync(inputFrameId, false); // Make sure that inputFrame exists locally
-      if (0 < (existingInputFrame.ConfirmedList & (1 << (peerJoinIndex - 1)))) {
+      const peerJoinIndexMask = (1 << (peerJoinIndex - 1));
+      self.getOrPrefabInputFrameUpsync(inputFrameId, false); // Make sure that inputFrame exists locally
+      const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
+      if (0 < (existingInputFrame.ConfirmedList & peerJoinIndexMask)) {
         continue;
       }
       const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
@@ -958,13 +960,11 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       }
       effCnt += 1;
       // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
-      let newInputList = new Array(self.playerRichInfoDict.size).fill(0);
-      for (let i in existingInputFrame.InputList) {
-        newInputList[i] = existingInputFrame.InputList[i];
-      }
+      let newInputList = existingInputFrame.InputList.slice();
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
-      let newConfirmedList = (existingInputFrame.confirmedList | (1 << (peerJoinIndex - 1)));
+      let newConfirmedList = (existingInputFrame.ConfirmedList | peerJoinIndex);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
+      console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
     }
     if (0 < effCnt) {
@@ -988,7 +988,6 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
     if (ALL_BATTLE_STATES.IN_BATTLE != self.battleState) {
       return;
     }
-    self._stringifyRdfIdToActuallyUsedInput();
     window.closeWSConnection(constants.RET_CODE.BATTLE_STOPPED, "");
     self.battleState = ALL_BATTLE_STATES.IN_SETTLEMENT;
     self.countdownNanos = null;
@@ -1463,6 +1462,21 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     //s.push(`ConfirmedList:${inputFrameDownsync.confirmedList}`); 
 
     return s.join(',');
+  },
+
+  gopkgsInputFrameDownsyncStr(inputFrameDownsync) {
+    if (null == inputFrameDownsync) return "{}";
+    const self = this;
+    let s = [];
+    s.push(`InputFrameId:${inputFrameDownsync.InputFrameId}`);
+    let ss = [];
+    for (let k = 0; k < window.boundRoomCapacity; ++k) {
+      ss.push(`"${inputFrameDownsync.InputList[k]}"`);
+    }
+    s.push(`InputList:[${ss.join(',')}]`);
+    s.push(`ConfirmedList:${inputFrameDownsync.ConfirmedList}`);
+
+    return `{${s.join(',')}}`;
   },
 
   _stringifyRdfIdToActuallyUsedInput() {

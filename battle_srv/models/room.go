@@ -825,6 +825,7 @@ func (pR *Room) OnDismissed() {
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(serverFps) / dilutedServerFps)
 	pR.BattleDurationFrames = int32(60 * serverFps)
+	//pR.BattleDurationFrames = int32(20 * serverFps)
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 9                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame, roughly as the "turn-around frames to recover" is empirically OK
@@ -1187,11 +1188,11 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 
 		if false == fromUDP {
 			/*
-						   [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
+							   [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
 
-						   Moreover, only ws session upsyncs should advance "player.LastReceivedInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
+							   Moreover, only ws session upsyncs should advance "player.LastReceivedInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
 
-			               Kindly note that the updates of "player.LastReceivedInputFrameId" could be discrete before and after reconnection.
+				               Kindly note that the updates of "player.LastReceivedInputFrameId" could be discrete before and after reconnection.
 			*/
 			player.LastReceivedInputFrameId = clientInputFrameId
 			if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {

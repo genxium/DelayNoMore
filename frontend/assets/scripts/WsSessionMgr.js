@@ -250,7 +250,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     console.warn(`The WS clientSession is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
     if (cc.sys.isNative) {
       if (mapIns.frameDataLoggingEnabled) {
-        console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+        console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
+`);
       }
       DelayNoMore.UdpSession.closeUdpSession();
     }
@@ -260,7 +261,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.BATTLE_STOPPED:
         // deliberately do nothing
         if (mapIns.frameDataLoggingEnabled) {
-          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
+`);
         }
         break;
       case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
@@ -277,7 +279,8 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       case constants.RET_CODE.PLAYER_CHEATING:
       case 1006: // Peer(i.e. the backend) gone unexpectedly, but not working for "cc.sys.isNative" 
         if (mapIns.frameDataLoggingEnabled) {
-          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}`);
+          console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
+`);
         }
         window.clearLocalStorageAndBackToLoginScene(true);
         break;
