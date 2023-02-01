@@ -80,6 +80,7 @@ NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
 }
 
 NetworkDoctor.prototype.isTooFast = function(mapIns) {
+  return false;
   const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold + 3) {
     // Don't send too fast
@@ -97,7 +98,7 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
         if (mapIns.lastIndividuallyConfirmedInputFrameId[k] >= minInputFrameIdFront) continue;
         minInputFrameIdFront = mapIns.lastIndividuallyConfirmedInputFrameId[k];
       }
-      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance+2))) {
+      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance >> 1))) {
         // first comparison condition is to avoid numeric overflow
         console.log(`Game logic ticking too fast, selfInputFrameIdFront=${selfInputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
         return true;

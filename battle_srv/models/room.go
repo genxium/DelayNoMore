@@ -817,7 +817,7 @@ func (pR *Room) OnDismissed() {
 
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
-	pR.NstDelayFrames = 16
+	pR.NstDelayFrames = 24
 
 	serverFps := 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
