@@ -79,17 +79,29 @@ NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
   this.skippedRenderFrameCnt += 1;
 }
 
-NetworkDoctor.prototype.isTooFast = function() {
-  return false;
+NetworkDoctor.prototype.isTooFast = function(mapIns) {
   const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
-  if (sendingFps >= this.inputRateThreshold + 2) {
+  if (sendingFps >= this.inputRateThreshold + 3) {
     // Don't send too fast
+    console.log(`Sending too fast, sendingFps=${sendingFps}`);
     return true;
-  } else if (sendingFps >= this.inputRateThreshold && srvDownsyncFps >= this.inputRateThreshold) {
+  } else {
+    const sendingFpsNormal = (sendingFps >= this.inputRateThreshold);
     // An outstanding lag within the "inputFrameDownsyncQ" will reduce "srvDownsyncFps", HOWEVER, a constant lag wouldn't impact "srvDownsyncFps"! In native platforms we might use PING value might help as a supplement information to confirm that the "selfPlayer" is not lagged within the time accounted by "inputFrameDownsyncQ".  
-    if (rollbackFrames >= this.rollbackFramesThreshold) {
-      // I got many frames rolled back while none of my peers effectively helped my preciction. Deliberately not using "peerUpsyncThreshold" here because when using UDP p2p upsync broadcasting, we expect to receive effective p2p upsyncs from every other player.   
-      return true;
+    const recvFpsNormal = (srvDownsyncFps >= this.inputRateThreshold || peerUpsyncFps >= this.inputRateThreshold * (window.boundRoomCapacity - 1));
+    if (sendingFpsNormal && recvFpsNormal) {
+      let selfInputFrameIdFront = gopkgs.ConvertToNoDelayInputFrameId(mapIns.renderFrameId);
+      let minInputFrameIdFront = Number.MAX_VALUE;
+      for (let k = 0; k < window.boundRoomCapacity; ++k) {
+        if (k + 1 == mapIns.selfPlayerInfo.JoinIndex) continue;
+        if (mapIns.lastIndividuallyConfirmedInputFrameId[k] >= minInputFrameIdFront) continue;
+        minInputFrameIdFront = mapIns.lastIndividuallyConfirmedInputFrameId[k];
+      }
+      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance+2))) {
+        // first comparison condition is to avoid numeric overflow
+        console.log(`Game logic ticking too fast, selfInputFrameIdFront=${selfInputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
+        return true;
+      }
     }
   }
   return false;

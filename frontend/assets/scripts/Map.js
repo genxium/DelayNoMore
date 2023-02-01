@@ -894,8 +894,12 @@ cc.Class({
       }
     }
     self._markConfirmationIfApplicable();
+    self._handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, false);
+  },
 
+  _handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP) {
     if (null == firstPredictedYetIncorrectInputFrameId) return;
+    const self = this;
     const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
@@ -911,12 +915,17 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
+    console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by 
+firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
-batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]`);
+batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]
+fromUDP=${fromUDP}`);
     self.chaserRenderFrameId = renderFrameId1;
-    self.networkDoctor.logRollbackFrames(self.renderFrameId - self.chaserRenderFrameId);
+    let rollbackFrames = (self.renderFrameId - self.chaserRenderFrameId);
+    if (0 > rollbackFrames)
+      rollbackFrames = 0;
+    self.networkDoctor.logRollbackFrames(rollbackFrames);
   },
 
   onPeerInputFrameUpsync(peerJoinIndex, batch, fromUDP) {
@@ -935,12 +944,24 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 
     let effCnt = 0;
     //console.log(`Received peer inputFrameUpsync batch w/ inputFrameId in [${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}] for prediction assistance`);
+    let firstPredictedYetIncorrectInputFrameId = null;
     const renderedInputFrameIdUpper = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
     for (let k in batch) {
       const inputFrame = batch[k]; // could be either "pb.InputFrameDownsync" or "pb.InputFrameUpsync", depending on "fromUDP"
       const inputFrameId = inputFrame.inputFrameId;
+      const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
       if (inputFrameId <= renderedInputFrameIdUpper) {
         // [WARNING] Avoid obfuscating already rendered history, even at "inputFrameId == renderedInputFrameIdUpper", due to the use of "INPUT_SCALE_FRAMES" some previous render frames might already be rendered with "inputFrameId"!   
+        // TODO: Shall we update the "chaserRenderFrameId" if the rendered history was wrong? It doesn't seem to impact eventual correctness if we allow the update of "chaserRenderFrameId" upon "inputFrameId <= renderedInputFrameIdUpper" here, however UDP upsync doesn't reserve order from a same sender and there might be multiple other senders, hence it might result in unnecessarily frequent chasing.
+        const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
+        if (null != localInputFrame
+          &&
+          null == firstPredictedYetIncorrectInputFrameId
+          &&
+          localInputFrame.InputList[peerJoinIndex - 1] != peerEncodedInput
+        ) {
+          firstPredictedYetIncorrectInputFrameId = inputFrameId;
+        }
         continue;
       }
       if (inputFrameId <= self.lastAllConfirmedInputFrameId) {
@@ -953,7 +974,6 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       if (0 < (existingInputFrame.ConfirmedList & peerJoinIndexMask)) {
         continue;
       }
-      const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
       if (inputFrameId > self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1]) {
         self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1] = inputFrameId;
         self.lastIndividuallyConfirmedInputList[peerJoinIndex - 1] = peerEncodedInput;
@@ -964,13 +984,14 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
       let newConfirmedList = (existingInputFrame.ConfirmedList | peerJoinIndex);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
-      console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
+      //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
     }
     if (0 < effCnt) {
       //self._markConfirmationIfApplicable();
       self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     }
+    self._handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP);
   },
 
   onPlayerAdded(rdf /* pb.RoomDownsyncFrame */ ) {
@@ -1115,7 +1136,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
-        self.skipRenderFrameFlag = self.networkDoctor.isTooFast();
+        self.skipRenderFrameFlag = self.networkDoctor.isTooFast(self);
       } catch (err) {
         console.error("Error during Map.update", err);
         self.onBattleStopped(); // TODO: Popup to ask player to refresh browser
