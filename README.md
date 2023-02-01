@@ -4,7 +4,7 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 
 As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- **since v0.9.25, the project is actually equipped with UDP capabilities as follows**.
 - When using the so called `native apps` on `Android` and `Windows` (I'm working casually hard to support `iOS` next), the frontends will try to use UDP hole-punching w/ the help of backend as a registry. If UDP hole-punching is working, the rollback is often less than `turn-around frames to recover` and thus not noticeable, being much better than using websocket alone.
-- If UDP hole-punching is not working, e.g. for Symmetric NAT like in 4G/5G cellular network, the frontends will use backend as a UDP tunnel (or relay, whatever you like to call it). This video shows how the UDP tunnel performs for a [Phone-4G v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1wdUTvRiyrTLWy7mF6G7uyQ?pwd=icmp). 
+- If UDP hole-punching is not working, e.g. for Symmetric NAT like in 4G/5G cellular network, the frontends will use backend as a UDP tunnel (or relay, whatever you like to call it). This video shows how the UDP tunnel performs for a [Phone-4G v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1IZVa5wVgAdeH6D-xsZYFUw?pwd=dgkj). 
 - Browser vs `native app` is possible but in that case only websocket is used.
 
 The following video is recorded over INTERNET using an input delay of 4 frames and it feels SMOOTH when playing! Please also checkout these demo videos
