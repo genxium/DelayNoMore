@@ -1749,7 +1749,7 @@ func (pR *Room) startBattleUdpTunnel() {
 		pReq := new(pb.WsReq)
 		bytes := message[0:rlen]
 		if unmarshalErr := proto.Unmarshal(bytes, pReq); nil != unmarshalErr {
-			Logger.Warn("`BattleUdpTunnel` for roomId=%d failed to unmarshal", zap.Error(unmarshalErr))
+			Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to unmarshal %d bytes", pR.Id, rlen), zap.Error(unmarshalErr))
 			continue
 		}
 		playerId := pReq.PlayerId
