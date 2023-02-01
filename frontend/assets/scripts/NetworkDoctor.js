@@ -80,7 +80,6 @@ NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
 }
 
 NetworkDoctor.prototype.isTooFast = function(mapIns) {
-  return false;
   const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold + 3) {
     // Don't send too fast
