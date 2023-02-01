@@ -97,7 +97,7 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
         if (mapIns.lastIndividuallyConfirmedInputFrameId[k] >= minInputFrameIdFront) continue;
         minInputFrameIdFront = mapIns.lastIndividuallyConfirmedInputFrameId[k];
       }
-      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance >> 1))) {
+      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance + 1))) {
         // first comparison condition is to avoid numeric overflow
         console.log(`Game logic ticking too fast, selfInputFrameIdFront=${selfInputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
         return true;
