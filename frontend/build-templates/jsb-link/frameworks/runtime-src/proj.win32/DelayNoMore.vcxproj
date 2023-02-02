@@ -193,6 +193,7 @@ copy "$(ProjectDir)..\..\..\project.json" "$(OutDir)\" /Y</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />
+    <ClInclude Include="..\Classes\send_ring_buff.hpp" />
     <ClInclude Include="..\Classes\udp_session.hpp" />
     <ClInclude Include="..\Classes\udp_session_bridge.hpp" />
     <ClInclude Include="..\Classes\AppDelegate.h" />

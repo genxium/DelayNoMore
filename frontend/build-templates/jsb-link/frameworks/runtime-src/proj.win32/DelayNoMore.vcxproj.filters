@@ -37,6 +37,9 @@
       <Filter>win32</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="..\Classes\send_ring_buff.hpp">
+      <Filter>Classes</Filter>
+    </ClInclude>
     <ClInclude Include="..\Classes\udp_session.hpp">
       <Filter>Classes</Filter>
     </ClInclude>

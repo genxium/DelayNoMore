@@ -1,18 +1,9 @@
-#include "uv/uv.h"
-#define __SSIZE_T // Otherwise "ssize_t" would have conflicting macros error that stops compiling
-
 #ifndef udp_session_hpp
 #define udp_session_hpp
 
-typedef char BYTEC;
-typedef char const CHARC;
-int const maxUdpPayloadBytes = 128;
+#include "send_ring_buff.hpp"
 
 int const maxPeerCnt = 10;
-struct PeerAddr {
-    struct sockaddr_in sockAddrIn;
-    uint32_t authKey;
-};
 
 namespace DelayNoMore {
     class UdpSession {

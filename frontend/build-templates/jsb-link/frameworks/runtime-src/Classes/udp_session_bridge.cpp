@@ -126,8 +126,7 @@ bool upsertPeerUdpAddr(se::State& s) {
 }
 SE_BIND_FUNC(upsertPeerUdpAddr)
 
-static bool udpSessionFinalize(se::State& s)
-{
+static bool udpSessionFinalize(se::State& s) {
     CCLOGINFO("jsbindings: finalizing JS object %p (DelayNoMore::UdpSession)", s.nativeThisObject());
     auto iter = se::NonRefNativePtrCreatedByCtorMap::find(s.nativeThisObject());
     if (iter != se::NonRefNativePtrCreatedByCtorMap::end()) {
@@ -141,8 +140,7 @@ SE_BIND_FINALIZE_FUNC(udpSessionFinalize)
 
 se::Object* __jsb_udp_session_proto = nullptr;
 se::Class* __jsb_udp_session_class = nullptr;
-bool registerUdpSession(se::Object* obj)
-{
+bool registerUdpSession(se::Object* obj) {
     // Get the ns
     se::Value nsVal;
     if (!obj->getProperty("DelayNoMore", &nsVal))
