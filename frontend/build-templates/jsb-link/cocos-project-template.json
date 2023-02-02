@@ -21,6 +21,9 @@
             "from": "frameworks/runtime-src/Classes/send_ring_buff.hpp",
             "to": "frameworks/runtime-src/Classes/send_ring_buff.hpp"
         }, {
+            "from": "frameworks/runtime-src/Classes/send_ring_buff.cpp",
+            "to": "frameworks/runtime-src/Classes/send_ring_buff.cpp"
+        }, {
             "from": "frameworks/runtime-src/Classes/udp_session.hpp",
             "to": "frameworks/runtime-src/Classes/udp_session.hpp"
         }, {

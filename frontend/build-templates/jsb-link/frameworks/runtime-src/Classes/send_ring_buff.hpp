@@ -26,44 +26,19 @@ public:
 };
 
 // [WARNING] This class is specific to "SendWork", designed and implemented only to use in multithreading env and save heap alloc/dealloc timecomplexity, it's by no means comparable to the Golang or JavaScript versions!
-class SendRingBuffer {
+class SendRingBuff {
 public:
 	int ed, st, n, cnt;
 	SendWork eles[maxBuffedMsgs]; // preallocated on stack to save heap alloc/dealloc time
-	SendRingBuffer(int newN) {
+	SendRingBuff(int newN) {
 		this->n = newN;
 		this->st = this->ed = this->cnt = 0;
 	}
 
-	void put(BYTEC* const newBytes, size_t newBytesLen, PeerAddr* pNewPeerAddr) {
-		while (0 < cnt && cnt >= n) {
-			// Make room for the new element
-			this->pop();
-		}
-		eles[ed].bytesLen = newBytesLen;
-		memset(eles[ed].bytes, 0, sizeof eles[ed].bytes);
-		memcpy(eles[ed].bytes, newBytes, newBytesLen);
-		eles[ed].peerAddr = *(pNewPeerAddr);
-		ed++;
-		cnt++;
-		if (ed >= n) {
-			ed -= n; // Deliberately not using "%" operator for performance concern
-		}
-	}
+	void put(BYTEC* const newBytes, size_t newBytesLen, PeerAddr* pNewPeerAddr); 
 
 	// Sending is always sequential in UvSendThread, no need to return a copy of "SendWork" instance
-	SendWork* pop() {
-		if (0 == cnt) {
-			return NULL;
-		}
-		SendWork* ret = &(eles[st]);
-		cnt--;
-		st++;
-		if (st >= n) {
-			st -= n;
-		}
-		return ret;
-	}
+	SendWork* pop();
 };
 
 #endif

@@ -229,7 +229,11 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
             const peerJoinIndex = resp.peerJoinIndex;
             const peerAddrList = resp.rdf.peerUdpAddrList;
             console.log(`Got DOWNSYNC_MSG_ACT_PEER_UDP_ADDR peerAddrList=${JSON.stringify(peerAddrList)}; boundRoomCapacity=${window.boundRoomCapacity}`);
-            DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
+            for (let j = 0; j < 3; ++j) {
+                setTimeout(()=> {
+                    DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
+                }, j*500);
+            }
           }
           break;
         default:

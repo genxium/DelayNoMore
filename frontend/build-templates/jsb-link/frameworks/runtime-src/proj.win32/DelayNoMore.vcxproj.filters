@@ -22,6 +22,9 @@
     <ClCompile Include="..\Classes\jsb_module_register.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\send_ring_buff.cpp">
+      <Filter>Classes</Filter>
+    </ClCompile>
     <ClCompile Include="..\Classes\udp_session.cpp">
       <Filter>Classes</Filter>
     </ClCompile>

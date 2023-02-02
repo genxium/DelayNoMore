@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := hellojavascript/main.cpp \
 				   ../../../Classes/jsb_module_register.cpp \
 				   ../../../Classes/udp_session.cpp \
 				   ../../../Classes/udp_session_bridge.cpp \
+				   ../../../Classes/send_ring_buff.cpp 
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../Classes
 

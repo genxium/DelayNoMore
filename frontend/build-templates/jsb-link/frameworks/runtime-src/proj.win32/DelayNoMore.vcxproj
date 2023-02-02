@@ -190,6 +190,7 @@ copy "$(ProjectDir)..\..\..\project.json" "$(OutDir)\" /Y</Command>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
     <ClCompile Include="..\Classes\udp_session.cpp" />
     <ClCompile Include="..\Classes\udp_session_bridge.cpp" />
+    <ClCompile Include="..\Classes\send_ring_buff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />

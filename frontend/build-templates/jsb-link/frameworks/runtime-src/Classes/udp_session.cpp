@@ -6,7 +6,7 @@
 
 int const punchServerCnt = 3;
 int const punchPeerCnt = 3;
-int const broadcastUpsyncCnt = 3;
+int const broadcastUpsyncCnt = 1;
 
 uv_udp_t *udpRecvSocket = NULL, *udpSendSocket = NULL;
 uv_thread_t recvTid, sendTid;
@@ -14,7 +14,7 @@ uv_async_t uvRecvLoopStopSig, uvSendLoopStopSig, uvSendLoopTriggerSig;
 uv_loop_t *recvLoop = NULL, *sendLoop = NULL;
 
 uv_mutex_t sendRingBuffLock; // used along with "uvSendLoopTriggerSig" as a "uv_cond_t"
-SendRingBuffer* sendRingBuff = NULL;
+SendRingBuff* sendRingBuff = NULL;
 
 char SRV_IP[256];
 int SRV_PORT = 0;
@@ -41,14 +41,14 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
             struct sockaddr_in const* sockAddr = (struct sockaddr_in const*)addr;
             uv_inet_ntop(sockAddr->sin_family, &(sockAddr->sin_addr), ip, INET_ADDRSTRLEN);
             port = ntohs(sockAddr->sin_port);
-            CCLOG("UDP received %d bytes from %s:%d", nread, ip, port);
+            CCLOG("UDP received %u bytes from %s:%d", nread, ip, port);
             break;
         }
         default:
             break;
         }
     } else {
-        CCLOG("UDP received %d bytes from unknown sender", nread);
+        CCLOG("UDP received %u bytes from unknown sender", nread);
     }
 #endif
     
@@ -57,7 +57,7 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
     } else if (0 < nread) {
         // Non-holepunching; it might be more effective in RAM usage to use a threadsafe RingBuff to pass msg to GameThread here, but as long as it's not a performance blocker don't bother optimize here...
         uint8_t* const ui8Arr = (uint8_t*)malloc(maxUdpPayloadBytes*sizeof(uint8_t));
-        memset(ui8Arr, 0, sizeof ui8Arr);
+        memset(ui8Arr, 0, sizeof(ui8Arr));
         for (int i = 0; i < nread; i++) {
             *(ui8Arr+i) = *(buf->base + i);
         }
@@ -133,16 +133,15 @@ void _onUvSthNewToSend(uv_async_t* handle) {
         */
         uv_mutex_unlock(&sendRingBuffLock);
         if (NULL != work) {
-            /* 
+            
             // [WARNING] If "uv_udp_send" is to be used instead of "uv_udp_try_send", as UvSendThread will always be terminated from GameThread, it's a MUST to use the following heap-alloc form to initialize "uv_udp_send_t* req" such that "_afterSend" is guaranteed to be called, otherwise "int uvRunRet2 = uv_run(l, UV_RUN_DEFAULT);" for UvSendThread would block forever due to residual active handles.
 
-            uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof uv_udp_send_t);
+            uv_udp_send_t* req = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
             uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
             uv_udp_send(req, udpSendSocket, &sendBuffer, 1, (struct sockaddr const*)&(work->peerAddr.sockAddrIn), _afterSend);
-            */
             
-            uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
-            uv_udp_try_send(udpSendSocket, &sendBuffer, 1, (struct sockaddr const*)&(work->peerAddr.sockAddrIn));
+            //uv_buf_t sendBuffer = uv_buf_init(work->bytes, work->bytesLen);
+            //uv_udp_try_send(udpSendSocket, &sendBuffer, 1, (struct sockaddr const*)&(work->peerAddr.sockAddrIn));
 #if defined(COCOS2D_DEBUG) && (COCOS2D_DEBUG > 0)
             char ip[INET_ADDRSTRLEN];
             memset(ip, 0, sizeof ip);
@@ -213,7 +212,7 @@ bool DelayNoMore::UdpSession::openUdpSession(int port) {
 
     uv_async_init(recvLoop, &uvRecvLoopStopSig, _onUvStopSig);
     uv_mutex_init(&sendRingBuffLock);
-    sendRingBuff = new SendRingBuffer(maxBuffedMsgs);
+    sendRingBuff = new SendRingBuff(maxBuffedMsgs);
     uv_async_init(sendLoop, &uvSendLoopStopSig, _onUvStopSig);
     uv_async_init(sendLoop, &uvSendLoopTriggerSig, _onUvSthNewToSend);
 
