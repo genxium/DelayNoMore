@@ -147,7 +147,7 @@ void _onUvSthNewToSend(uv_async_t* handle) {
             memset(ip, 0, sizeof ip);
             uv_inet_ntop(work->peerAddr.sockAddrIn.sin_family, &(work->peerAddr.sockAddrIn.sin_addr), ip, INET_ADDRSTRLEN);
             int port = ntohs(work->peerAddr.sockAddrIn.sin_port);
-            //CCLOG("UDP sent %d bytes to %s:%d", sendBuffer.len, ip, port);
+            CCLOG("UDP sent %d bytes to %s:%d", sendBuffer.len, ip, port);
 #endif
         }
     }
@@ -159,8 +159,6 @@ void _onWalkCleanup(uv_handle_t* handle, void* data) {
 }
 
 void startRecvLoop(void* arg) {
-    uv_udp_recv_start(udpRecvSocket, _allocBuffer, _onRead);
-
     uv_loop_t* l = (uv_loop_t*)arg;
     int uvRunRet1 = uv_run(l, UV_RUN_DEFAULT);
     CCLOG("UDP recv loop is ended in UvRecvThread, uvRunRet1=%d", uvRunRet1);
@@ -187,36 +185,56 @@ void startSendLoop(void* arg) {
     uv_mutex_destroy(&sendRingBuffLock);
 }
 
-bool DelayNoMore::UdpSession::openUdpSession(int port) {
-    recvLoop = uv_loop_new();
-    udpRecvSocket = (uv_udp_t*)malloc(sizeof(uv_udp_t));
-
-    int recvSockInitRes = uv_udp_init(recvLoop, udpRecvSocket); // "uv_udp_init" must precede that of "uv_udp_bind" for successful binding!
-
-    struct sockaddr_in udpAddr;
-    uv_ip4_addr("0.0.0.0", port, &udpAddr);
-    int bindRes1 = uv_udp_bind(udpRecvSocket, (struct sockaddr const*)&udpAddr, UV_UDP_REUSEADDR);
-    if (0 != bindRes1) {
-        CCLOGERROR("Failed to bind recv on port=%d; result=%d, reason=%s", port, bindRes1, uv_strerror(bindRes1));
-        exit(-1);
-    }
-
+int initSendLoop(struct sockaddr const* pUdpAddr) {
     sendLoop = uv_loop_new();
     udpSendSocket = (uv_udp_t*)malloc(sizeof(uv_udp_t));
     int sendSockInitRes = uv_udp_init(sendLoop, udpSendSocket); // "uv_udp_init" must precede that of "uv_udp_bind" for successful binding!
-    int bindRes2 = uv_udp_bind(udpSendSocket, (struct sockaddr const*)&udpAddr, UV_UDP_REUSEADDR);
-    if (0 != bindRes2) {
-        CCLOGERROR("Failed to bind send on port=%d; result=%d, reason=%s", port, bindRes2, uv_strerror(bindRes2));
+    int sendBindRes = uv_udp_bind(udpSendSocket, pUdpAddr, UV_UDP_REUSEADDR);
+    if (0 != sendBindRes) {
+        CCLOGERROR("Failed to bind send; sendSockInitRes=%d, sendBindRes=%d, reason=%s", sendSockInitRes, sendBindRes, uv_strerror(sendBindRes));
         exit(-1);
     }
-
-    uv_async_init(recvLoop, &uvRecvLoopStopSig, _onUvStopSig);
     uv_mutex_init(&sendRingBuffLock);
     sendRingBuff = new SendRingBuff(maxBuffedMsgs);
     uv_async_init(sendLoop, &uvSendLoopStopSig, _onUvStopSig);
     uv_async_init(sendLoop, &uvSendLoopTriggerSig, _onUvSthNewToSend);
 
-    CCLOG("About to open UDP session at port=%d; bindRes1=%d, bindRes2=%d; recvSockInitRes=%d, sendSocketInitRes=%d; recvLoop=%p, sendLoop=%p...", port, bindRes1, bindRes2, recvSockInitRes, sendSockInitRes, recvLoop, sendLoop);
+    return sendBindRes;
+}
+
+bool initRecvLoop(struct sockaddr const* pUdpAddr) {
+    recvLoop = uv_loop_new();
+    udpRecvSocket = (uv_udp_t*)malloc(sizeof(uv_udp_t));
+
+    int recvSockInitRes = uv_udp_init(recvLoop, udpRecvSocket);
+    int recvbindRes = uv_udp_bind(udpRecvSocket, pUdpAddr, UV_UDP_REUSEADDR);
+    if (0 != recvbindRes) {
+        CCLOGERROR("Failed to bind recv; recvSockInitRes=%d, recvbindRes=%d, reason=%s", recvSockInitRes, recvbindRes, uv_strerror(recvbindRes));
+        exit(-1);
+    }
+    uv_udp_recv_start(udpRecvSocket, _allocBuffer, _onRead);
+    uv_async_init(recvLoop, &uvRecvLoopStopSig, _onUvStopSig);
+
+    return recvbindRes;
+}
+
+bool DelayNoMore::UdpSession::openUdpSession(int port) {
+    struct sockaddr_in udpAddr;
+    uv_ip4_addr("0.0.0.0", port, &udpAddr);
+    struct sockaddr const* pUdpAddr = (struct sockaddr const*)&udpAddr;
+    /*
+    [WARNING] On Android, the libuv documentation of "UV_UDP_REUSEADDR" is true, i.e. only the socket that binds later on the same port will be triggered the recv callback; however on Windows, experiment shows that the exact reverse is true instead.
+
+    It's feasible to use a same socket instance for both receiving and sending in different threads, however not knowing the exact thread-safety concerns for "uv_udp_send/uv_udp_try_send" & "uv recv callback" stops me from doing so, I'd prefer to stick to using different socket instances in different threads. 
+    */
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+    initSendLoop(pUdpAddr);
+    initRecvLoop(pUdpAddr);
+#else
+    initRecvLoop(pUdpAddr);
+    initSendLoop(pUdpAddr);
+#endif
+    CCLOG("About to open UDP session at port=%d; recvLoop=%p, sendLoop=%p...", port, recvLoop, sendLoop);
 
     uv_thread_create(&recvTid, startRecvLoop, recvLoop);
     uv_thread_create(&sendTid, startSendLoop, sendLoop);
