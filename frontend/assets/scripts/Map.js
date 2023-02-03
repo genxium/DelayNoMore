@@ -394,6 +394,8 @@ cc.Class({
     self.networkDoctor = new NetworkDoctor(20);
     self.skipRenderFrameFlag = false;
 
+    self.allowRollbackOnPeerUpsync = true;
+
     self.countdownNanos = null;
     if (self.countdownLabel) {
       self.countdownLabel.string = "";
@@ -950,18 +952,8 @@ fromUDP=${fromUDP}`);
       const inputFrame = batch[k]; // could be either "pb.InputFrameDownsync" or "pb.InputFrameUpsync", depending on "fromUDP"
       const inputFrameId = inputFrame.inputFrameId;
       const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
-      if (inputFrameId <= renderedInputFrameIdUpper) {
+      if (false == self.allowRollbackOnPeerUpsync && inputFrameId <= renderedInputFrameIdUpper) {
         // [WARNING] Avoid obfuscating already rendered history, even at "inputFrameId == renderedInputFrameIdUpper", due to the use of "INPUT_SCALE_FRAMES" some previous render frames might already be rendered with "inputFrameId"!   
-        // TODO: Shall we update the "chaserRenderFrameId" if the rendered history was wrong? It doesn't seem to impact eventual correctness if we allow the update of "chaserRenderFrameId" upon "inputFrameId <= renderedInputFrameIdUpper" here, however UDP upsync doesn't reserve order from a same sender and there might be multiple other senders, hence it might result in unnecessarily frequent chasing.
-        const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
-        if (null != localInputFrame
-          &&
-          null == firstPredictedYetIncorrectInputFrameId
-          &&
-          localInputFrame.InputList[peerJoinIndex - 1] != peerEncodedInput
-        ) {
-          firstPredictedYetIncorrectInputFrameId = inputFrameId;
-        }
         continue;
       }
       if (inputFrameId <= self.lastAllConfirmedInputFrameId) {
@@ -986,12 +978,26 @@ fromUDP=${fromUDP}`);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
+
+      if (self.allowRollbackOnPeerUpsync) {
+        // Reaching here implies that "true == self.allowRollbackOnPeerUpsync".
+        // Shall we update the "chaserRenderFrameId" if the rendered history was wrong? It doesn't seem to impact eventual correctness if we allow the update of "chaserRenderFrameId" upon "inputFrameId <= renderedInputFrameIdUpper" here, however UDP upsync doesn't reserve order from a same sender and there might be multiple other senders, hence it might result in unnecessarily frequent chasing.
+        if (
+          null == firstPredictedYetIncorrectInputFrameId
+          &&
+          existingInputFrame.InputList[peerJoinIndex - 1] != peerEncodedInput
+        ) {
+          firstPredictedYetIncorrectInputFrameId = inputFrameId;
+        }
+      }
     }
     if (0 < effCnt) {
       //self._markConfirmationIfApplicable();
       self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     }
-    self._handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP);
+    if (true == self.allowRollbackOnPeerUpsync) {
+      self._handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP);
+    }
   },
 
   onPlayerAdded(rdf /* pb.RoomDownsyncFrame */ ) {

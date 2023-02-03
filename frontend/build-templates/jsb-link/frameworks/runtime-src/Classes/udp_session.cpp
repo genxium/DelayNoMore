@@ -6,7 +6,7 @@
 
 int const punchServerCnt = 3;
 int const punchPeerCnt = 3;
-int const broadcastUpsyncCnt = 1;
+int const broadcastUpsyncCnt = 2;
 
 uv_udp_t *udpRecvSocket = NULL, *udpSendSocket = NULL;
 uv_thread_t recvTid, sendTid;
