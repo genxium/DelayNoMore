@@ -8,7 +8,7 @@ cc.Class({
     },
     speed: {
       type: cc.Float,
-      default: 500
+      default: 100
     },
   },
 

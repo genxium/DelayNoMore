@@ -23,13 +23,14 @@ const (
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
 	INPUT_DELAY_FRAMES = int32(6)  // in the count of render frames
-	INPUT_SCALE_FRAMES = uint32(2) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
+	INPUT_SCALE_FRAMES = uint32(1) // inputDelayedAndScaledFrameId = ((originalFrameId - InputDelayFrames) >> InputScaleFrames)
 
 	SP_ATK_LOOKUP_FRAMES = int32(5)
 
 	SNAP_INTO_PLATFORM_OVERLAP   = float64(0.1)
 	SNAP_INTO_PLATFORM_THRESHOLD = float64(0.5)
 	VERTICAL_PLATFORM_THRESHOLD  = float64(0.9)
+	MAGIC_FRAMES_TO_BE_ONWALL    = int32(12)
 
 	NO_SKILL     = -1
 	NO_SKILL_HIT = -1
@@ -939,11 +940,6 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 							break
 						}
 					}
-
-					if !currPlayerDownsync.OnWall && thatPlayerInNextFrame.OnWall {
-						// To avoid mysterious climbing up the wall after sticking on it
-						thatPlayerInNextFrame.VelY = 0
-					}
 				}
 			}
 			if !thatPlayerInNextFrame.OnWall {
@@ -1071,9 +1067,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			oldNextCharacterState := thatPlayerInNextFrame.CharacterState
 			switch oldNextCharacterState {
 			case ATK_CHARACTER_STATE_IDLE1, ATK_CHARACTER_STATE_WALKING, ATK_CHARACTER_STATE_TURNAROUND:
-				if thatPlayerInNextFrame.OnWall {
-					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ONWALL
-				} else if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
+				if jumpedOrNotList[i] || ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP == currPlayerDownsync.CharacterState {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP
 				} else {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP
@@ -1083,6 +1077,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				// No inAir transition for ATK2/ATK3 for now
 			case ATK_CHARACTER_STATE_ATKED1:
 				thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_INAIR_ATKED1
+			}
+		}
+
+		if thatPlayerInNextFrame.OnWall {
+			switch thatPlayerInNextFrame.CharacterState {
+			case ATK_CHARACTER_STATE_WALKING, ATK_CHARACTER_STATE_INAIR_IDLE1_BY_JUMP, ATK_CHARACTER_STATE_INAIR_IDLE1_NO_JUMP:
+				hasBeenOnWallChState := (ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState)
+				hasBeenOnWallCollisionResultForSameChState := (currPlayerDownsync.OnWall && MAGIC_FRAMES_TO_BE_ONWALL <= thatPlayerInNextFrame.FramesInChState)
+				if hasBeenOnWallChState || hasBeenOnWallCollisionResultForSameChState {
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ONWALL
+				}
 			}
 		}
 
