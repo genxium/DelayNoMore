@@ -27,7 +27,7 @@
 
 #include "cocos2d.h"
 
-#include "cocos/audio/include/AudioEngine.h"
+//#include "cocos/audio/include/AudioEngine.h"
 #include "cocos/scripting/js-bindings/manual/jsb_module_register.hpp"
 #include "cocos/scripting/js-bindings/manual/jsb_global.h"
 #include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
@@ -81,13 +81,13 @@ void AppDelegate::applicationDidEnterBackground()
 {
     EventDispatcher::dispatchEnterBackgroundEvent();
     // Ensure that handle AudioEngine enter background after all enter background events are handled
-    AudioEngine::onEnterBackground();
+    //AudioEngine::onEnterBackground();
 }
 
 // this function will be called when the app is active again
 void AppDelegate::applicationWillEnterForeground()
 {
     // Ensure that handle AudioEngine enter foreground before all enter foreground events are handled
-    AudioEngine::onEnterForeground();
+    //AudioEngine::onEnterForeground();
     EventDispatcher::dispatchEnterForegroundEvent();
 }

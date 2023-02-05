@@ -735,6 +735,7 @@ cc.Class({
         self.hideFindingPlayersGUI();
         console.warn('On battle resynced! renderFrameId=', rdf.Id);
       }
+
       self.renderFrameId = rdf.Id;
       self.lastRenderFrameIdTriggeredAt = performance.now();
       // In this case it must be true that "rdf.id > chaserRenderFrameId".
@@ -745,6 +746,10 @@ cc.Class({
       self.ctrl = canvasNode.getComponent("TouchEventsManager");
       self.enableInputControls();
       self.transitToState(ALL_MAP_STATES.VISUAL);
+
+      const selfPlayerRichInfo = self.playerRichInfoDict.get(self.selfPlayerInfo.Id);
+      const newMapPos = cc.v2().sub(selfPlayerRichInfo.node.position);
+      self.node.setPosition(newMapPos);
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
     }
 
@@ -926,8 +931,9 @@ batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inpu
 fromUDP=${fromUDP}`);
     self.chaserRenderFrameId = renderFrameId1;
     let rollbackFrames = (self.renderFrameId - self.chaserRenderFrameId);
-    if (0 > rollbackFrames)
+    if (0 > rollbackFrames) {
       rollbackFrames = 0;
+    }
     self.networkDoctor.logRollbackFrames(rollbackFrames);
   },
 
@@ -1112,7 +1118,12 @@ fromUDP=${fromUDP}`);
 
         // Inside the following "self.rollbackAndChase" actually ROLLS FORWARD w.r.t. the corresponding delayedInputFrame, REGARDLESS OF whether or not "self.chaserRenderFrameId == self.renderFrameId" now. 
         const latestRdfResults = self.rollbackAndChase(self.renderFrameId, self.renderFrameId + 1, self.gopkgsCollisionSys, self.gopkgsCollisionSysMap, false);
-        self.networkDoctor.logRollbackFrames(self.renderFrameId - self.chaserRenderFrameId);
+
+        let rollbackFrames = (self.renderFrameId - self.chaserRenderFrameId);
+        if (0 > rollbackFrames) {
+          rollbackFrames = 0;
+        }
+        self.networkDoctor.logRollbackFrames(rollbackFrames);
         let prevRdf = latestRdfResults[0],
           rdf = latestRdfResults[1];
         /*
