@@ -748,8 +748,9 @@ cc.Class({
       self.battleState = ALL_BATTLE_STATES.IN_BATTLE;
     }
 
+    // [WARNING] "cc.Node.removeChild" would trigger massive update of rendering nodes, thus a performance impact at the beginning of battle, avoid it by just moving the widget to infinitely far away!  
     if (self.countdownToBeginGameNode && self.countdownToBeginGameNode.parent) {
-      self.countdownToBeginGameNode.parent.removeChild(self.countdownToBeginGameNode);
+      self.countdownToBeginGameNode.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
     }
 
     if (null != self.musicEffectManagerScriptIns) {
@@ -1233,8 +1234,10 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   hideFindingPlayersGUI(rdf) {
     const self = this;
-    if (null == self.findingPlayerNode.parent) return;
-    self.findingPlayerNode.parent.removeChild(self.findingPlayerNode);
+    // [WARNING] "cc.Node.removeChild" would trigger massive update of rendering nodes, thus a performance impact at the beginning of battle, avoid it by just moving the widget to infinitely far away!  
+    if (self.findingPlayerNode && self.findingPlayerNode.parent) {
+      self.findingPlayerNode.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
+    }
   },
 
   onBattleReadyToStart(rdf /* pb.RoomDownsyncFrame */ ) {
