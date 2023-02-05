@@ -652,10 +652,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			*/
 			alignedWithInertia := true
 			exactTurningAround := false
-			if 0 == effDx && 0 != thatPlayerInNextFrame.VelX {
+			stoppingFromWalking := false
+			if 0 != effDx && 0 == thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
-			} else if 0 != effDx && 0 == thatPlayerInNextFrame.VelX {
+			} else if 0 == effDx && 0 != thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
+				stoppingFromWalking = true
 			} else if 0 > effDx*thatPlayerInNextFrame.VelX {
 				alignedWithInertia = false
 				exactTurningAround = true
@@ -671,6 +673,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				thatPlayerInNextFrame.CapturedByInertia = true
 				if exactTurningAround {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_TURNAROUND
+					thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
+				} else if stoppingFromWalking {
 					thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
 				} else {
 					thatPlayerInNextFrame.FramesToRecover = (chConfig.InertiaFramesToRecover >> 1)
