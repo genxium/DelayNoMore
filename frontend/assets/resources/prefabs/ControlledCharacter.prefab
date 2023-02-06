@@ -375,7 +375,7 @@
       "__id__": 8
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 10
@@ -489,6 +489,9 @@
       null,
       {
         "__uuid__": "6e1139d4-03dd-4bd4-9510-606e94f629fe"
+      },
+      {
+        "__uuid__": "168df303-4b6a-4376-940c-3d36fa9e98d8"
       }
     ],
     "playOnLoad": false,

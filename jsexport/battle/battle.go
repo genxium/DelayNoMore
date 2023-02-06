@@ -522,7 +522,31 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	return patternId, jumpedOrNot, effDx, effDy
 }
 
-// [WARNING] The params of this method is carefully tuned such that only "battle.RoomDownsyncFrame" is a necessary custom struct.
+/*
+[LONG TERM PERFORMANCE ENHANCEMENT PLAN]
+
+The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & playerColliders & bulletColliders, which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
+
+It's not easy to remove all of the dynamic heap-memory blocks allocation/deallocation, but we can reduce them to some extent. For example, the creation of new "RoomDownsyncFrame" in heap-memory can be avoided by adding
+
+```
+func overwriteRoomDownsyncFrame(src *RoomDownsyncFrame, dst *RoomDownsyncFrame) {
+    // Copy "src" into "dst" down to every primitive field
+}
+
+type Room struct {
+    newRoomDownsyncFrameHolder *RoomDownsyncFrame
+}
+
+func (pR *Room) provisionNewRoomDownsyncFrameHolder(src *RoomDownsyncFrame) {
+    overwriteRoomDownsyncFrame(src, pR.newRoomDownsyncFrameHolder)
+}
+```
+
+then pass in the whole "renderFrameBuffer *SpecificRingBuffer" to this function and overwrite the target slot IN-PLACE, i.e. need write new "SpecificRingBuffer.Put/SetByFrameId" to use the new function "overwriteRoomDownsyncFrame(src, dst)" to keep "%p of every SpecificRingBuffer.Eles[i]" constant.
+
+However, the enhancement for "playerColliders & bulletColliders" of each room is even more difficult, because the feasibility of doing in-place overwrites depends on the collision library in use.
+*/
 func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
