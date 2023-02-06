@@ -1,0 +1,73 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Fireball3",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.5666666666666667,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 2,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "6af65d40-470c-47de-8b3d-f53c3923bf90"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "ebf64819-79a5-4366-bf70-08f3b1c6114c"
+            }
+          },
+          {
+            "frame": 0.13333333333333333,
+            "value": {
+              "__uuid__": "e03d879b-5227-4c11-a4b9-0a426967d28a"
+            }
+          },
+          {
+            "frame": 0.2,
+            "value": {
+              "__uuid__": "a1aa0c83-4a34-43ae-9a8f-56189808df68"
+            }
+          },
+          {
+            "frame": 0.26666666666666666,
+            "value": {
+              "__uuid__": "3cc28dd0-2518-4162-a39d-4e4b19f9d60b"
+            }
+          },
+          {
+            "frame": 0.35,
+            "value": {
+              "__uuid__": "1b41f500-c55b-4cbf-a040-287b6cc0e958"
+            }
+          },
+          {
+            "frame": 0.43333333333333335,
+            "value": {
+              "__uuid__": "cfa24c51-0ad4-4e3b-b571-c5500002d6e9"
+            }
+          },
+          {
+            "frame": 0.5,
+            "value": {
+              "__uuid__": "d4a46a6a-401c-4694-a192-0a7b3ce6f603"
+            }
+          },
+          {
+            "frame": 0.55,
+            "value": {
+              "__uuid__": "c88c5293-9f21-4a1a-a6b6-649e403dc7a2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

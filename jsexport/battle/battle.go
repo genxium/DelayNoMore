@@ -84,6 +84,7 @@ const (
 	ATK_CHARACTER_STATE_ONWALL  = int32(16)
 
 	ATK_CHARACTER_STATE_TURNAROUND = int32(17)
+	ATK_CHARACTER_STATE_DYING      = int32(18)
 )
 
 var inAirSet = map[int32]bool{
@@ -531,7 +532,7 @@ It's not easy to remove all of the dynamic heap-memory blocks allocation/dealloc
 
 ```
 func overwriteRoomDownsyncFrame(src *RoomDownsyncFrame, dst *RoomDownsyncFrame) {
-    // Copy "src" into "dst" down to every primitive field
+    // Copy "src" into "dst" down to every primitive field; as for a same room, the "RenderFrameBuffer" is always accessed (R & W) by a same kernel thread (both frontend & backend), no thread-safety concern here
 }
 
 type Room struct {

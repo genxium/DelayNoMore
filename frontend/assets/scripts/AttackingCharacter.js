@@ -19,6 +19,7 @@ window.ATK_CHARACTER_STATE = {
   Dashing: [15, "Dashing"],
   OnWall: [16, "OnWall"],
   TurnAround1: [17, "TurnAround1"],
+  Dying: [18, "Dying"],
 };
 
 window.ATK_CHARACTER_STATE_ARR = [];

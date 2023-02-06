@@ -51,8 +51,12 @@ var Characters = map[int]*CharacterConfig{
 
 		InertiaFramesToRecover: int32(9),
 
-		DashingEnabled: false,
-		OnWallEnabled:  false,
+		DashingEnabled:             true,
+		OnWallEnabled:              true,
+		WallJumpingFramesToRecover: int32(8),                                          // 8 would be the minimum for an avg human
+		WallJumpingInitVelX:        int32(float64(2.8) * WORLD_TO_VIRTUAL_GRID_RATIO), // Default is "appeared facing right", but actually holding ctrl against left
+		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
 			if 1 == patternId {
@@ -74,6 +78,15 @@ var Characters = map[int]*CharacterConfig{
 							}
 						}
 					}
+				}
+			} else if 3 == patternId {
+				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+					return 15
+				}
+			} else if 5 == patternId {
+				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
+				if !currPlayerDownsync.InAir {
+					return 12
 				}
 			}
 
@@ -128,9 +141,14 @@ var Characters = map[int]*CharacterConfig{
 						}
 					}
 				}
+			} else if 3 == patternId {
+				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+					return 16
+				}
 			} else if 5 == patternId {
+				// Air dash allowed for this character
 				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
-				return 12
+				return 13
 			}
 
 			// By default no skill can be fired
@@ -156,7 +174,7 @@ var Characters = map[int]*CharacterConfig{
 
 		InertiaFramesToRecover: int32(9),
 
-		DashingEnabled: false,
+		DashingEnabled: true,
 		OnWallEnabled:  false,
 
 		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
@@ -187,6 +205,11 @@ var Characters = map[int]*CharacterConfig{
 			} else if 3 == patternId {
 				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
 					return 10
+				}
+			} else if 5 == patternId {
+				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
+				if !currPlayerDownsync.InAir {
+					return 14
 				}
 			}
 
@@ -492,30 +515,30 @@ var skills = map[int]*Skill{
 		},
 	},
 	10: &Skill{
-		RecoveryFrames:        int32(40),
-		RecoveryFramesOnBlock: int32(40),
-		RecoveryFramesOnHit:   int32(40),
+		RecoveryFrames:        int32(38),
+		RecoveryFramesOnBlock: int32(38),
+		RecoveryFramesOnHit:   int32(38),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK4,
 		Hits: []interface{}{
 			&FireballBullet{
-				Speed: int32(float64(5) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				Speed: int32(float64(6) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: &BulletConfig{
-					StartupFrames:   int32(12),
+					StartupFrames:   int32(10),
 					ActiveFrames:    MAX_INT32,
 					HitStunFrames:   int32(15),
 					BlockStunFrames: int32(9),
-					Damage:          int32(20),
+					Damage:          int32(22),
 					SelfLockVelX:    NO_LOCK_VEL,
 					SelfLockVelY:    NO_LOCK_VEL,
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:    int32(0),
-					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxOffsetY:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
-					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(float64(10) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(64) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeY:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          false,
-					ExplosionFrames: 15,
+					ExplosionFrames: 10,
 					SpeciesId:       int32(1),
 				},
 			},
@@ -534,7 +557,7 @@ var skills = map[int]*Skill{
 					ActiveFrames:    int32(25),
 					HitStunFrames:   MAX_INT32,
 					BlockStunFrames: int32(9),
-					Damage:          int32(30),
+					Damage:          int32(35),
 					SelfLockVelX:    int32(float64(1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					SelfLockVelY:    int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelX:    int32(float64(2) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -551,6 +574,33 @@ var skills = map[int]*Skill{
 		},
 	},
 	12: &Skill{
+		RecoveryFrames:        int32(10),
+		RecoveryFramesOnBlock: int32(10),
+		RecoveryFramesOnHit:   int32(10),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_DASHING,
+		Hits: []interface{}{
+			&MeleeBullet{
+				Bullet: &BulletConfig{
+					StartupFrames:   int32(3),
+					ActiveFrames:    int32(0),
+					HitStunFrames:   int32(0),
+					BlockStunFrames: int32(0),
+					Damage:          int32(0),
+					SelfLockVelX:    int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    int32(0),
+					PushbackVelX:    NO_LOCK_VEL,
+					PushbackVelY:    NO_LOCK_VEL,
+					HitboxOffsetX:   int32(0),
+					HitboxOffsetY:   int32(0),
+					HitboxSizeX:     int32(0),
+					HitboxSizeY:     int32(0),
+					BlowUp:          false,
+				},
+			},
+		},
+	},
+	13: &Skill{
 		RecoveryFrames:        int32(12),
 		RecoveryFramesOnBlock: int32(12),
 		RecoveryFramesOnHit:   int32(12),
@@ -559,9 +609,9 @@ var skills = map[int]*Skill{
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
-					StartupFrames:   int32(0),
+					StartupFrames:   int32(3),
 					ActiveFrames:    int32(0),
-					HitStunFrames:   MAX_INT32,
+					HitStunFrames:   int32(0),
 					BlockStunFrames: int32(0),
 					Damage:          int32(0),
 					SelfLockVelX:    int32(float64(9) * WORLD_TO_VIRTUAL_GRID_RATIO),
@@ -573,6 +623,93 @@ var skills = map[int]*Skill{
 					HitboxSizeX:     int32(0),
 					HitboxSizeY:     int32(0),
 					BlowUp:          false,
+				},
+			},
+		},
+	},
+	14: &Skill{
+		RecoveryFrames:        int32(10),
+		RecoveryFramesOnBlock: int32(10),
+		RecoveryFramesOnHit:   int32(10),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_DASHING,
+		Hits: []interface{}{
+			&MeleeBullet{
+				Bullet: &BulletConfig{
+					StartupFrames:   int32(3),
+					ActiveFrames:    int32(0),
+					HitStunFrames:   MAX_INT32,
+					BlockStunFrames: int32(0),
+					Damage:          int32(0),
+					SelfLockVelX:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelY:    int32(0),
+					PushbackVelX:    NO_LOCK_VEL,
+					PushbackVelY:    NO_LOCK_VEL,
+					HitboxOffsetX:   int32(0),
+					HitboxOffsetY:   int32(0),
+					HitboxSizeX:     int32(0),
+					HitboxSizeY:     int32(0),
+					BlowUp:          false,
+				},
+			},
+		},
+	},
+	15: &Skill{
+		RecoveryFrames:        int32(48),
+		RecoveryFramesOnBlock: int32(48),
+		RecoveryFramesOnHit:   int32(48),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_ATK4,
+		Hits: []interface{}{
+			&FireballBullet{
+				Speed: int32(float64(4) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				Bullet: &BulletConfig{
+					StartupFrames:   int32(12),
+					ActiveFrames:    MAX_INT32,
+					HitStunFrames:   int32(15),
+					BlockStunFrames: int32(9),
+					Damage:          int32(18),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
+					PushbackVelX:    int32(float64(3) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    int32(0),
+					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					BlowUp:          false,
+					ExplosionFrames: 30,
+					SpeciesId:       int32(2),
+				},
+			},
+		},
+	},
+	16: &Skill{
+		RecoveryFrames:        int32(60),
+		RecoveryFramesOnBlock: int32(60),
+		RecoveryFramesOnHit:   int32(60),
+		ReleaseTriggerType:    int32(1),
+		BoundChState:          ATK_CHARACTER_STATE_ATK4,
+		Hits: []interface{}{
+			&FireballBullet{
+				Speed: int32(float64(4) * WORLD_TO_VIRTUAL_GRID_RATIO),
+				Bullet: &BulletConfig{
+					StartupFrames:   int32(16),
+					ActiveFrames:    MAX_INT32,
+					HitStunFrames:   MAX_INT32,
+					BlockStunFrames: int32(9),
+					Damage:          int32(30),
+					SelfLockVelX:    NO_LOCK_VEL,
+					SelfLockVelY:    NO_LOCK_VEL,
+					PushbackVelX:    int32(float64(3) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					PushbackVelY:    int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetX:   int32(float64(24) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxOffsetY:   int32(float64(8) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeX:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					HitboxSizeY:     int32(float64(32) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					BlowUp:          true,
+					ExplosionFrames: 30,
+					SpeciesId:       int32(3),
 				},
 			},
 		},

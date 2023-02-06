@@ -1,0 +1,25 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "OnWall",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.016666666666666666,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "d5c1e6b4-1048-43e2-96f9-801dc23cf418"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}

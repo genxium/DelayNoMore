@@ -324,8 +324,8 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 255,
-      "b": 255,
+      "g": 0,
+      "b": 0,
       "a": 255
     },
     "_contentSize": {
@@ -375,7 +375,7 @@
       "__id__": 8
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 10
@@ -483,15 +483,21 @@
       {
         "__uuid__": "e8247e2a-1b5b-4618-86f8-224b25246b55"
       },
+      {
+        "__uuid__": "168df303-4b6a-4376-940c-3d36fa9e98d8"
+      },
       null,
-      null,
-      null,
-      null,
+      {
+        "__uuid__": "d7b6d7c4-d2b5-49c6-bbcb-d8d80f52ae7e"
+      },
+      {
+        "__uuid__": "57358699-1d1b-44db-898c-df0c3ce9aab0"
+      },
       {
         "__uuid__": "6e1139d4-03dd-4bd4-9510-606e94f629fe"
       },
       {
-        "__uuid__": "168df303-4b6a-4376-940c-3d36fa9e98d8"
+        "__uuid__": "86706adc-e079-4997-883b-3e269d223065"
       }
     ],
     "playOnLoad": false,
@@ -548,7 +554,7 @@
       "__id__": 8
     },
     "_children": [],
-    "_active": false,
+    "_active": true,
     "_components": [
       {
         "__id__": 14
@@ -656,7 +662,9 @@
       {
         "__uuid__": "9b500cb0-8048-4715-81db-cc975c914225"
       },
-      null,
+      {
+        "__uuid__": "2aef91f9-ef47-4bb4-bf43-5441723aa639"
+      },
       null,
       {
         "__uuid__": "38b2c892-347b-4009-93f8-65b2ab1614f0"
@@ -666,6 +674,9 @@
       },
       {
         "__uuid__": "e906322d-a08b-4477-a2e9-98acd42fa034"
+      },
+      {
+        "__uuid__": "ac90c9b8-3b06-4866-89ce-2c953a9d5a9a"
       }
     ],
     "playOnLoad": false,
@@ -836,10 +847,15 @@
       {
         "__uuid__": "0abbd156-980e-475e-9994-3c958bd913fc"
       },
-      null,
+      {
+        "__uuid__": "337d57ad-118c-40e2-be90-2aa1505c152b"
+      },
       null,
       {
         "__uuid__": "edd23b2f-1caa-4836-88a7-e4af1f26743e"
+      },
+      {
+        "__uuid__": "657d4193-2224-44ea-94f7-0305a9f2b322"
       }
     ],
     "playOnLoad": false,

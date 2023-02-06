@@ -1,0 +1,61 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Dying",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.45,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "0b31e6af-6d24-4915-b87b-772c6eb10ca7"
+            }
+          },
+          {
+            "frame": 0.06666666666666667,
+            "value": {
+              "__uuid__": "c597fb09-4621-4d1f-abf9-6484405a6330"
+            }
+          },
+          {
+            "frame": 0.13333333333333333,
+            "value": {
+              "__uuid__": "8c8be852-b65d-41d8-800f-04cbb3cad094"
+            }
+          },
+          {
+            "frame": 0.2,
+            "value": {
+              "__uuid__": "f9522b47-812e-4020-845a-5d9f6d9aca90"
+            }
+          },
+          {
+            "frame": 0.26666666666666666,
+            "value": {
+              "__uuid__": "1ff63b81-49d8-4d68-9526-5f0dc4c88ef0"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "4e96b6fd-2cd1-412b-98a8-7f22040af589"
+            }
+          },
+          {
+            "frame": 0.43333333333333335,
+            "value": {
+              "__uuid__": "a827896b-00b5-4385-9648-2c40414b29c3"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
