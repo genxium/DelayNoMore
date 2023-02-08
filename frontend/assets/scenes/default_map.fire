@@ -78,6 +78,9 @@
     "_active": true,
     "_components": [
       {
+        "__id__": 49
+      },
+      {
         "__id__": 50
       },
       {
@@ -88,9 +91,6 @@
       },
       {
         "__id__": 53
-      },
-      {
-        "__id__": 54
       }
     ],
     "_prefab": null,
@@ -156,9 +156,6 @@
       },
       {
         "__id__": 5
-      },
-      {
-        "__id__": 49
       }
     ],
     "_prefab": null,
@@ -539,7 +536,7 @@
       "array": [
         0,
         0,
-        209.6693197428241,
+        216.50635094610968,
         0,
         0,
         0,
@@ -2300,24 +2297,6 @@
     "_originalWidth": 480,
     "_originalHeight": 0,
     "_id": "2cxYjEIwNO6rUtXX4WcfnV"
-  },
-  {
-    "__type__": "09e1b/tEy5K2qaPIpqHDbae",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 3
-    },
-    "_enabled": true,
-    "BGMEffect": null,
-    "crashedByTrapBullet": null,
-    "highScoreTreasurePicked": null,
-    "treasurePicked": null,
-    "countDown10SecToEnd": null,
-    "mapNode": {
-      "__id__": 3
-    },
-    "_id": "3crA1nz5xPSLAnCSLQIPOq"
   },
   {
     "__type__": "cc.Canvas",
