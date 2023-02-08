@@ -1220,6 +1220,8 @@ $root.protos = (function() {
          * @property {number|null} [onWallNormX] PlayerDownsync onWallNormX
          * @property {number|null} [onWallNormY] PlayerDownsync onWallNormY
          * @property {boolean|null} [capturedByInertia] PlayerDownsync capturedByInertia
+         * @property {number|null} [revivalVirtualGridX] PlayerDownsync revivalVirtualGridX
+         * @property {number|null} [revivalVirtualGridY] PlayerDownsync revivalVirtualGridY
          * @property {string|null} [name] PlayerDownsync name
          * @property {string|null} [displayName] PlayerDownsync displayName
          * @property {string|null} [avatar] PlayerDownsync avatar
@@ -1473,6 +1475,22 @@ $root.protos = (function() {
         PlayerDownsync.prototype.capturedByInertia = false;
 
         /**
+         * PlayerDownsync revivalVirtualGridX.
+         * @member {number} revivalVirtualGridX
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.revivalVirtualGridX = 0;
+
+        /**
+         * PlayerDownsync revivalVirtualGridY.
+         * @member {number} revivalVirtualGridY
+         * @memberof protos.PlayerDownsync
+         * @instance
+         */
+        PlayerDownsync.prototype.revivalVirtualGridY = 0;
+
+        /**
          * PlayerDownsync name.
          * @member {string} name
          * @memberof protos.PlayerDownsync
@@ -1578,6 +1596,10 @@ $root.protos = (function() {
                 writer.uint32(/* id 28, wireType 0 =*/224).int32(message.onWallNormY);
             if (message.capturedByInertia != null && Object.hasOwnProperty.call(message, "capturedByInertia"))
                 writer.uint32(/* id 29, wireType 0 =*/232).bool(message.capturedByInertia);
+            if (message.revivalVirtualGridX != null && Object.hasOwnProperty.call(message, "revivalVirtualGridX"))
+                writer.uint32(/* id 30, wireType 0 =*/240).int32(message.revivalVirtualGridX);
+            if (message.revivalVirtualGridY != null && Object.hasOwnProperty.call(message, "revivalVirtualGridY"))
+                writer.uint32(/* id 31, wireType 0 =*/248).int32(message.revivalVirtualGridY);
             if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                 writer.uint32(/* id 997, wireType 2 =*/7978).string(message.name);
             if (message.displayName != null && Object.hasOwnProperty.call(message, "displayName"))
@@ -1734,6 +1756,14 @@ $root.protos = (function() {
                         message.capturedByInertia = reader.bool();
                         break;
                     }
+                case 30: {
+                        message.revivalVirtualGridX = reader.int32();
+                        break;
+                    }
+                case 31: {
+                        message.revivalVirtualGridY = reader.int32();
+                        break;
+                    }
                 case 997: {
                         message.name = reader.string();
                         break;
@@ -1868,6 +1898,12 @@ $root.protos = (function() {
             if (message.capturedByInertia != null && message.hasOwnProperty("capturedByInertia"))
                 if (typeof message.capturedByInertia !== "boolean")
                     return "capturedByInertia: boolean expected";
+            if (message.revivalVirtualGridX != null && message.hasOwnProperty("revivalVirtualGridX"))
+                if (!$util.isInteger(message.revivalVirtualGridX))
+                    return "revivalVirtualGridX: integer expected";
+            if (message.revivalVirtualGridY != null && message.hasOwnProperty("revivalVirtualGridY"))
+                if (!$util.isInteger(message.revivalVirtualGridY))
+                    return "revivalVirtualGridY: integer expected";
             if (message.name != null && message.hasOwnProperty("name"))
                 if (!$util.isString(message.name))
                     return "name: string expected";
@@ -1950,6 +1986,10 @@ $root.protos = (function() {
                 message.onWallNormY = object.onWallNormY | 0;
             if (object.capturedByInertia != null)
                 message.capturedByInertia = Boolean(object.capturedByInertia);
+            if (object.revivalVirtualGridX != null)
+                message.revivalVirtualGridX = object.revivalVirtualGridX | 0;
+            if (object.revivalVirtualGridY != null)
+                message.revivalVirtualGridY = object.revivalVirtualGridY | 0;
             if (object.name != null)
                 message.name = String(object.name);
             if (object.displayName != null)
@@ -2002,6 +2042,8 @@ $root.protos = (function() {
                 object.onWallNormX = 0;
                 object.onWallNormY = 0;
                 object.capturedByInertia = false;
+                object.revivalVirtualGridX = 0;
+                object.revivalVirtualGridY = 0;
                 object.name = "";
                 object.displayName = "";
                 object.avatar = "";
@@ -2064,6 +2106,10 @@ $root.protos = (function() {
                 object.onWallNormY = message.onWallNormY;
             if (message.capturedByInertia != null && message.hasOwnProperty("capturedByInertia"))
                 object.capturedByInertia = message.capturedByInertia;
+            if (message.revivalVirtualGridX != null && message.hasOwnProperty("revivalVirtualGridX"))
+                object.revivalVirtualGridX = message.revivalVirtualGridX;
+            if (message.revivalVirtualGridY != null && message.hasOwnProperty("revivalVirtualGridY"))
+                object.revivalVirtualGridY = message.revivalVirtualGridY;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.displayName != null && message.hasOwnProperty("displayName"))

@@ -658,7 +658,7 @@ cc.Class({
     const jsPlayersArr = new Array(pbRdf.playersArr.length).fill(null);
     for (let k = 0; k < pbRdf.playersArr.length; ++k) {
       const pbPlayer = pbRdf.playersArr[k];
-      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.onWallNormX, pbPlayer.onWallNormY, pbPlayer.capturedByInertia, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId);
+      const jsPlayer = gopkgs.NewPlayerDownsyncJs(pbPlayer.id, pbPlayer.virtualGridX, pbPlayer.virtualGridY, pbPlayer.dirX, pbPlayer.dirY, pbPlayer.velX, pbPlayer.velY, pbPlayer.framesToRecover, pbPlayer.framesInChState, pbPlayer.activeSkillId, pbPlayer.activeSkillHit, pbPlayer.framesInvinsible, pbPlayer.speed, pbPlayer.battleState, pbPlayer.characterState, pbPlayer.joinIndex, pbPlayer.hp, pbPlayer.maxHp, pbPlayer.colliderRadius, pbPlayer.inAir, pbPlayer.onWall, pbPlayer.onWallNormX, pbPlayer.onWallNormY, pbPlayer.capturedByInertia, pbPlayer.bulletTeamId, pbPlayer.chCollisionTeamId, pbPlayer.revivalVirtualGridX, pbPlayer.revivalVirtualGridY);
       jsPlayersArr[k] = jsPlayer;
     }
     const jsMeleeBulletsArr = new Array(pbRdf.meleeBullets.length).fill(null);
@@ -1292,6 +1292,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       playerRichInfo.node.setPosition(wx, wy);
       playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false, chConfig);
+      playerRichInfo.scriptIns.hpBar.progress = (currPlayerDownsync.Hp * 1.0) / currPlayerDownsync.MaxHp;
     }
 
     // Move all to infinitely far away first

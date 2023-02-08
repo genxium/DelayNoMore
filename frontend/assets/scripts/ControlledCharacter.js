@@ -10,7 +10,11 @@ cc.Class({
     coordLabel: {
       type: cc.Label,
       default: null
-    }
+    },
+    hpBar: {
+      type: cc.ProgressBar,
+      default: null
+    },
   },
 
   onLoad() {

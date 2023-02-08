@@ -37,6 +37,8 @@ const (
 	VERTICAL_PLATFORM_THRESHOLD  = float64(0.9)
 	MAGIC_FRAMES_TO_BE_ONWALL    = int32(12)
 
+	DYING_FRAMES_TO_RECOVER = int32(60) // MUST BE SAME FOR EVERY CHARACTER FOR FAIRNESS!
+
 	NO_SKILL     = -1
 	NO_SKILL_HIT = -1
 
@@ -101,13 +103,15 @@ var noOpSet = map[int32]bool{
 	ATK_CHARACTER_STATE_INAIR_ATKED1: true,
 	ATK_CHARACTER_STATE_BLOWN_UP1:    true,
 	ATK_CHARACTER_STATE_LAY_DOWN1:    true,
-	// During the invinsible frames of GET_UP1, the player is allowed to take any action
+	// [WARNING] During the invinsible frames of GET_UP1, the player is allowed to take any action
+	ATK_CHARACTER_STATE_DYING: true,
 }
 
 var invinsibleSet = map[int32]bool{
 	ATK_CHARACTER_STATE_BLOWN_UP1: true,
 	ATK_CHARACTER_STATE_LAY_DOWN1: true,
 	ATK_CHARACTER_STATE_GET_UP1:   true,
+	ATK_CHARACTER_STATE_DYING:     true,
 }
 
 var nonAttackingSet = map[int32]bool{
@@ -120,6 +124,7 @@ var nonAttackingSet = map[int32]bool{
 	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
 	ATK_CHARACTER_STATE_LAY_DOWN1:           true,
 	ATK_CHARACTER_STATE_GET_UP1:             true,
+	ATK_CHARACTER_STATE_DYING:               true,
 }
 
 func intAbs(x int32) int32 {
@@ -493,7 +498,7 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	canJumpWithinInertia := currPlayerDownsync.CapturedByInertia && ((chConfig.InertiaFramesToRecover >> 1) > currPlayerDownsync.FramesToRecover)
 	if 0 == currPlayerDownsync.FramesToRecover || canJumpWithinInertia {
 		if decodedInput.BtnBLevel > prevBtnBLevel {
-			if chConfig.DashingEnabled && 0 > decodedInput.Dy {
+			if chConfig.DashingEnabled && 0 > decodedInput.Dy && ATK_CHARACTER_STATE_DASHING != currPlayerDownsync.CharacterState {
 				// Checking "DashingEnabled" here to allow jumping when dashing-disabled players pressed "DOWN + BtnB"
 				patternId = 5
 			} else if _, existent := inAirSet[currPlayerDownsync.CharacterState]; !existent {
@@ -555,32 +560,36 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:                currPlayerDownsync.Id,
-			VirtualGridX:      currPlayerDownsync.VirtualGridX,
-			VirtualGridY:      currPlayerDownsync.VirtualGridY,
-			DirX:              currPlayerDownsync.DirX,
-			DirY:              currPlayerDownsync.DirY,
-			VelX:              currPlayerDownsync.VelX,
-			VelY:              currPlayerDownsync.VelY,
-			CharacterState:    currPlayerDownsync.CharacterState,
-			InAir:             true,
-			OnWall:            false,
-			Speed:             currPlayerDownsync.Speed,
-			BattleState:       currPlayerDownsync.BattleState,
-			Score:             currPlayerDownsync.Score,
-			Removed:           currPlayerDownsync.Removed,
-			JoinIndex:         currPlayerDownsync.JoinIndex,
-			Hp:                currPlayerDownsync.Hp,
-			MaxHp:             currPlayerDownsync.MaxHp,
-			FramesToRecover:   currPlayerDownsync.FramesToRecover - 1,
-			FramesInChState:   currPlayerDownsync.FramesInChState + 1,
-			ActiveSkillId:     currPlayerDownsync.ActiveSkillId,
-			ActiveSkillHit:    currPlayerDownsync.ActiveSkillHit,
-			FramesInvinsible:  currPlayerDownsync.FramesInvinsible - 1,
-			ColliderRadius:    currPlayerDownsync.ColliderRadius,
-			OnWallNormX:       currPlayerDownsync.OnWallNormX,
-			OnWallNormY:       currPlayerDownsync.OnWallNormY,
-			CapturedByInertia: currPlayerDownsync.CapturedByInertia,
+			Id:                  currPlayerDownsync.Id,
+			VirtualGridX:        currPlayerDownsync.VirtualGridX,
+			VirtualGridY:        currPlayerDownsync.VirtualGridY,
+			DirX:                currPlayerDownsync.DirX,
+			DirY:                currPlayerDownsync.DirY,
+			VelX:                currPlayerDownsync.VelX,
+			VelY:                currPlayerDownsync.VelY,
+			CharacterState:      currPlayerDownsync.CharacterState,
+			InAir:               true,
+			OnWall:              false,
+			Speed:               currPlayerDownsync.Speed,
+			BattleState:         currPlayerDownsync.BattleState,
+			Score:               currPlayerDownsync.Score,
+			Removed:             currPlayerDownsync.Removed,
+			JoinIndex:           currPlayerDownsync.JoinIndex,
+			Hp:                  currPlayerDownsync.Hp,
+			MaxHp:               currPlayerDownsync.MaxHp,
+			FramesToRecover:     currPlayerDownsync.FramesToRecover - 1,
+			FramesInChState:     currPlayerDownsync.FramesInChState + 1,
+			ActiveSkillId:       currPlayerDownsync.ActiveSkillId,
+			ActiveSkillHit:      currPlayerDownsync.ActiveSkillHit,
+			FramesInvinsible:    currPlayerDownsync.FramesInvinsible - 1,
+			BulletTeamId:        currPlayerDownsync.BulletTeamId,
+			ChCollisionTeamId:   currPlayerDownsync.ChCollisionTeamId,
+			RevivalVirtualGridX: currPlayerDownsync.RevivalVirtualGridX,
+			RevivalVirtualGridY: currPlayerDownsync.RevivalVirtualGridY,
+			ColliderRadius:      currPlayerDownsync.ColliderRadius,
+			OnWallNormX:         currPlayerDownsync.OnWallNormX,
+			OnWallNormY:         currPlayerDownsync.OnWallNormY,
+			CapturedByInertia:   currPlayerDownsync.CapturedByInertia,
 		}
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
@@ -745,6 +754,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
+		if 0 >= thatPlayerInNextFrame.Hp && 0 == thatPlayerInNextFrame.FramesToRecover {
+			// Revive
+			newVx, newVy = currPlayerDownsync.RevivalVirtualGridX, currPlayerDownsync.RevivalVirtualGridY
+			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+			thatPlayerInNextFrame.Hp = currPlayerDownsync.MaxHp
+		}
 		if jumpedOrNotList[i] {
 			// We haven't proceeded with "OnWall" calculation for "thatPlayerInNextFrame", thus use "currPlayerDownsync.OnWall" for checking
 			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState {
@@ -798,38 +813,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	// 3. Add bullet colliders into collision system
-
 	// [WARNING] For rollback compatibility, static data of "BulletConfig" & "BattleAttr(static since instantiated)" can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets movement data as well as bullet animation data must be copies of instances for each RenderFrame!
-	bulletColliders := make([]*resolv.Object, 0, len(currRenderFrame.MeleeBullets)) // Will all be removed at the end of this function due to the need for being rollback-compatible
-	for _, prevMelee := range currRenderFrame.MeleeBullets {
-		meleeBullet := &MeleeBullet{
-			Bullet:          prevMelee.Bullet,
-			BattleAttr:      prevMelee.BattleAttr,
-			FramesInBlState: prevMelee.FramesInBlState + 1,
-			BlState:         prevMelee.BlState,
-		}
-		if IsMeleeBulletAlive(meleeBullet, currRenderFrame) {
-			if IsMeleeBulletActive(meleeBullet, currRenderFrame) {
-				offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
-
-				xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
-				if 0 > offender.DirX {
-					xfac = -xfac
-				}
-				bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
-				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
-				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
-				collisionSys.Add(newBulletCollider)
-				bulletColliders = append(bulletColliders, newBulletCollider)
-				meleeBullet.BlState = BULLET_ACTIVE
-				if meleeBullet.BlState != prevMelee.BlState {
-					meleeBullet.FramesInBlState = 0
-				}
-			}
-			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
-		}
-	}
-
+	bulletColliders := make([]*resolv.Object, 0, ((len(currRenderFrame.MeleeBullets) + len(currRenderFrame.FireballBullets)) << 1)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for _, prevFireball := range currRenderFrame.FireballBullets {
 		fireballBullet := &FireballBullet{
 			VirtualGridX:    prevFireball.VirtualGridX,
@@ -858,9 +843,46 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				fireballBullet.VirtualGridX, fireballBullet.VirtualGridY = fireballBullet.VirtualGridX+fireballBullet.VelX, fireballBullet.VirtualGridY+fireballBullet.VelY
 				//fmt.Printf("Pushing active fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY, fireballBullet.BlState)
 			} else {
+				offender := currRenderFrame.PlayersArr[fireballBullet.BattleAttr.OffenderJoinIndex-1]
+				if _, existent := noOpSet[offender.CharacterState]; existent {
+					// If a fireball is not yet active but the offender got attacked, remove it
+					continue
+				}
 				//fmt.Printf("Pushing non-active fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY, fireballBullet.BlState)
 			}
 			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
+		}
+	}
+
+	for _, prevMelee := range currRenderFrame.MeleeBullets {
+		meleeBullet := &MeleeBullet{
+			Bullet:          prevMelee.Bullet,
+			BattleAttr:      prevMelee.BattleAttr,
+			FramesInBlState: prevMelee.FramesInBlState + 1,
+			BlState:         prevMelee.BlState,
+		}
+		if IsMeleeBulletAlive(meleeBullet, currRenderFrame) {
+			offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
+			if _, existent := noOpSet[offender.CharacterState]; existent {
+				// If a melee is alive but the offender got attacked, remove it even if it's active
+				continue
+			}
+			if IsMeleeBulletActive(meleeBullet, currRenderFrame) {
+				xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+				if 0 > offender.DirX {
+					xfac = -xfac
+				}
+				bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
+				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
+				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+				collisionSys.Add(newBulletCollider)
+				bulletColliders = append(bulletColliders, newBulletCollider)
+				meleeBullet.BlState = BULLET_ACTIVE
+				if meleeBullet.BlState != prevMelee.BlState {
+					meleeBullet.FramesInBlState = 0
+				}
+			}
+			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
 		}
 	}
 
@@ -1015,18 +1037,26 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if 0 > offender.DirX {
 							xfac = -xfac
 						}
-						pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
 						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
-						atkedPlayerInNextFrame.VelX = pushbackVelX
-						atkedPlayerInNextFrame.VelY = pushbackVelY
-						if v.Bullet.BlowUp {
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+						atkedPlayerInNextFrame.Hp -= v.Bullet.Damage
+						if 0 >= atkedPlayerInNextFrame.Hp {
+							// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
+							atkedPlayerInNextFrame.Hp = 0
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
+							atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
 						} else {
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-						}
-						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-						if v.Bullet.HitStunFrames > oldFramesToRecover {
-							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
+							pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
+							atkedPlayerInNextFrame.VelX = pushbackVelX
+							atkedPlayerInNextFrame.VelY = pushbackVelY
+							if v.Bullet.BlowUp {
+								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+							} else {
+								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+							}
+							oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+							if v.Bullet.HitStunFrames > oldFramesToRecover {
+								atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
+							}
 						}
 					}
 				}
@@ -1055,18 +1085,26 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 						if 0 > offender.DirX {
 							xfac = -xfac
 						}
-						pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
 						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
-						atkedPlayerInNextFrame.VelX = pushbackVelX
-						atkedPlayerInNextFrame.VelY = pushbackVelY
-						if v.Bullet.BlowUp {
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+						atkedPlayerInNextFrame.Hp -= v.Bullet.Damage
+						if 0 >= atkedPlayerInNextFrame.Hp {
+							// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
+							atkedPlayerInNextFrame.Hp = 0
+							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
+							atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
 						} else {
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-						}
-						oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-						if v.Bullet.HitStunFrames > oldFramesToRecover {
-							atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
+							pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
+							atkedPlayerInNextFrame.VelX = pushbackVelX
+							atkedPlayerInNextFrame.VelY = pushbackVelY
+							if v.Bullet.BlowUp {
+								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+							} else {
+								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+							}
+							oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+							if v.Bullet.HitStunFrames > oldFramesToRecover {
+								atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
+							}
 						}
 					default:
 						exploded = true

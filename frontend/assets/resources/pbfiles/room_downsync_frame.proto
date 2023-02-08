@@ -37,6 +37,8 @@ message PlayerDownsync {
   int32 onWallNormY = 28;
 
   bool capturedByInertia = 29; // like "inAir", it’s by design a standalone field only inferred by the calc result of "applyInputFrameDownsyncDynamicsOnSingleRenderFrame" instead of "characterState"
+  int32 revivalVirtualGridX = 30;
+  int32 revivalVirtualGridY = 31;
 
   string name = 997;
   string displayName = 998;

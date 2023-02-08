@@ -980,7 +980,10 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 			if nil == playerPos {
 				panic(fmt.Sprintf("onPlayerAdded error, nil == playerPos, roomId=%v, playerId=%v, roomState=%v, roomEffectivePlayerCount=%v", pR.Id, playerId, pR.State, pR.EffectivePlayerCount))
 			}
-			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = battle.WorldToVirtualGridPos(playerPos.X, playerPos.Y)
+			pR.Players[playerId].RevivalVirtualGridX, pR.Players[playerId].RevivalVirtualGridY = battle.WorldToVirtualGridPos(playerPos.X, playerPos.Y)
+			pR.Players[playerId].VirtualGridX, pR.Players[playerId].VirtualGridY = pR.Players[playerId].RevivalVirtualGridX, pR.Players[playerId].RevivalVirtualGridY
+			pR.Players[playerId].MaxHp = 100 // Hardcoded for now
+			pR.Players[playerId].Hp = pR.Players[playerId].MaxHp
 			// Hardcoded initial character orientation/facing
 			if 0 == (pR.Players[playerId].JoinIndex % 2) {
 				pR.Players[playerId].DirX = -2
