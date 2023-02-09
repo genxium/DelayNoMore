@@ -72,9 +72,9 @@ void _onRead(uv_udp_t* req, ssize_t nread, uv_buf_t const* buf, struct sockaddr 
 #if defined(COCOS2D_DEBUG) && (COCOS2D_DEBUG > 0)
         CCLOG("UDP received %u bytes inputFrameUpsync from %s:%d", nread, ip, port);
 #endif
-        uv_mutex_lock(&recvRingBuffLock);
+        //uv_mutex_lock(&recvRingBuffLock);
         recvRingBuff->put(buf->base, nread);
-        uv_mutex_unlock(&recvRingBuffLock);
+        //uv_mutex_unlock(&recvRingBuffLock);
     }
     free(buf->base);
 
@@ -352,15 +352,12 @@ bool DelayNoMore::UdpSession::broadcastInputFrameUpsync(BYTEC* const bytes, size
 bool DelayNoMore::UdpSession::pollUdpRecvRingBuff() {
     // This function is called by GameThread 60 fps.
 
-    if (0 >= recvRingBuff->cnt) {
-        // This check is NOT thread-safe, but as "pollUdpRecvRingBuff" is called by GameThread, we want it to lock as few as possible.
-        return true;
-    }
+    //uv_mutex_lock(&recvRingBuffLock);
+    while (true) {
+        RecvWork f;
+        bool res = recvRingBuff->pop(&f); 
+        if (!res) return false;
 
-    uv_mutex_lock(&recvRingBuffLock);
-    RecvWork* f = NULL;
-    while (0 < recvRingBuff->cnt) {
-        f = recvRingBuff->pop();        
         // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
         se::AutoHandleScope hs;
         // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
@@ -368,7 +365,7 @@ bool DelayNoMore::UdpSession::pollUdpRecvRingBuff() {
         se::ScriptEngine::getInstance()->getGlobalObject()->getProperty("onUdpMessage", &onUdpMessageCb);
         if (onUdpMessageCb.isObject() && onUdpMessageCb.toObject()->isFunction()) {
             //CCLOG("UDP received %d bytes upsync -- 1", nread);
-            se::Object* const gameThreadMsg = se::Object::createTypedArray(se::Object::TypedArrayType::UINT8, f->ui8Arr, f->bytesLen);
+            se::Object* const gameThreadMsg = se::Object::createTypedArray(se::Object::TypedArrayType::UINT8, f.ui8Arr, f.bytesLen);
             //CCLOG("UDP received %d bytes upsync -- 2", nread);
             se::ValueArray args = { se::Value(gameThreadMsg) };
 
@@ -382,6 +379,6 @@ bool DelayNoMore::UdpSession::pollUdpRecvRingBuff() {
             //CCLOG("UDP received %d bytes upsync -- 4", nread);
         }
     }
-    uv_mutex_unlock(&recvRingBuffLock);
+    //uv_mutex_unlock(&recvRingBuffLock);
     return true;
 }

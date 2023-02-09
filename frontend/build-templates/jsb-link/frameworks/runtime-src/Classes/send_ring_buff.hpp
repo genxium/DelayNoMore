@@ -4,6 +4,8 @@
 #include "uv/uv.h"
 #define __SSIZE_T // Otherwise "ssize_t" would have conflicting macros error that stops compiling
 
+#include <atomic>
+
 int const RING_BUFF_CONSECUTIVE_SET = 0;
 int const RING_BUFF_NON_CONSECUTIVE_SET = 1;
 int const RING_BUFF_FAILED_TO_SET = 2;
@@ -48,10 +50,17 @@ public:
 	size_t bytesLen;
 };
 
-// [WARNING] This class is specific to "RecvWork"
+/*
+[WARNING] This class is specific to "RecvWork"; its "put" and "pop" methods are designed to be thread-safe & lock-free for our particular case, i.e. only concurrent access from "UvRecvThread" & "GameThread", in a sense more sophisticated than the Golang or JavaScript versions. 
+
+There's yet no plan to support thread-safe & lock-free "getByFrameId/setByFrameId" -- being thread-safe is easy by use of mutex, which is very SLOWWWWW when used in 60fps race-conditions.
+
+The generic "thread-safe, lock-free ring buffer or circular buffer" is a big problem, widely discussed over the internet and in literatures, search "lock-free circular buffer" for more information.
+*/
 class RecvRingBuff {
 public:
-	int ed, st, n, cnt;
+	int n;
+	std::atomic_int ed, st, cnt;
 	RecvWork eles[maxBuffedMsgs]; // preallocated on stack to save heap alloc/dealloc time
 	RecvRingBuff(int newN) {
 		this->n = newN;
@@ -60,6 +69,6 @@ public:
 
 	void put(char* newBytes, size_t newBytesLen);
 
-	RecvWork* pop();
+	bool pop(RecvWork* out);
 };
 #endif

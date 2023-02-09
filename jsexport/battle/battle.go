@@ -755,7 +755,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		// Reset playerCollider position from the "virtual grid position"
 		newVx, newVy := currPlayerDownsync.VirtualGridX+currPlayerDownsync.VelX, currPlayerDownsync.VirtualGridY+currPlayerDownsync.VelY
 		if 0 >= thatPlayerInNextFrame.Hp && 0 == thatPlayerInNextFrame.FramesToRecover {
-			// Revive
+			// Revive from Dying
 			newVx, newVy = currPlayerDownsync.RevivalVirtualGridX, currPlayerDownsync.RevivalVirtualGridY
 			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
 			thatPlayerInNextFrame.Hp = currPlayerDownsync.MaxHp
@@ -945,7 +945,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 			if fallStopping {
 				thatPlayerInNextFrame.VelY = 0
 				thatPlayerInNextFrame.VelX = 0
-				if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
+				if ATK_CHARACTER_STATE_DYING == thatPlayerInNextFrame.CharacterState {
+				} else if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
 					thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
 				} else {
@@ -960,9 +961,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					thatPlayerInNextFrame.FramesToRecover = 0
 				}
 			} else {
-				// landedOnGravityPushback not fallStopping, could be in LayDown or GetUp
+				// landedOnGravityPushback not fallStopping, could be in LayDown or GetUp or Dying
 				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
-					if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
+					if ATK_CHARACTER_STATE_DYING == thatPlayerInNextFrame.CharacterState {
+						// No update needed for Dying
+					} else if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
 						if 0 == thatPlayerInNextFrame.FramesToRecover {
 							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
 							thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
