@@ -41,4 +41,25 @@ public:
 	SendWork* pop();
 };
 
+// TODO: Move "RecvXxxx" to a dedicated class.
+class RecvWork {
+public:
+	uint8_t ui8Arr[maxUdpPayloadBytes]; // Wasting some RAM here thus no need for explicit recursive destruction
+	size_t bytesLen;
+};
+
+// [WARNING] This class is specific to "RecvWork"
+class RecvRingBuff {
+public:
+	int ed, st, n, cnt;
+	RecvWork eles[maxBuffedMsgs]; // preallocated on stack to save heap alloc/dealloc time
+	RecvRingBuff(int newN) {
+		this->n = newN;
+		this->st = this->ed = this->cnt = 0;
+	}
+
+	void put(char* newBytes, size_t newBytesLen);
+
+	RecvWork* pop();
+};
 #endif

@@ -1084,6 +1084,9 @@ fromUDP=${fromUDP}`);
       }
       try {
         let st = performance.now();
+        if (cc.sys.isNative) {
+          DelayNoMore.UdpSession.pollUdpRecvRingBuff();
+        }
         const noDelayInputFrameId = gopkgs.ConvertToNoDelayInputFrameId(self.renderFrameId);
         let prevSelfInput = null,
           currSelfInput = null;

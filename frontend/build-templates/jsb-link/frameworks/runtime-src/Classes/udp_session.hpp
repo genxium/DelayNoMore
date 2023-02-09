@@ -14,6 +14,7 @@ namespace DelayNoMore {
         //static bool clearPeerUDPAddrList();
         static bool punchToServer(CHARC* const srvIp, int const srvPort, BYTEC* const bytes, size_t bytesLen, int const udpTunnelSrvPort, BYTEC* const udpTunnelBytes, size_t udpTunnelBytesBytesLen);
         static bool broadcastInputFrameUpsync(BYTEC* const bytes, size_t bytesLen, int roomCapacity, int selfJoinIndex);
+        static bool pollUdpRecvRingBuff();
     };
 }
 #endif

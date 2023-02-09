@@ -15,5 +15,5 @@ SE_DECLARE_FUNC(punchToServer);
 SE_DECLARE_FUNC(broadcastInputFrameUpsync);
 SE_DECLARE_FUNC(closeUdpSession);
 SE_DECLARE_FUNC(upsertPeerUdpAddr);
-
+SE_DECLARE_FUNC(pollUdpRecvRingBuff);
 #endif

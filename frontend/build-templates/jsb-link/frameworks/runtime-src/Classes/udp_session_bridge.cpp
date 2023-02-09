@@ -126,6 +126,20 @@ bool upsertPeerUdpAddr(se::State& s) {
 }
 SE_BIND_FUNC(upsertPeerUdpAddr)
 
+bool pollUdpRecvRingBuff(se::State& s) {
+    const auto& args = s.args();
+    size_t argc = args.size();
+    CC_UNUSED bool ok = true;
+    if (0 == argc) {
+        SE_PRECONDITION2(ok, false, "upsertPeerUdpAddr: Error processing arguments");
+        return DelayNoMore::UdpSession::pollUdpRecvRingBuff();
+    }
+    SE_REPORT_ERROR("wrong number of arguments: %d, was expecting %d; or wrong arg type!", (int)argc, 0);
+
+    return false;
+}
+SE_BIND_FUNC(pollUdpRecvRingBuff)
+
 static bool udpSessionFinalize(se::State& s) {
     CCLOGINFO("jsbindings: finalizing JS object %p (DelayNoMore::UdpSession)", s.nativeThisObject());
     auto iter = se::NonRefNativePtrCreatedByCtorMap::find(s.nativeThisObject());
@@ -158,6 +172,7 @@ bool registerUdpSession(se::Object* obj) {
     cls->defineStaticFunction("broadcastInputFrameUpsync", _SE(broadcastInputFrameUpsync));
     cls->defineStaticFunction("closeUdpSession", _SE(closeUdpSession));
     cls->defineStaticFunction("upsertPeerUdpAddr", _SE(upsertPeerUdpAddr));
+    cls->defineStaticFunction("pollUdpRecvRingBuff", _SE(pollUdpRecvRingBuff));
     cls->defineFinalizeFunction(_SE(udpSessionFinalize));
     cls->install();
     
