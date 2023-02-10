@@ -1,7 +1,7 @@
 #ifndef udp_session_hpp
 #define udp_session_hpp
 
-#include "send_ring_buff.hpp"
+#include "ring_buff.hpp"
 
 int const maxPeerCnt = 10;
 

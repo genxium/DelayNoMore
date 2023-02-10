@@ -6,9 +6,13 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 
 ![Merged_cut_annotated_spedup](./charts/Merged_cut_annotated_spedup.gif)
 
+(battle between 2 celluar 4G users using Android phones, [original video here](https://pan.baidu.com/s/1RL-9M-cK8cFS_Q8afMTrJA?pwd=ryzv))
+
+![Phone4g_battle_spedup](./charts/Phone4g_battle_spedup.gif)
+
 As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- **since v0.9.25, the project is actually equipped with UDP capabilities as follows**.
 - When using the so called `native apps` on `Android` and `Windows` (I'm working casually hard to support `iOS` next), the frontends will try to use UDP hole-punching w/ the help of backend as a registry. If UDP hole-punching is working, the rollback is often less than `turn-around frames to recover` and thus not noticeable, being much better than using websocket alone. This video shows how the UDP holepunched p2p performs for [Phone-Wifi v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1K6704bJKlrSBTVqGcXhajA?pwd=l7ok).
-- If UDP hole-punching is not working, e.g. for Symmetric NAT like in 4G/5G cellular network, the frontends will use backend as a UDP tunnel (or relay, whatever you like to call it). This video shows how the UDP tunnel performs for [Phone-4G v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1IZVa5wVgAdeH6D-xsZYFUw?pwd=dgkj). 
+- If UDP hole-punching is not working, e.g. for Symmetric NAT like in 4G/5G cellular network, the frontends will use backend as a UDP tunnel (or relay, whatever you like to call it). This video shows how the UDP tunnel performs for [Phone-4G v.s. PC-Wifi (merged view@v0.9.34, excellent synchronization)](https://pan.baidu.com/s/1yeIrN5TSf6_av_8-N3vdVg?pwd=7tzw). 
 - Browser vs `native app` is possible but in that case only websocket is used.
 
 

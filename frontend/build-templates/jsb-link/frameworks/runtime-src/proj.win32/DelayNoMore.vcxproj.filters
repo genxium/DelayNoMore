@@ -22,7 +22,7 @@
     <ClCompile Include="..\Classes\jsb_module_register.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\send_ring_buff.cpp">
+    <ClCompile Include="..\Classes\ring_buff.cpp">
       <Filter>Classes</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\udp_session.cpp">
@@ -40,7 +40,7 @@
       <Filter>win32</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="..\Classes\send_ring_buff.hpp">
+    <ClInclude Include="..\Classes\ring_buff.hpp">
       <Filter>Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\udp_session.hpp">
