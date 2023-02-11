@@ -1306,7 +1306,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     }
     for (let k in rdf.MeleeBullets) {
       const meleeBullet = rdf.MeleeBullets[k];
-      const isExploding = (window.BULLET_STATE.Exploding == meleeBullet.BlState);
+      const isExploding = (window.BULLET_STATE.Exploding == meleeBullet.BlState && meleeBullet.FramesInBlState < meleeBullet.Bullet.ExplosionFrames);
       if (isExploding) {
         let pqNode = self.cachedFireballs.popAny(meleeBullet.BattleAttr.BulletLocalId);
         let speciesName = `MeleeExplosion`;

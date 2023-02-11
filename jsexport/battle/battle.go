@@ -716,7 +716,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				} else if stoppingFromWalking {
 					thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
 				} else {
-					thatPlayerInNextFrame.FramesToRecover = (chConfig.InertiaFramesToRecover >> 1)
+					thatPlayerInNextFrame.FramesToRecover = ((chConfig.InertiaFramesToRecover >> 1) + (chConfig.InertiaFramesToRecover >> 2))
 				}
 			} else {
 				thatPlayerInNextFrame.CapturedByInertia = false
@@ -757,8 +757,19 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if 0 >= thatPlayerInNextFrame.Hp && 0 == thatPlayerInNextFrame.FramesToRecover {
 			// Revive from Dying
 			newVx, newVy = currPlayerDownsync.RevivalVirtualGridX, currPlayerDownsync.RevivalVirtualGridY
-			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_IDLE1
+			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
+			thatPlayerInNextFrame.FramesInChState = ATK_CHARACTER_STATE_GET_UP1
+			thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
+			thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
 			thatPlayerInNextFrame.Hp = currPlayerDownsync.MaxHp
+			// Hardcoded initial character orientation/facing
+			if 0 == (thatPlayerInNextFrame.JoinIndex % 2) {
+				thatPlayerInNextFrame.DirX = -2
+				thatPlayerInNextFrame.DirY = 0
+			} else {
+				thatPlayerInNextFrame.DirX = +2
+				thatPlayerInNextFrame.DirY = 0
+			}
 		}
 		if jumpedOrNotList[i] {
 			// We haven't proceeded with "OnWall" calculation for "thatPlayerInNextFrame", thus use "currPlayerDownsync.OnWall" for checking
@@ -899,8 +910,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if collision := playerCollider.Check(0, 0); nil != collision {
 			for _, obj := range collision.Objects {
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
-				switch obj.Data.(type) {
+				switch v := obj.Data.(type) {
 				case *PlayerDownsync:
+					if ATK_CHARACTER_STATE_DYING == v.CharacterState {
+						// ignore collision with dying player
+						continue
+					}
 					isAnotherPlayer = true
 				case *MeleeBullet, *FireballBullet:
 					isBullet = true
@@ -912,6 +927,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					// ignore bullets for this step
 					continue
 				}
+
 				bShape := obj.Shape.(*resolv.ConvexPolygon)
 				overlapped, pushbackX, pushbackY, overlapResult := calcPushbacks(0, 0, playerShape, bShape)
 				if !overlapped {
@@ -1013,113 +1029,83 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		collision := bulletCollider.Check(0, 0)
 		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
 		exploded := false
-		if nil != collision {
-			switch v := bulletCollider.Data.(type) {
-			case *MeleeBullet:
-				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.BattleAttr.OffenderJoinIndex-1]
-				for _, obj := range collision.Objects {
-					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
-					switch t := obj.Data.(type) {
-					case *PlayerDownsync:
-						if v.BattleAttr.OffenderJoinIndex == t.JoinIndex {
-							continue
-						}
-						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
-						if !overlapped {
-							continue
-						}
-						exploded = true
-						if _, existent := invinsibleSet[t.CharacterState]; existent {
-							continue
-						}
-						if 0 < t.FramesInvinsible {
-							continue
-						}
-						xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
-						if 0 > offender.DirX {
-							xfac = -xfac
-						}
-						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
-						atkedPlayerInNextFrame.Hp -= v.Bullet.Damage
-						if 0 >= atkedPlayerInNextFrame.Hp {
-							// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
-							atkedPlayerInNextFrame.Hp = 0
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
-							atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
-						} else {
-							pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
-							atkedPlayerInNextFrame.VelX = pushbackVelX
-							atkedPlayerInNextFrame.VelY = pushbackVelY
-							if v.Bullet.BlowUp {
-								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
-							} else {
-								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-							}
-							oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-							if v.Bullet.HitStunFrames > oldFramesToRecover {
-								atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
-							}
-						}
+		explodedOnAnotherPlayer := false
+		if nil == collision {
+			continue
+		}
+
+		var bulletStaticAttr *BulletConfig = nil
+		var bulletBattleAttr *BulletBattleAttr = nil
+		switch v := bulletCollider.Data.(type) {
+		case *MeleeBullet:
+			bulletStaticAttr = v.Bullet
+			bulletBattleAttr = v.BattleAttr
+		case *FireballBullet:
+			bulletStaticAttr = v.Bullet
+			bulletBattleAttr = v.BattleAttr
+		}
+
+		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
+		offender := currRenderFrame.PlayersArr[bulletBattleAttr.OffenderJoinIndex-1]
+		for _, obj := range collision.Objects {
+			defenderShape := obj.Shape.(*resolv.ConvexPolygon)
+			switch t := obj.Data.(type) {
+			case *PlayerDownsync:
+				if bulletBattleAttr.OffenderJoinIndex == t.JoinIndex {
+					continue
+				}
+				overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
+				if !overlapped {
+					continue
+				}
+				if _, existent := invinsibleSet[t.CharacterState]; existent {
+					continue
+				}
+				if 0 < t.FramesInvinsible {
+					continue
+				}
+				exploded = true
+				explodedOnAnotherPlayer = true
+				xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
+				if 0 > offender.DirX {
+					xfac = -xfac
+				}
+				atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
+				atkedPlayerInNextFrame.Hp -= bulletStaticAttr.Damage
+				if 0 >= atkedPlayerInNextFrame.Hp {
+					// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
+					atkedPlayerInNextFrame.Hp = 0
+					atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
+					atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
+				} else {
+					pushbackVelX, pushbackVelY := xfac*bulletStaticAttr.PushbackVelX, bulletStaticAttr.PushbackVelY
+					atkedPlayerInNextFrame.VelX = pushbackVelX
+					atkedPlayerInNextFrame.VelY = pushbackVelY
+					if bulletStaticAttr.BlowUp {
+						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
+					} else {
+						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
+					}
+					oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
+					if bulletStaticAttr.HitStunFrames > oldFramesToRecover {
+						atkedPlayerInNextFrame.FramesToRecover = bulletStaticAttr.HitStunFrames
 					}
 				}
-			case *FireballBullet:
-				bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
-				offender := currRenderFrame.PlayersArr[v.BattleAttr.OffenderJoinIndex-1]
-				for _, obj := range collision.Objects {
-					defenderShape := obj.Shape.(*resolv.ConvexPolygon)
-					switch t := obj.Data.(type) {
-					case *PlayerDownsync:
-						if v.BattleAttr.OffenderJoinIndex == t.JoinIndex {
-							continue
-						}
-						overlapped, _, _, _ := calcPushbacks(0, 0, bulletShape, defenderShape)
-						if !overlapped {
-							continue
-						}
-						exploded = true
-						if _, existent := invinsibleSet[t.CharacterState]; existent {
-							continue
-						}
-						if 0 < t.FramesInvinsible {
-							continue
-						}
-						xfac := int32(1) // By now, straight Punch offset doesn't respect "y-axis"
-						if 0 > offender.DirX {
-							xfac = -xfac
-						}
-						atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
-						atkedPlayerInNextFrame.Hp -= v.Bullet.Damage
-						if 0 >= atkedPlayerInNextFrame.Hp {
-							// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
-							atkedPlayerInNextFrame.Hp = 0
-							atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
-							atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
-						} else {
-							pushbackVelX, pushbackVelY := xfac*v.Bullet.PushbackVelX, v.Bullet.PushbackVelY
-							atkedPlayerInNextFrame.VelX = pushbackVelX
-							atkedPlayerInNextFrame.VelY = pushbackVelY
-							if v.Bullet.BlowUp {
-								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
-							} else {
-								atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_ATKED1
-							}
-							oldFramesToRecover := nextRenderFramePlayers[t.JoinIndex-1].FramesToRecover
-							if v.Bullet.HitStunFrames > oldFramesToRecover {
-								atkedPlayerInNextFrame.FramesToRecover = v.Bullet.HitStunFrames
-							}
-						}
-					default:
-						exploded = true
-					}
-				}
+			default:
+				exploded = true
 			}
 		}
+
 		if exploded {
 			switch v := bulletCollider.Data.(type) {
 			case *MeleeBullet:
 				v.BlState = BULLET_EXPLODING
-				v.FramesInBlState = 0
+				if explodedOnAnotherPlayer {
+					v.FramesInBlState = 0
+				} else {
+					// When hitting a barrier, don't play explosion anim
+					v.FramesInBlState = v.Bullet.ExplosionFrames + 1
+				}
 				//fmt.Printf("melee exploded @currRenderFrame.Id=%d, bulletLocalId=%d, blState=%d\n", currRenderFrame.Id, v.BattleAttr.BulletLocalId, v.BlState)
 			case *FireballBullet:
 				v.BlState = BULLET_EXPLODING

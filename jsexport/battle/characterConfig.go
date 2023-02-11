@@ -538,7 +538,7 @@ var skills = map[int]*Skill{
 					HitboxSizeX:     int32(float64(64) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					HitboxSizeY:     int32(float64(48) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					BlowUp:          false,
-					ExplosionFrames: 10,
+					ExplosionFrames: 30,
 					SpeciesId:       int32(1),
 				},
 			},
@@ -781,10 +781,10 @@ var skills = map[int]*Skill{
 		Hits: []interface{}{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
-					StartupFrames:   int32(3),
+					StartupFrames:   int32(4),
 					ActiveFrames:    int32(20),
-					HitStunFrames:   int32(18),
-					BlockStunFrames: int32(9),
+					HitStunFrames:   int32(9),
+					BlockStunFrames: int32(5),
 					Damage:          int32(5),
 					SelfLockVelX:    NO_LOCK_VEL,
 					SelfLockVelY:    NO_LOCK_VEL,
