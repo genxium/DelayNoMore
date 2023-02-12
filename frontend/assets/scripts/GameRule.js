@@ -14,16 +14,14 @@ cc.Class({
       type: cc.Node,
       default: []
     },
+    chosenSpeciesId: {
+      type: cc.Integer,
+      default: 0
+    },
   },
 
   // LIFE-CYCLE CALLBACKS:
-  onLoad() {
-    const modeBtnClickEventHandler = new cc.Component.EventHandler();
-    modeBtnClickEventHandler.target = this.mapNode;
-    modeBtnClickEventHandler.component = "Map";
-    modeBtnClickEventHandler.handler = "onGameRule1v1ModeClicked";
-    this.modeButton.clickEvents.push(modeBtnClickEventHandler);
-  },
+  onLoad() {},
 
   onSpeciesSelected(evt, val) {
     for (let cell of this.characterSelectCells) {
@@ -32,7 +30,12 @@ cc.Class({
         comp.chosenFlag.node.active = false;
       } else {
         comp.chosenFlag.node.active = true;
+        this.chosenSpeciesId = val;
       }
     }
+  },
+
+  onModeButtonClicked(evt) {
+    this.mapNode.getComponent("Map").onGameRule1v1ModeClicked(this.chosenSpeciesId);
   },
 });

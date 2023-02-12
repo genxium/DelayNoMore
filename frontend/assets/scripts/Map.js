@@ -1230,9 +1230,10 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     self.enableInputControls();
   },
 
-  onGameRule1v1ModeClicked(evt, cb) {
+  onGameRule1v1ModeClicked(chosenSpeciesId) {
     const self = this;
     self.battleState = ALL_BATTLE_STATES.WAITING;
+    window.chosenSpeciesId = chosenSpeciesId; // TODO: Find a better way to pass it into "self.initAfterWSConnected"!
     window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     self.hideGameRuleNode();
   },

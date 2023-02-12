@@ -58,10 +58,21 @@ window.getBoundRoomCapacityFromPersistentStorage = function() {
   return (null == boundRoomCapacityStr ? null : parseInt(boundRoomCapacityStr));
 };
 
+window.getChosenSpeciesIdFromPersistentStorage = function() {
+  const boundRoomIdExpiresAt = parseInt(cc.sys.localStorage.getItem("boundRoomIdExpiresAt"));
+  if (!boundRoomIdExpiresAt || Date.now() >= boundRoomIdExpiresAt) {
+    window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
+    return null;
+  }
+  const chosenSpeciesIdStr = cc.sys.localStorage.getItem("chosenSpeciesId");
+  return (null == chosenSpeciesIdStr ? 0 : parseInt(chosenSpeciesIdStr));
+};
+
 window.clearBoundRoomIdInBothVolatileAndPersistentStorage = function() {
   window.boundRoomId = null;
   cc.sys.localStorage.removeItem("boundRoomId");
   cc.sys.localStorage.removeItem("boundRoomCapacity");
+  cc.sys.localStorage.removeItem("chosenSpeciesId");
   cc.sys.localStorage.removeItem("boundRoomIdExpiresAt");
 };
 
@@ -84,6 +95,7 @@ window.handleHbRequirements = function(resp) {
     window.boundRoomCapacity = resp.bciFrame.boundRoomCapacity;
     cc.sys.localStorage.setItem('boundRoomId', window.boundRoomId);
     cc.sys.localStorage.setItem('boundRoomCapacity', window.boundRoomCapacity);
+    cc.sys.localStorage.setItem('chosenSpeciesId', window.chosenSpeciesId);
     cc.sys.localStorage.setItem('boundRoomIdExpiresAt', Date.now() + 10 * 60 * 1000); // Temporarily hardcoded, for `boundRoomId` only.
   }
   console.log(`Handle hb requirements #3`);
@@ -179,6 +191,13 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
     }
   }
 
+  if (null == window.chosenSpeciesId) {
+    window.chosenSpeciesId = getChosenSpeciesIdFromPersistentStorage();
+  }
+  if (null != window.chosenSpeciesId) {
+    urlToConnect = urlToConnect + "&speciesId=" + window.chosenSpeciesId;
+  }
+
   const clientSession = new WebSocket(urlToConnect);
   clientSession.binaryType = 'arraybuffer'; // Make 'event.data' of 'onmessage' an "ArrayBuffer" instead of a "Blob"
 
@@ -230,9 +249,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
             const peerAddrList = resp.rdf.peerUdpAddrList;
             console.log(`Got DOWNSYNC_MSG_ACT_PEER_UDP_ADDR peerAddrList=${JSON.stringify(peerAddrList)}; boundRoomCapacity=${window.boundRoomCapacity}`);
             for (let j = 0; j < 3; ++j) {
-                setTimeout(()=> {
-                    DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
-                }, j*500);
+              setTimeout(() => {
+                DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
+              }, j * 500);
             }
           }
           break;
