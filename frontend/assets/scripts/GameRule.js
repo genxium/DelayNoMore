@@ -25,13 +25,13 @@ cc.Class({
     this.modeButton.clickEvents.push(modeBtnClickEventHandler);
   },
 
-  onSpeciesSelected(val) {
+  onSpeciesSelected(evt, val) {
     for (let cell of this.characterSelectCells) {
       const comp = cell.getComponent("CharacterSelectCell");
-      if (cell.speciesId != val) {
-        cell.chosenFlag.active = false;
+      if (comp.speciesId != val) {
+        comp.chosenFlag.node.active = false;
       } else {
-        cell.chosenFlag.active = true;
+        comp.chosenFlag.node.active = true;
       }
     }
   },

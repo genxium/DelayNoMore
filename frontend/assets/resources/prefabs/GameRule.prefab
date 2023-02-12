@@ -2895,7 +2895,17 @@
       "__id__": 73
     },
     "mapNode": null,
-    "characterSelectCells": [],
+    "characterSelectCells": [
+      {
+        "__id__": 6
+      },
+      {
+        "__id__": 26
+      },
+      {
+        "__id__": 46
+      }
+    ],
     "_id": ""
   },
   {
