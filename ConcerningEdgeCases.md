@@ -76,3 +76,17 @@ It's not a global consensus, but in practice many UDP communications are platfor
 
 Therefore, the following plan doesn't assume use of any specific 3rd party encapsulation of UDP communication.
 ![UDP_secondary_session](./charts/UDPEssentials.jpg)
+
+# Would using WebRTC for all frontends be a `UDP for all` solution?
+Theoretically yes.
+
+## Plan to integrate WebRTC
+The actual integration of WebRTC to enable `browser v.s. native app w/ WebRTC` requires detailed planning :)
+
+In my current implementation, there's only 1 backend process and it's responsible for all of the following things. The plan for integrating/migrating each item is written respectively.
+- TURN for UDP tunneling/relay
+	- Some minor modification to [Room.PlayerSecondaryDownsyncSessionDict](https://github.com/genxium/DelayNoMore/blob/365177a3af6033f1cd629a4a4d59beb4557cc311/battle_srv/models/room.go#L126) should be enough to yield a WebRTC API friendly TURN. It's interesting that [though UDP based in transport layer, a WebRTC session is stateful and more similar to WebSocket in terms of API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API).  
+- STUN for UDP holepunching
+	- Some minor modification to [Player.UdpAddr](https://github.com/genxium/DelayNoMore/blob/365177a3af6033f1cd629a4a4d59beb4557cc311/battle_srv/models/player.go#L56) should be enough to yield a WebRTC API friendly STUN.  
+- reconnection recovery 
+	- Not sure whether or not I should separate this feature from STUN and TURN, but if I were to do so, [both `Room.RenderFrameBuffer` and `Room.InputsBuffer`](https://github.com/genxium/DelayNoMore/blob/365177a3af6033f1cd629a4a4d59beb4557cc311/battle_srv/models/room.go) should be moved to a shared fast I/O storage (e.g. using Redis) to achieve the same level of `High Availability` in design as STUN and TURN.   
