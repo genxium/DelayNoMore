@@ -168,7 +168,7 @@ func (pR *Room) updateScore() {
 	pR.Score = calRoomScore(pR.EffectivePlayerCount, pR.Capacity, pR.State)
 }
 
-func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) bool {
+func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, speciesId int, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) bool {
 	playerId := pPlayerFromDbInit.Id
 	// TODO: Any thread-safety concern for accessing "pR" here?
 	if RoomBattleStateIns.IDLE != pR.State && RoomBattleStateIns.WAITING != pR.State {
@@ -180,7 +180,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, session *websocke
 		return false
 	}
 
-	defer pR.onPlayerAdded(playerId)
+	defer pR.onPlayerAdded(playerId, speciesId)
 
 	pPlayerFromDbInit.UdpAddr = nil
 	pPlayerFromDbInit.BattleUdpTunnelAddr = nil
@@ -416,15 +416,6 @@ func (pR *Room) StartBattle() {
 
 	pR.RenderFrameId = 0
 
-	for _, player := range pR.Players {
-		speciesId := int(player.JoinIndex - 1) // FIXME: Hardcoded the values for now
-		if player.JoinIndex == 1 {
-			speciesId = 4096
-		}
-		chosenCh := battle.Characters[speciesId]
-		pR.CharacterConfigsArr[player.JoinIndex-1] = chosenCh
-		pR.SpeciesIdList[player.JoinIndex-1] = int32(speciesId)
-	}
 	Logger.Info("[StartBattle] ", zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("SpeciesIdList", pR.SpeciesIdList))
 
 	// Initialize the "collisionSys" as well as "RenderFrameBuffer"
@@ -954,7 +945,7 @@ func (pR *Room) clearPlayerNetworkSession(playerId int32) {
 	}
 }
 
-func (pR *Room) onPlayerAdded(playerId int32) {
+func (pR *Room) onPlayerAdded(playerId int32, speciesId int) {
 	pR.EffectivePlayerCount++
 
 	if 1 == pR.EffectivePlayerCount {
@@ -966,8 +957,9 @@ func (pR *Room) onPlayerAdded(playerId int32) {
 			pR.Players[playerId].JoinIndex = int32(index) + 1
 			pR.JoinIndexBooleanArr[index] = true
 
-			speciesId := index // FIXME
+			pR.SpeciesIdList[index] = int32(speciesId)
 			chosenCh := battle.Characters[speciesId]
+			pR.CharacterConfigsArr[index] = chosenCh
 			pR.Players[playerId].Speed = chosenCh.Speed
 
 			// Lazily assign the initial position of "Player" for "RoomDownsyncFrame".

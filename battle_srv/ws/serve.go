@@ -50,7 +50,17 @@ func Serve(c *gin.Context) {
 
 	boundRoomId := 0
 	expectedRoomId := 0
+	speciesId := 0
 	var err error
+	if speciesIdStr, hasSpeciesId := c.GetQuery("speciesId"); hasSpeciesId {
+		speciesId, err = strconv.Atoi(speciesIdStr)
+		if err != nil {
+			// TODO: Abort with specific message.
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	}
+
 	if boundRoomIdStr, hasBoundRoomId := c.GetQuery("boundRoomId"); hasBoundRoomId {
 		boundRoomId, err = strconv.Atoi(boundRoomIdStr)
 		if err != nil {
@@ -195,7 +205,7 @@ func Serve(c *gin.Context) {
 
 			if pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer) {
 				playerSuccessfullyAddedToRoom = true
-			} else if pRoom.AddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer) {
+			} else if pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer) {
 				playerSuccessfullyAddedToRoom = true
 			} else {
 				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectedRoomId))
@@ -219,7 +229,7 @@ func Serve(c *gin.Context) {
 		} else {
 			pRoom = tmpRoom
 			Logger.Info("Successfully popped:\n", zap.Any("roomId", pRoom.Id), zap.Any("forPlayerId", playerId))
-			res := pRoom.AddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
+			res := pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer)
 			if !res {
 				signalToCloseConnOfThisPlayer(Constants.RetCode.PlayerNotAddableToRoom, fmt.Sprintf("AddPlayerIfPossible returns false for roomId == %v, playerId == %v!", pRoom.Id, playerId))
 			}

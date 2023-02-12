@@ -60,6 +60,12 @@
             }
           },
           {
+            "frame": 0.3,
+            "value": {
+              "__uuid__": "cabf9cb6-99ca-426d-9a23-95cdec6f06b9"
+            }
+          },
+          {
             "frame": 0.3333333333333333,
             "value": {
               "__uuid__": "cabf9cb6-99ca-426d-9a23-95cdec6f06b9"
