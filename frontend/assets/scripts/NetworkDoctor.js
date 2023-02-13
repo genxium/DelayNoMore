@@ -89,23 +89,28 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
   const [inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold + 3) {
     // Don't send too fast
-    console.log(`Sending too fast, sendingFps=${sendingFps}`);
+    if (CC_DEBUG) {    
+      // Printing of this message might induce a performance impact.
+      console.log(`Sending too fast, sendingFps=${sendingFps}`);
+    }
     return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
   } else {
     const sendingFpsNormal = (sendingFps >= this.inputRateThreshold);
     // An outstanding lag within the "inputFrameDownsyncQ" will reduce "srvDownsyncFps", HOWEVER, a constant lag wouldn't impact "srvDownsyncFps"! In native platforms we might use PING value might help as a supplement information to confirm that the "selfPlayer" is not lagged within the time accounted by "inputFrameDownsyncQ".  
     const recvFpsNormal = (srvDownsyncFps >= this.inputRateThreshold || peerUpsyncFps >= this.inputRateThreshold * (window.boundRoomCapacity - 1));
     if (sendingFpsNormal && recvFpsNormal) {
-      let selfInputFrameIdFront = gopkgs.ConvertToNoDelayInputFrameId(mapIns.renderFrameId);
       let minInputFrameIdFront = Number.MAX_VALUE;
       for (let k = 0; k < window.boundRoomCapacity; ++k) {
         if (k + 1 == mapIns.selfPlayerInfo.JoinIndex) continue;
         if (mapIns.lastIndividuallyConfirmedInputFrameId[k] >= minInputFrameIdFront) continue;
         minInputFrameIdFront = mapIns.lastIndividuallyConfirmedInputFrameId[k];
       }
-      if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance + 1))) {
+      if ((inputFrameIdFront > minInputFrameIdFront) && ((inputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance + 1))) {
         // first comparison condition is to avoid numeric overflow
-        console.log(`Game logic ticking too fast, selfInputFrameIdFront=${selfInputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
+        if (CC_DEBUG) {
+            // Printing of this message might induce a performance impact.
+            console.log(`Game logic ticking too fast, selfInputFrameIdFront=${inputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
+        }
         return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
       }
     }

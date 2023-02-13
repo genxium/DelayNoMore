@@ -385,6 +385,7 @@ cc.Class({
     self.rdfIdToActuallyUsedInput = new Map();
 
     self.networkDoctor = new NetworkDoctor(20);
+    self.allowSkippingRenderFrameFlag = true;
     self.skipRenderFrameFlag = false;
 
     self.allowRollbackOnPeerUpsync = true;
@@ -443,7 +444,7 @@ cc.Class({
   },
 
   onLoad() {
-    cc.game.setFrameRate(59);
+    cc.game.setFrameRate(60);
     cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
     cc.view.enableAutoFullScreen(true);
 
@@ -902,12 +903,15 @@ cc.Class({
     --------------------------------------------------------
     */
     // The actual rollback-and-chase would later be executed in update(dt). 
-    console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by 
+    if (CC_DEBUG) {
+      // Printing of this message might induce a performance impact.
+      console.log(`Mismatched input detected, resetting chaserRenderFrameId: ${self.chaserRenderFrameId}->${renderFrameId1} by 
 firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
 batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]
 fromUDP=${fromUDP}`);
+    }
     self.chaserRenderFrameId = renderFrameId1;
     let rollbackFrames = (self.renderFrameId - self.chaserRenderFrameId);
     if (0 > rollbackFrames) {
@@ -965,7 +969,7 @@ fromUDP=${fromUDP}`);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
 
-      if (self.allowRollbackOnPeerUpsync) {
+      if (true == self.allowRollbackOnPeerUpsync) {
         // Reaching here implies that "true == self.allowRollbackOnPeerUpsync".
         // Shall we update the "chaserRenderFrameId" if the rendered history was wrong? It doesn't seem to impact eventual correctness if we allow the update of "chaserRenderFrameId" upon "inputFrameId <= renderedInputFrameIdUpper" here, however UDP upsync doesn't reserve order from a same sender and there might be multiple other senders, hence it might result in unnecessarily frequent chasing.
         if (
@@ -1048,7 +1052,7 @@ fromUDP=${fromUDP}`);
 
       Kindly note that Significantly different network bandwidths or delay fluctuations would result in frequent [type#1 forceConfirmation] too, but CAUSE FROM DIFFERENT LOCAL "update(dt)" RATE SHOULD BE THE FIRST TO INVESTIGATE AND ELIMINATE -- because we have control on it, but no one has control on the internet. 
       */
-      if (self.skipRenderFrameFlag) {
+      if (self.allowSkippingRenderFrameFlag && self.skipRenderFrameFlag) {
         self.networkDoctor.logSkippedRenderFrameCnt();
         self.skipRenderFrameFlag = false;
         return;
@@ -1125,7 +1129,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
         const [skipRenderFrameFlag, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, doctorRollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.isTooFast(self);
-        self.skipRenderFrameFlag = skipRenderFrameFlag;
+        if (self.allowSkippingRenderFrameFlag) {
+          self.skipRenderFrameFlag = skipRenderFrameFlag;
+        }
         if (self.showNetworkDoctorInfo) {
           self.showNetworkDoctorLabels(inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, doctorRollbackFrames, skippedRenderFrameCnt);
         }

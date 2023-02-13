@@ -51,7 +51,7 @@ void RecvRingBuff::put(char* newBytes, size_t newBytesLen) {
     }
     slotEle->bytesLen = newBytesLen;
     memset(slotEle->ui8Arr, 0, sizeof slotEle->ui8Arr);
-    for (int i = 0; i < newBytesLen; i++) {
+    for (size_t i = 0; i < newBytesLen; i++) {
         *(slotEle->ui8Arr + i) = *(newBytes + i);
     }
 

@@ -120,6 +120,24 @@ When building for native platforms, it's much more convenient to trigger the Coc
 ```
 shell> cd <proj-root>
 shell> /path/to/CocosCreator.exe --path ./frontend --build "platform=win32;debug=true"
+shell> cd ./frontend/build/jsb-link/frameworks/runtime-src/proj.win32 && MSBUILD DelayNoMore.vcxproj -property:Configuration=Debug
+```
+or 
+```
+shell> cd <proj-root>
+shell> /path/to/CocosCreator.exe --path ./frontend --build "platform=win32;debug=false"
+shell> cd ./frontend/build/jsb-link/frameworks/runtime-src/proj.win32 && MSBUILD DelayNoMore.vcxproj -property:Configuration=Release
+```
+
+for release.
+
+If `MSBUILD` command is not yet added to `PATH`, Use `Get-Command MSBUILD` in `Developer Command Prompt for VS 2017/2019` to see where the command should come from and add it to `PATH`.
+
+Similarly for Android release build
+```
+shell> cd <proj-root>
+shell> /path/to/CocosCreator.exe --path ./frontend --build "platform=android;debug=false"
+shell> cd ./frontend/build/jsb-link/frameworks/runtime-src/proj.android-studio && ./gradlew assembleRelease
 ```
 
 ### 2.4 CococCreator native build reloading
