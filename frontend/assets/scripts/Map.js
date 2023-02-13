@@ -1121,13 +1121,14 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         }
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
         self.showDebugBoundaries(rdf);
-        if (self.showNetworkDoctorInfo) {
-          self.showNetworkDoctorLabels();
-        }
         ++self.renderFrameId; // [WARNING] It's important to increment the renderFrameId AFTER all the operations above!!!
         self.lastRenderFrameIdTriggeredAt = performance.now();
         let t3 = performance.now();
-        self.skipRenderFrameFlag = self.networkDoctor.isTooFast(self);
+        const [skipRenderFrameFlag, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, doctorRollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.isTooFast(self);
+        self.skipRenderFrameFlag = skipRenderFrameFlag;
+        if (self.showNetworkDoctorInfo) {
+          self.showNetworkDoctorLabels(inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, doctorRollbackFrames, skippedRenderFrameCnt);
+        }
       } catch (err) {
         console.error("Error during Map.update", err);
         self.onBattleStopped(); // TODO: Popup to ask player to refresh browser
@@ -1626,14 +1627,13 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
     }
   },
 
-  showNetworkDoctorLabels() {
+  showNetworkDoctorLabels(inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt) {
     const self = this;
-    const [inputFrameFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.stats();
     if (self.inputFrameFrontLabel) {
-      self.inputFrameFrontLabel.string = `${inputFrameFront} inputFrameId front`;
+      self.inputFrameFrontLabel.string = `inputFrameId front: ${inputFrameIdFront}`;
     }
     if (self.sendingQLabel) {
-      self.sendingQLabel.string = `${sendingFps} fps sending`;
+      self.sendingQLabel.string = `fps sending: ${sendingFps}`;
       if (sendingFps < self.networkDoctor.inputRateThreshold) {
         self.sendingQLabel.node.color = cc.Color.RED;
       } else {
@@ -1641,7 +1641,7 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       }
     }
     if (self.inputFrameDownsyncQLabel) {
-      self.inputFrameDownsyncQLabel.string = `${srvDownsyncFps} fps srv-downsync`;
+      self.inputFrameDownsyncQLabel.string = `fps srv-downsync: ${srvDownsyncFps}`;
       if (srvDownsyncFps < self.networkDoctor.inputRateThreshold) {
         self.inputFrameDownsyncQLabel.node.color = cc.Color.RED;
       } else {
@@ -1649,7 +1649,7 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       }
     }
     if (self.peerInputFrameUpsyncQLabel) {
-      self.peerInputFrameUpsyncQLabel.string = `${peerUpsyncFps} fps peer-upsync`;
+      self.peerInputFrameUpsyncQLabel.string = `fps peer-upsync: ${peerUpsyncFps}`;
       if (peerUpsyncFps > self.networkDoctor.peerUpsyncFps) {
         self.peerInputFrameUpsyncQLabel.node.color = cc.Color.RED;
       } else {
@@ -1665,7 +1665,7 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       }
     }
     if (self.skippedRenderFrameCntLabel) {
-      self.skippedRenderFrameCntLabel.string = `${skippedRenderFrameCnt} frames skipped`
+      self.skippedRenderFrameCntLabel.string = `frames skipped: ${skippedRenderFrameCnt}`
     }
   },
 });

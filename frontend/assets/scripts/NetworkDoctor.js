@@ -55,7 +55,8 @@ NetworkDoctor.prototype.logRollbackFrames = function(x) {
 };
 
 NetworkDoctor.prototype.stats = function() {
-  let sendingFps = 0,
+  let inputFrameIdFront = this.inputFrameIdFront,
+    sendingFps = 0,
     srvDownsyncFps = 0,
     peerUpsyncFps = 0,
     rollbackFrames = this.immediateRollbackFrames;
@@ -77,7 +78,7 @@ NetworkDoctor.prototype.stats = function() {
     const elapsedMillis = ed.t - st.t;
     peerUpsyncFps = Math.round(this.peerInputFrameUpsyncCnt * 1000 / elapsedMillis);
   }
-  return [this.inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, this.skippedRenderFrameCnt];
+  return [inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, this.skippedRenderFrameCnt];
 };
 
 NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
@@ -85,11 +86,11 @@ NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {
 }
 
 NetworkDoctor.prototype.isTooFast = function(mapIns) {
-  const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
+  const [inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = this.stats();
   if (sendingFps >= this.inputRateThreshold + 3) {
     // Don't send too fast
     console.log(`Sending too fast, sendingFps=${sendingFps}`);
-    return true;
+    return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
   } else {
     const sendingFpsNormal = (sendingFps >= this.inputRateThreshold);
     // An outstanding lag within the "inputFrameDownsyncQ" will reduce "srvDownsyncFps", HOWEVER, a constant lag wouldn't impact "srvDownsyncFps"! In native platforms we might use PING value might help as a supplement information to confirm that the "selfPlayer" is not lagged within the time accounted by "inputFrameDownsyncQ".  
@@ -105,11 +106,11 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
       if ((selfInputFrameIdFront > minInputFrameIdFront) && ((selfInputFrameIdFront - minInputFrameIdFront) > (mapIns.inputFrameUpsyncDelayTolerance + 1))) {
         // first comparison condition is to avoid numeric overflow
         console.log(`Game logic ticking too fast, selfInputFrameIdFront=${selfInputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
-        return true;
+        return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
       }
     }
   }
-  return false;
+  return [false, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
 };
 
 module.exports = NetworkDoctor;
