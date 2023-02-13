@@ -22,7 +22,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(5) // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(6) // in the count of render frames
 
 	/*
 	   [WARNING]

@@ -47,7 +47,7 @@ cc.Class({
   },
 
   hideExitButton() {
-    if (null == this.exitBtnNode != null) {
+    if (null == this.exitBtnNode) {
       return;
     }
     this.exitBtnNode.active = false;

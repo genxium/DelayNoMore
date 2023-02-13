@@ -5,6 +5,7 @@ var NetworkDoctor = function(capacity) {
 };
 
 NetworkDoctor.prototype.reset = function(capacity) {
+  this.inputFrameIdFront = 0;
   this.sendingQ = new RingBuffer(capacity);
   this.inputFrameDownsyncQ = new RingBuffer(capacity);
   this.peerInputFrameUpsyncQ = new RingBuffer(capacity);
@@ -15,6 +16,10 @@ NetworkDoctor.prototype.reset = function(capacity) {
   this.inputRateThreshold = gopkgs.ConvertToNoDelayInputFrameId(60);
   this.peerUpsyncThreshold = 8;
   this.rollbackFramesThreshold = 8; // Roughly the minimum "TurnAroundFramesToRecover".
+};
+
+NetworkDoctor.prototype.logInputFrameIdFront = function(inputFrameId) {
+  this.inputFrameIdFront = inputFrameId;
 };
 
 NetworkDoctor.prototype.logSending = function(stFrameId, edFrameId) {
@@ -72,7 +77,7 @@ NetworkDoctor.prototype.stats = function() {
     const elapsedMillis = ed.t - st.t;
     peerUpsyncFps = Math.round(this.peerInputFrameUpsyncCnt * 1000 / elapsedMillis);
   }
-  return [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, this.skippedRenderFrameCnt];
+  return [this.inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, this.skippedRenderFrameCnt];
 };
 
 NetworkDoctor.prototype.logSkippedRenderFrameCnt = function() {

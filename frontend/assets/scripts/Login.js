@@ -354,6 +354,7 @@ cc.Class({
       self.loadingNode.getChildByName('loadingSprite').runAction(
         cc.repeatForever(cc.rotateBy(1.0, 360))
       );
+      self.loadingNode.getChildByName('loadingLabel').active = true;
       cc.director.loadScene('default_map');
     } else {
       console.log("OnLoggedIn failed, about to remove `selfPlayer` in local cache.")

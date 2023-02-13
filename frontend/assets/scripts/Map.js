@@ -103,16 +103,16 @@ cc.Class({
       type: cc.Prefab,
       default: null
     },
-    playersInfoPrefab: {
-      type: cc.Prefab,
-      default: null
-    },
     forceBigEndianFloatingNumDecoding: {
       default: false,
     },
     renderFrameIdLagTolerance: {
       type: cc.Integer,
       default: 4 // implies (renderFrameIdLagTolerance >> inputScaleFrames) count of inputFrameIds
+    },
+    inputFrameFrontLabel: {
+      type: cc.Label,
+      default: null
     },
     sendingQLabel: {
       type: cc.Label,
@@ -280,13 +280,6 @@ cc.Class({
     }
   },
 
-  onManualRejoinRequired(labelString) {
-    const self = this;
-    self.battleState = ALL_BATTLE_STATES.NONE; // Effectively stops "update(dt)" 
-    self.showPopupInCanvas(self.gameRuleNode);
-    self.popupSimplePressToGo(labelString, false);
-  },
-
   popupSimplePressToGo(labelString, hideYesButton) {
     const self = this;
     self.state = ALL_MAP_STATES.SHOWING_MODAL_POPUP;
@@ -397,15 +390,6 @@ cc.Class({
     self.allowRollbackOnPeerUpsync = true;
 
     self.countdownNanos = null;
-    if (self.countdownLabel) {
-      self.countdownLabel.string = "";
-    }
-    if (self.playersInfoNode) {
-      safelyAddChild(self.widgetsAboveAllNode, self.playersInfoNode);
-    }
-    if (self.findingPlayerNode) {
-      safelyAddChild(self.widgetsAboveAllNode, self.findingPlayerNode);
-    }
   },
 
   initDebugDrawers() {
@@ -459,7 +443,7 @@ cc.Class({
   },
 
   onLoad() {
-    cc.game.setFrameRate(60);
+    cc.game.setFrameRate(59);
     cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
     cc.view.enableAutoFullScreen(true);
 
@@ -508,8 +492,6 @@ cc.Class({
     const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
     findingPlayerScriptIns.init(self);
 
-    self.playersInfoNode = cc.instantiate(self.playersInfoPrefab);
-
     self.countdownToBeginGameNode = cc.instantiate(self.countdownToBeginGamePrefab);
     self.countdownToBeginGameNode.width = self.canvasNode.width;
     self.countdownToBeginGameNode.height = self.canvasNode.height;
@@ -551,6 +533,11 @@ cc.Class({
         tiledMapIns.tmxAsset = null;
         mapNode.removeAllChildren();
         self._resetCurrentMatch();
+        if (self.countdownLabel) {
+          self.countdownLabel.string = "";
+        }
+        self.hideGameRuleNode();
+        self.showFindingPlayerGUI(null);
 
         tiledMapIns.tmxAsset = tmxAsset;
         const newMapSize = tiledMapIns.getMapSize();
@@ -597,7 +584,6 @@ cc.Class({
 
     self.initAfterWSConnected = () => {
       const self = window.mapIns;
-      self.hideGameRuleNode();
       self.transitToState(ALL_MAP_STATES.WAITING);
       self._inputControlEnabled = false;
     }
@@ -643,7 +629,8 @@ cc.Class({
     if (null == self.gameRuleNode) {
       return;
     }
-    self.gameRuleNode.active = false;
+    //self.gameRuleNode.active = false;
+    self.gameRuleNode.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
   },
 
   enableInputControls() {
@@ -717,14 +704,6 @@ cc.Class({
     }
     self.chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(pbRdf.speciesIdList);
     self._initPlayerRichInfoDict(rdf.PlayersArr);
-
-    // Show the top status indicators for IN_BATTLE 
-    if (self.playersInfoNode) {
-      const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-      for (let i in pbRdf.playersArr) {
-        playersInfoScriptIns.updateData(pbRdf.playersArr[i]);
-      }
-    }
 
     if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdf.id", but here we double check and log the anomaly  
@@ -1009,12 +988,7 @@ fromUDP=${fromUDP}`);
 
   onPlayerAdded(rdf /* pb.RoomDownsyncFrame */ ) {
     const self = this;
-    // Update the "finding player" GUI and show it if not previously present
-    if (!self.findingPlayerNode.parent) {
-      self.showPopupInCanvas(self.findingPlayerNode);
-    }
-    let findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
-    findingPlayerScriptIns.updatePlayersInfo(rdf.playersArr);
+    self.showFindingPlayerGUI(rdf);
   },
 
   onBattleStopped() {
@@ -1034,9 +1008,6 @@ fromUDP=${fromUDP}`);
     resultPanelScriptIns.showPlayerInfo(self.playerRichInfoDict);
     window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
     self.showPopupInCanvas(resultPanelNode);
-
-    // Clear player info
-    self.playersInfoNode.getComponent("PlayersInfo").clearInfo();
   },
 
   spawnPlayerNode(joinIndex, vx, vy, playerDownsyncInfo) {
@@ -1092,6 +1063,7 @@ fromUDP=${fromUDP}`);
           currSelfInput = null;
         if (gopkgs.ShouldGenerateInputFrameUpsync(self.renderFrameId)) {
           [prevSelfInput, currSelfInput] = self.getOrPrefabInputFrameUpsync(noDelayInputFrameId, true);
+          self.networkDoctor.logInputFrameIdFront(noDelayInputFrameId);
         }
 
         const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(self.renderFrameId);
@@ -1143,8 +1115,6 @@ fromUDP=${fromUDP}`);
             console.warn(`Mismatched render frame@rdf.id=${rdf.Id} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${JSON.stringify(rdf)}
 othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}`);
-            // closeWSConnection(constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME, "");
-            // self.onManualRejoinRequired("[DEBUG] CLIENT_MISMATCHED_RENDER_FRAME");
             rdf = othersForcedDownsyncRenderFrame;
             self.othersForcedDownsyncRenderFrameDict.delete(rdf.Id);
           }
@@ -1235,7 +1205,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     self.battleState = ALL_BATTLE_STATES.WAITING;
     window.chosenSpeciesId = chosenSpeciesId; // TODO: Find a better way to pass it into "self.initAfterWSConnected"!
     window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
-    self.hideGameRuleNode();
   },
 
   showPopupInCanvas(toShowNode) {
@@ -1245,6 +1214,18 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     self.transitToState(ALL_MAP_STATES.SHOWING_MODAL_POPUP);
     safelyAddChild(self.widgetsAboveAllNode, toShowNode);
     setLocalZOrder(toShowNode, 10);
+  },
+
+  showFindingPlayerGUI(rdf) {
+    const self = this;
+    // Update the "finding player" GUI and show it if not previously present
+    if (!self.findingPlayerNode.parent) {
+      self.showPopupInCanvas(self.findingPlayerNode);
+    }
+    if (null != rdf) {
+      const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
+      findingPlayerScriptIns.updatePlayersInfo(rdf.playersArr);
+    }
   },
 
   hideFindingPlayersGUI(rdf) {
@@ -1259,13 +1240,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     const self = this;
     const players = rdf.playersArr;
 
-    // Show the top status indicators for IN_BATTLE 
-    if (self.playersInfoNode) {
-      const playersInfoScriptIns = self.playersInfoNode.getComponent("PlayersInfo");
-      for (let i in players) {
-        playersInfoScriptIns.updateData(players[i]);
-      }
-    }
     console.log("Calling `onBattleReadyToStart` with:", players);
     if (self.findingPlayerNode) {
       const findingPlayerScriptIns = self.findingPlayerNode.getComponent("FindingPlayer");
@@ -1654,7 +1628,10 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
 
   showNetworkDoctorLabels() {
     const self = this;
-    const [sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.stats();
+    const [inputFrameFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt] = self.networkDoctor.stats();
+    if (self.inputFrameFrontLabel) {
+      self.inputFrameFrontLabel.string = `${inputFrameFront} inputFrameId front`;
+    }
     if (self.sendingQLabel) {
       self.sendingQLabel.string = `${sendingFps} fps sending`;
       if (sendingFps < self.networkDoctor.inputRateThreshold) {

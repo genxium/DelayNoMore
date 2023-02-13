@@ -18,10 +18,15 @@ cc.Class({
       type: cc.Integer,
       default: 0
     },
+    loadingNode: {
+      default: null,
+      type: cc.Node
+    },
   },
 
   // LIFE-CYCLE CALLBACKS:
-  onLoad() {},
+  onLoad() {
+  },
 
   onSpeciesSelected(evt, val) {
     for (let cell of this.characterSelectCells) {
@@ -36,6 +41,15 @@ cc.Class({
   },
 
   onModeButtonClicked(evt) {
+    for (let cell of this.characterSelectCells) {
+      const comp = cell.getComponent("CharacterSelectCell");
+      comp.setInteractable(false);
+    }
+    this.modeButton.node.active = false;
+    this.loadingNode.active = true;
+    this.loadingNode.runAction(
+      cc.repeatForever(cc.rotateBy(1.0, 360))
+    );
     this.mapNode.getComponent("Map").onGameRule1v1ModeClicked(this.chosenSpeciesId);
   },
 });
