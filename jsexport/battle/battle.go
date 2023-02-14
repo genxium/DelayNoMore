@@ -1294,13 +1294,15 @@ func NewMeleeBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, s
 
 func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId int32, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, blState, framesInBlState, explosionFrames, speciesId int32) *FireballBullet {
 	return &FireballBullet{
-		VirtualGridX: virtualGridX,
-		VirtualGridY: virtualGridY,
-		DirX:         dirX,
-		DirY:         dirY,
-		VelX:         velX,
-		VelY:         velY,
-		Speed:        speed,
+		BlState:         blState,
+		FramesInBlState: framesInBlState,
+		VirtualGridX:    virtualGridX,
+		VirtualGridY:    virtualGridY,
+		DirX:            dirX,
+		DirY:            dirY,
+		VelX:            velX,
+		VelY:            velY,
+		Speed:           speed,
 		BattleAttr: &BulletBattleAttr{
 			BulletLocalId:           bulletLocalId,
 			OriginatedRenderFrameId: originatedRenderFrameId,
@@ -1332,4 +1334,62 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 			SpeciesId:       speciesId,
 		},
 	}
+}
+
+func CloneMeleeBullet(blState, framesInBlState int32, dynamicBattleAttr *BulletBattleAttr, staticBulletConfig *BulletConfig, dst *MeleeBullet /* preallocated */) {
+	dst.BlState = blState
+	dst.FramesInBlState = framesInBlState
+	dst.BattleAttr.BulletLocalId = dynamicBattleAttr.BulletLocalId
+	dst.BattleAttr.OriginatedRenderFrameId = dynamicBattleAttr.OriginatedRenderFrameId
+	dst.BattleAttr.OffenderJoinIndex = dynamicBattleAttr.OffenderJoinIndex
+	dst.BattleAttr.TeamId = dynamicBattleAttr.TeamId
+	dst.Bullet = staticBulletConfig // It's OK to just assign the pointer here, static bullet config is meant to be passed this way
+}
+
+func CloneFireballBullet(blState, framesInBlState, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed int32, dynamicBattleAttr *BulletBattleAttr, staticBulletConfig *BulletConfig, dst *FireballBullet /* preallocated */) {
+	dst.BlState = blState
+	dst.FramesInBlState = framesInBlState
+	dst.VirtualGridX = virtualGridX
+	dst.VirtualGridY = virtualGridY
+	dst.DirX = dirX
+	dst.DirY = dirY
+	dst.VelX = velX
+	dst.VelY = velY
+	dst.Speed = speed
+	dst.BattleAttr.BulletLocalId = dynamicBattleAttr.BulletLocalId
+	dst.BattleAttr.OriginatedRenderFrameId = dynamicBattleAttr.OriginatedRenderFrameId
+	dst.BattleAttr.OffenderJoinIndex = dynamicBattleAttr.OffenderJoinIndex
+	dst.BattleAttr.TeamId = dynamicBattleAttr.TeamId
+	dst.Bullet = staticBulletConfig // It's OK to just assign the pointer here, static bullet config is meant to be passed this way
+}
+
+func ClonePlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId, revivalVirtualGridX, revivalVirtualGridY int32, dst *PlayerDownsync) {
+	dst.Id = id
+	dst.VirtualGridX = virtualGridX
+	dst.VirtualGridY = virtualGridY
+	dst.DirX = dirX
+	dst.DirY = dirY
+	dst.VelX = velX
+	dst.VelY = velY
+	dst.FramesToRecover = framesToRecover
+	dst.FramesInChState = framesInChState
+	dst.ActiveSkillId = activeSkillId
+	dst.ActiveSkillHit = activeSkillHit
+	dst.FramesInvinsible = framesInvinsible
+	dst.Speed = speed
+	dst.BattleState = battleState
+	dst.CharacterState = characterState
+	dst.JoinIndex = joinIndex
+	dst.Hp = hp
+	dst.MaxHp = maxHp
+	dst.ColliderRadius = colliderRadius
+	dst.InAir = inAir
+	dst.OnWall = onWall
+	dst.OnWallNormX = onWallNormX
+	dst.OnWallNormY = onWallNormY
+	dst.CapturedByInertia = capturedByInertia
+	dst.BulletTeamId = bulletTeamId
+	dst.ChCollisionTeamId = chCollisionTeamId
+	dst.RevivalVirtualGridX = revivalVirtualGridX
+	dst.RevivalVirtualGridY = revivalVirtualGridY
 }
