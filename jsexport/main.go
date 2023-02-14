@@ -43,36 +43,7 @@ func NewBarrierJs(boundary *Polygon2D) *js.Object {
 }
 
 func NewPlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId int32, revivalVirtualGridX, revivalVirtualGridY int32) *js.Object {
-	return js.MakeWrapper(&PlayerDownsync{
-		Id:                  id,
-		VirtualGridX:        virtualGridX,
-		VirtualGridY:        virtualGridY,
-		DirX:                dirX,
-		DirY:                dirY,
-		VelX:                velX,
-		VelY:                velY,
-		FramesToRecover:     framesToRecover,
-		FramesInChState:     framesInChState,
-		ActiveSkillId:       activeSkillId,
-		ActiveSkillHit:      activeSkillHit,
-		FramesInvinsible:    framesInvinsible,
-		Speed:               speed,
-		BattleState:         battleState,
-		CharacterState:      characterState,
-		JoinIndex:           joinIndex,
-		Hp:                  hp,
-		MaxHp:               maxHp,
-		ColliderRadius:      colliderRadius,
-		InAir:               inAir,
-		OnWall:              onWall,
-		OnWallNormX:         onWallNormX,
-		OnWallNormY:         onWallNormY,
-		CapturedByInertia:   capturedByInertia,
-		BulletTeamId:        bulletTeamId,
-		ChCollisionTeamId:   chCollisionTeamId,
-		RevivalVirtualGridX: revivalVirtualGridX,
-		RevivalVirtualGridY: revivalVirtualGridY,
-	})
+	return js.MakeWrapper(NewPlayerDownsync(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius, inAir, onWall, onWallNormX, onWallNormY, capturedByInertia, bulletTeamId, chCollisionTeamId, revivalVirtualGridX, revivalVirtualGridY))
 }
 
 func NewMeleeBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinIndex, startupFrames, cancellableStFrame, cancellableEdFrame, activeFrames, hitStunFrames, blockStunFrames, pushbackVelX, pushbackVelY, damage, selfLockVelX, selfLockVelY, hitboxOffsetX, hitboxOffsetY, hitboxSizeX, hitboxSizeY int32, blowUp bool, teamId, blState, framesInBlState, explosionFrames, speciesId int32) *js.Object {
@@ -96,8 +67,8 @@ func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, bulletLocalI
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
 	return js.MakeFullWrapper(&RoomDownsyncFrame{
 		Id:                   id,
-		PlayersArr:           playersArr,
 		BulletLocalIdCounter: bulletLocalIdCounter,
+		PlayersArr:           playersArr,
 		MeleeBullets:         meleeBullets,
 		FireballBullets:      fireballBullets,
 	})

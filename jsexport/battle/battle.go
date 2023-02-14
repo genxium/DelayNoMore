@@ -43,6 +43,11 @@ const (
 	NO_SKILL_HIT = -1
 
 	NO_LOCK_VEL = int32(-1)
+
+	// Used in preallocated RoomDownsyncFrame to check termination
+	TERMINATING_BULLET_LOCAL_ID = int32(-1)
+	TERMINATING_PLAYER_ID       = int32(-1)
+	TERMINATING_RENDER_FRAME_ID = int32(-1)
 )
 
 // These directions are chosen such that when speed is changed to "(speedX+delta, speedY+delta)" for any of them, the direction is unchanged.
@@ -1336,6 +1341,39 @@ func NewFireballBullet(bulletLocalId, originatedRenderFrameId, offenderJoinIndex
 	}
 }
 
+func NewPlayerDownsync(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId int32, revivalVirtualGridX, revivalVirtualGridY int32) *PlayerDownsync {
+	return &PlayerDownsync{
+		Id:                  id,
+		VirtualGridX:        virtualGridX,
+		VirtualGridY:        virtualGridY,
+		DirX:                dirX,
+		DirY:                dirY,
+		VelX:                velX,
+		VelY:                velY,
+		FramesToRecover:     framesToRecover,
+		FramesInChState:     framesInChState,
+		ActiveSkillId:       activeSkillId,
+		ActiveSkillHit:      activeSkillHit,
+		FramesInvinsible:    framesInvinsible,
+		Speed:               speed,
+		BattleState:         battleState,
+		CharacterState:      characterState,
+		JoinIndex:           joinIndex,
+		Hp:                  hp,
+		MaxHp:               maxHp,
+		ColliderRadius:      colliderRadius,
+		InAir:               inAir,
+		OnWall:              onWall,
+		OnWallNormX:         onWallNormX,
+		OnWallNormY:         onWallNormY,
+		CapturedByInertia:   capturedByInertia,
+		BulletTeamId:        bulletTeamId,
+		ChCollisionTeamId:   chCollisionTeamId,
+		RevivalVirtualGridX: revivalVirtualGridX,
+		RevivalVirtualGridY: revivalVirtualGridY,
+	}
+}
+
 func CloneMeleeBullet(blState, framesInBlState int32, dynamicBattleAttr *BulletBattleAttr, staticBulletConfig *BulletConfig, dst *MeleeBullet /* preallocated */) {
 	dst.BlState = blState
 	dst.FramesInBlState = framesInBlState
@@ -1363,7 +1401,7 @@ func CloneFireballBullet(blState, framesInBlState, virtualGridX, virtualGridY, d
 	dst.Bullet = staticBulletConfig // It's OK to just assign the pointer here, static bullet config is meant to be passed this way
 }
 
-func ClonePlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId, revivalVirtualGridX, revivalVirtualGridY int32, dst *PlayerDownsync) {
+func ClonePlayerDownsync(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, framesToRecover, framesInChState, activeSkillId, activeSkillHit, framesInvinsible, speed, battleState, characterState, joinIndex, hp, maxHp, colliderRadius int32, inAir, onWall bool, onWallNormX, onWallNormY int32, capturedByInertia bool, bulletTeamId, chCollisionTeamId, revivalVirtualGridX, revivalVirtualGridY int32, dst *PlayerDownsync) {
 	dst.Id = id
 	dst.VirtualGridX = virtualGridX
 	dst.VirtualGridY = virtualGridY
@@ -1392,4 +1430,60 @@ func ClonePlayerDownsyncJs(id, virtualGridX, virtualGridY, dirX, dirY, velX, vel
 	dst.ChCollisionTeamId = chCollisionTeamId
 	dst.RevivalVirtualGridX = revivalVirtualGridX
 	dst.RevivalVirtualGridY = revivalVirtualGridY
+}
+
+func CloneRoomDownsyncFrame(id int32, playersArr []*PlayerDownsync, bulletLocalIdCounter int32, meleeBullets []*MeleeBullet, fireballBullets []*FireballBullet, dst *RoomDownsyncFrame) {
+	dst.Id = id
+	dst.BulletLocalIdCounter = bulletLocalIdCounter
+	for i := 0; i < len(playersArr); i++ {
+		src := playersArr[i]
+		if nil == src || TERMINATING_PLAYER_ID == src.Id {
+			break
+		}
+		ClonePlayerDownsync(src.Id, src.VirtualGridX, src.VirtualGridY, src.DirX, src.DirY, src.VelX, src.VelY, src.FramesToRecover, src.FramesInChState, src.ActiveSkillId, src.ActiveSkillHit, src.FramesInvinsible, src.Speed, src.BattleState, src.CharacterState, src.JoinIndex, src.Hp, src.MaxHp, src.ColliderRadius, src.InAir, src.OnWall, src.OnWallNormX, src.OnWallNormY, src.CapturedByInertia, src.BulletTeamId, src.ChCollisionTeamId, src.RevivalVirtualGridX, src.RevivalVirtualGridY, dst.PlayersArr[i])
+	}
+
+	for i := 0; i < len(meleeBullets); i++ {
+		src := meleeBullets[i]
+		if nil == src || TERMINATING_BULLET_LOCAL_ID == src.BattleAttr.BulletLocalId {
+			break
+		}
+		CloneMeleeBullet(src.BlState, src.FramesInBlState, src.BattleAttr, src.Bullet, dst.MeleeBullets[i])
+	}
+
+	for i := 0; i < len(fireballBullets); i++ {
+		src := fireballBullets[i]
+		if nil == src || TERMINATING_BULLET_LOCAL_ID == src.BattleAttr.BulletLocalId {
+			break
+		}
+		CloneFireballBullet(src.BlState, src.FramesInBlState, src.VirtualGridX, src.VirtualGridY, src.DirX, src.DirY, src.VelX, src.VelY, src.Speed, src.BattleAttr, src.Bullet, dst.FireballBullets[i])
+	}
+}
+
+func NewPreallocatedRoomDownsyncFrame(roomCapacity, preallocMeleeBulletCount int, preallocFireballBulletCount int) *RoomDownsyncFrame {
+	preallocatedPlayers := make([]*PlayerDownsync, roomCapacity)
+	for i := 0; i < roomCapacity; i++ {
+		preallocatedPlayer := NewPlayerDownsync(TERMINATING_PLAYER_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false, 0, 0, false, 0, 0, 0, 0)
+		preallocatedPlayers[i] = preallocatedPlayer
+	}
+
+	preallocatedMeleeBullets := make([]*MeleeBullet, preallocMeleeBulletCount)
+	for i := 0; i < preallocMeleeBulletCount; i++ {
+		preallocatedMelee := NewMeleeBullet(TERMINATING_BULLET_LOCAL_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0)
+		preallocatedMeleeBullets[i] = preallocatedMelee
+	}
+
+	preallocatedFireballBullets := make([]*FireballBullet, preallocFireballBulletCount)
+	for i := 0; i < preallocFireballBulletCount; i++ {
+		preallocatedFireball := NewFireballBullet(TERMINATING_BULLET_LOCAL_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		preallocatedFireballBullets[i] = preallocatedFireball
+	}
+
+	return &RoomDownsyncFrame{
+		Id:                   TERMINATING_RENDER_FRAME_ID,
+		BulletLocalIdCounter: TERMINATING_BULLET_LOCAL_ID,
+		PlayersArr:           preallocatedPlayers,
+		MeleeBullets:         preallocatedMeleeBullets,
+		FireballBullets:      preallocatedFireballBullets,
+	}
 }
