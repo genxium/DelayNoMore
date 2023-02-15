@@ -15,7 +15,7 @@ func NewInputFrameDownsync(inputFrameId int32, inputList []uint64, confirmedList
 }
 
 func NewRingBufferJs(n int32) *js.Object {
-	return js.MakeFullWrapper(NewRingBuffer(n))
+	return js.MakeFullWrapper(resolv.NewRingBuffer(n))
 }
 
 func NewCollisionSpaceJs(spaceW, spaceH, minStepW, minStepH int) *js.Object {
@@ -113,7 +113,7 @@ func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *js.Object {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
 	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex))
 }

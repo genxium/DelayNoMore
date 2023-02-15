@@ -16,7 +16,7 @@ const (
 	PATTERN_ID_UNABLE_TO_OP = -2
 	PATTERN_ID_NO_OP        = -1
 
-	WORLD_TO_VIRTUAL_GRID_RATIO = float64(100.0)
+	WORLD_TO_VIRTUAL_GRID_RATIO = float64(10.0)
 	VIRTUAL_GRID_TO_WORLD_RATIO = float64(1.0) / WORLD_TO_VIRTUAL_GRID_RATIO
 
 	GRAVITY_X = int32(0)
@@ -226,16 +226,31 @@ func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 	}
 
 	if 1 < aCnt {
-		for _, axis := range a.SATAxes() {
-			if isPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
+		// Deliberately using "Points" instead of "SATAxes" to avoid unnecessary heap memory alloc
+		for i, _ := range a.Points {
+			u, v := a.Points[i], a.Points[0]
+			if i != len(a.Points)-1 {
+				v = a.Points[i+1]
+			}
+			dy := v[1] - u[1]
+			dx := v[0] - u[0]
+			axis := resolv.Vector{dy, -dx}.Unit()
+			if isPolygonPairSeparatedByDir(a, b, axis, result) {
 				return false
 			}
 		}
 	}
 
 	if 1 < bCnt {
-		for _, axis := range b.SATAxes() {
-			if isPolygonPairSeparatedByDir(a, b, axis.Unit(), result) {
+		for i, _ := range b.Points {
+			u, v := b.Points[i], b.Points[0]
+			if i != len(b.Points)-1 {
+				v = b.Points[i+1]
+			}
+			dy := v[1] - u[1]
+			dx := v[0] - u[0]
+			axis := resolv.Vector{dy, -dx}.Unit()
+			if isPolygonPairSeparatedByDir(a, b, axis, result) {
 				return false
 			}
 		}
@@ -411,8 +426,7 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
-func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D) *[]Vec2D {
-	ret := make([]Vec2D, 0, 10) // no one would simultaneously have more than 5 hardPushbacks
+func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D, pHardPushback *[]Vec2D, collision *resolv.Collision) int {
 	virtualGripToWall := float64(0)
 	if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && 0 == thatPlayerInNextFrame.VelX && currPlayerDownsync.DirX == thatPlayerInNextFrame.DirX {
 		/*
@@ -429,14 +443,19 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 		}
 		virtualGripToWall = xfac * float64(currPlayerDownsync.Speed) * VIRTUAL_GRID_TO_WORLD_RATIO
 	}
-	collision := playerCollider.Check(virtualGripToWall, 0)
-	if nil == collision {
-		return &ret
+	retCnt := 0
+	collided := playerCollider.CheckAllWithHolder(virtualGripToWall, 0, collision)
+	if !collided {
+		return retCnt
 	}
 
 	//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
 	//fmt.Printf("joinIndex=%d calcHardPushbacksNorms has non-empty collision;playerColliderPos=(%.2f,%.2f)\n", joinIndex, playerColliderCenterX, playerColliderCenterY)
-	for _, obj := range collision.Objects {
+	for true {
+		obj := collision.FirstCollidedObject()
+		if nil == obj {
+			break
+		}
 		isBarrier := false
 		switch obj.Data.(type) {
 		case *PlayerDownsync, *MeleeBullet, *FireballBullet:
@@ -456,15 +475,16 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 		// ALWAY snap into hardPushbacks!
 		// [OverlapX, OverlapY] is the unit vector that points into the platform
 		pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
-		ret = append(ret, Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY})
+		(*pHardPushback)[retCnt] = Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY}
 		pEffPushback.X += pushbackX
 		pEffPushback.Y += pushbackY
+		retCnt++
 		//fmt.Printf("joinIndex=%d calcHardPushbacksNorms found one hardpushback; immediatePushback=(%.2f,%.2f)\n", joinIndex, pushbackX, pushbackY)
 	}
-	return &ret
+	return retCnt
 }
 
-func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *RingBuffer) (int, bool, int32, int32) {
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *resolv.RingBuffer) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
 	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
 	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id - 1)
@@ -558,7 +578,9 @@ then pass in the whole "renderFrameBuffer *SpecificRingBuffer" to this function 
 
 However, the enhancement for "playerColliders & bulletColliders" of each room is even more difficult, because the feasibility of doing in-place overwrites depends on the collision library in use.
 */
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
+	collision := resolv.NewCollision() // TODO: Pass this holder in from params
+
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	roomCapacity := len(currRenderFrame.PlayersArr)
 	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
@@ -607,7 +629,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
 	nextRenderFrameFireballBullets := make([]*FireballBullet, 0, len(currRenderFrame.FireballBullets))
 	effPushbacks := make([]Vec2D, roomCapacity)
-	hardPushbackNorms := make([]*[]Vec2D, roomCapacity)
+	hardPushbackNorms := make([][]Vec2D, roomCapacity)
+	for i, _ := range currRenderFrame.PlayersArr {
+		hardPushbackNorms[i] = make([]Vec2D, 5) // In reality no more than 4 simultaneous hard pushbacks
+	}
 	jumpedOrNotList := make([]bool, roomCapacity)
 
 	bulletLocalId := currRenderFrame.BulletLocalIdCounter
@@ -813,7 +838,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		playerColliders[i] = playerCollider
 
 		// Add to collision system
-		collisionSys.Add(playerCollider)
+		collisionSys.AddSingle(playerCollider)
 
 		if currPlayerDownsync.InAir {
 			if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && !jumpedOrNotList[i] {
@@ -850,7 +875,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
 				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
 				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
-				collisionSys.Add(newBulletCollider)
+				collisionSys.AddSingle(newBulletCollider)
 				bulletColliders = append(bulletColliders, newBulletCollider)
 				fireballBullet.BlState = BULLET_ACTIVE
 				if fireballBullet.BlState != prevFireball.BlState {
@@ -891,7 +916,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
 				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
 				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
-				collisionSys.Add(newBulletCollider)
+				collisionSys.AddSingle(newBulletCollider)
 				bulletColliders = append(bulletColliders, newBulletCollider)
 				meleeBullet.BlState = BULLET_ACTIVE
 				if meleeBullet.BlState != prevMelee.BlState {
@@ -908,12 +933,16 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		playerCollider := playerColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		hardPushbackNorms[joinIndex-1] = calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]))
+		hardPushbackCnt := calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]), &(hardPushbackNorms[joinIndex-1]), collision)
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		landedOnGravityPushback := false
 
-		if collision := playerCollider.Check(0, 0); nil != collision {
-			for _, obj := range collision.Objects {
+		if collided := playerCollider.CheckAllWithHolder(0, 0, collision); collided {
+			for true {
+				obj := collision.FirstCollidedObject()
+				if nil == obj {
+					break
+				}
 				isBarrier, isAnotherPlayer, isBullet := false, false, false
 				switch v := obj.Data.(type) {
 				case *PlayerDownsync:
@@ -943,11 +972,14 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
 					pushbackX, pushbackY = (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapX, (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapY
 				}
-				for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
-					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
-					if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
-						pushbackX -= projectedMagnitude * hardPushbackNorm.X
-						pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+				if 0 < hardPushbackCnt {
+					for i := 0; i < hardPushbackCnt; i++ {
+						hardPushbackNorm := hardPushbackNorms[joinIndex-1][i]
+						projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
+						if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
+							pushbackX -= projectedMagnitude * hardPushbackNorm.X
+							pushbackY -= projectedMagnitude * hardPushbackNorm.Y
+						}
 					}
 				}
 				effPushbacks[joinIndex-1].X += pushbackX
@@ -956,10 +988,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 				if SNAP_INTO_PLATFORM_THRESHOLD < normAlignmentWithGravity {
 					landedOnGravityPushback = true
 					//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
-					//fmt.Printf("joinIndex=%d landedOnGravityPushback\n{renderFrame.id: %d, isBarrier: %v, isAnotherPlayer: %v}\nhardPushbackNormsOfThisPlayer=%v, playerColliderPos=(%.2f,%.2f), immediatePushback={%.3f, %.3f}, effPushback={%.3f, %.3f}, overlapMag=%.4f\n", joinIndex, currRenderFrame.Id, isBarrier, isAnotherPlayer, *hardPushbackNorms[joinIndex-1], playerColliderCenterX, playerColliderCenterY, pushbackX, pushbackY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap)
+					//fmt.Printf("joinIndex=%d landedOnGravityPushback\n{renderFrame.id: %d, isBarrier: %v, isAnotherPlayer: %v}\nhardPushbackNormsOfThisPlayer=%v, playerColliderPos=(%.2f,%.2f), immediatePushback={%.3f, %.3f}, effPushback={%.3f, %.3f}, overlapMag=%.4f\n", joinIndex, currRenderFrame.Id, isBarrier, isAnotherPlayer, hardPushbackNorms[joinIndex-1], playerColliderCenterX, playerColliderCenterY, pushbackX, pushbackY, effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y, overlapResult.Overlap)
 				}
 			}
 		}
+
 		if landedOnGravityPushback {
 			thatPlayerInNextFrame.InAir = false
 			fallStopping := (currPlayerDownsync.InAir && 0 >= currPlayerDownsync.VelY)
@@ -1004,9 +1037,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 		if chConfig.OnWallEnabled {
 			if thatPlayerInNextFrame.InAir {
 				// [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
-				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
+				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent && 0 < hardPushbackCnt {
 					// [WARNING] Sticking to wall could only be triggered by proactive player input
-					for _, hardPushbackNorm := range *hardPushbackNorms[joinIndex-1] {
+					for i := 0; i < hardPushbackCnt; i++ {
+						hardPushbackNorm := hardPushbackNorms[joinIndex-1][i]
 						normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
 						normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
 						if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
@@ -1031,13 +1065,14 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 
 	// 5. Check bullet-anything collisions
 	for _, bulletCollider := range bulletColliders {
-		collision := bulletCollider.Check(0, 0)
-		bulletCollider.Space.Remove(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
-		exploded := false
-		explodedOnAnotherPlayer := false
-		if nil == collision {
+		collided := bulletCollider.CheckAllWithHolder(0, 0, collision)
+		bulletCollider.Space.RemoveSingle(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
+		if !collided {
 			continue
 		}
+
+		exploded := false
+		explodedOnAnotherPlayer := false
 
 		var bulletStaticAttr *BulletConfig = nil
 		var bulletBattleAttr *BulletBattleAttr = nil
@@ -1052,7 +1087,11 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 
 		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
 		offender := currRenderFrame.PlayersArr[bulletBattleAttr.OffenderJoinIndex-1]
-		for _, obj := range collision.Objects {
+		for true {
+			obj := collision.FirstCollidedObject()
+			if nil == obj {
+				break
+			}
 			defenderShape := obj.Shape.(*resolv.ConvexPolygon)
 			switch t := obj.Data.(type) {
 			case *PlayerDownsync:
@@ -1170,7 +1209,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *RingBuffer
 	}
 
 	for _, playerCollider := range playerColliders {
-		playerCollider.Space.Remove(playerCollider)
+		playerCollider.Space.RemoveSingle(playerCollider)
 	}
 
 	return &RoomDownsyncFrame{
@@ -1188,7 +1227,7 @@ func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, 
 }
 
 func generateRectColliderInCollisionSpace(blX, blY, w, h float64, data interface{}, tag string) *resolv.Object {
-	collider := resolv.NewObject(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details
+	collider := resolv.NewObjectSingleTag(blX, blY, w, h, tag) // Unlike its frontend counter part, the position of a "resolv.Object" must be specified by "bottom-left point" because "w" and "h" must be positive, see "resolv.Object.BoundsToSpace" for details
 	shape := resolv.NewRectangle(0, 0, w, h)
 	collider.SetShape(shape)
 	collider.Data = data

@@ -38,8 +38,9 @@ func (line *Line) Project(axis Vector) Vector {
 }
 
 func (line *Line) Normal() Vector {
-	v := line.Vector()
-	return Vector{v[1], -v[0]}.Unit()
+	dy := line.End[1] - line.Start[1]
+	dx := line.End[0] - line.Start[0]
+	return Vector{dy, -dx}.Unit()
 }
 
 func (line *Line) Vector() Vector {
@@ -177,24 +178,20 @@ func (cp *ConvexPolygon) AddPoints(vertexPositions ...float64) {
 // Lines returns a slice of transformed Lines composing the ConvexPolygon.
 func (cp *ConvexPolygon) Lines() []*Line {
 
-	lines := []*Line{}
-
 	vertices := cp.Transformed()
+	linesCnt := len(vertices)
+	if !cp.Closed {
+		linesCnt -= 1
+	}
+	lines := make([]*Line, linesCnt)
 
-	for i := 0; i < len(vertices); i++ {
-
+	for i := 0; i < linesCnt; i++ {
 		start, end := vertices[i], vertices[0]
-
 		if i < len(vertices)-1 {
 			end = vertices[i+1]
-		} else if !cp.Closed {
-			break
 		}
-
 		line := NewLine(start[0], start[1], end[0], end[1])
-
-		lines = append(lines, line)
-
+		lines[i] = line
 	}
 
 	return lines
@@ -203,9 +200,9 @@ func (cp *ConvexPolygon) Lines() []*Line {
 
 // Transformed returns the ConvexPolygon's points / vertices, transformed according to the ConvexPolygon's position.
 func (cp *ConvexPolygon) Transformed() []Vector {
-	transformed := []Vector{}
-	for _, point := range cp.Points {
-		transformed = append(transformed, Vector{point[0] + cp.X, point[1] + cp.Y})
+	transformed := make([]Vector, len(cp.Points))
+	for i, point := range cp.Points {
+		transformed[i] = Vector{point[0] + cp.X, point[1] + cp.Y}
 	}
 	return transformed
 }
@@ -275,12 +272,14 @@ func (cp *ConvexPolygon) Center() Vector {
 
 	pos := Vector{0, 0}
 
-	for _, v := range cp.Transformed() {
+	vertices := cp.Transformed()
+	for _, v := range vertices {
 		pos.Add(v)
 	}
 
-	pos[0] /= float64(len(cp.Transformed()))
-	pos[1] /= float64(len(cp.Transformed()))
+	denom := float64(len(vertices))
+	pos[0] /= denom
+	pos[1] /= denom
 
 	return pos
 
@@ -305,10 +304,10 @@ func (cp *ConvexPolygon) Project(axis Vector) Projection {
 
 // SATAxes returns the axes of the ConvexPolygon for SAT intersection testing.
 func (cp *ConvexPolygon) SATAxes() []Vector {
-
-	axes := []Vector{}
-	for _, line := range cp.Lines() {
-		axes = append(axes, line.Normal())
+	lines := cp.Lines()
+	axes := make([]Vector, len(lines))
+	for i, line := range lines {
+		axes[i] = line.Normal()
 	}
 	return axes
 

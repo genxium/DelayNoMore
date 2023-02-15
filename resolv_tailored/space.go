@@ -30,7 +30,20 @@ func NewSpace(spaceWidth, spaceHeight, cellWidth, cellHeight int) *Space {
 
 }
 
+// [WARNING] The slice type boxing/unboxing is proved by profiling to be heavy after transpiled to JavaScript, thus adding some "XxxSingle" shortcuts here.
 // Add adds the specified Objects to the Space, updating the Space's cells to refer to the Object.
+func (sp *Space) AddSingle(obj *Object) {
+
+	if sp == nil {
+		panic("ERROR: space is nil")
+	}
+
+	obj.Space = sp
+
+	// We call Update() once to make sure the object gets its cells added.
+	obj.Update()
+}
+
 func (sp *Space) Add(objects ...*Object) {
 
 	if sp == nil {
@@ -50,6 +63,20 @@ func (sp *Space) Add(objects ...*Object) {
 
 // Remove removes the specified Objects from being associated with the Space. This should be done whenever an Object is removed from the
 // game.
+func (sp *Space) RemoveSingle(obj *Object) {
+
+	if sp == nil {
+		panic("ERROR: space is nil")
+	}
+
+	for 0 < obj.TouchingCells.Cnt {
+		cell := obj.TouchingCells.Pop().(*Cell)
+		cell.unregister(obj)
+	}
+
+	obj.Space = nil
+}
+
 func (sp *Space) Remove(objects ...*Object) {
 
 	if sp == nil {
@@ -57,12 +84,10 @@ func (sp *Space) Remove(objects ...*Object) {
 	}
 
 	for _, obj := range objects {
-
-		for _, cell := range obj.TouchingCells {
+		for 0 < obj.TouchingCells.Cnt {
+			cell := obj.TouchingCells.Pop().(*Cell)
 			cell.unregister(obj)
 		}
-
-		obj.TouchingCells = []*Cell{}
 
 		obj.Space = nil
 
@@ -80,16 +105,14 @@ func (sp *Space) Objects() []*Object {
 	for cy := range sp.Cells {
 
 		for cx := range sp.Cells[cy] {
-
-			for _, o := range sp.Cells[cy][cx].Objects {
-
+			rb := sp.Cells[cy][cx].Objects
+			for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+				o := rb.GetByFrameId(i).(*Object)
 				if _, added := objectsAdded[o]; !added {
 					objects = append(objects, o)
 					objectsAdded[o] = true
 				}
-
 			}
-
 		}
 
 	}
@@ -100,19 +123,13 @@ func (sp *Space) Objects() []*Object {
 
 // Resize resizes the internal Cells array.
 func (sp *Space) Resize(width, height int) {
-
-	sp.Cells = [][]*Cell{}
-
+	sp.Cells = make([][]*Cell, height)
 	for y := 0; y < height; y++ {
-
-		sp.Cells = append(sp.Cells, []*Cell{})
-
+		sp.Cells[y] = make([]*Cell, width)
 		for x := 0; x < width; x++ {
-			sp.Cells[y] = append(sp.Cells[y], newCell(x, y))
+			sp.Cells[y][x] = newCell(x, y)
 		}
-
 	}
-
 }
 
 // Cell returns the Cell at the given cellular / spatial (not world) X and Y position in the Space. If the X and Y position are
@@ -137,25 +154,23 @@ func (sp *Space) CheckCells(x, y, w, h int, tags ...string) *Object {
 			cell := sp.Cell(ix, iy)
 
 			if cell != nil {
-
+				rb := cell.Objects
 				if len(tags) > 0 {
-
 					if cell.ContainsTags(tags...) {
-						for _, obj := range cell.Objects {
+						for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+							obj := rb.GetByFrameId(i).(*Object)
 							if obj.HasTags(tags...) {
 								return obj
 							}
 						}
 					}
-
 				} else if cell.Occupied() {
-					return cell.Objects[0]
+					return rb.GetByFrameId(rb.StFrameId).(*Object)
 				}
 
 			}
 
 		}
-
 	}
 
 	return nil
@@ -178,10 +193,13 @@ func (sp *Space) CheckCellsWorld(x, y, w, h float64, tags ...string) *Object {
 func (sp *Space) UnregisterAllObjects() {
 
 	for y := 0; y < len(sp.Cells); y++ {
-
 		for x := 0; x < len(sp.Cells[y]); x++ {
 			cell := sp.Cells[y][x]
-			sp.Remove(cell.Objects...)
+			rb := cell.Objects
+			for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+				o := rb.GetByFrameId(i).(*Object)
+				sp.RemoveSingle(o)
+			}
 		}
 
 	}

@@ -1,4 +1,4 @@
-package battle
+package resolv
 
 const (
 	RING_BUFF_CONSECUTIVE_SET     = int32(0)
@@ -18,11 +18,13 @@ type RingBuffer struct {
 
 func NewRingBuffer(n int32) *RingBuffer {
 	return &RingBuffer{
-		Ed:   0,
-		St:   0,
-		N:    n,
-		Cnt:  0,
-		Eles: make([]interface{}, n),
+		Ed:        0,
+		St:        0,
+		EdFrameId: 0,
+		StFrameId: 0,
+		N:         n,
+		Cnt:       0,
+		Eles:      make([]interface{}, n),
 	}
 }
 
@@ -121,4 +123,14 @@ func (rb *RingBuffer) SetByFrameId(pItem interface{}, frameId int32) (int32, int
 	rb.Put(pItem)
 
 	return ret, oldStFrameId, oldEdFrameId
+}
+
+func (rb *RingBuffer) Clear() {
+	for 0 < rb.Cnt {
+		rb.Pop()
+	}
+	rb.St = 0
+	rb.Ed = 0
+	rb.StFrameId = 0
+	rb.EdFrameId = 0
 }

@@ -33,7 +33,7 @@ cc.Class({
     /** Init required prefab ended. */
 
     self.inputFrameUpsyncDelayTolerance = 2;
-    self.collisionMinStep = 2;
+    self.collisionMinStep = 8;
 
     self.renderCacheSize = 1024;
     self.serverFps = 60;
@@ -98,7 +98,7 @@ cc.Class({
       const p2Vpos = gopkgs.WorldToVirtualGridPos(boundaryObjs.playerStartingPositions[1].x, boundaryObjs.playerStartingPositions[1].y);
       const colliderRadiusV = gopkgs.WorldToVirtualGridPos(12.0, 0);
 
-      const speciesIdList = [4096, 0];
+      const speciesIdList = [1, 0];
       const chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(speciesIdList);
 
       const startRdf = window.pb.protos.RoomDownsyncFrame.create({

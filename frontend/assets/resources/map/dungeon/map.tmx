@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="137">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="40" tilewidth="16" tileheight="16" infinite="0" nextlayerid="8" nextobjectid="138">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
- <layer id="6" name="Ground" width="128" height="64">
+ <layer id="7" name="Ground" width="128" height="40">
   <data encoding="base64" compression="zlib">
-   eJzt201uwjAQhuEIxCY7KugeqTepumHXC/T+xyCqYimy4sQ4E2bE9y6eDf+e1w4bOHZddwQAAAAAAAAAAACAF/jBP+8Onv29P4M35Rkor50ZaK+dGWivnRlor50ZtK39UmnL5/owegz94/X/on8Ykfsv9V27n/72a0/drPqfBucZeeMSjxm8m5b+W1m9Dv3fv//c9eG88f3p397fytr1vNR9j31A/1hq21vtg4gziNz/ZvQY+vubrr0fefdv3QOt+0O9/3cm3ZffntwqlZ4fTZqBdwuv/odROv9/g3vBwUDpjFq8dst7q5//vP/0O2B6m1V/T/Qv979nvedY9/jcwTPXHPov9+lXZldjrb/1fqL/c/2vo6W5bTn/S3tg7/Nfsz/pX+5v+Z1L/3i8f3cdhXcHz/6/4uivjf7a6K+N/tror43+2uivjf7a6K+N/tror43+2uivjf7a6K+N/tror43+2uivjf7a6K+N/trSf6C8W9Cf/vSn/6v7Y7/+Dyz1uAA=
+   eJzt2k0OgjAQQGECccMOo+5JvIlx484LeP9jaAxNSEOhlMGZOG/xbfyl81rc2FRV1QAAAAAAAAAAAADAD9zxpd1Bs7/2NWjzPAPPa2cGvtfODHyvnRn4XjszKFv7KdOW6zoKvYb+9vpf6W+G5f5zfZeep7/82kM3qf6Hj25C3DhFYwb/pqT/VlKfQ///7z91f+g2fj/9y/tLWbqfp7rvsQ/ob0tue6l9YHEGlvv3Qq+hv77x2tuBdv/SPVC6P7z3v0XCc/HjQZ8p9X5rwgy0W2j1rwfh/L8+Hgm1gNQZlfjsku/2fv7j/uPfgPFjUv010T/d/xH1niLd47KDNfcc+s/3aRdml2Opv/R+ov+6/ufB3Ny2nP+5PbD3+c/Zn/RP95f8zaW/Pdr/u7ZCu4Nm/6dz9Pdtz/5vZSq2hg==
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">
@@ -84,12 +84,12 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="84" x="640" y="224" width="16" height="800">
+  <object id="84" x="640" y="224" width="16" height="416">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="85" x="1680" y="224" width="16" height="800">
+  <object id="85" x="1680" y="224" width="16" height="416">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
@@ -149,22 +149,22 @@
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="113" x="640" y="1008" width="1056" height="16">
-   <properties>
-    <property name="boundary_type" value="barrier"/>
-   </properties>
-  </object>
   <object id="114" x="640" y="224" width="1056" height="16">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
-  <object id="119" x="656" y="592" width="1024" height="416">
+  <object id="119" x="656" y="592" width="512" height="48">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>
   </object>
   <object id="136" x="1232" y="432" width="208" height="16">
+   <properties>
+    <property name="boundary_type" value="barrier"/>
+   </properties>
+  </object>
+  <object id="137" x="1168" y="592" width="512" height="48">
    <properties>
     <property name="boundary_type" value="barrier"/>
    </properties>

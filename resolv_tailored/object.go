@@ -2,7 +2,6 @@ package resolv
 
 import (
 	"math"
-	//"sort"
 )
 
 // Object represents an object that can be spread across one or more Cells in a Space. An Object is essentially an AABB (Axis-Aligned Bounding Box) Rectangle.
@@ -10,21 +9,36 @@ type Object struct {
 	Shape         Shape            // A shape for more specific collision-checking.
 	Space         *Space           // Reference to the Space the Object exists within
 	X, Y, W, H    float64          // Position and size of the Object in the Space
-	TouchingCells []*Cell          // An array of Cells the Object is touching
+	TouchingCells *RingBuffer      // An array of Cells the Object is touching
 	Data          interface{}      // A pointer to a user-definable object
 	ignoreList    map[*Object]bool // Set of Objects to ignore when checking for collisions
 	tags          []string         // A list of tags the Object has
 }
 
 // NewObject returns a new Object of the specified position and size.
+func NewObjectSingleTag(x, y, w, h float64, tag string) *Object {
+	o := &Object{
+		X:             x,
+		Y:             y,
+		W:             w,
+		H:             h,
+		TouchingCells: NewRingBuffer(512), // [WARNING] Should make N large enough to cover all "TouchingCells", otherwise some cells would fail to unregister an object, resulting in memory corruption and incorrect detection result!
+		tags:          []string{tag},
+		ignoreList:    map[*Object]bool{},
+	}
+
+	return o
+}
+
 func NewObject(x, y, w, h float64, tags ...string) *Object {
 	o := &Object{
-		X:          x,
-		Y:          y,
-		W:          w,
-		H:          h,
-		tags:       []string{},
-		ignoreList: map[*Object]bool{},
+		X:             x,
+		Y:             y,
+		W:             w,
+		H:             h,
+		TouchingCells: NewRingBuffer(512),
+		tags:          []string{},
+		ignoreList:    map[*Object]bool{},
 	}
 
 	if len(tags) > 0 {
@@ -59,7 +73,7 @@ func (obj *Object) Update() {
 
 		space := obj.Space
 
-		obj.Space.Remove(obj)
+		obj.Space.RemoveSingle(obj)
 
 		obj.Space = space
 
@@ -73,7 +87,7 @@ func (obj *Object) Update() {
 
 				if c != nil {
 					c.register(obj)
-					obj.TouchingCells = append(obj.TouchingCells, c)
+					obj.TouchingCells.Put(c)
 				}
 
 			}
@@ -154,17 +168,22 @@ func (obj *Object) BoundsToSpace(dx, dy float64) (int, int, int, int) {
 
 // SharesCells returns whether the Object occupies a cell shared by the specified other Object.
 func (obj *Object) SharesCells(other *Object) bool {
-	for _, cell := range obj.TouchingCells {
+	rb := obj.TouchingCells
+	for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+		cell := rb.GetByFrameId(i).(*Cell)
 		if cell.Contains(other) {
 			return true
 		}
 	}
+
 	return false
 }
 
 // SharesCellsTags returns if the Cells the Object occupies have an object with the specified tags.
 func (obj *Object) SharesCellsTags(tags ...string) bool {
-	for _, cell := range obj.TouchingCells {
+	rb := obj.TouchingCells
+	for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+		cell := rb.GetByFrameId(i).(*Cell)
 		if cell.ContainsTags(tags...) {
 			return true
 		}
@@ -218,13 +237,12 @@ func (obj *Object) SetBounds(topLeft, bottomRight Vector) {
 // Check checks the space around the object using the designated delta movement (dx and dy). This is done by querying the containing Space's Cells
 // so that it can see if moving it would coincide with a cell that houses another Object (filtered using the given selection of tag strings). If so,
 // Check returns a Collision. If no objects are found or the Object does not exist within a Space, this function returns nil.
-func (obj *Object) Check(dx, dy float64, tags ...string) *Collision {
+func (obj *Object) CheckAllWithHolder(dx, dy float64, cc *Collision) bool {
 
 	if obj.Space == nil {
-		return nil
+		return false
 	}
 
-	cc := NewCollision()
 	cc.checkingObject = obj
 
 	if dx < 0 {
@@ -253,63 +271,36 @@ func (obj *Object) Check(dx, dy float64, tags ...string) *Collision {
 
 			if c := obj.Space.Cell(x, y); c != nil {
 
-				for _, o := range c.Objects {
-
+				rb := c.Objects
+				for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+					o := rb.GetByFrameId(i).(*Object)
 					// We only want cells that have objects other than the checking object, or that aren't on the ignore list.
 					if ignored := obj.ignoreList[o]; o == obj || ignored {
 						continue
 					}
 
-					if _, added := objectsAdded[o]; (len(tags) == 0 || o.HasTags(tags...)) && !added {
-
-						cc.Objects = append(cc.Objects, o)
+					if _, added := objectsAdded[o]; !added {
+						cc.Objects.Put(o)
 						objectsAdded[o] = true
 						if _, added := cellsAdded[c]; !added {
-							cc.Cells = append(cc.Cells, c)
+							cc.Cells.Put(c)
 							cellsAdded[c] = true
 						}
 						continue
 
 					}
-
 				}
-
 			}
 
 		}
 
 	}
 
-	if len(cc.Objects) == 0 {
-		return nil
+	if 0 >= cc.Objects.Cnt {
+		return false
 	}
 
-	/*
-		    // In my use case, order of objects within a collision instance is not needed, and this also favors both runtime performance & size reduction of `jsexport.js`.
-
-			ox, oy := cc.checkingObject.Center()
-			oc := Vector{ox, oy}
-			sort.Slice(cc.Objects, func(i, j int) bool {
-
-				ix, iy := cc.Objects[i].Center()
-				jx, jy := cc.Objects[j].Center()
-				return Vector{ix, iy}.Sub(oc).Magnitude2() < Vector{jx, jy}.Sub(oc).Magnitude2()
-
-			})
-
-			cw := cc.checkingObject.Space.CellWidth
-			ch := cc.checkingObject.Space.CellHeight
-
-			sort.Slice(cc.Cells, func(i, j int) bool {
-
-				return Vector{float64(cc.Cells[i].X*cw + (cw / 2)), float64(cc.Cells[i].Y*ch + (ch / 2))}.Sub(oc).Magnitude2() <
-					Vector{float64(cc.Cells[j].X*cw + (cw / 2)), float64(cc.Cells[j].Y*ch + (ch / 2))}.Sub(oc).Magnitude2()
-
-			})
-	*/
-
-	return cc
-
+	return true
 }
 
 // Overlaps returns if an Object overlaps another Object.

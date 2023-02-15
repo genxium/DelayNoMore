@@ -3,23 +3,39 @@ package resolv
 // Collision contains the results of an Object.Check() call, and represents a collision between an Object and cells that contain other Objects.
 // The Objects array indicate the Objects collided with.
 type Collision struct {
-	checkingObject *Object   // The checking object
-	dx, dy         float64   // The delta the checking object was moving on that caused this collision
-	Objects        []*Object // Slice of objects that were collided with; sorted according to distance to calling Object.
-	Cells          []*Cell   // Slice of cells that were collided with; sorted according to distance to calling Object.
+	checkingObject *Object     // The checking object
+	dx, dy         float64     // The delta the checking object was moving on that caused this collision
+	Objects        *RingBuffer // Slice of objects that were collided with; sorted according to distance to calling Object.
+	Cells          *RingBuffer // Slice of cells that were collided with; sorted according to distance to calling Object.
 }
 
 func NewCollision() *Collision {
 	return &Collision{
-		Objects: []*Object{},
+		Objects: NewRingBuffer(16), // I don't expect it to exceed 10 actually
+		Cells:   NewRingBuffer(16),
 	}
+}
+
+func (cc *Collision) Clear() {
+	cc.checkingObject = nil
+	cc.dx = 0
+	cc.dy = 0
+	cc.Objects.Clear()
+	cc.Cells.Clear()
+}
+
+func (cc *Collision) FirstCollidedObject() *Object {
+	if 0 >= cc.Objects.Cnt {
+		return nil
+	}
+	return cc.Objects.Pop().(*Object)
 }
 
 // HasTags returns whether any objects within the Collision have all of the specified tags. This slice does not contain the Object that called Check().
 func (cc *Collision) HasTags(tags ...string) bool {
-
-	for _, o := range cc.Objects {
-
+	rb := cc.Objects
+	for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+		o := rb.GetByFrameId(i).(*Object)
 		if o == cc.checkingObject {
 			continue
 		}
@@ -38,8 +54,9 @@ func (cc *Collision) ObjectsByTags(tags ...string) []*Object {
 
 	objects := []*Object{}
 
-	for _, o := range cc.Objects {
-
+	rb := cc.Objects
+	for i := rb.StFrameId; i < rb.EdFrameId; i++ {
+		o := rb.GetByFrameId(i).(*Object)
 		if o == cc.checkingObject {
 			continue
 		}
@@ -105,7 +122,7 @@ func (cc *Collision) SlideAgainstCell(cell *Cell, avoidTags ...string) Vector {
 
 	sp := cc.checkingObject.Space
 
-	collidingCell := cc.Cells[0]
+	collidingCell := cc.Cells.GetByFrameId(cc.Cells.StFrameId).(*Cell)
 	ccX, ccY := sp.SpaceToWorld(collidingCell.X, collidingCell.Y)
 	hX := float64(sp.CellWidth) / 2.0
 	hY := float64(sp.CellHeight) / 2.0

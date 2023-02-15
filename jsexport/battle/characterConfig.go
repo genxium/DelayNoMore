@@ -107,7 +107,7 @@ var Characters = map[int]*CharacterConfig{
 		GetUpInvinsibleFrames: int32(10),
 		GetUpFramesToRecover:  int32(27),
 
-		Speed:                  int32(float64(2.19) * WORLD_TO_VIRTUAL_GRID_RATIO), // I don't know why "2.2" is so special that it throws a compile error
+		Speed:                  int32(float64(2.2) * WORLD_TO_VIRTUAL_GRID_RATIO), // I don't know why "2.2" is so special that it throws a compile error
 		JumpingInitVelY:        int32(float64(7.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		JumpingFramesToRecover: int32(2),
 
@@ -234,7 +234,7 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(13),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
-					SelfLockVelX:       int32(float64(0.05) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:       int32(float64(0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),
@@ -332,7 +332,7 @@ var skills = map[int]*Skill{
 					HitStunFrames:      int32(13),
 					BlockStunFrames:    int32(9),
 					Damage:             int32(5),
-					SelfLockVelX:       int32(float64(0.05) * WORLD_TO_VIRTUAL_GRID_RATIO),
+					SelfLockVelX:       int32(float64(0.1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					SelfLockVelY:       NO_LOCK_VEL,
 					PushbackVelX:       int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO),
 					PushbackVelY:       int32(0),

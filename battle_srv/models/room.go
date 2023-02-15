@@ -1771,7 +1771,7 @@ func (pR *Room) startBattleUdpTunnel() {
 							}
 							_, wrerr := conn.WriteTo(bytes, otherPlayer.BattleUdpTunnelAddr)
 							if nil != wrerr {
-								Logger.Warn(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to forward upsync from (playerId:%d, joinIndex:%d, addr:%s) to (otherPlayerId:%d, otherPlayerJoinIndex:%d, otherPlayerAddr:%s)\n", pR.Id, playerId, peerJoinIndex, remote, otherPlayer.Id, otherPlayer.JoinIndex, otherPlayer.BattleUdpTunnelAddr))
+								//Logger.Debug(fmt.Sprintf("`BattleUdpTunnel` for roomId=%d failed to forward upsync from (playerId:%d, joinIndex:%d, addr:%s) to (otherPlayerId:%d, otherPlayerJoinIndex:%d, otherPlayerAddr:%s)\n", pR.Id, playerId, peerJoinIndex, remote, otherPlayer.Id, otherPlayer.JoinIndex, otherPlayer.BattleUdpTunnelAddr))
 							}
 						}
 						pR.OnBattleCmdReceived(pReq, true) // To help advance "pR.LastAllConfirmedInputFrameId" asap, and even if "pR.LastAllConfirmedInputFrameId" is not advanced due to packet loss, these UDP packets would help prefill the "InputsBuffer" with correct player "future inputs (compared to ws session)" such that when "forceConfirmation" occurs we have as many correct predictions as possible
