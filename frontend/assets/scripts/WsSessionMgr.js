@@ -87,8 +87,8 @@ window.handleHbRequirements = function(resp) {
   if (constants.RET_CODE.OK != resp.ret) return;
   // The assignment of "window.mapIns" is inside "Map.onLoad", which precedes "initPersistentSessionClient".
   window.mapIns.selfPlayerInfo = JSON.parse(cc.sys.localStorage.getItem('selfPlayer')); // This field is kept for distinguishing "self" and "others".
-  window.mapIns.selfPlayerInfo.Id = window.mapIns.selfPlayerInfo.playerId;
-  window.mapIns.selfPlayerInfo.JoinIndex = resp.peerJoinIndex;
+  window.mapIns.selfPlayerInfo.id = window.mapIns.selfPlayerInfo.playerId;
+  window.mapIns.selfPlayerInfo.joinIndex = resp.peerJoinIndex;
   console.log(`Handle hb requirements #2`);
   if (null == window.boundRoomId || null == window.boundRoomCapacity) {
     window.boundRoomId = resp.bciFrame.boundRoomId;
@@ -109,7 +109,7 @@ window.handleHbRequirements = function(resp) {
     window.initSecondarySession(null, window.boundRoomId);
   } else {
     console.log(`Handle hb requirements #5, native, bciFrame.battleUdpTunnel=${resp.bciFrame.battleUdpTunnel}, selfPlayerInfo=${JSON.stringify(window.mapIns.selfPlayerInfo)}`);
-    const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + window.mapIns.selfPlayerInfo.JoinIndex);
+    const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + window.mapIns.selfPlayerInfo.joinIndex);
     window.mapIns.selfPlayerInfo.udpTunnelAuthKey = resp.bciFrame.battleUdpTunnel.authKey;
     const intAuthToken = window.mapIns.selfPlayerInfo.intAuthToken;
     const authKey = Math.floor(Math.random() * 65535);
@@ -121,7 +121,7 @@ window.handleHbRequirements = function(resp) {
     }).finish();
     const udpTunnelHolePunchData = window.pb.protos.WsReq.encode({
       msgId: Date.now(),
-      playerId: window.mapIns.selfPlayerInfo.Id,
+      playerId: window.mapIns.selfPlayerInfo.id,
       act: window.UPSYNC_MSG_ACT_PLAYER_CMD,
       authKey: resp.bciFrame.battleUdpTunnel.authKey,
     }).finish();
@@ -250,7 +250,7 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
             console.log(`Got DOWNSYNC_MSG_ACT_PEER_UDP_ADDR peerAddrList=${JSON.stringify(peerAddrList)}; boundRoomCapacity=${window.boundRoomCapacity}`);
             for (let j = 0; j < 3; ++j) {
               setTimeout(() => {
-                DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.JoinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
+                DelayNoMore.UdpSession.upsertPeerUdpAddr(peerAddrList, window.boundRoomCapacity, window.mapIns.selfPlayerInfo.joinIndex); // In C++ impl it actually broadcasts the peer-punching message to all known peers within "window.boundRoomCapacity"
               }, j * 500);
             }
           }

@@ -134,3 +134,15 @@ func (rb *RingBuffer) Clear() {
 	rb.StFrameId = 0
 	rb.EdFrameId = 0
 }
+
+func (rb *RingBuffer) GetStFrameId() int32 {
+	return rb.StFrameId
+}
+
+func (rb *RingBuffer) GetEdFrameId() int32 {
+	return rb.EdFrameId
+}
+
+func (rb *RingBuffer) GetCnt() int32 {
+	return rb.Cnt
+}

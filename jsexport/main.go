@@ -6,8 +6,15 @@ import (
 	"resolv"
 )
 
+/*
+[WARNING] Should avoid using "MakeFullWrapper" as much as possible, and completely remove its usage in 60fps calls like "update(dt)" on frontend!
+*/
+func NewCollisionHolder() *js.Object {
+	return js.MakeWrapper(resolv.NewCollision())
+}
+
 func NewInputFrameDownsync(inputFrameId int32, inputList []uint64, confirmedList uint64) *js.Object {
-	return js.MakeFullWrapper(&InputFrameDownsync{
+	return js.MakeWrapper(&InputFrameDownsync{
 		InputFrameId:  inputFrameId,
 		InputList:     inputList,
 		ConfirmedList: confirmedList,
@@ -15,7 +22,7 @@ func NewInputFrameDownsync(inputFrameId int32, inputList []uint64, confirmedList
 }
 
 func NewRingBufferJs(n int32) *js.Object {
-	return js.MakeFullWrapper(resolv.NewRingBuffer(n))
+	return js.MakeWrapper(resolv.NewRingBuffer(n))
 }
 
 func NewCollisionSpaceJs(spaceW, spaceH, minStepW, minStepH int) *js.Object {
@@ -23,14 +30,14 @@ func NewCollisionSpaceJs(spaceW, spaceH, minStepW, minStepH int) *js.Object {
 }
 
 func NewVec2DJs(x, y float64) *js.Object {
-	return js.MakeFullWrapper(&Vec2D{
+	return js.MakeWrapper(&Vec2D{
 		X: x,
 		Y: y,
 	})
 }
 
 func NewPolygon2DJs(anchor *Vec2D, points []*Vec2D) *js.Object {
-	return js.MakeFullWrapper(&Polygon2D{
+	return js.MakeWrapper(&Polygon2D{
 		Anchor: anchor,
 		Points: points,
 	})
@@ -55,7 +62,7 @@ func NewFireballBulletJs(bulletLocalId, originatedRenderFrameId, offenderJoinInd
 }
 
 func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
-	return js.MakeFullWrapper(&NpcPatrolCue{
+	return js.MakeWrapper(&NpcPatrolCue{
 		FlAct: flAct,
 		FrAct: frAct,
 		X:     x,
@@ -65,7 +72,7 @@ func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
 
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, bulletLocalIdCounter int32, meleeBullets []*MeleeBullet, fireballBullets []*FireballBullet) *js.Object {
 	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
-	return js.MakeFullWrapper(&RoomDownsyncFrame{
+	return js.MakeWrapper(&RoomDownsyncFrame{
 		Id:                   id,
 		BulletLocalIdCounter: bulletLocalIdCounter,
 		PlayersArr:           playersArr,
@@ -77,77 +84,56 @@ func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, bulletLocalI
 func GetCollisionSpaceObjsJs(space *resolv.Space) []*js.Object {
 	// [WARNING] We couldn't just use the existing method "space.Objects()" to access them in JavaScript, there'd a stackoverflow error
 	objs := space.Objects()
-	ret := make([]*js.Object, 0, len(objs))
-	for _, obj := range objs {
-		ret = append(ret, js.MakeFullWrapper(obj))
+	ret := make([]*js.Object, len(objs))
+	for i, obj := range objs {
+		ret[i] = js.MakeWrapper(obj)
 	}
 	return ret
 }
 
-func GenerateRectColliderJs(wx, wy, w, h, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
-	/*
-			   [WARNING] It's important to note that we don't need "js.MakeFullWrapper" for a call sequence as follows.
-			   ```
-			       var space = gopkgs.NewCollisionSpaceJs(2048, 2048, 8, 8);
-			       var a = gopkgs.GenerateRectColliderJs(189, 497, 48, 48, spaceOffsetX, spaceOffsetY, "Player");
-			       space.Add(a);
-			   ```
-			   The "space" variable doesn't need access to the field of "a" in JavaScript level to run "space.Add(...)" method, which is good.
-
-		       However, the full wrapper access here is used for updating "collider.X/collider.Y" at JavaScript runtime.
-	*/
-	topPadding, bottomPadding, leftPadding, rightPadding := SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP
-	return js.MakeFullWrapper(GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag))
-
-}
-
 func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *js.Object {
-	return js.MakeFullWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
+	return js.MakeWrapper(GenerateConvexPolygonCollider(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag))
 }
 
 func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	ret := make([]*js.Object, len(speciesIdList), len(speciesIdList))
 	for i, speciesId := range speciesIdList {
-		ret[i] = js.MakeFullWrapper(Characters[speciesId])
+		ret[i] = js.MakeWrapper(Characters[speciesId])
 	}
 	return ret
 }
 
 func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *js.Object {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return js.MakeFullWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex))
+	return js.MakeWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex))
 }
 
 func main() {
 	js.Global.Set("gopkgs", map[string]interface{}{
-		"NewVec2DJs":                                           NewVec2DJs,
-		"NewPolygon2DJs":                                       NewPolygon2DJs,
-		"NewBarrierJs":                                         NewBarrierJs,
-		"NewPlayerDownsyncJs":                                  NewPlayerDownsyncJs,
-		"NewMeleeBulletJs":                                     NewMeleeBulletJs,
-		"NewFireballBulletJs":                                  NewFireballBulletJs,
-		"NewNpcPatrolCue":                                      NewNpcPatrolCue,
-		"NewRoomDownsyncFrameJs":                               NewRoomDownsyncFrameJs,
-		"NewCollisionSpaceJs":                                  NewCollisionSpaceJs,
-		"NewInputFrameDownsync":                                NewInputFrameDownsync,
-		"NewRingBufferJs":                                      NewRingBufferJs,
-		"GenerateRectColliderJs":                               GenerateRectColliderJs,
-		"GenerateConvexPolygonColliderJs":                      GenerateConvexPolygonColliderJs,
-		"GetCollisionSpaceObjsJs":                              GetCollisionSpaceObjsJs,
-		"WorldToPolygonColliderBLPos":                          WorldToPolygonColliderBLPos, // No need to wrap primitive return types
-		"PolygonColliderBLToWorldPos":                          PolygonColliderBLToWorldPos,
-		"WorldToVirtualGridPos":                                WorldToVirtualGridPos,
-		"VirtualGridToWorldPos":                                VirtualGridToWorldPos,
-		"GetCharacterConfigsOrderedByJoinIndex":                GetCharacterConfigsOrderedByJoinIndex,
+		"NewVec2DJs":                            NewVec2DJs,
+		"NewPolygon2DJs":                        NewPolygon2DJs,
+		"NewBarrierJs":                          NewBarrierJs,
+		"NewPlayerDownsyncJs":                   NewPlayerDownsyncJs,
+		"NewMeleeBulletJs":                      NewMeleeBulletJs,
+		"NewFireballBulletJs":                   NewFireballBulletJs,
+		"NewNpcPatrolCue":                       NewNpcPatrolCue,
+		"NewRoomDownsyncFrameJs":                NewRoomDownsyncFrameJs,
+		"NewCollisionSpaceJs":                   NewCollisionSpaceJs,
+		"NewInputFrameDownsync":                 NewInputFrameDownsync,
+		"NewRingBufferJs":                       NewRingBufferJs,
+		"GenerateConvexPolygonColliderJs":       GenerateConvexPolygonColliderJs,
+		"GetCollisionSpaceObjsJs":               GetCollisionSpaceObjsJs,
+		"WorldToPolygonColliderBLPos":           WorldToPolygonColliderBLPos, // No need to wrap primitive return types
+		"PolygonColliderBLToWorldPos":           PolygonColliderBLToWorldPos,
+		"WorldToVirtualGridPos":                 WorldToVirtualGridPos,
+		"VirtualGridToWorldPos":                 VirtualGridToWorldPos,
+		"GetCharacterConfigsOrderedByJoinIndex": GetCharacterConfigsOrderedByJoinIndex,
 		"ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs": ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs,
 		"ConvertToDelayedInputFrameId":                         ConvertToDelayedInputFrameId,
 		"ConvertToNoDelayInputFrameId":                         ConvertToNoDelayInputFrameId,
 		"ConvertToFirstUsedRenderFrameId":                      ConvertToFirstUsedRenderFrameId,
 		"ConvertToLastUsedRenderFrameId":                       ConvertToLastUsedRenderFrameId,
 		"ShouldGenerateInputFrameUpsync":                       ShouldGenerateInputFrameUpsync,
-		"IsMeleeBulletActive":                                  IsMeleeBulletActive,
-		"IsMeleeBulletAlive":                                   IsMeleeBulletAlive,
-		"IsFireballBulletActive":                               IsFireballBulletActive,
-		"IsFireballBulletAlive":                                IsFireballBulletAlive,
+		"IsGeneralBulletActive":                                IsGeneralBulletActive,
 	})
 }

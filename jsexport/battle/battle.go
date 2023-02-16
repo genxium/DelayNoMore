@@ -101,6 +101,7 @@ var inAirSet = map[int32]bool{
 	ATK_CHARACTER_STATE_INAIR_ATKED1:        true,
 	ATK_CHARACTER_STATE_BLOWN_UP1:           true,
 	ATK_CHARACTER_STATE_ONWALL:              true,
+	ATK_CHARACTER_STATE_DASHING:             true, // Yes dashing is an inair state even if you dashed on the ground :)
 }
 
 var noOpSet = map[int32]bool{
@@ -259,11 +260,15 @@ func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 	return true
 }
 
-func IsMeleeBulletActive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
-	if BULLET_EXPLODING == meleeBullet.BlState {
+func IsGeneralBulletActive(blState, originatedRenderFrameId, startupFrames, activeFrames, renderFrameId int32) bool {
+	if BULLET_EXPLODING == blState {
 		return false
 	}
-	return (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames <= currRenderFrame.Id) && (meleeBullet.BattleAttr.OriginatedRenderFrameId+meleeBullet.Bullet.StartupFrames+meleeBullet.Bullet.ActiveFrames > currRenderFrame.Id)
+	return (originatedRenderFrameId+startupFrames < renderFrameId) && (originatedRenderFrameId+startupFrames+activeFrames > renderFrameId)
+}
+
+func IsMeleeBulletActive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
+    return IsGeneralBulletActive(meleeBullet.BlState, meleeBullet.BattleAttr.OriginatedRenderFrameId, meleeBullet.Bullet.StartupFrames, meleeBullet.Bullet.ActiveFrames, currRenderFrame.Id)
 }
 
 func IsMeleeBulletAlive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
@@ -274,10 +279,7 @@ func IsMeleeBulletAlive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncF
 }
 
 func IsFireballBulletActive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {
-	if BULLET_EXPLODING == fireballBullet.BlState {
-		return false
-	}
-	return (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames < currRenderFrame.Id) && (fireballBullet.BattleAttr.OriginatedRenderFrameId+fireballBullet.Bullet.StartupFrames+fireballBullet.Bullet.ActiveFrames > currRenderFrame.Id)
+    return IsGeneralBulletActive(fireballBullet.BlState, fireballBullet.BattleAttr.OriginatedRenderFrameId, fireballBullet.Bullet.StartupFrames, fireballBullet.Bullet.ActiveFrames, currRenderFrame.Id)
 }
 
 func IsFireballBulletAlive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {

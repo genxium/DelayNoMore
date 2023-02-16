@@ -25,7 +25,7 @@ cc.Class({
     if (!self.mapScriptIns) return;
     if (!self.mapScriptIns.selfPlayerInfo) return;
     if (!self.mapScriptIns.playerRichInfoDict) return;
-    const selfPlayerRichInfo = self.mapScriptIns.playerRichInfoDict.get(self.mapScriptIns.selfPlayerInfo.Id);
+    const selfPlayerRichInfo = self.mapScriptIns.playerRichInfoDict.get(self.mapScriptIns.selfPlayerInfo.id);
     if (!selfPlayerRichInfo) return;
     const selfPlayerNode = selfPlayerRichInfo.node;
     if (!selfPlayerNode) return;

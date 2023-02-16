@@ -111,7 +111,7 @@ cc.Class({
             virtualGridY: p1Vpos[1],
             revivalVirtualGridX: p1Vpos[0],
             revivalVirtualGridY: p1Vpos[1],
-            speed: chConfigsOrderedByJoinIndex[0].Speed,
+            speed: chConfigsOrderedByJoinIndex[0].GetSpeed(),
             colliderRadius: colliderRadiusV[0],
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
@@ -131,7 +131,7 @@ cc.Class({
             virtualGridY: p2Vpos[1],
             revivalVirtualGridX: p2Vpos[0],
             revivalVirtualGridY: p2Vpos[1],
-            speed: chConfigsOrderedByJoinIndex[1].Speed,
+            speed: chConfigsOrderedByJoinIndex[1].GetSpeed(),
             colliderRadius: colliderRadiusV[0],
             characterState: window.ATK_CHARACTER_STATE.InAirIdle1NoJump[0],
             framesToRecover: 0,
@@ -149,8 +149,8 @@ cc.Class({
       });
 
       self.selfPlayerInfo = {
-        Id: 10,
-        JoinIndex: 1,
+        id: 10,
+        joinIndex: 1,
       };
       if (cc.sys.isNative) {
         window.onUdpMessage = (args) => {
@@ -163,7 +163,7 @@ cc.Class({
           const echoed = window.pb.protos.HolePunchUpsync.decode(ui8Arr);
           cc.log(`#2 Js called back by CPP: onUdpMessage: ${JSON.stringify(echoed)}`);
         };
-        const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.JoinIndex);
+        const res1 = DelayNoMore.UdpSession.openUdpSession(8888 + self.selfPlayerInfo.joinIndex);
         const holePunchData = window.pb.protos.HolePunchUpsync.encode({
           boundRoomId: 22,
           intAuthToken: "foobar",

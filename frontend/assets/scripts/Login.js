@@ -337,6 +337,7 @@ cc.Class({
       const date = Number(res.expiresAt);
       const selfPlayer = {
         expiresAt: date,
+        id: res.playerId,
         playerId: res.playerId,
         intAuthToken: res.intAuthToken,
         avatar: res.avatar,

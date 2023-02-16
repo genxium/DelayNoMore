@@ -64,9 +64,6 @@ cc.Class({
 
   ctor() {
     this.speciesName = null;
-    this.hp = 100;
-    this.maxHp = 100;
-    this.inAir = true;
   },
 
   setSpecies(speciesName) {
@@ -116,7 +113,6 @@ cc.Class({
     playingAnimName = (!underlyingAnimationCtrl ? null : underlyingAnimationCtrl.name);
     //}
 
-    // It turns out that "prevRdfPlayer.CharacterState" is not useful in this function :)
     if (newAnimName == playingAnimName && window.ATK_CHARACTER_STATE_INTERRUPT_WAIVE_SET.has(newCharacterState)) {
       // No need to interrupt
       // console.warn(`JoinIndex=${rdfPlayer.joinIndex}, not interrupting ${newAnimName} while the playing anim is also ${playingAnimName}, player rdf changed from: ${null == prevRdfPlayer ? null : JSON.stringify(prevRdfPlayer)}, to: ${JSON.stringify(rdfPlayer)}`);

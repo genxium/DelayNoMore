@@ -48,6 +48,18 @@ func NewObject(x, y, w, h float64, tags ...string) *Object {
 	return o
 }
 
+func (obj *Object) GetData() interface{} {
+	return obj.Data
+}
+
+func (obj *Object) GetShape() *Shape {
+	return &(obj.Shape)
+}
+
+func (obj *Object) Position() (float64, float64) {
+	return obj.X, obj.Y
+}
+
 // Clone clones the Object with its properties into another Object. It also clones the Object's Shape (if it has one).
 func (obj *Object) Clone() *Object {
 	newObj := NewObject(obj.X, obj.Y, obj.W, obj.H, obj.Tags()...)

@@ -331,6 +331,10 @@ func (polygon *ConvexPolygon) PointInside(point Vector) bool {
 	return contactCount == 1
 }
 
+func (polygon *ConvexPolygon) GetPoints() []Vector {
+	return polygon.Points
+}
+
 type ContactSet struct {
 	Points []Vector // Slice of Points indicating contact between the two Shapes.
 	MTV    Vector   // Minimum Translation Vector; this is the vector to move a Shape on to move it outside of its contacting Shape.
