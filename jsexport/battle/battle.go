@@ -268,7 +268,7 @@ func IsGeneralBulletActive(blState, originatedRenderFrameId, startupFrames, acti
 }
 
 func IsMeleeBulletActive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
-    return IsGeneralBulletActive(meleeBullet.BlState, meleeBullet.BattleAttr.OriginatedRenderFrameId, meleeBullet.Bullet.StartupFrames, meleeBullet.Bullet.ActiveFrames, currRenderFrame.Id)
+	return IsGeneralBulletActive(meleeBullet.BlState, meleeBullet.BattleAttr.OriginatedRenderFrameId, meleeBullet.Bullet.StartupFrames, meleeBullet.Bullet.ActiveFrames, currRenderFrame.Id)
 }
 
 func IsMeleeBulletAlive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncFrame) bool {
@@ -279,7 +279,7 @@ func IsMeleeBulletAlive(meleeBullet *MeleeBullet, currRenderFrame *RoomDownsyncF
 }
 
 func IsFireballBulletActive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {
-    return IsGeneralBulletActive(fireballBullet.BlState, fireballBullet.BattleAttr.OriginatedRenderFrameId, fireballBullet.Bullet.StartupFrames, fireballBullet.Bullet.ActiveFrames, currRenderFrame.Id)
+	return IsGeneralBulletActive(fireballBullet.BlState, fireballBullet.BattleAttr.OriginatedRenderFrameId, fireballBullet.Bullet.StartupFrames, fireballBullet.Bullet.ActiveFrames, currRenderFrame.Id)
 }
 
 func IsFireballBulletAlive(fireballBullet *FireballBullet, currRenderFrame *RoomDownsyncFrame) bool {
@@ -428,7 +428,7 @@ func VirtualGridToPolygonColliderBLPos(vx, vy int32, halfBoundingW, halfBounding
 	return WorldToPolygonColliderBLPos(wx, wy, halfBoundingW, halfBoundingH, topPadding, bottomPadding, leftPadding, rightPadding, collisionSpaceOffsetX, collisionSpaceOffsetY)
 }
 
-func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, pEffPushback *Vec2D, pHardPushback *[]Vec2D, collision *resolv.Collision) int {
+func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, playerCollider *resolv.Object, playerShape *resolv.ConvexPolygon, snapIntoPlatformOverlap float64, effPushback *Vec2D, hardPushbackNorms []*Vec2D, collision *resolv.Collision) int {
 	virtualGripToWall := float64(0)
 	if ATK_CHARACTER_STATE_ONWALL == currPlayerDownsync.CharacterState && 0 == thatPlayerInNextFrame.VelX && currPlayerDownsync.DirX == thatPlayerInNextFrame.DirX {
 		/*
@@ -477,9 +477,9 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 		// ALWAY snap into hardPushbacks!
 		// [OverlapX, OverlapY] is the unit vector that points into the platform
 		pushbackX, pushbackY = (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapX, (overlapResult.Overlap-snapIntoPlatformOverlap)*overlapResult.OverlapY
-		(*pHardPushback)[retCnt] = Vec2D{X: overlapResult.OverlapX, Y: overlapResult.OverlapY}
-		pEffPushback.X += pushbackX
-		pEffPushback.Y += pushbackY
+		hardPushbackNorms[retCnt].X, hardPushbackNorms[retCnt].Y = overlapResult.OverlapX, overlapResult.OverlapY
+		effPushback.X += pushbackX
+		effPushback.Y += pushbackY
 		retCnt++
 		//fmt.Printf("joinIndex=%d calcHardPushbacksNorms found one hardpushback; immediatePushback=(%.2f,%.2f)\n", joinIndex, pushbackX, pushbackY)
 	}
@@ -560,32 +560,23 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 
 The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & playerColliders & bulletColliders, which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
 
-It's not easy to remove all of the dynamic heap-memory blocks allocation/deallocation, but we can reduce them to some extent. For example, the creation of new "RoomDownsyncFrame" in heap-memory can be avoided by adding
-
-```
-func overwriteRoomDownsyncFrame(src *RoomDownsyncFrame, dst *RoomDownsyncFrame) {
-    // Copy "src" into "dst" down to every primitive field; as for a same room, the "RenderFrameBuffer" is always accessed (R & W) by a same kernel thread (both frontend & backend), no thread-safety concern here
-}
-
-type Room struct {
-    newRoomDownsyncFrameHolder *RoomDownsyncFrame
-}
-
-func (pR *Room) provisionNewRoomDownsyncFrameHolder(src *RoomDownsyncFrame) {
-    overwriteRoomDownsyncFrame(src, pR.newRoomDownsyncFrameHolder)
-}
-```
-
-then pass in the whole "renderFrameBuffer *SpecificRingBuffer" to this function and overwrite the target slot IN-PLACE, i.e. need write new "SpecificRingBuffer.Put/SetByFrameId" to use the new function "overwriteRoomDownsyncFrame(src, dst)" to keep "%p of every SpecificRingBuffer.Eles[i]" constant.
-
-However, the enhancement for "playerColliders & bulletColliders" of each room is even more difficult, because the feasibility of doing in-place overwrites depends on the collision library in use.
+It's not easy to remove all of the dynamic heap-memory blocks allocation/deallocation, but we can reduce them to some extent.
 */
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *RoomDownsyncFrame {
-	collision := resolv.NewCollision() // TODO: Pass this holder in from params
-
-	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool) bool {
+	currRenderFrame := renderFrameBuffer.GetByFrameId(currRenderFrameId).(*RoomDownsyncFrame)
+	nextRenderFrameId := currRenderFrameId + 1
 	roomCapacity := len(currRenderFrame.PlayersArr)
-	nextRenderFramePlayers := make([]*PlayerDownsync, roomCapacity)
+	var ret *RoomDownsyncFrame = nil
+	candidate := renderFrameBuffer.GetByFrameId(nextRenderFrameId)
+	if nil == candidate {
+		// Lazy alloc heap-mem for holder
+		ret = NewPreallocatedRoomDownsyncFrame(roomCapacity, 64, 64)
+		renderFrameBuffer.SetByFrameId(ret, nextRenderFrameId)
+	} else {
+		ret = candidate.(*RoomDownsyncFrame)
+	}
+	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
+	nextRenderFramePlayers := ret.PlayersArr
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		nextRenderFramePlayers[i] = &PlayerDownsync{
@@ -628,14 +619,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		}
 	}
 
-	nextRenderFrameMeleeBullets := make([]*MeleeBullet, 0, len(currRenderFrame.MeleeBullets)) // Is there any better way to reduce malloc/free impact, e.g. smart prediction for fixed memory allocation?
-	nextRenderFrameFireballBullets := make([]*FireballBullet, 0, len(currRenderFrame.FireballBullets))
-	effPushbacks := make([]Vec2D, roomCapacity)
-	hardPushbackNorms := make([][]Vec2D, roomCapacity)
-	for i, _ := range currRenderFrame.PlayersArr {
-		hardPushbackNorms[i] = make([]Vec2D, 5) // In reality no more than 4 simultaneous hard pushbacks
-	}
-	jumpedOrNotList := make([]bool, roomCapacity)
+	meleeBulletCnt := 0
+	nextRenderFrameMeleeBullets := ret.MeleeBullets
+	fireballBulletCnt := 0
+	nextRenderFrameFireballBullets := ret.FireballBullets
 
 	bulletLocalId := currRenderFrame.BulletLocalIdCounter
 	// 1. Process player inputs
@@ -660,16 +647,15 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			// Hardcoded to use only the first hit for now
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
-				var newBullet MeleeBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.BattleAttr = &BulletBattleAttr{
-					BulletLocalId:           bulletLocalId,
-					OriginatedRenderFrameId: currRenderFrame.Id,
-					OffenderJoinIndex:       joinIndex,
-					TeamId:                  currPlayerDownsync.BulletTeamId,
-				}
+				nextRenderFrameMeleeBullets[meleeBulletCnt].BlState = BULLET_STARTUP
+				nextRenderFrameMeleeBullets[meleeBulletCnt].FramesInBlState = 0
+				nextRenderFrameMeleeBullets[meleeBulletCnt].Bullet = v.Bullet
+				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.BulletLocalId = bulletLocalId
+				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.OriginatedRenderFrameId = currRenderFrame.Id
+				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.OffenderJoinIndex = joinIndex
+				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.TeamId = currPlayerDownsync.BulletTeamId
 				bulletLocalId++
-				newBullet.BlState = BULLET_STARTUP
-				nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, &newBullet)
+				meleeBulletCnt++
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
 					thatPlayerInNextFrame.VelX = xfac * v.Bullet.SelfLockVelX
@@ -679,23 +665,21 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 					thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY
 				}
 			case *FireballBullet:
-				var newBullet FireballBullet = *v // Copied primitive fields into an onstack variable
-				newBullet.BattleAttr = &BulletBattleAttr{
-					BulletLocalId:           bulletLocalId,
-					OriginatedRenderFrameId: currRenderFrame.Id,
-					OffenderJoinIndex:       joinIndex,
-					TeamId:                  currPlayerDownsync.BulletTeamId,
-				}
+				nextRenderFrameFireballBullets[fireballBulletCnt].BlState = BULLET_STARTUP
+				nextRenderFrameFireballBullets[fireballBulletCnt].FramesInBlState = 0
+				nextRenderFrameFireballBullets[fireballBulletCnt].Bullet = v.Bullet
+				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.BulletLocalId = bulletLocalId
+				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.OriginatedRenderFrameId = currRenderFrame.Id
+				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.OffenderJoinIndex = joinIndex
+				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.TeamId = currPlayerDownsync.BulletTeamId
+				nextRenderFrameFireballBullets[fireballBulletCnt].VirtualGridX = currPlayerDownsync.VirtualGridX + xfac*v.Bullet.HitboxOffsetX
+				nextRenderFrameFireballBullets[fireballBulletCnt].VirtualGridY = currPlayerDownsync.VirtualGridY + v.Bullet.HitboxOffsetY
+				nextRenderFrameFireballBullets[fireballBulletCnt].DirX = xfac
+				nextRenderFrameFireballBullets[fireballBulletCnt].DirY = 0
+				nextRenderFrameFireballBullets[fireballBulletCnt].VelX = v.Speed * xfac
+				nextRenderFrameFireballBullets[fireballBulletCnt].VelY = 0
 				bulletLocalId++
-				newBullet.VirtualGridX, newBullet.VirtualGridY = currPlayerDownsync.VirtualGridX+xfac*newBullet.Bullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+newBullet.Bullet.HitboxOffsetY
-				newBullet.DirX = xfac
-				newBullet.DirY = 0
-				newBullet.VelX = newBullet.Speed * xfac
-				newBullet.VelY = 0
-
-				newBullet.BlState = BULLET_STARTUP
-				nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, &newBullet)
-				//fmt.Printf("Created new fireball @currRenderFrame.Id=%d, %p, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, offenderVpos=(%d,%d)\n", currRenderFrame.Id, &newBullet, bulletLocalId, newBullet.VirtualGridX, newBullet.VirtualGridY, currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY)
+				fireballBulletCnt++
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
 					hasLockVel = true
 					thatPlayerInNextFrame.VelX = xfac * v.Bullet.SelfLockVelX
@@ -859,19 +843,22 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	// [WARNING] For rollback compatibility, static data of "BulletConfig" & "BattleAttr(static since instantiated)" can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets movement data as well as bullet animation data must be copies of instances for each RenderFrame!
 	bulletColliders := make([]*resolv.Object, 0, ((len(currRenderFrame.MeleeBullets) + len(currRenderFrame.FireballBullets)) << 1)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for _, prevFireball := range currRenderFrame.FireballBullets {
-		fireballBullet := &FireballBullet{
-			VirtualGridX:    prevFireball.VirtualGridX,
-			VirtualGridY:    prevFireball.VirtualGridY,
-			DirX:            prevFireball.DirX,
-			DirY:            prevFireball.DirY,
-			VelX:            prevFireball.VelX,
-			VelY:            prevFireball.VelY,
-			Speed:           prevFireball.Speed,
-			Bullet:          prevFireball.Bullet,
-			BattleAttr:      prevFireball.BattleAttr,
-			FramesInBlState: prevFireball.FramesInBlState + 1,
-			BlState:         prevFireball.BlState,
+		if TERMINATING_BULLET_LOCAL_ID == prevFireball.BattleAttr.BulletLocalId {
+			break
 		}
+		fireballBullet := nextRenderFrameFireballBullets[fireballBulletCnt]
+		fireballBullet.VirtualGridX = prevFireball.VirtualGridX
+		fireballBullet.VirtualGridY = prevFireball.VirtualGridY
+		fireballBullet.DirX = prevFireball.DirX
+		fireballBullet.DirY = prevFireball.DirY
+		fireballBullet.VelX = prevFireball.VelX
+		fireballBullet.VelY = prevFireball.VelY
+		fireballBullet.Speed = prevFireball.Speed
+		fireballBullet.Bullet = prevFireball.Bullet
+		fireballBullet.BattleAttr = prevFireball.BattleAttr
+		fireballBullet.FramesInBlState = prevFireball.FramesInBlState + 1
+		fireballBullet.BlState = prevFireball.BlState
+
 		if IsFireballBulletAlive(fireballBullet, currRenderFrame) {
 			if IsFireballBulletActive(fireballBullet, currRenderFrame) {
 				bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
@@ -893,17 +880,20 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				}
 				//fmt.Printf("Pushing non-active fireball to next frame @currRenderFrame.Id=%d, bulletLocalId=%d, virtualGridX=%d, virtualGridY=%d, blState=%d\n", currRenderFrame.Id, fireballBullet.BattleAttr.BulletLocalId, fireballBullet.VirtualGridX, fireballBullet.VirtualGridY, fireballBullet.BlState)
 			}
-			nextRenderFrameFireballBullets = append(nextRenderFrameFireballBullets, fireballBullet)
+			fireballBulletCnt++
 		}
 	}
 
 	for _, prevMelee := range currRenderFrame.MeleeBullets {
-		meleeBullet := &MeleeBullet{
-			Bullet:          prevMelee.Bullet,
-			BattleAttr:      prevMelee.BattleAttr,
-			FramesInBlState: prevMelee.FramesInBlState + 1,
-			BlState:         prevMelee.BlState,
+		if TERMINATING_BULLET_LOCAL_ID == prevMelee.BattleAttr.BulletLocalId {
+			break
 		}
+		meleeBullet := nextRenderFrameMeleeBullets[meleeBulletCnt]
+		meleeBullet.Bullet = prevMelee.Bullet
+		meleeBullet.BattleAttr = prevMelee.BattleAttr
+		meleeBullet.FramesInBlState = prevMelee.FramesInBlState + 1
+		meleeBullet.BlState = prevMelee.BlState
+
 		if IsMeleeBulletAlive(meleeBullet, currRenderFrame) {
 			offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
 			if _, existent := noOpSet[offender.CharacterState]; existent {
@@ -925,7 +915,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 					meleeBullet.FramesInBlState = 0
 				}
 			}
-			nextRenderFrameMeleeBullets = append(nextRenderFrameMeleeBullets, meleeBullet)
+			meleeBulletCnt++
 		}
 	}
 
@@ -935,7 +925,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		playerCollider := playerColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		hardPushbackCnt := calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, &(effPushbacks[joinIndex-1]), &(hardPushbackNorms[joinIndex-1]), collision)
+		hardPushbackCnt := calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, effPushbacks[joinIndex-1], hardPushbackNormsArr[joinIndex-1], collision)
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		landedOnGravityPushback := false
 
@@ -976,7 +966,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				}
 				if 0 < hardPushbackCnt {
 					for i := 0; i < hardPushbackCnt; i++ {
-						hardPushbackNorm := hardPushbackNorms[joinIndex-1][i]
+						hardPushbackNorm := hardPushbackNormsArr[joinIndex-1][i]
 						projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
 						if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
 							pushbackX -= projectedMagnitude * hardPushbackNorm.X
@@ -1042,7 +1032,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent && 0 < hardPushbackCnt {
 					// [WARNING] Sticking to wall could only be triggered by proactive player input
 					for i := 0; i < hardPushbackCnt; i++ {
-						hardPushbackNorm := hardPushbackNorms[joinIndex-1][i]
+						hardPushbackNorm := hardPushbackNormsArr[joinIndex-1][i]
 						normAlignmentWithHorizon1 := (hardPushbackNorm.X*float64(1.0) + hardPushbackNorm.Y*float64(0.0))
 						normAlignmentWithHorizon2 := (hardPushbackNorm.X*float64(-1.0) + hardPushbackNorm.Y*float64(0.0))
 						if VERTICAL_PLATFORM_THRESHOLD < normAlignmentWithHorizon1 {
@@ -1214,13 +1204,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		playerCollider.Space.RemoveSingle(playerCollider)
 	}
 
-	return &RoomDownsyncFrame{
-		Id:                   currRenderFrame.Id + 1,
-		PlayersArr:           nextRenderFramePlayers,
-		BulletLocalIdCounter: bulletLocalId,
-		MeleeBullets:         nextRenderFrameMeleeBullets,
-		FireballBullets:      nextRenderFrameFireballBullets,
-	}
+	ret.Id = nextRenderFrameId
+	ret.BulletLocalIdCounter = bulletLocalId
+
+	return true
 }
 
 func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *resolv.Object {

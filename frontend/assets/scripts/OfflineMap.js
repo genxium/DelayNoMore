@@ -73,6 +73,7 @@ cc.Class({
       self.spaceOffsetX = ((newMapSize.width * newTileSize.width) >> 1);
       self.spaceOffsetY = ((newMapSize.height * newTileSize.height) >> 1);
 
+      window.boundRoomCapacity = 2;
       self._resetCurrentMatch();
       let barrierIdCounter = 0;
       const boundaryObjs = tileCollisionManager.extractBoundaryObjects(self.node);

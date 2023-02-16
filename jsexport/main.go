@@ -103,9 +103,9 @@ func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrame *RoomDownsyncFrame, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig) *js.Object {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool) bool {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return js.MakeWrapper(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrame, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex))
+	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList)
 }
 
 func main() {
@@ -119,6 +119,7 @@ func main() {
 		"NewNpcPatrolCue":                       NewNpcPatrolCue,
 		"NewRoomDownsyncFrameJs":                NewRoomDownsyncFrameJs,
 		"NewCollisionSpaceJs":                   NewCollisionSpaceJs,
+		"NewCollisionHolder":                    NewCollisionHolder,
 		"NewInputFrameDownsync":                 NewInputFrameDownsync,
 		"NewRingBufferJs":                       NewRingBufferJs,
 		"GenerateConvexPolygonColliderJs":       GenerateConvexPolygonColliderJs,
