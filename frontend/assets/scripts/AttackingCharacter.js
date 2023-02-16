@@ -83,17 +83,17 @@ cc.Class({
   updateCharacterAnim(rdfPlayer, prevRdfPlayer, forceAnimSwitch, chConfig) {
     // As this function might be called after many frames of a rollback, it's possible that the playing animation was predicted, different from "prevRdfPlayer.CharacterState" but same as "newCharacterState". More granular checks are needed to determine whether we should interrupt the playing animation.  
 
-    let newCharacterState = rdfPlayer.CharacterState;
+    let newCharacterState = rdfPlayer.GetCharacterState();
 
     // Update directions
     if (this.animComp && this.animComp.node) {
-      if (0 > rdfPlayer.DirX) {
+      if (0 > rdfPlayer.GetDirX()) {
         this.animNode.scaleX = (-1.0);
-      } else if (0 < rdfPlayer.DirX) {
+      } else if (0 < rdfPlayer.GetDirX()) {
         this.animNode.scaleX = (+1.0);
       }
       if (ATK_CHARACTER_STATE.OnWall[0] == newCharacterState || ATK_CHARACTER_STATE.TurnAround1[0] == newCharacterState) {
-        if (0 < rdfPlayer.OnWallNormX) {
+        if (0 < rdfPlayer.GetOnWallNormX()) {
           this.animNode.scaleX = (-1.0);
         } else {
           this.animNode.scaleX = (+1.0);
@@ -147,7 +147,7 @@ cc.Class({
     }
     // The "playTimes" counterpart is managed by each "cc.AnimationClip.wrapMode", already preset in the editor.
     const targetClip = this.animComp.getClips()[newCharacterState]; // The clips follow the exact order in ATK_CHARACTER_STATE
-    let frameIdxInAnim = rdfPlayer.FramesInChState;
+    let frameIdxInAnim = rdfPlayer.GetFramesInChState();
     if (window.ATK_CHARACTER_STATE.InAirIdle1ByJump == newCharacterState && null != chConfig) {
       frameIdxInAnim = chConfig.InAirIdleFrameIdxTurningPoint + (frameIdxInAnim - chConfig.InAirIdleFrameIdxTurningPoint) % chConfig.InAirIdleFrameIdxTurnedCycle; // TODO: Anyway to avoid using division here?
     }

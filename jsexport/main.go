@@ -98,7 +98,7 @@ func GenerateConvexPolygonColliderJs(unalignedSrc *Polygon2D, spaceOffsetX, spac
 func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	ret := make([]*js.Object, len(speciesIdList), len(speciesIdList))
 	for i, speciesId := range speciesIdList {
-		ret[i] = js.MakeWrapper(Characters[speciesId])
+		ret[i] = js.MakeFullWrapper(Characters[speciesId])
 	}
 	return ret
 }
@@ -106,6 +106,47 @@ func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool) bool {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
 	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList)
+}
+
+func GetRoomDownsyncFrame(renderFrameBuffer *resolv.RingBuffer, frameId int32) *js.Object {
+	// [WARNING] Calling "renderFrameBuffer.GetByFrameId(frameId)" directly from transpiled frontend code would automatically invoke the expensive "$externalize" and "$mapArray"! See profiling result for more details.
+	candidate := renderFrameBuffer.GetByFrameId(frameId)
+	if nil == candidate {
+		return nil
+	}
+	return js.MakeWrapper(candidate.(*RoomDownsyncFrame))
+}
+
+func GetInputFrameDownsync(inputsBuffer *resolv.RingBuffer, inputFrameId int32) *js.Object {
+	candidate := inputsBuffer.GetByFrameId(inputFrameId)
+	if nil == candidate {
+		return nil
+	}
+	return js.MakeWrapper(candidate.(*InputFrameDownsync))
+}
+
+func GetInput(ifd *InputFrameDownsync, i int) uint64 {
+	// [WARNING] Calling "ifd.GetInputList()" directly from transpiled frontend code would make a copy of the array.
+	return ifd.InputList[i]
+}
+
+func GetPlayer(rdf *RoomDownsyncFrame, i int) *js.Object {
+	// [WARNING] Calling "rdf.GetPlayersArr()" directly from transpiled frontend code would automatically invoke the expensive "$externalize" and "$mapArray"! See profiling result for more details.
+	return js.MakeWrapper(rdf.PlayersArr[i])
+}
+
+func GetMeleeBullet(rdf *RoomDownsyncFrame, i int) *js.Object {
+	if TERMINATING_BULLET_LOCAL_ID == rdf.MeleeBullets[i].GetBulletLocalId() {
+		return nil
+	}
+	return js.MakeWrapper(rdf.MeleeBullets[i])
+}
+
+func GetFireballBullet(rdf *RoomDownsyncFrame, i int) *js.Object {
+	if TERMINATING_BULLET_LOCAL_ID == rdf.FireballBullets[i].GetBulletLocalId() {
+		return nil
+	}
+	return js.MakeWrapper(rdf.FireballBullets[i])
 }
 
 func main() {
@@ -136,5 +177,11 @@ func main() {
 		"ConvertToLastUsedRenderFrameId":                       ConvertToLastUsedRenderFrameId,
 		"ShouldGenerateInputFrameUpsync":                       ShouldGenerateInputFrameUpsync,
 		"IsGeneralBulletActive":                                IsGeneralBulletActive,
+		"GetRoomDownsyncFrame":                                 GetRoomDownsyncFrame,
+		"GetInputFrameDownsync":                                GetInputFrameDownsync,
+		"GetPlayer":                                            GetPlayer,
+		"GetMeleeBullet":                                       GetMeleeBullet,
+		"GetFireballBullet":                                    GetFireballBullet,
+		"GetInput":                                             GetInput,
 	})
 }

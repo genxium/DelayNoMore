@@ -579,38 +579,37 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	nextRenderFramePlayers := ret.PlayersArr
 	// Make a copy first
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
-		nextRenderFramePlayers[i] = &PlayerDownsync{
-			Id:                  currPlayerDownsync.Id,
-			VirtualGridX:        currPlayerDownsync.VirtualGridX,
-			VirtualGridY:        currPlayerDownsync.VirtualGridY,
-			DirX:                currPlayerDownsync.DirX,
-			DirY:                currPlayerDownsync.DirY,
-			VelX:                currPlayerDownsync.VelX,
-			VelY:                currPlayerDownsync.VelY,
-			CharacterState:      currPlayerDownsync.CharacterState,
-			InAir:               true,
-			OnWall:              false,
-			Speed:               currPlayerDownsync.Speed,
-			BattleState:         currPlayerDownsync.BattleState,
-			Score:               currPlayerDownsync.Score,
-			Removed:             currPlayerDownsync.Removed,
-			JoinIndex:           currPlayerDownsync.JoinIndex,
-			Hp:                  currPlayerDownsync.Hp,
-			MaxHp:               currPlayerDownsync.MaxHp,
-			FramesToRecover:     currPlayerDownsync.FramesToRecover - 1,
-			FramesInChState:     currPlayerDownsync.FramesInChState + 1,
-			ActiveSkillId:       currPlayerDownsync.ActiveSkillId,
-			ActiveSkillHit:      currPlayerDownsync.ActiveSkillHit,
-			FramesInvinsible:    currPlayerDownsync.FramesInvinsible - 1,
-			BulletTeamId:        currPlayerDownsync.BulletTeamId,
-			ChCollisionTeamId:   currPlayerDownsync.ChCollisionTeamId,
-			RevivalVirtualGridX: currPlayerDownsync.RevivalVirtualGridX,
-			RevivalVirtualGridY: currPlayerDownsync.RevivalVirtualGridY,
-			ColliderRadius:      currPlayerDownsync.ColliderRadius,
-			OnWallNormX:         currPlayerDownsync.OnWallNormX,
-			OnWallNormY:         currPlayerDownsync.OnWallNormY,
-			CapturedByInertia:   currPlayerDownsync.CapturedByInertia,
-		}
+		nextRenderFramePlayers[i].Id = currPlayerDownsync.Id
+		nextRenderFramePlayers[i].VirtualGridX = currPlayerDownsync.VirtualGridX
+		nextRenderFramePlayers[i].VirtualGridY = currPlayerDownsync.VirtualGridY
+		nextRenderFramePlayers[i].DirX = currPlayerDownsync.DirX
+		nextRenderFramePlayers[i].DirY = currPlayerDownsync.DirY
+		nextRenderFramePlayers[i].VelX = currPlayerDownsync.VelX
+		nextRenderFramePlayers[i].VelY = currPlayerDownsync.VelY
+		nextRenderFramePlayers[i].CharacterState = currPlayerDownsync.CharacterState
+		nextRenderFramePlayers[i].InAir = true
+		nextRenderFramePlayers[i].OnWall = false
+		nextRenderFramePlayers[i].Speed = currPlayerDownsync.Speed
+		nextRenderFramePlayers[i].BattleState = currPlayerDownsync.BattleState
+		nextRenderFramePlayers[i].Score = currPlayerDownsync.Score
+		nextRenderFramePlayers[i].Removed = currPlayerDownsync.Removed
+		nextRenderFramePlayers[i].JoinIndex = currPlayerDownsync.JoinIndex
+		nextRenderFramePlayers[i].Hp = currPlayerDownsync.Hp
+		nextRenderFramePlayers[i].MaxHp = currPlayerDownsync.MaxHp
+		nextRenderFramePlayers[i].FramesToRecover = currPlayerDownsync.FramesToRecover - 1
+		nextRenderFramePlayers[i].FramesInChState = currPlayerDownsync.FramesInChState + 1
+		nextRenderFramePlayers[i].ActiveSkillId = currPlayerDownsync.ActiveSkillId
+		nextRenderFramePlayers[i].ActiveSkillHit = currPlayerDownsync.ActiveSkillHit
+		nextRenderFramePlayers[i].FramesInvinsible = currPlayerDownsync.FramesInvinsible - 1
+		nextRenderFramePlayers[i].BulletTeamId = currPlayerDownsync.BulletTeamId
+		nextRenderFramePlayers[i].ChCollisionTeamId = currPlayerDownsync.ChCollisionTeamId
+		nextRenderFramePlayers[i].RevivalVirtualGridX = currPlayerDownsync.RevivalVirtualGridX
+		nextRenderFramePlayers[i].RevivalVirtualGridY = currPlayerDownsync.RevivalVirtualGridY
+		nextRenderFramePlayers[i].ColliderRadius = currPlayerDownsync.ColliderRadius
+		nextRenderFramePlayers[i].OnWallNormX = currPlayerDownsync.OnWallNormX
+		nextRenderFramePlayers[i].OnWallNormY = currPlayerDownsync.OnWallNormY
+		nextRenderFramePlayers[i].CapturedByInertia = currPlayerDownsync.CapturedByInertia
+
 		if nextRenderFramePlayers[i].FramesToRecover < 0 {
 			nextRenderFramePlayers[i].FramesToRecover = 0
 		}

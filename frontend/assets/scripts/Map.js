@@ -158,9 +158,9 @@ cc.Class({
       currSelfInput = null;
     const joinIndex = self.selfPlayerInfo.joinIndex;
     const selfJoinIndexMask = (1 << (joinIndex - 1));
-    const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
-    const previousInputFrameDownsync = self.recentInputCache.GetByFrameId(inputFrameId - 1);
-    previousSelfInput = (null == previousInputFrameDownsync ? null : previousInputFrameDownsync.InputList[joinIndex - 1]);
+    const existingInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, inputFrameId);
+    const previousInputFrameDownsync = gopkgs.GetInputFrameDownsync(self.recentInputCache, (inputFrameId - 1));
+    previousSelfInput = (null == previousInputFrameDownsync ? null : gopkgs.GetInput(previousInputFrameDownsync, joinIndex - 1));
     if (
       null != existingInputFrame
       &&
@@ -168,7 +168,7 @@ cc.Class({
     ) {
       // This could happen upon either [type#1] or [type#2] forceConfirmation, where "refRenderFrame" is accompanied by some "inputFrameDownsyncs". The check here also guarantees that we don't override history 
       //console.log(`noDelayInputFrameId=${inputFrameId} already exists in recentInputCache: recentInputCache=${self._stringifyRecentInputCache(false)}`);
-      return [previousSelfInput, existingInputFrame.InputList[joinIndex - 1]];
+      return [previousSelfInput, gopkgs.GetInput(existingInputFrame, joinIndex - 1)];
     }
 
     const prefabbedInputList = new Array(self.playerRichInfoDict.size).fill(0);
@@ -176,14 +176,14 @@ cc.Class({
     for (let k = 0; k < window.boundRoomCapacity; ++k) {
       if (null != existingInputFrame) {
         // When "null != existingInputFrame", it implies that "true == canConfirmSelf" here, we just have to assign "prefabbedInputList[(joinIndex-1)]" specifically and copy all others
-        prefabbedInputList[k] = existingInputFrame.InputList[k];
+        prefabbedInputList[k] = gopkgs.GetInput(existingInputFrame, k);
       } else if (self.lastIndividuallyConfirmedInputFrameId[k] <= inputFrameId) {
         prefabbedInputList[k] = self.lastIndividuallyConfirmedInputList[k];
         // Don't predict "btnA & btnB"!
         prefabbedInputList[k] = (prefabbedInputList[k] & 15);
       } else if (null != previousInputFrameDownsync) {
         // When "self.lastIndividuallyConfirmedInputFrameId[k] > inputFrameId", don't use it to predict a historical input!
-        prefabbedInputList[k] = previousInputFrameDownsync.InputList[k];
+        prefabbedInputList[k] = gopkgs.GetInput(previousInputFrameDownsync, k);
         // Don't predict "btnA & btnB"!
         prefabbedInputList[k] = (prefabbedInputList[k] & 15);
       }
@@ -191,14 +191,14 @@ cc.Class({
     let initConfirmedList = 0;
     if (null != existingInputFrame) {
       // When "null != existingInputFrame", it implies that "true == canConfirmSelf" here
-      initConfirmedList = (existingInputFrame.ConfirmedList | selfJoinIndexMask);
+      initConfirmedList = (existingInputFrame.GetConfirmedList() | selfJoinIndexMask);
     }
     currSelfInput = self.ctrl.getEncodedInput(); // When "null == existingInputFrame", it'd be safe to say that the realtime "self.ctrl.getEncodedInput()" is for the requested "inputFrameId"
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     while (self.recentInputCache.GetEdFrameId() <= inputFrameId) {
       // Fill the gap
       // [WARNING] Do not blindly use "selfJoinIndexMask" here, as the "actuallyUsedInput for self" couldn't be confirmed while prefabbing, otherwise we'd have confirmed a wrong self input by "_markConfirmationIfApplicable()"!
-      const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(self.recentInputCache.GetEdFrameId(), prefabbedInputList.slice(), initConfirmedList);
+      const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(self.recentInputCache.GetEdFrameId(), prefabbedInputList, initConfirmedList);
       // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.GetInputFrameId()}`);
       self.recentInputCache.Put(prefabbedInputFrameDownsync);
     }
@@ -720,8 +720,7 @@ cc.Class({
       console.error(`pbRdf.speciesIdList is required for starting or resyncing battle!`);
     }
     self.chConfigsOrderedByJoinIndex = gopkgs.GetCharacterConfigsOrderedByJoinIndex(pbRdf.speciesIdList);
-    const playersArr = rdf.GetPlayersArr();
-    self._initPlayerRichInfoDict(playersArr);
+    self._initPlayerRichInfoDict(rdf);
 
     if (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) {
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdfId", but here we double check and log the anomaly  
@@ -1285,18 +1284,16 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   applyRoomDownsyncFrameDynamics(rdf, prevRdf) {
     const self = this;
-    const playersArr = rdf.PlayersArr;
-    const prevPlayersArr = (null == prevRdf ? null : prevRdf.PlayersArr);
-    for (let k in playersArr) {
-      const currPlayerDownsync = playersArr[k];
+    for (let k = 0; k < window.boundRoomCapacity; k++) {
+      const currPlayerDownsync = gopkgs.GetPlayer(rdf, k);
+      const prevRdfPlayer = (null == prevRdf ? null : gopkgs.GetPlayer(prevRdf, k));
       const chConfig = self.chConfigsOrderedByJoinIndex[k];
-      const prevRdfPlayer = (null == prevPlayersArr ? null : prevPlayersArr[k]);
-      const [wx, wy] = gopkgs.VirtualGridToWorldPos(currPlayerDownsync.VirtualGridX, currPlayerDownsync.VirtualGridY);
+      const [wx, wy] = gopkgs.VirtualGridToWorldPos(currPlayerDownsync.GetVirtualGridX(), currPlayerDownsync.GetVirtualGridY());
       const playerRichInfo = self.playerRichInfoArr[k];
       playerRichInfo.node.setPosition(wx, wy);
-      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.Speed);
+      playerRichInfo.scriptIns.updateSpeed(currPlayerDownsync.GetSpeed());
       playerRichInfo.scriptIns.updateCharacterAnim(currPlayerDownsync, prevRdfPlayer, false, chConfig);
-      playerRichInfo.scriptIns.hpBar.progress = (currPlayerDownsync.Hp * 1.0) / currPlayerDownsync.MaxHp;
+      playerRichInfo.scriptIns.hpBar.progress = (currPlayerDownsync.GetHp() * 1.0) / currPlayerDownsync.GetMaxHp();
     }
 
     // Move all to infinitely far away first
@@ -1305,21 +1302,23 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       const fireball = pqNode.value;
       fireball.node.setPosition(cc.v2(Number.MAX_VALUE, Number.MAX_VALUE));
     }
-    const meleeBullets = rdf.MeleeBullets;
-    for (let k in meleeBullets) {
-      const meleeBullet = meleeBullets[k];
-      const isExploding = (window.BULLET_STATE.Exploding == meleeBullet.BlState && meleeBullet.FramesInBlState < meleeBullet.Bullet.ExplosionFrames);
+    for (let k = 0;; k++) {
+      const meleeBullet = gopkgs.GetMeleeBullet(rdf, k);
+      if (null == meleeBullet) {
+        break;
+      }
+      const isExploding = (window.BULLET_STATE.Exploding == meleeBullet.GetBlState() && meleeBullet.GetFramesInBlState() < meleeBullet.GetExplosionFrames());
       if (isExploding) {
-        let pqNode = self.cachedFireballs.popAny(meleeBullet.BattleAttr.BulletLocalId);
+        let pqNode = self.cachedFireballs.popAny(meleeBullet.GetBulletLocalId());
         let speciesName = `MeleeExplosion`;
-        let animName = `MeleeExplosion${meleeBullet.Bullet.SpeciesId}`;
+        let animName = `MeleeExplosion${meleeBullet.GetSpeciesId()}`;
 
-        const offender = playersArr[meleeBullet.BattleAttr.OffenderJoinIndex - 1];
+        const offender = gopkgs.GetPlayer(rdf, meleeBullet.GetOffenderJoinIndex() - 1);
         let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
-        if (0 > offender.DirX) {
+        if (0 > offender.GetDirX()) {
           xfac = -1;
         }
-        const [wx, wy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(offender.GetVirtualGridX() + xfac * meleeBullet.GetHitboxOffsetX(), offender.GetVirtualGridY());
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
@@ -1329,27 +1328,29 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         }
         const cachedFireball = pqNode.value;
         cachedFireball.setSpecies(speciesName, meleeBullet, rdf);
-        const newAnimIdx = meleeBullet.Bullet.SpeciesId - 1;
-        cachedFireball.updateAnim(animName, meleeBullet.FramesInBlState, offender.DirX, false, rdf, newAnimIdx);
+        const newAnimIdx = meleeBullet.GetSpeciesId() - 1;
+        cachedFireball.updateAnim(animName, meleeBullet.GetFramesInBlState(), offender.GetDirX(), false, rdf, newAnimIdx);
         cachedFireball.lastUsed = self.renderFrameId;
-        cachedFireball.bulletLocalId = meleeBullet.BattleAttr.BulletLocalId;
+        cachedFireball.bulletLocalId = meleeBullet.GetBulletLocalId();
         cachedFireball.node.setPosition(cc.v2(wx, wy));
 
-        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, meleeBullet.BattleAttr.BulletLocalId);
+        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, meleeBullet.GetBulletLocalId());
       } else {
         //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, activeFrames=${meleeBullet.Bullet.ActiveFrames}, not rendering melee node for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId}`);
       }
     }
-    const fireballBullets = rdf.FireballBullets;
-    for (let k in fireballBullets) {
-      const fireballBullet = fireballBullets[k];
-      const isExploding = (window.BULLET_STATE.Exploding == fireballBullet.BlState);
-      if (gopkgs.IsGeneralBulletActive(fireballBullet.BlState, fireballBullet.BattleAttr.OriginatedRenderFrameId, fireballBullet.Bullet.StartupFrames, fireballBullet.Bullet.ActiveFrames, rdf.Id) || isExploding) {
-        let pqNode = self.cachedFireballs.popAny(fireballBullet.BattleAttr.BulletLocalId);
-        let speciesName = `Fireball${fireballBullet.Bullet.SpeciesId}`;
-        let animName = (BULLET_STATE.Exploding == fireballBullet.BlState ? `Fireball${fireballBullet.Bullet.SpeciesId}Explosion` : speciesName);
+    for (let k = 0;; k++) {
+      const fireballBullet = gopkgs.GetFireballBullet(rdf, k);
+      if (null == fireballBullet) {
+        break;
+      }
+      const isExploding = (window.BULLET_STATE.Exploding == fireballBullet.GetBlState());
+      if (gopkgs.IsGeneralBulletActive(fireballBullet.GetBlState(), fireballBullet.GetOriginatedRenderFrameId(), fireballBullet.GetStartupFrames(), fireballBullet.GetActiveFrames(), rdf.GetId()) || isExploding) {
+        let pqNode = self.cachedFireballs.popAny(fireballBullet.GetBulletLocalId());
+        let speciesName = `Fireball${fireballBullet.GetSpeciesId()}`;
+        let animName = (isExploding ? `Fireball${fireballBullet.GetSpeciesId()}Explosion` : speciesName);
 
-        const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(fireballBullet.GetVirtualGridX(), fireballBullet.GetVirtualGridY());
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
@@ -1361,12 +1362,12 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
         const spontaneousLooping = !isExploding;
         const newAnimIdx = (spontaneousLooping ? 0 : 1);
-        cachedFireball.updateAnim(animName, fireballBullet.FramesInBlState, fireballBullet.DirX, spontaneousLooping, rdf, newAnimIdx);
+        cachedFireball.updateAnim(animName, fireballBullet.GetFramesInBlState(), fireballBullet.GetDirX(), spontaneousLooping, rdf, newAnimIdx);
         cachedFireball.lastUsed = self.renderFrameId;
-        cachedFireball.bulletLocalId = fireballBullet.BattleAttr.BulletLocalId;
+        cachedFireball.bulletLocalId = fireballBullet.GetBulletLocalId();
         cachedFireball.node.setPosition(cc.v2(wx, wy));
 
-        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.BattleAttr.BulletLocalId);
+        self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.GetBulletLocalId());
       } else {
         //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, not rendering fireball node for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId}`);
       }
@@ -1384,15 +1385,15 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     let prevLatestRdf = null,
       latestRdf = null;
     for (let i = renderFrameIdSt; i < renderFrameIdEd; i++) {
-      const currRdf = self.recentRenderCache.GetByFrameId(i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
+      const currRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, i); // typed "RoomDownsyncFrame"; [WARNING] When "true == isChasing" and using Firefox, this function could be interruptted by "onRoomDownsyncFrame(rdf)" asynchronously anytime, making this line return "null"!
       if (null == currRdf) {
         throw `Couldn't find renderFrame for i=${i} to rollback (are you using Firefox?), self.renderFrameId=${self.renderFrameId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}, might've been interruptted by onRoomDownsyncFrame`;
       }
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
-      const delayedInputFrame = self.recentInputCache.GetByFrameId(j);
+      const delayedInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, j);
 
       if (self.frameDataLoggingEnabled) {
-        const actuallyUsedInputClone = delayedInputFrame.InputList.slice();
+        const actuallyUsedInputClone = delayedInputFrame.GetInputList();
         const inputFrameDownsyncClone = {
           inputFrameId: j,
           inputList: actuallyUsedInputClone,
@@ -1401,13 +1402,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         self.rdfIdToActuallyUsedInput.set(i, inputFrameDownsyncClone);
       }
       const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.pEffPushbacks, self.pHardPushbackNormsArr, self.pJumpedOrNotList);
-      const nextRdf = self.recentRenderCache.GetByFrameId(self.renderFrameId + 1);
+      const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, self.renderFrameId + 1);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!
-        self.chaserRenderFrameId = nextRdf.Id;
-      } else if (nextRdf.Id == self.chaserRenderFrameId + 1) {
-        self.chaserRenderFrameId = nextRdf.Id; // To avoid redundant calculation 
+        self.chaserRenderFrameId = nextRdf.GetId();
+      } else if (nextRdf.GetId() == self.chaserRenderFrameId + 1) {
+        self.chaserRenderFrameId = nextRdf.GetId(); // To avoid redundant calculation 
       }
       prevLatestRdf = currRdf;
       latestRdf = nextRdf;
@@ -1416,16 +1417,16 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     return [prevLatestRdf, latestRdf];
   },
 
-  _initPlayerRichInfoDict(playersArr) {
+  _initPlayerRichInfoDict(rdf) {
     const self = this;
-    for (let k in playersArr) {
-      const immediatePlayerInfo = playersArr[k];
-      const playerId = immediatePlayerInfo.Id;
+    for (let k = 0; k < window.boundRoomCapacity; k++) {
+      const immediatePlayerInfo = gopkgs.GetPlayer(rdf, k);
+      const playerId = immediatePlayerInfo.GetId();
       if (self.playerRichInfoDict.has(playerId)) continue; // Skip already put keys
       self.playerRichInfoDict.set(playerId, immediatePlayerInfo);
-      const joinIndex = immediatePlayerInfo.JoinIndex;
-      const vx = immediatePlayerInfo.VirtualGridX;
-      const vy = immediatePlayerInfo.VirtualGridY;
+      const joinIndex = immediatePlayerInfo.GetJoinIndex();
+      const vx = immediatePlayerInfo.GetVirtualGridX();
+      const vy = immediatePlayerInfo.GetVirtualGridY();
       const nodeAndScriptIns = self.spawnPlayerNode(joinIndex, vx, vy, immediatePlayerInfo);
 
       Object.assign(self.playerRichInfoDict.get(playerId), {
@@ -1435,13 +1436,13 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
       const selfPlayerId = self.selfPlayerInfo.id;
       if (selfPlayerId == playerId) {
-        self.selfPlayerInfo.joinIndex = immediatePlayerInfo.JoinIndex; // Update here in case of any change during WAITING phase
+        self.selfPlayerInfo.joinIndex = joinIndex; // Update here in case of any change during WAITING phase
         nodeAndScriptIns[1].showArrowTipNode();
       }
     }
     self.playerRichInfoArr = new Array(self.playerRichInfoDict.size);
     self.playerRichInfoDict.forEach((playerRichInfo, playerId) => {
-      self.playerRichInfoArr[playerRichInfo.JoinIndex - 1] = playerRichInfo;
+      self.playerRichInfoArr[playerRichInfo.GetJoinIndex() - 1] = playerRichInfo;
     });
   },
 
