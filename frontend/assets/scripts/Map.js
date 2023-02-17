@@ -367,19 +367,19 @@ cc.Class({
     self.lastIndividuallyConfirmedInputList = new Array(window.boundRoomCapacity).fill(0);
 
     self.collisionHolder = gopkgs.NewCollisionHolder();
-    // [WARNING] For "pEffPushbacks", "pHardPushbackNormsArr" and "pJumpedOrNotList", use array literal instead of "new Array" for compliance when passing into "gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs"!
-    self.pEffPushbacks = [];
-    for (let i = 0; i < window.boundRoomCapacity; i++) self.pEffPushbacks.push(gopkgs.NewVec2DJs(0, 0));
-    self.pHardPushbackNormsArr = [];
+    // [WARNING] For "effPushbacks", "hardPushbackNormsArr" and "jumpedOrNotList", use array literal instead of "new Array" for compliance when passing into "gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs"!
+    self.effPushbacks = [];
+    for (let i = 0; i < window.boundRoomCapacity; i++) self.effPushbacks.push(gopkgs.NewVec2DJs(0, 0));
+    self.hardPushbackNormsArr = [];
     for (let i = 0; i < window.boundRoomCapacity; i++) {
       const single = [];
       for (let j = 0; j < 5; j++) {
         single.push(gopkgs.NewVec2DJs(0, 0));
       }
-      self.pHardPushbackNormsArr.push(single);
+      self.hardPushbackNormsArr.push(single);
     }
-    self.pJumpedOrNotList = [];
-    for (let i = 0; i < window.boundRoomCapacity; i++) self.pJumpedOrNotList.push(false);
+    self.jumpedOrNotList = [];
+    for (let i = 0; i < window.boundRoomCapacity; i++) self.jumpedOrNotList.push(false);
     self.dynamicRectangleColliders = gopkgs.NewDynamicRectangleColliders(64);
 
     self.recentRenderCache = gopkgs.NewRingBufferJs(self.renderCacheSize);
@@ -1403,8 +1403,8 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(i, inputFrameDownsyncClone);
       }
-      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.pEffPushbacks, self.pHardPushbackNormsArr, self.pJumpedOrNotList, self.dynamicRectangleColliders);
-      const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, self.renderFrameId + 1);
+      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders);
+      const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, i + 1);
 
       if (true == isChasing) {
         // [WARNING] Move the cursor "self.chaserRenderFrameId" when "true == isChasing", keep in mind that "self.chaserRenderFrameId" is not monotonic!

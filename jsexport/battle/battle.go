@@ -571,7 +571,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	var ret *RoomDownsyncFrame = nil
 	candidate := renderFrameBuffer.GetByFrameId(nextRenderFrameId)
 	if nil == candidate {
-		// Lazy alloc heap-mem for holder
+		// Lazy alloc heap-mem for holder, will be called on each "nextRenderFrameId == renderFrameBuffer.EdFrameId"
 		ret = NewPreallocatedRoomDownsyncFrame(roomCapacity, 64, 64)
 		renderFrameBuffer.SetByFrameId(ret, nextRenderFrameId)
 	} else {

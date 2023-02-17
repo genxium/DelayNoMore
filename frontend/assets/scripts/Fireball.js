@@ -13,9 +13,9 @@ cc.Class({
     if (speciesName == this.speciesName) return;
     if (null != this.speciesName) {
       for (let k in this.animNode.children) {
-        const child = this.children[k];
+        const child = this.animNode.children[k];
         if (!child.active) continue;
-        if (child == effAnimNode || child.name == speciesName) continue;
+        if (child == this.effAnimNode || child.name == speciesName) continue;
         child.active = false;
       }
     }

@@ -12,8 +12,9 @@ func NormVec2D(dx, dy float64) Vec2D {
 }
 
 func ConvexPolygonStr(body *resolv.ConvexPolygon) string {
-	var s []string = make([]string, len(body.Points))
-	for i, p := range body.Points {
+	var s []string = make([]string, body.Points.Cnt)
+	for i := int32(0); i < body.Points.Cnt; i++ {
+		p := body.GetPointByOffset(i)
 		s[i] = fmt.Sprintf("[%.2f, %.2f]", p[0]+body.X, p[1]+body.Y)
 	}
 

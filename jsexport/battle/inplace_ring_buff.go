@@ -4,6 +4,9 @@ import (
 	"resolv"
 )
 
+/*
+[WARNING] NOT USED ANYWHERE YET!!!
+*/
 type InplaceRingBuffer struct {
 	Ed        int32 // write index, open index
 	St        int32 // read index, closed index

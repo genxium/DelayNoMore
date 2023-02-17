@@ -135,9 +135,9 @@ type Room struct {
 	CurDynamicsRenderFrameId               int32 // [WARNING] The dynamics of backend is ALWAYS MOVING FORWARD BY ALL-CONFIRMED INPUTFRAMES (either by upsync or forced), i.e. no rollback; Moreover when "true == BackendDynamicsEnabled" we always have "Room.CurDynamicsRenderFrameId >= Room.RenderFrameId" because each "all-confirmed inputFrame" is applied on "all applicable renderFrames" in one-go hence often sees a future "renderFrame" earlier
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
-	InputsBuffer                           *battle.RingBuffer // Indices are STRICTLY consecutive
+	InputsBuffer                           *resolv.RingBuffer // Indices are STRICTLY consecutive
 	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputList, player.LastReceivedInputFrameId, player.LastUdpReceivedInputFrameId]
-	RenderFrameBuffer                      *battle.RingBuffer // Indices are STRICTLY consecutive
+	RenderFrameBuffer                      *resolv.RingBuffer // Indices are STRICTLY consecutive
 	LatestPlayerUpsyncedInputFrameId       int32
 	LastAllConfirmedInputFrameId           int32
 	LastAllConfirmedInputFrameIdWithChange int32
@@ -162,6 +162,12 @@ type Room struct {
 	BattleUdpTunnelLock sync.Mutex
 	BattleUdpTunnelAddr *pb.PeerUdpAddr
 	BattleUdpTunnel     *net.UDPConn
+
+	collisionHolder           *resolv.Collision
+	effPushbacks              []*battle.Vec2D
+	hardPushbackNormsArr      [][]*battle.Vec2D
+	jumpedOrNotList           []bool
+	dynamicRectangleColliders []*resolv.Object
 }
 
 func (pR *Room) updateScore() {
@@ -796,8 +802,8 @@ func (pR *Room) OnDismissed() {
 	pR.PlayerSecondarySignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.JoinIndexBooleanArr = make([]bool, pR.Capacity)
 	pR.RenderCacheSize = 1024
-	pR.RenderFrameBuffer = battle.NewRingBuffer(pR.RenderCacheSize)
-	pR.InputsBuffer = battle.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
+	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
+	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
 	pR.LastIndividuallyConfirmedInputList = make([]uint64, pR.Capacity)
 
@@ -809,6 +815,24 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameId = 0
 	pR.CurDynamicsRenderFrameId = 0
 	pR.NstDelayFrames = 24
+
+	pR.collisionHolder = resolv.NewCollision()
+	pR.effPushbacks = make([]*battle.Vec2D, pR.Capacity)
+	for i := 0; i < len(pR.effPushbacks); i++ {
+		pR.effPushbacks[i] = &battle.Vec2D{X: 0, Y: 0}
+	}
+	pR.hardPushbackNormsArr = make([][]*battle.Vec2D, pR.Capacity)
+	for i := 0; i < pR.Capacity; i++ {
+		pR.hardPushbackNormsArr[i] = make([]*battle.Vec2D, 5)
+		for j := 0; j < len(pR.hardPushbackNormsArr[i]); j++ {
+			pR.hardPushbackNormsArr[i][j] = &battle.Vec2D{X: 0, Y: 0}
+		}
+	}
+	pR.jumpedOrNotList = make([]bool, pR.Capacity)
+	pR.dynamicRectangleColliders = make([]*resolv.Object, 64)
+	for i := 0; i < len(pR.dynamicRectangleColliders); i++ {
+		pR.dynamicRectangleColliders[i] = battle.GenerateRectCollider(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nil, "")
+	}
 
 	serverFps := 60
 	pR.RollbackEstimatedDtMillis = 16.667  // Use fixed-and-low-precision to mitigate the inconsistent floating-point-number issue between Golang and JavaScript
@@ -1356,8 +1380,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		nextRenderFrame := battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr)
-		pR.RenderFrameBuffer.Put(nextRenderFrame)
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders)
 		pR.CurDynamicsRenderFrameId++
 	}
 }
