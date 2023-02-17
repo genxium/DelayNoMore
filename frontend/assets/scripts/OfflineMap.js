@@ -35,7 +35,7 @@ cc.Class({
     self.inputFrameUpsyncDelayTolerance = 2;
     self.collisionMinStep = 8;
 
-    self.renderCacheSize = 1024;
+    self.renderCacheSize = 128;
     self.serverFps = 60;
     self.rollbackEstimatedDt = 0.016667;
     self.rollbackEstimatedDtMillis = 16.667;

@@ -571,9 +571,19 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	var ret *RoomDownsyncFrame = nil
 	candidate := renderFrameBuffer.GetByFrameId(nextRenderFrameId)
 	if nil == candidate {
-		// Lazy alloc heap-mem for holder, will be called on each "nextRenderFrameId == renderFrameBuffer.EdFrameId"
-		ret = NewPreallocatedRoomDownsyncFrame(roomCapacity, 64, 64)
-		renderFrameBuffer.SetByFrameId(ret, nextRenderFrameId)
+		if nextRenderFrameId == renderFrameBuffer.EdFrameId {
+			renderFrameBuffer.DryPut()
+			candidate = renderFrameBuffer.GetByFrameId(nextRenderFrameId)
+			if nil == candidate {
+				// Lazy alloc heap-mem for holder
+				ret = NewPreallocatedRoomDownsyncFrame(roomCapacity, 64, 64)
+				renderFrameBuffer.SetByFrameId(ret, nextRenderFrameId)
+			} else {
+				ret = candidate.(*RoomDownsyncFrame)
+			}
+		} else {
+			panic("Invalid nextRenderFrameId=" + string(nextRenderFrameId) + "!")
+		}
 	} else {
 		ret = candidate.(*RoomDownsyncFrame)
 	}
@@ -893,6 +903,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			fireballBulletCnt++
 		}
 	}
+	// Explicitly specify termination of fireball bullets
+	nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.BulletLocalId = TERMINATING_BULLET_LOCAL_ID
 
 	for _, prevMelee := range currRenderFrame.MeleeBullets {
 		if TERMINATING_BULLET_LOCAL_ID == prevMelee.BattleAttr.BulletLocalId {
@@ -931,6 +943,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			meleeBulletCnt++
 		}
 	}
+	// Explicitly specify termination of melee bullets
+	nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.BulletLocalId = TERMINATING_BULLET_LOCAL_ID
 
 	// 4. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {

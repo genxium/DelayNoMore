@@ -28,6 +28,19 @@ func NewRingBuffer(n int32) *RingBuffer {
 	}
 }
 
+func (rb *RingBuffer) DryPut() {
+	for 0 < rb.Cnt && rb.Cnt >= rb.N {
+		// Make room for the new element
+		rb.Pop()
+	}
+	rb.EdFrameId++
+	rb.Cnt++
+	rb.Ed++
+	if rb.Ed >= rb.N {
+		rb.Ed -= rb.N // Deliberately not using "%" operator for performance concern
+	}
+}
+
 func (rb *RingBuffer) Put(pItem interface{}) {
 	for 0 < rb.Cnt && rb.Cnt >= rb.N {
 		// Make room for the new element

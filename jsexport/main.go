@@ -79,14 +79,9 @@ func NewNpcPatrolCue(flAct, frAct uint64, x, y float64) *js.Object {
 }
 
 func NewRoomDownsyncFrameJs(id int32, playersArr []*PlayerDownsync, bulletLocalIdCounter int32, meleeBullets []*MeleeBullet, fireballBullets []*FireballBullet) *js.Object {
-	// [WARNING] Avoid using "pb.RoomDownsyncFrame" here, in practive "MakeFullWrapper" doesn't expose the public fields for a "protobuf struct" as expected and requires helper functions like "GetCollisionSpaceObjsJs".
-	return js.MakeWrapper(&RoomDownsyncFrame{
-		Id:                   id,
-		BulletLocalIdCounter: bulletLocalIdCounter,
-		PlayersArr:           playersArr,
-		MeleeBullets:         meleeBullets,
-		FireballBullets:      fireballBullets,
-	})
+	preallocatedRdf := NewPreallocatedRoomDownsyncFrame(len(playersArr), 64, 64)
+	CloneRoomDownsyncFrame(id, playersArr, bulletLocalIdCounter, meleeBullets, fireballBullets, preallocatedRdf)
+	return js.MakeWrapper(preallocatedRdf)
 }
 
 func GetCollisionSpaceObjsJs(space *resolv.Space) []*js.Object {
@@ -136,6 +131,28 @@ func GetInputFrameDownsync(inputsBuffer *resolv.RingBuffer, inputFrameId int32) 
 func GetInput(ifd *InputFrameDownsync, i int) uint64 {
 	// [WARNING] Calling "ifd.GetInputList()" directly from transpiled frontend code would make a copy of the array.
 	return ifd.InputList[i]
+}
+
+func SetInputFrameId(ifd *InputFrameDownsync, newVal int32) bool {
+	// [WARNING] This function should be only used by frontend which is single-threaded; on the backend more rigorous thread-safety concerns are taken care of by proper locking.
+	ifd.InputFrameId = newVal
+	return true
+}
+
+func SetInput(ifd *InputFrameDownsync, i int, newVal uint64) bool {
+	// [WARNING] This function should be only used by frontend which is single-threaded; on the backend more rigorous thread-safety concerns are taken care of by proper locking.
+	if i >= len(ifd.InputList) {
+		return false
+	}
+
+	ifd.InputList[i] = newVal
+	return true
+}
+
+func SetConfirmedList(ifd *InputFrameDownsync, newVal uint64) bool {
+	// [WARNING] This function should be only used by frontend which is single-threaded; on the backend more rigorous thread-safety concerns are taken care of by proper locking.
+	ifd.ConfirmedList = newVal
+	return true
 }
 
 func GetPlayer(rdf *RoomDownsyncFrame, i int) *js.Object {
@@ -192,5 +209,8 @@ func main() {
 		"GetFireballBullet":                                    GetFireballBullet,
 		"GetInput":                                             GetInput,
 		"NewDynamicRectangleColliders":                         NewDynamicRectangleColliders,
+		"SetInputFrameId":                                      SetInputFrameId,
+		"SetInput":                                             SetInput,
+		"SetConfirmedList":                                     SetConfirmedList,
 	})
 }

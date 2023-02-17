@@ -188,6 +188,8 @@ cc.Class({
         prefabbedInputList[k] = (prefabbedInputList[k] & 15);
       }
     }
+
+    // [WARNING] Do not blindly use "selfJoinIndexMask" here, as the "actuallyUsedInput for self" couldn't be confirmed while prefabbing, otherwise we'd have confirmed a wrong self input by "_markConfirmationIfApplicable()"!
     let initConfirmedList = 0;
     if (null != existingInputFrame) {
       // When "null != existingInputFrame", it implies that "true == canConfirmSelf" here
@@ -197,10 +199,21 @@ cc.Class({
     prefabbedInputList[(joinIndex - 1)] = currSelfInput;
     while (self.recentInputCache.GetEdFrameId() <= inputFrameId) {
       // Fill the gap
-      // [WARNING] Do not blindly use "selfJoinIndexMask" here, as the "actuallyUsedInput for self" couldn't be confirmed while prefabbing, otherwise we'd have confirmed a wrong self input by "_markConfirmationIfApplicable()"!
-      const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(self.recentInputCache.GetEdFrameId(), prefabbedInputList, initConfirmedList);
-      // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.GetInputFrameId()}`);
-      self.recentInputCache.Put(prefabbedInputFrameDownsync);
+      const gapInputFrameId = self.recentInputCache.GetEdFrameId();
+      self.recentInputCache.DryPut();
+      let ifdHolder = gopkgs.GetInputFrameDownsync(self.recentInputCache, gapInputFrameId);
+      if (null == ifdHolder) {
+        // Lazy heap alloc, calling "gopkgs.NewInputFrameDownsync" would trigger not only heap alloc but also "gopherjs $externalize", neither is efficient T_T 
+        const prefabbedInputFrameDownsync = gopkgs.NewInputFrameDownsync(gapInputFrameId, prefabbedInputList, initConfirmedList);
+        // console.log(`Prefabbed inputFrameId=${prefabbedInputFrameDownsync.GetInputFrameId()}`);
+        self.recentInputCache.SetByFrameId(prefabbedInputFrameDownsync, gapInputFrameId);
+      } else {
+        gopkgs.SetInputFrameId(ifdHolder, gapInputFrameId);
+        for (let k = 0; k < window.boundRoomCapacity; ++k) {
+          gopkgs.SetInput(ifdHolder, k, prefabbedInputList[k]);
+        }
+        gopkgs.SetConfirmedList(ifdHolder, initConfirmedList);
+      }
     }
 
     return [previousSelfInput, currSelfInput];
@@ -680,7 +693,7 @@ cc.Class({
     }
 
     // This function is also applicable to "re-joining".
-    const rdf = gopkgs.NewRoomDownsyncFrameJs(pbRdf.id, jsPlayersArr, pbRdf.bulletLocalIdCounter, jsMeleeBulletsArr, jsFireballBulletsArr);
+    const rdf = gopkgs.NewRoomDownsyncFrameJs(pbRdf.id, jsPlayersArr, pbRdf.bulletLocalIdCounter, jsMeleeBulletsArr, jsFireballBulletsArr); // TODO: Check whether a "proper" preallocated rdf is available and reuse it to avoid redundant heap alloc. By "proper" I mean "pbRdf.id" should yield a "non window.RING_BUFF_FAILED_TO_SET" result, yet currently it's a bit difficult to sort out the following codes for efficient reuse, thus I'm keeping it as-is. 
     const self = window.mapIns;
     self.onInputFrameDownsyncBatch(accompaniedInputFrameDownsyncBatch); // Important to do this step before setting IN_BATTLE
     if (!self.recentRenderCache) {
