@@ -1210,10 +1210,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		}
 	}
 
-    for i := 0; i < colliderCnt; i++ {
-        dynamicCollider := dynamicRectangleColliders[i]
+	for i := 0; i < colliderCnt; i++ {
+		dynamicCollider := dynamicRectangleColliders[i]
 		dynamicCollider.Space.RemoveSingle(dynamicCollider)
-    }
+	}
 
 	ret.Id = nextRenderFrameId
 	ret.BulletLocalIdCounter = bulletLocalId
@@ -1236,9 +1236,10 @@ func generateRectColliderInCollisionSpace(blX, blY, w, h float64, data interface
 
 func UpdateRectCollider(collider *resolv.Object, wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) {
 	blX, blY := WorldToPolygonColliderBLPos(wx, wy, w*0.5, h*0.5, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY)
-	collider.X, collider.Y, collider.W, collider.H = blX, blY, w, h
+	effW, effH := leftPadding+w+rightPadding, bottomPadding+h+topPadding
+	collider.X, collider.Y, collider.W, collider.H = blX, blY, effW, effH
 	rectShape := collider.Shape.(*resolv.ConvexPolygon)
-	rectShape.UpdateAsRectangle(0, 0, w, h)
+	rectShape.UpdateAsRectangle(0, 0, effW, effH)
 	collider.Data = data
 	// Ignore "tag" for now
 }

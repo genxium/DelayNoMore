@@ -462,7 +462,7 @@ cc.Class({
   },
 
   onLoad() {
-    cc.game.setFrameRate(60);
+    cc.game.setFrameRate(59.9);
     cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
     cc.view.enableAutoFullScreen(true);
 
