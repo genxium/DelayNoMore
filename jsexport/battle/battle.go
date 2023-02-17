@@ -590,44 +590,17 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	// [WARNING] On backend this function MUST BE called while "InputsBufferLock" is locked!
 	nextRenderFramePlayers := ret.PlayersArr
 	// Make a copy first
-	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
-		nextRenderFramePlayers[i].Id = currPlayerDownsync.Id
-		nextRenderFramePlayers[i].VirtualGridX = currPlayerDownsync.VirtualGridX
-		nextRenderFramePlayers[i].VirtualGridY = currPlayerDownsync.VirtualGridY
-		nextRenderFramePlayers[i].DirX = currPlayerDownsync.DirX
-		nextRenderFramePlayers[i].DirY = currPlayerDownsync.DirY
-		nextRenderFramePlayers[i].VelX = currPlayerDownsync.VelX
-		nextRenderFramePlayers[i].VelY = currPlayerDownsync.VelY
-		nextRenderFramePlayers[i].CharacterState = currPlayerDownsync.CharacterState
-		nextRenderFramePlayers[i].InAir = true
-		nextRenderFramePlayers[i].OnWall = false
-		nextRenderFramePlayers[i].Speed = currPlayerDownsync.Speed
-		nextRenderFramePlayers[i].BattleState = currPlayerDownsync.BattleState
-		nextRenderFramePlayers[i].Score = currPlayerDownsync.Score
-		nextRenderFramePlayers[i].Removed = currPlayerDownsync.Removed
-		nextRenderFramePlayers[i].JoinIndex = currPlayerDownsync.JoinIndex
-		nextRenderFramePlayers[i].Hp = currPlayerDownsync.Hp
-		nextRenderFramePlayers[i].MaxHp = currPlayerDownsync.MaxHp
-		nextRenderFramePlayers[i].FramesToRecover = currPlayerDownsync.FramesToRecover - 1
-		nextRenderFramePlayers[i].FramesInChState = currPlayerDownsync.FramesInChState + 1
-		nextRenderFramePlayers[i].ActiveSkillId = currPlayerDownsync.ActiveSkillId
-		nextRenderFramePlayers[i].ActiveSkillHit = currPlayerDownsync.ActiveSkillHit
-		nextRenderFramePlayers[i].FramesInvinsible = currPlayerDownsync.FramesInvinsible - 1
-		nextRenderFramePlayers[i].BulletTeamId = currPlayerDownsync.BulletTeamId
-		nextRenderFramePlayers[i].ChCollisionTeamId = currPlayerDownsync.ChCollisionTeamId
-		nextRenderFramePlayers[i].RevivalVirtualGridX = currPlayerDownsync.RevivalVirtualGridX
-		nextRenderFramePlayers[i].RevivalVirtualGridY = currPlayerDownsync.RevivalVirtualGridY
-		nextRenderFramePlayers[i].ColliderRadius = currPlayerDownsync.ColliderRadius
-		nextRenderFramePlayers[i].OnWallNormX = currPlayerDownsync.OnWallNormX
-		nextRenderFramePlayers[i].OnWallNormY = currPlayerDownsync.OnWallNormY
-		nextRenderFramePlayers[i].CapturedByInertia = currPlayerDownsync.CapturedByInertia
-
-		if nextRenderFramePlayers[i].FramesToRecover < 0 {
-			nextRenderFramePlayers[i].FramesToRecover = 0
+	for i, src := range currRenderFrame.PlayersArr {
+		framesToRecover := src.FramesToRecover - 1
+		framesInChState := src.FramesInChState + 1
+		framesInvinsible := src.FramesInvinsible - 1
+		if framesToRecover < 0 {
+			framesToRecover = 0
 		}
-		if nextRenderFramePlayers[i].FramesInvinsible < 0 {
-			nextRenderFramePlayers[i].FramesInvinsible = 0
+		if framesInvinsible < 0 {
+			framesInvinsible = 0
 		}
+		ClonePlayerDownsync(src.Id, src.VirtualGridX, src.VirtualGridY, src.DirX, src.DirY, src.VelX, src.VelY, framesToRecover, framesInChState, src.ActiveSkillId, src.ActiveSkillHit, framesInvinsible, src.Speed, src.BattleState, src.CharacterState, src.JoinIndex, src.Hp, src.MaxHp, src.ColliderRadius, true, false, src.OnWallNormX, src.OnWallNormY, src.CapturedByInertia, src.BulletTeamId, src.ChCollisionTeamId, src.RevivalVirtualGridX, src.RevivalVirtualGridY, nextRenderFramePlayers[i])
 	}
 
 	meleeBulletCnt := 0
@@ -658,13 +631,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			// Hardcoded to use only the first hit for now
 			switch v := skillConfig.Hits[thatPlayerInNextFrame.ActiveSkillHit].(type) {
 			case *MeleeBullet:
-				nextRenderFrameMeleeBullets[meleeBulletCnt].BlState = BULLET_STARTUP
-				nextRenderFrameMeleeBullets[meleeBulletCnt].FramesInBlState = 0
-				nextRenderFrameMeleeBullets[meleeBulletCnt].Bullet = v.Bullet
-				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.BulletLocalId = bulletLocalId
-				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.OriginatedRenderFrameId = currRenderFrame.Id
-				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.OffenderJoinIndex = joinIndex
-				nextRenderFrameMeleeBullets[meleeBulletCnt].BattleAttr.TeamId = currPlayerDownsync.BulletTeamId
+				CloneMeleeBullet(BULLET_STARTUP, 0, bulletLocalId, currRenderFrameId, joinIndex, currPlayerDownsync.BulletTeamId, v.Bullet, nextRenderFrameMeleeBullets[meleeBulletCnt])
 				bulletLocalId++
 				meleeBulletCnt++
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
@@ -676,19 +643,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 					thatPlayerInNextFrame.VelY = v.Bullet.SelfLockVelY
 				}
 			case *FireballBullet:
-				nextRenderFrameFireballBullets[fireballBulletCnt].BlState = BULLET_STARTUP
-				nextRenderFrameFireballBullets[fireballBulletCnt].FramesInBlState = 0
-				nextRenderFrameFireballBullets[fireballBulletCnt].Bullet = v.Bullet
-				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.BulletLocalId = bulletLocalId
-				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.OriginatedRenderFrameId = currRenderFrame.Id
-				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.OffenderJoinIndex = joinIndex
-				nextRenderFrameFireballBullets[fireballBulletCnt].BattleAttr.TeamId = currPlayerDownsync.BulletTeamId
-				nextRenderFrameFireballBullets[fireballBulletCnt].VirtualGridX = currPlayerDownsync.VirtualGridX + xfac*v.Bullet.HitboxOffsetX
-				nextRenderFrameFireballBullets[fireballBulletCnt].VirtualGridY = currPlayerDownsync.VirtualGridY + v.Bullet.HitboxOffsetY
-				nextRenderFrameFireballBullets[fireballBulletCnt].DirX = xfac
-				nextRenderFrameFireballBullets[fireballBulletCnt].DirY = 0
-				nextRenderFrameFireballBullets[fireballBulletCnt].VelX = v.Speed * xfac
-				nextRenderFrameFireballBullets[fireballBulletCnt].VelY = 0
+				CloneFireballBullet(BULLET_STARTUP, 0, currPlayerDownsync.VirtualGridX+xfac*v.Bullet.HitboxOffsetX, currPlayerDownsync.VirtualGridY+v.Bullet.HitboxOffsetY, xfac, 0, v.Speed*xfac, 0, v.Speed, bulletLocalId, currRenderFrameId, joinIndex, currPlayerDownsync.BulletTeamId, v.Bullet, nextRenderFrameFireballBullets[fireballBulletCnt])
 				bulletLocalId++
 				fireballBulletCnt++
 				if NO_LOCK_VEL != v.Bullet.SelfLockVelX {
@@ -864,17 +819,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			break
 		}
 		fireballBullet := nextRenderFrameFireballBullets[fireballBulletCnt]
-		fireballBullet.VirtualGridX = prevFireball.VirtualGridX
-		fireballBullet.VirtualGridY = prevFireball.VirtualGridY
-		fireballBullet.DirX = prevFireball.DirX
-		fireballBullet.DirY = prevFireball.DirY
-		fireballBullet.VelX = prevFireball.VelX
-		fireballBullet.VelY = prevFireball.VelY
-		fireballBullet.Speed = prevFireball.Speed
-		fireballBullet.Bullet = prevFireball.Bullet
-		fireballBullet.BattleAttr = prevFireball.BattleAttr
-		fireballBullet.FramesInBlState = prevFireball.FramesInBlState + 1
-		fireballBullet.BlState = prevFireball.BlState
+		CloneFireballBullet(prevFireball.BlState, prevFireball.FramesInBlState, prevFireball.VirtualGridX, prevFireball.VirtualGridY, prevFireball.DirX, prevFireball.DirY, prevFireball.VelX, prevFireball.VelY, prevFireball.Speed, prevFireball.BattleAttr.BulletLocalId, prevFireball.BattleAttr.OriginatedRenderFrameId, prevFireball.BattleAttr.OffenderJoinIndex, prevFireball.BattleAttr.TeamId, prevFireball.Bullet, fireballBullet)
 
 		if IsFireballBulletAlive(fireballBullet, currRenderFrame) {
 			if IsFireballBulletActive(fireballBullet, currRenderFrame) {
@@ -1437,17 +1382,17 @@ func NewPlayerDownsync(id, virtualGridX, virtualGridY, dirX, dirY, velX, velY, f
 	}
 }
 
-func CloneMeleeBullet(blState, framesInBlState int32, dynamicBattleAttr *BulletBattleAttr, staticBulletConfig *BulletConfig, dst *MeleeBullet /* preallocated */) {
+func CloneMeleeBullet(blState, framesInBlState, bulletLocalId, originatedRenderFrameId, offenderJoinIndex, teamId int32, staticBulletConfig *BulletConfig, dst *MeleeBullet /* preallocated */) {
 	dst.BlState = blState
 	dst.FramesInBlState = framesInBlState
-	dst.BattleAttr.BulletLocalId = dynamicBattleAttr.BulletLocalId
-	dst.BattleAttr.OriginatedRenderFrameId = dynamicBattleAttr.OriginatedRenderFrameId
-	dst.BattleAttr.OffenderJoinIndex = dynamicBattleAttr.OffenderJoinIndex
-	dst.BattleAttr.TeamId = dynamicBattleAttr.TeamId
+	dst.BattleAttr.BulletLocalId = bulletLocalId
+	dst.BattleAttr.OriginatedRenderFrameId = originatedRenderFrameId
+	dst.BattleAttr.OffenderJoinIndex = offenderJoinIndex
+	dst.BattleAttr.TeamId = teamId
 	dst.Bullet = staticBulletConfig // It's OK to just assign the pointer here, static bullet config is meant to be passed this way
 }
 
-func CloneFireballBullet(blState, framesInBlState, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed int32, dynamicBattleAttr *BulletBattleAttr, staticBulletConfig *BulletConfig, dst *FireballBullet /* preallocated */) {
+func CloneFireballBullet(blState, framesInBlState, virtualGridX, virtualGridY, dirX, dirY, velX, velY, speed, bulletLocalId, originatedRenderFrameId, offenderJoinIndex, teamId int32, staticBulletConfig *BulletConfig, dst *FireballBullet /* preallocated */) {
 	dst.BlState = blState
 	dst.FramesInBlState = framesInBlState
 	dst.VirtualGridX = virtualGridX
@@ -1457,10 +1402,10 @@ func CloneFireballBullet(blState, framesInBlState, virtualGridX, virtualGridY, d
 	dst.VelX = velX
 	dst.VelY = velY
 	dst.Speed = speed
-	dst.BattleAttr.BulletLocalId = dynamicBattleAttr.BulletLocalId
-	dst.BattleAttr.OriginatedRenderFrameId = dynamicBattleAttr.OriginatedRenderFrameId
-	dst.BattleAttr.OffenderJoinIndex = dynamicBattleAttr.OffenderJoinIndex
-	dst.BattleAttr.TeamId = dynamicBattleAttr.TeamId
+	dst.BattleAttr.BulletLocalId = bulletLocalId
+	dst.BattleAttr.OriginatedRenderFrameId = originatedRenderFrameId
+	dst.BattleAttr.OffenderJoinIndex = offenderJoinIndex
+	dst.BattleAttr.TeamId = teamId
 	dst.Bullet = staticBulletConfig // It's OK to just assign the pointer here, static bullet config is meant to be passed this way
 }
 
@@ -1511,7 +1456,7 @@ func CloneRoomDownsyncFrame(id int32, playersArr []*PlayerDownsync, bulletLocalI
 		if nil == src || TERMINATING_BULLET_LOCAL_ID == src.BattleAttr.BulletLocalId {
 			break
 		}
-		CloneMeleeBullet(src.BlState, src.FramesInBlState, src.BattleAttr, src.Bullet, dst.MeleeBullets[i])
+		CloneMeleeBullet(src.BlState, src.FramesInBlState, src.BattleAttr.BulletLocalId, src.BattleAttr.OriginatedRenderFrameId, src.BattleAttr.OffenderJoinIndex, src.BattleAttr.TeamId, src.Bullet, dst.MeleeBullets[i])
 	}
 
 	for i := 0; i < len(fireballBullets); i++ {
@@ -1519,7 +1464,7 @@ func CloneRoomDownsyncFrame(id int32, playersArr []*PlayerDownsync, bulletLocalI
 		if nil == src || TERMINATING_BULLET_LOCAL_ID == src.BattleAttr.BulletLocalId {
 			break
 		}
-		CloneFireballBullet(src.BlState, src.FramesInBlState, src.VirtualGridX, src.VirtualGridY, src.DirX, src.DirY, src.VelX, src.VelY, src.Speed, src.BattleAttr, src.Bullet, dst.FireballBullets[i])
+		CloneFireballBullet(src.BlState, src.FramesInBlState, src.VirtualGridX, src.VirtualGridY, src.DirX, src.DirY, src.VelX, src.VelY, src.Speed, src.BattleAttr.BulletLocalId, src.BattleAttr.OriginatedRenderFrameId, src.BattleAttr.OffenderJoinIndex, src.BattleAttr.TeamId, src.Bullet, dst.FireballBullets[i])
 	}
 }
 

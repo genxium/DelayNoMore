@@ -438,9 +438,9 @@ cc.Class({
       for (let k in collisionSpaceObjs) {
         const body = collisionSpaceObjs[k];
         let padding = 0;
-        if (null != body.GetData() && null != body.GetData().JoinIndex) {
+        if (null != body.GetData() && null != body.GetData().GetJoinIndex) {
           // character
-          if (1 == body.GetData().JoinIndex) {
+          if (1 == body.GetData().GetJoinIndex()) {
             g1.strokeColor = cc.Color.BLUE;
           } else {
             g1.strokeColor = cc.Color.RED;
@@ -509,7 +509,8 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {};
+    resultPanelScriptIns.onCloseDelegate = () => {
+    };
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -720,7 +721,7 @@ cc.Class({
 
     const [dumpRenderCacheRet, oldStRenderFrameId, oldEdRenderFrameId] = (shouldForceDumping1 || shouldForceDumping2 || shouldForceResync) ? self.recentRenderCache.SetByFrameId(rdf, rdfId) : [window.RING_BUFF_CONSECUTIVE_SET, null, null];
     if (window.RING_BUFF_FAILED_TO_SET == dumpRenderCacheRet) {
-      throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.Id=${rdfId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
+      throw `Failed to dump render cache#1 (maybe recentRenderCache too small)! rdf.GetId()=${rdfId}, lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}; recentRenderCache=${self._stringifyRecentRenderCache(false)}, recentInputCache=${self._stringifyRecentInputCache(false)}`;
     }
     if (!shouldForceResync && (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START < rdfId && window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet)) {
       /*
@@ -744,7 +745,7 @@ cc.Class({
         console.log('On battle started! renderFrameId=', rdfId);
       } else {
         self.hideFindingPlayersGUI();
-        console.warn('On battle resynced! renderFrameId=', rdf.Id);
+        console.warn('On battle resynced! renderFrameId=', rdf.GetId());
       }
 
       self.renderFrameId = rdfId;
@@ -791,20 +792,20 @@ cc.Class({
     if (null == lhs || null == rhs) return false;
     if (null == lhs && null != rhs) return false;
     if (null != lhs && null == rhs) return false;
-    if (lhs.VirtualGridX != rhs.VirtualGridX) return false;
-    if (lhs.VirtualGridY != rhs.VirtualGridY) return false;
-    if (lhs.DirX != rhs.DirX) return false;
-    if (lhs.DirY != rhs.DirY) return false;
-    if (lhs.VelX != rhs.VelX) return false;
-    if (lhs.VelY != rhs.VelY) return false;
-    if (lhs.Speed != rhs.Speed) return false;
-    if (lhs.Hp != rhs.Hp) return false;
-    if (lhs.MaxHp != rhs.MaxHp) return false;
-    if (lhs.CharacterState != rhs.CharacterState) return false;
-    if (lhs.InAir != rhs.InAir) return false;
-    if (lhs.OnWall != rhs.OnWall) return false;
-    if (lhs.FramesToRecover != rhs.FramesToRecover) return false;
-    if (lhs.FramesInChState != rhs.FramesInChState) return false;
+    if (lhs.GetVirtualGridX() != rhs.GetVirtualGridX()) return false;
+    if (lhs.GetVirtualGridY() != rhs.GetVirtualGridY()) return false;
+    if (lhs.GetDirX() != rhs.GetDirX()) return false;
+    if (lhs.GetDirY() != rhs.GetDirY()) return false;
+    if (lhs.GetVelX() != rhs.GetVelX()) return false;
+    if (lhs.GetVelY() != rhs.GetVelY()) return false;
+    if (lhs.GetSpeed() != rhs.GetSpeed()) return false;
+    if (lhs.GetHp() != rhs.GetHp()) return false;
+    if (lhs.GetMaxHp() != rhs.GetMaxHp()) return false;
+    if (lhs.GetCharacterState() != rhs.GetCharacterState()) return false;
+    if (lhs.GetInAir() != rhs.GetInAir()) return false;
+    if (lhs.GetOnWall() != rhs.GetOnWall()) return false;
+    if (lhs.GetFramesToRecover() != rhs.GetFramesToRecover()) return false;
+    if (lhs.GetFramesInChState() != rhs.GetFramesInChState()) return false;
     return true;
   },
 
@@ -812,9 +813,9 @@ cc.Class({
     if (null == lhs || null == rhs) return false;
     if (null == lhs && null != rhs) return false;
     if (null != lhs && null == rhs) return false;
-    if (lhs.BattleAttr.BulletLocalId != rhs.BattleAttr.BulletLocalId) return false;
-    if (lhs.BattleAttr.OffenderJoinIndex != rhs.BattleAttr.OffenderJoinIndex) return false;
-    if (lhs.BattleAttr.OriginatedRenderFrameId != rhs.BattleAttr.OriginatedRenderFrameId) return false;
+    if (lhs.GetBulletLocalId() != rhs.GetBulletLocalId()) return false;
+    if (lhs.GetOffenderJoinIndex() != rhs.GetOffenderJoinIndex()) return false;
+    if (lhs.GetOriginatedRenderFrameId() != rhs.GetOriginatedRenderFrameId()) return false;
     return true;
   },
 
@@ -822,31 +823,39 @@ cc.Class({
     if (null == lhs || null == rhs) return false;
     if (null == lhs && null != rhs) return false;
     if (null != lhs && null == rhs) return false;
-    if (lhs.BattleAttr.BulletLocalId != rhs.BattleAttr.BulletLocalId) return false;
-    if (lhs.BattleAttr.OffenderJoinIndex != rhs.BattleAttr.OffenderJoinIndex) return false;
-    if (lhs.BattleAttr.OriginatedRenderFrameId != rhs.BattleAttr.OriginatedRenderFrameId) return false;
+    if (lhs.GetBulletLocalId() != rhs.GetBulletLocalId()) return false;
+    if (lhs.GetOffenderJoinIndex() != rhs.GetOffenderJoinIndex()) return false;
+    if (lhs.GetOriginatedRenderFrameId() != rhs.GetOriginatedRenderFrameId()) return false;
 
-    if (lhs.VirtualGridX != rhs.VirtualGridX) return false;
-    if (lhs.VirtualGridY != rhs.VirtualGridY) return false;
-    if (lhs.DirX != rhs.DirX) return false;
-    if (lhs.DirY != rhs.DirY) return false;
-    if (lhs.VelX != rhs.VelX) return false;
-    if (lhs.VelY != rhs.VelY) return false;
-    if (lhs.Speed != rhs.Speed) return false;
+    if (lhs.GetVirtualGridX() != rhs.GetVirtualGridX()) return false;
+    if (lhs.GetVirtualGridY() != rhs.GetVirtualGridY()) return false;
+    if (lhs.GetDirX() != rhs.GetDirX()) return false;
+    if (lhs.GetDirY() != rhs.GetDirY()) return false;
+    if (lhs.GetVelX() != rhs.GetVelX()) return false;
+    if (lhs.GetVelY() != rhs.GetVelY()) return false;
+    if (lhs.GetSpeed() != rhs.GetSpeed()) return false;
 
     return true;
   },
 
   equalRoomDownsyncFrames(lhs, rhs) {
     if (null == lhs || null == rhs) return false;
-    for (let k in lhs.PlayersArr) {
-      if (!this.equalPlayers(lhs.PlayersArr[k], rhs.PlayersArr[k])) return false;
+    for (let k = 0; k < window.boundRoomCapacity; k++) {
+      const lp = gopkgs.GetPlayer(lhs, k);
+      const rp = gopkgs.GetPlayer(rhs, k);
+      if (!this.equalPlayers(lp, rp)) return false;
     }
-    for (let k in lhs.MeleeBullets) {
-      if (!this.equalMeleeBullets(lhs.MeleeBullets[k], rhs.MeleeBullets[k])) return false;
+    for (let k = 0;; k++) {
+      const lblt = gopkgs.GetMeleeBullet(lhs, k);
+      const rblt = gopkgs.GetMeleeBullet(rhs, k);
+      if (null == lblt && null == rblt) break;
+      if (!this.equalMeleeBullets(lblt, rblt)) return false;
     }
-    for (let k in lhs.FireballBullets) {
-      if (!this.equalFireballBullets(lhs.FireballBullets[k], rhs.FireballBullets[k])) return false;
+    for (let k = 0;; k++) {
+      const lblt = gopkgs.GetFireballBullet(lhs, k);
+      const rblt = gopkgs.GetFireballBullet(rhs, k);
+      if (null == lblt && null == rblt) break;
+      if (!this.equalFireballBullets(lblt, rblt)) return false;
     }
     return true;
   },
@@ -1144,15 +1153,15 @@ fromUDP=${fromUDP}`);
         }  
         */
         // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.GetByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
-        if (self.othersForcedDownsyncRenderFrameDict.has(rdf.Id)) {
-          const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.Id);
-          const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.Id);
+        if (self.othersForcedDownsyncRenderFrameDict.has(rdf.GetId())) {
+          const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.GetId());
+          const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.GetId());
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
-            console.warn(`Mismatched render frame@rdf.id=${rdf.Id} w/ inputFrameId=${delayedInputFrameId}:
+            console.warn(`Mismatched render frame@rdf.id=${rdf.GetId()} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${JSON.stringify(rdf)}
 othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}`);
             rdf = othersForcedDownsyncRenderFrame;
-            self.othersForcedDownsyncRenderFrameDict.delete(rdf.Id);
+            self.othersForcedDownsyncRenderFrameDict.delete(rdf.GetId());
           }
         }
         self.applyRoomDownsyncFrameDynamics(rdf, prevRdf);
@@ -1337,9 +1346,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
-        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+        //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${meleeBullet.GetOriginatedRenderFrameId()}, startupFrames=${meleeBullet.GetStartupFrames()}, using a new fireball node for rendering for bulletLocalId=${meleeBullet.GetBulletLocalId()} at wpos=(${wx},${wy})`);
         } else {
-          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, using a cached fireball node for rendering for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+          //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${meleeBullet.GetOriginatedRenderFrameId()}, startupFrames=${meleeBullet.GetStartupFrames()}, using a cached fireball node for rendering for bulletLocalId=${meleeBullet.GetBulletLocalId()} at wpos=(${wx},${wy})`);
         }
         const cachedFireball = pqNode.value;
         cachedFireball.setSpecies(speciesName, meleeBullet, rdf);
@@ -1351,7 +1360,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
         self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, meleeBullet.GetBulletLocalId());
       } else {
-        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${meleeBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${meleeBullet.Bullet.StartupFrames}, activeFrames=${meleeBullet.Bullet.ActiveFrames}, not rendering melee node for bulletLocalId=${meleeBullet.BattleAttr.BulletLocalId}`);
+        //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${meleeBullet.GetOriginatedRenderFrameId()}, startupFrames=${meleeBullet.GetStartupFrames()}, activeFrames=${meleeBullet.GetActiveFrames()}, not rendering melee node for bulletLocalId=${meleeBullet.GetBulletLocalId()}`);
       }
     }
     for (let k = 0;; k++) {
@@ -1369,9 +1378,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
         if (null == pqNode) {
           pqNode = self.cachedFireballs.pop();
-        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+        //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${fireballBullet.GetOriginatedRenderFrameId()}, startupFrames=${fireballBullet.GetStartupFrames()}, using a new fireball node for rendering for bulletLocalId=${fireballBullet.GetBulletLocalId()} at wpos=(${wx},${wy})`);
         } else {
-          //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId} at wpos=(${wx},${wy})`);
+          //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${fireballBullet.GetOriginatedRenderFrameId()}, startupFrames=${fireballBullet.GetStartupFrames()}, using a cached fireball node for rendering for bulletLocalId=${fireballBullet.GetBulletLocalId()} at wpos=(${wx},${wy})`);
         }
         const cachedFireball = pqNode.value;
         cachedFireball.setSpecies(speciesName, fireballBullet, rdf);
@@ -1384,7 +1393,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
         self.cachedFireballs.push(cachedFireball.lastUsed, cachedFireball, fireballBullet.GetBulletLocalId());
       } else {
-        //console.log(`@rdf.Id=${rdf.Id}, origRdfId=${fireballBullet.BattleAttr.OriginatedRenderFrameId}, startupFrames=${fireballBullet.Bullet.StartupFrames}, activeFrames=${fireballBullet.Bullet.ActiveFrames}, not rendering fireball node for bulletLocalId=${fireballBullet.BattleAttr.BulletLocalId}`);
+        //console.log(`@rdf.GetId()=${rdf.GetId()}, origRdfId=${fireballBullet.GetOriginatedRenderFrameId()}, startupFrames=${fireballBullet.GetStartupFrames()}, activeFrames=${fireballBullet.GetActiveFrames()}, not rendering fireball node for bulletLocalId=${fireballBullet.GetBulletLocalId()}`);
       }
     }
 
@@ -1477,11 +1486,11 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
   _stringifyGopkgRoomDownsyncFrame(rdf) {
     let s = [];
     s.push(`{`);
-    s.push(`  id: ${rdf.Id}`);
+    s.push(`  id: ${rdf.GetId()}`);
     s.push(`  players: [`);
     for (let k in rdf.GetPlayersArr()) {
       const player = rdf.GetPlayersArr()[k];
-      s.push(`    {joinIndex: ${player.JoinIndex}, id: ${player.Id}, vx: ${player.VirtualGridX}, vy: ${player.VirtualGridY}, velX: ${player.VelX}, velY: ${player.VelY}}`);
+      s.push(`    {joinIndex: ${player.GetJoinIndex()}, id: ${player.Id}, vx: ${player.GetVirtualGridX()}, vy: ${player.GetVirtualGridY()}, velX: ${player.GetVelX()}, velY: ${player.GetVelY()}}`);
     }
     s.push(`  ]`);
     s.push(`}`);
@@ -1504,12 +1513,12 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
 
   playerDownsyncStr(playerDownsync) {
     if (null == playerDownsync) return "";
-    return `{${playerDownsync.JoinIndex},${playerDownsync.VirtualGridX},${playerDownsync.VirtualGridY},${playerDownsync.VelX},${playerDownsync.VelY},${playerDownsync.FramesToRecover},${playerDownsync.InAir ? 1 : 0},${playerDownsync.OnWall ? 1 : 0}}`;
+    return `{${playerDownsync.GetJoinIndex()},${playerDownsync.GetVirtualGridX()},${playerDownsync.GetVirtualGridY()},${playerDownsync.GetVelX()},${playerDownsync.GetVelY()},${playerDownsync.GetFramesToRecover()},${playerDownsync.GetInAir() ? 1 : 0},${playerDownsync.GetOnWall() ? 1 : 0}}`;
   },
 
   fireballDownsyncStr(fireball) {
     if (null == fireball) return "";
-    return `{${fireball.BattleAttr.BulletLocalId},${fireball.BattleAttr.OriginatedRenderFrameId},${fireball.BattleAttr.OffenderJoinIndex},${fireball.VirtualGridX},${fireball.VirtualGridY},${fireball.VelX},${fireball.VelY},${fireball.DirX},${fireball.DirY},${fireball.Bullet.HitboxSizeX},${fireball.Bullet.HitboxSizeY}}`;
+    return `{${fireball.GetBulletLocalId()},${fireball.GetOriginatedRenderFrameId()},${fireball.GetOffenderJoinIndex()},${fireball.GetVirtualGridX()},${fireball.GetVirtualGridY()},${fireball.GetVelX()},${fireball.GetVelY()},${fireball.GetDirX()},${fireball.GetDirY()},${fireball.GetHitboxSizeX()},${fireball.GetHitboxSizeY()}}`;
   },
 
   inputFrameDownsyncStr(inputFrameDownsync) {
@@ -1581,31 +1590,30 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
       let g2 = self.g2;
       g2.clear();
 
-      const playersArr = rdf.GetPlayersArr();
-      for (let k in playersArr) {
-        const player = playersArr[k];
-        if (1 == player.JoinIndex) {
+      for (let k = 0; k < window.boundRoomCapacity; k++) {
+        const player = gopkgs.GetPlayer(rdf, k);
+        if (1 == player.GetJoinIndex()) {
           g2.strokeColor = cc.Color.BLUE;
         } else {
           g2.strokeColor = cc.Color.RED;
         }
 
-        let [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 4];
-        switch (player.CharacterState) {
+        let [colliderWidth, colliderHeight] = [player.GetColliderRadius() * 2, player.GetColliderRadius() * 4];
+        switch (player.GetCharacterState()) {
           case ATK_CHARACTER_STATE.LayDown1[0]:
-            [colliderWidth, colliderHeight] = [player.ColliderRadius * 4, player.ColliderRadius * 2];
+            [colliderWidth, colliderHeight] = [player.GetColliderRadius() * 4, player.GetColliderRadius() * 2];
             break;
           case ATK_CHARACTER_STATE.BlownUp1[0]:
           case ATK_CHARACTER_STATE.InAirIdle1NoJump[0]:
           case ATK_CHARACTER_STATE.InAirIdle1ByJump[0]:
           case ATK_CHARACTER_STATE.OnWall[0]:
-            [colliderWidth, colliderHeight] = [player.ColliderRadius * 2, player.ColliderRadius * 2];
+            [colliderWidth, colliderHeight] = [player.GetColliderRadius() * 2, player.GetColliderRadius() * 2];
             break;
         }
 
         const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((colliderWidth >> 1), (colliderHeight >> 1));
 
-        const [wx, wy] = gopkgs.VirtualGridToWorldPos(player.VirtualGridX, player.VirtualGridY);
+        const [wx, wy] = gopkgs.VirtualGridToWorldPos(player.GetVirtualGridX(), player.GetVirtualGridY());
         const [cx, cy] = gopkgs.WorldToPolygonColliderBLPos(wx, wy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
         const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 
@@ -1617,23 +1625,25 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
         g2.stroke();
       }
 
-      const meleeBullets = rdf.MeleeBullets;
-      for (let k in meleeBullets) {
-        const meleeBullet = meleeBullets[k];
-        if (gopkgs.IsGeneralBulletActive(meleeBullet.BlState, meleeBullet.BattleAttr.OriginatedRenderFrameId, meleeBullet.Bullet.StartupFrames, meleeBullet.Bullet.ActiveFrames, rdf.Id)) {
-          const offender = playersArr[meleeBullet.BattleAttr.OffenderJoinIndex - 1];
-          if (1 == offender.JoinIndex) {
+      for (let k = 0;; k++) {
+        const meleeBullet = gopkgs.GetMeleeBullet(rdf, k);
+        if (null == meleeBullet) {
+          break;
+        }
+        if (gopkgs.IsGeneralBulletActive(meleeBullet.GetBlState(), meleeBullet.GetOriginatedRenderFrameId(), meleeBullet.GetStartupFrames(), meleeBullet.GetActiveFrames(), rdf.GetId())) {
+          const offender = gopkgs.GetPlayer(rdf, meleeBullet.GetOffenderJoinIndex() - 1);
+          if (1 == offender.GetJoinIndex()) {
             g2.strokeColor = cc.Color.BLUE;
           } else {
             g2.strokeColor = cc.Color.RED;
           }
 
           let xfac = 1; // By now, straight Punch offset doesn't respect "y-axis"
-          if (0 > offender.DirX) {
+          if (0 > offender.GetDirX()) {
             xfac = -1;
           }
-          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.VirtualGridX + xfac * meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY);
-          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.Bullet.HitboxSizeX >> 1), (meleeBullet.Bullet.HitboxSizeY >> 1));
+          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(offender.GetVirtualGridX() + xfac * meleeBullet.GetHitboxOffsetX(), offender.GetVirtualGridY());
+          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((meleeBullet.GetHitboxSizeX() >> 1), (meleeBullet.GetHitboxSizeY() >> 1));
           const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
           const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 
@@ -1646,19 +1656,21 @@ actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
         }
       }
 
-      const fireballBullets = rdf.FireballBullets;
-      for (let k in fireballBullets) {
-        const fireballBullet = fireballBullets[k];
-        if (gopkgs.IsGeneralBulletActive(fireballBullet.BlState, fireballBullet.BattleAttr.OriginatedRenderFrameId, fireballBullet.Bullet.StartupFrames, fireballBullet.Bullet.ActiveFrames, rdf.Id)) {
-          const offender = playersArr[fireballBullet.BattleAttr.OffenderJoinIndex - 1];
-          if (1 == offender.JoinIndex) {
+      for (let k = 0;; k++) {
+        const fireballBullet = gopkgs.GetFireballBullet(rdf, k);
+        if (null == fireballBullet) {
+          break;
+        }
+        if (gopkgs.IsGeneralBulletActive(fireballBullet.GetBlState(), fireballBullet.GetOriginatedRenderFrameId(), fireballBullet.GetStartupFrames(), fireballBullet.GetActiveFrames(), rdf.GetId())) {
+          const offender = gopkgs.GetPlayer(rdf, fireballBullet.GetOffenderJoinIndex() - 1);
+          if (1 == offender.GetJoinIndex()) {
             g2.strokeColor = cc.Color.BLUE;
           } else {
             g2.strokeColor = cc.Color.RED;
           }
 
-          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
-          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((fireballBullet.Bullet.HitboxSizeX >> 1), (fireballBullet.Bullet.HitboxSizeY >> 1));
+          const [bulletWx, bulletWy] = gopkgs.VirtualGridToWorldPos(fireballBullet.GetVirtualGridX(), fireballBullet.GetVirtualGridY());
+          const [halfColliderWidth, halfColliderHeight] = gopkgs.VirtualGridToWorldPos((fireballBullet.GetHitboxSizeX() >> 1), (fireballBullet.GetHitboxSizeY() >> 1));
           const [bulletCx, bulletCy] = gopkgs.WorldToPolygonColliderBLPos(bulletWx, bulletWy, halfColliderWidth, halfColliderHeight, topPadding, bottomPadding, leftPadding, rightPadding, 0, 0);
           const pts = [[0, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, 0], [leftPadding + halfColliderWidth * 2 + rightPadding, bottomPadding + halfColliderHeight * 2 + topPadding], [0, bottomPadding + halfColliderHeight * 2 + topPadding]];
 

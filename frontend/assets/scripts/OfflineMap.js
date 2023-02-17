@@ -16,7 +16,7 @@ cc.Class({
     cc.view.enableAutoFullScreen(true);
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = false;
+    self.showCriticalCoordinateLabels = true;
     self.showNetworkDoctorInfo = true;
 
     const mapNode = self.node;
