@@ -254,7 +254,7 @@ func (obj *Object) CheckAllWithHolder(dx, dy float64, cc *Collision) bool {
 	if obj.Space == nil {
 		return false
 	}
-
+	cc.Clear()
 	cc.checkingObject = obj
 
 	if dx < 0 {

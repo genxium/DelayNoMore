@@ -2856,7 +2856,7 @@ $packages["math"] = (function() {
 	return $pkg;
 })();
 $packages["resolv"] = (function() {
-	var $pkg = {}, $init, math, Vector, Axis, Space, Shape, Line, ConvexPolygon, ContactSet, Circle, Projection, RingBuffer, Object, Collision, Cell, sliceType, ptrType, sliceType$1, sliceType$2, ptrType$1, ptrType$2, sliceType$3, sliceType$4, ptrType$3, sliceType$5, ptrType$4, ptrType$5, ptrType$6, sliceType$6, ptrType$7, sliceType$7, ptrType$8, sliceType$8, ptrType$9, mapType, Dot, NewSpace, NewLine, NewConvexPolygon, NewContactSet, NewRectangle, NewCircle, NewRingBuffer, NewObjectSingleTag, NewObject, axpyUnitaryTo, scalUnitaryTo, NewCollision, newCell;
+	var $pkg = {}, $init, math, Vector, Axis, Space, Shape, Line, ConvexPolygon, ContactSet, Circle, Projection, RingBuffer, Object, Collision, Cell, sliceType, ptrType, sliceType$1, sliceType$2, ptrType$1, ptrType$2, sliceType$3, sliceType$4, ptrType$3, ptrType$4, sliceType$5, ptrType$5, ptrType$6, ptrType$7, sliceType$6, sliceType$7, ptrType$8, sliceType$8, ptrType$9, mapType, Dot, NewSpace, NewLine, NewConvexPolygon, NewContactSet, NewRectangle, NewCircle, NewRingBuffer, NewObjectSingleTag, NewObject, axpyUnitaryTo, scalUnitaryTo, NewCollision, newCell;
 	math = $packages["math"];
 	Vector = $pkg.Vector = $newType(12, $kindSlice, "resolv.Vector", true, "resolv", true, null);
 	Axis = $pkg.Axis = $newType(4, $kindInt, "resolv.Axis", true, "resolv", true, null);
@@ -2886,7 +2886,7 @@ $packages["resolv"] = (function() {
 	ConvexPolygon = $pkg.ConvexPolygon = $newType(0, $kindStruct, "resolv.ConvexPolygon", true, "resolv", true, function(Points_, X_, Y_, Closed_) {
 		this.$val = this;
 		if (arguments.length === 0) {
-			this.Points = sliceType$4.nil;
+			this.Points = ptrType$3.nil;
 			this.X = 0;
 			this.Y = 0;
 			this.Closed = false;
@@ -2960,7 +2960,7 @@ $packages["resolv"] = (function() {
 			this.Y = 0;
 			this.W = 0;
 			this.H = 0;
-			this.TouchingCells = ptrType$7.nil;
+			this.TouchingCells = ptrType$3.nil;
 			this.Data = $ifaceNil;
 			this.ignoreList = false;
 			this.tags = sliceType$7.nil;
@@ -2983,8 +2983,8 @@ $packages["resolv"] = (function() {
 			this.checkingObject = ptrType$2.nil;
 			this.dx = 0;
 			this.dy = 0;
-			this.Objects = ptrType$7.nil;
-			this.Cells = ptrType$7.nil;
+			this.Objects = ptrType$3.nil;
+			this.Cells = ptrType$3.nil;
 			return;
 		}
 		this.checkingObject = checkingObject_;
@@ -2998,7 +2998,7 @@ $packages["resolv"] = (function() {
 		if (arguments.length === 0) {
 			this.X = 0;
 			this.Y = 0;
-			this.Objects = ptrType$7.nil;
+			this.Objects = ptrType$3.nil;
 			return;
 		}
 		this.X = X_;
@@ -3013,13 +3013,13 @@ $packages["resolv"] = (function() {
 	ptrType$2 = $ptrType(Object);
 	sliceType$3 = $sliceType(ptrType$2);
 	sliceType$4 = $sliceType(Vector);
-	ptrType$3 = $ptrType(Line);
-	sliceType$5 = $sliceType(ptrType$3);
-	ptrType$4 = $ptrType(Circle);
-	ptrType$5 = $ptrType(ConvexPolygon);
-	ptrType$6 = $ptrType(ContactSet);
+	ptrType$3 = $ptrType(RingBuffer);
+	ptrType$4 = $ptrType(Line);
+	sliceType$5 = $sliceType(ptrType$4);
+	ptrType$5 = $ptrType(Circle);
+	ptrType$6 = $ptrType(ConvexPolygon);
+	ptrType$7 = $ptrType(ContactSet);
 	sliceType$6 = $sliceType($emptyInterface);
-	ptrType$7 = $ptrType(RingBuffer);
 	sliceType$7 = $sliceType($String);
 	ptrType$8 = $ptrType(Shape);
 	sliceType$8 = $sliceType(Axis);
@@ -3603,48 +3603,79 @@ $packages["resolv"] = (function() {
 	Line.prototype.IntersectionPointsCircle = function(circle) { return this.$val.IntersectionPointsCircle(circle); };
 	NewConvexPolygon = function(points) {
 		var cp, points;
-		cp = new ConvexPolygon.ptr(new sliceType$4([]), 0, 0, true);
+		cp = new ConvexPolygon.ptr(NewRingBuffer(6), 0, 0, true);
 		cp.AddPoints(points);
 		return cp;
 	};
 	$pkg.NewConvexPolygon = NewConvexPolygon;
-	ConvexPolygon.ptr.prototype.Clone = function() {
-		var _i, _ref, cp, newPoly, point, points;
+	ConvexPolygon.ptr.prototype.GetPointByOffset = function(offset) {
+		var cp, offset;
 		cp = this;
-		points = new sliceType$4([]);
-		_ref = cp.Points;
-		_i = 0;
-		while (true) {
-			if (!(_i < _ref.$length)) { break; }
-			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
-			points = $append(points, point.Clone());
-			_i++;
+		if (cp.Points.Cnt <= offset) {
+			return Vector.nil;
 		}
+		return $assertType(cp.Points.GetByFrameId(cp.Points.StFrameId + offset >> 0), Vector);
+	};
+	ConvexPolygon.prototype.GetPointByOffset = function(offset) { return this.$val.GetPointByOffset(offset); };
+	ConvexPolygon.ptr.prototype.Clone = function() {
+		var cp, i, newPoly;
+		cp = this;
 		newPoly = NewConvexPolygon(sliceType.nil);
 		newPoly.X = cp.X;
 		newPoly.Y = cp.Y;
-		newPoly.AddPointsVec(points);
+		i = 0;
+		while (true) {
+			if (!(i < cp.Points.Cnt)) { break; }
+			newPoly.Points.Put(cp.GetPointByOffset(i));
+			i = i + (1) >> 0;
+		}
 		newPoly.Closed = cp.Closed;
 		return newPoly;
 	};
 	ConvexPolygon.prototype.Clone = function() { return this.$val.Clone(); };
-	ConvexPolygon.ptr.prototype.AddPointsVec = function(points) {
-		var cp, points;
-		cp = this;
-		cp.Points = $appendSlice(cp.Points, points);
-	};
-	ConvexPolygon.prototype.AddPointsVec = function(points) { return this.$val.AddPointsVec(points); };
 	ConvexPolygon.ptr.prototype.AddPoints = function(vertexPositions) {
 		var cp, v, vertexPositions, x;
 		cp = this;
 		v = 0;
 		while (true) {
 			if (!(v < vertexPositions.$length)) { break; }
-			cp.Points = $append(cp.Points, new Vector([((v < 0 || v >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + v]), (x = v + 1 >> 0, ((x < 0 || x >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + x]))]));
+			cp.Points.Put(new Vector([((v < 0 || v >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + v]), (x = v + 1 >> 0, ((x < 0 || x >= vertexPositions.$length) ? ($throwRuntimeError("index out of range"), undefined) : vertexPositions.$array[vertexPositions.$offset + x]))]));
 			v = v + (2) >> 0;
 		}
 	};
 	ConvexPolygon.prototype.AddPoints = function(vertexPositions) { return this.$val.AddPoints(vertexPositions); };
+	ConvexPolygon.ptr.prototype.UpdateAsRectangle = function(x, y, w, h) {
+		var _1, cp, h, i, thatVec, w, x, y;
+		cp = this;
+		if (!((4 === cp.Points.Cnt))) {
+			$panic(new $String("ConvexPolygon not having exactly 4 vertices to form a rectangle#1!"));
+		}
+		i = 0;
+		while (true) {
+			if (!(i < cp.Points.Cnt)) { break; }
+			thatVec = cp.GetPointByOffset(i);
+			if (Vector.nil === thatVec) {
+				$panic(new $String("ConvexPolygon not having exactly 4 vertices to form a rectangle#2!"));
+			}
+			_1 = i;
+			if (_1 === (0)) {
+				(0 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 0] = x);
+				(1 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 1] = y);
+			} else if (_1 === (1)) {
+				(0 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 0] = x + w);
+				(1 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 1] = y);
+			} else if (_1 === (2)) {
+				(0 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 0] = x + w);
+				(1 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 1] = y + h);
+			} else if (_1 === (3)) {
+				(0 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 0] = x);
+				(1 >= thatVec.$length ? ($throwRuntimeError("index out of range"), undefined) : thatVec.$array[thatVec.$offset + 1] = y + h);
+			}
+			i = i + (1) >> 0;
+		}
+		return true;
+	};
+	ConvexPolygon.prototype.UpdateAsRectangle = function(x, y, w, h) { return this.$val.UpdateAsRectangle(x, y, w, h); };
 	ConvexPolygon.ptr.prototype.Lines = function() {
 		var _tmp, _tmp$1, cp, end, i, line, lines, linesCnt, start, vertices, x;
 		cp = this;
@@ -3672,17 +3703,15 @@ $packages["resolv"] = (function() {
 	};
 	ConvexPolygon.prototype.Lines = function() { return this.$val.Lines(); };
 	ConvexPolygon.ptr.prototype.Transformed = function() {
-		var _i, _ref, cp, i, point, transformed;
+		var cp, i, point, transformed;
 		cp = this;
-		transformed = $makeSlice(sliceType$4, cp.Points.$length);
-		_ref = cp.Points;
-		_i = 0;
+		transformed = $makeSlice(sliceType$4, cp.Points.Cnt);
+		i = 0;
 		while (true) {
-			if (!(_i < _ref.$length)) { break; }
-			i = _i;
-			point = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (!(i < cp.Points.Cnt)) { break; }
+			point = cp.GetPointByOffset(i);
 			((i < 0 || i >= transformed.$length) ? ($throwRuntimeError("index out of range"), undefined) : transformed.$array[transformed.$offset + i] = new Vector([(0 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 0]) + cp.X, (1 >= point.$length ? ($throwRuntimeError("index out of range"), undefined) : point.$array[point.$offset + 1]) + cp.Y]));
-			_i++;
+			i = i + (1) >> 0;
 		}
 		return transformed;
 	};
@@ -3821,12 +3850,6 @@ $packages["resolv"] = (function() {
 		return contactCount === 1;
 	};
 	ConvexPolygon.prototype.PointInside = function(point) { return this.$val.PointInside(point); };
-	ConvexPolygon.ptr.prototype.GetPoints = function() {
-		var polygon;
-		polygon = this;
-		return polygon.Points;
-	};
-	ConvexPolygon.prototype.GetPoints = function() { return this.$val.GetPoints(); };
 	NewContactSet = function() {
 		return new ContactSet.ptr(new sliceType$4([]), new Vector([0, 0]), new Vector([0, 0]));
 	};
@@ -3907,7 +3930,7 @@ $packages["resolv"] = (function() {
 		ogY = cp.Y;
 		cp.X = cp.X + (dx);
 		cp.Y = cp.Y + (dy);
-		_tuple = $assertType(other, ptrType$4, true);
+		_tuple = $assertType(other, ptrType$5, true);
 		circle = _tuple[0];
 		isCircle = _tuple[1];
 		if (isCircle) {
@@ -3920,7 +3943,7 @@ $packages["resolv"] = (function() {
 				_i++;
 			}
 		} else {
-			_tuple$1 = $assertType(other, ptrType$5, true);
+			_tuple$1 = $assertType(other, ptrType$6, true);
 			poly = _tuple$1[0];
 			isPoly = _tuple$1[1];
 			if (isPoly) {
@@ -3960,9 +3983,9 @@ $packages["resolv"] = (function() {
 				contactSet.MTV = mtv;
 			}
 		} else {
-			contactSet = ptrType$6.nil;
+			contactSet = ptrType$7.nil;
 		}
-		if (!(contactSet === ptrType$6.nil) && (!((dx === 0)) || !((dy === 0)))) {
+		if (!(contactSet === ptrType$7.nil) && (!((dx === 0)) || !((dy === 0)))) {
 			deltaMagnitude = new Vector([dx, dy]).Magnitude();
 			ogMagnitude = contactSet.MTV.Magnitude();
 			contactSet.MTV = contactSet.MTV.Unit().Scale(ogMagnitude - deltaMagnitude);
@@ -3978,7 +4001,7 @@ $packages["resolv"] = (function() {
 		delta = new Vector([0, 0]);
 		smallest = new Vector([1.7976931348623157e+308, 0]);
 		_ref = otherShape;
-		if ($assertType(_ref, ptrType$5, true)[1]) {
+		if ($assertType(_ref, ptrType$6, true)[1]) {
 			other = _ref.$val;
 			_ref$1 = cp.SATAxes();
 			_i = 0;
@@ -4018,7 +4041,7 @@ $packages["resolv"] = (function() {
 		var _i, _i$1, _ref, _ref$1, _ref$2, axis, axis$1, cp, other, otherShape;
 		cp = this;
 		_ref = otherShape;
-		if ($assertType(_ref, ptrType$5, true)[1]) {
+		if ($assertType(_ref, ptrType$6, true)[1]) {
 			other = _ref.$val;
 			_ref$1 = cp.SATAxes();
 			_i = 0;
@@ -4044,47 +4067,6 @@ $packages["resolv"] = (function() {
 		return true;
 	};
 	ConvexPolygon.prototype.ContainedBy = function(otherShape) { return this.$val.ContainedBy(otherShape); };
-	ConvexPolygon.ptr.prototype.FlipH = function() {
-		var _i, _ref, cp, v;
-		cp = this;
-		_ref = cp.Points;
-		_i = 0;
-		while (true) {
-			if (!(_i < _ref.$length)) { break; }
-			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
-			(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0] = -(0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]));
-			_i++;
-		}
-		cp.ReverseVertexOrder();
-	};
-	ConvexPolygon.prototype.FlipH = function() { return this.$val.FlipH(); };
-	ConvexPolygon.ptr.prototype.FlipV = function() {
-		var _i, _ref, cp, v;
-		cp = this;
-		_ref = cp.Points;
-		_i = 0;
-		while (true) {
-			if (!(_i < _ref.$length)) { break; }
-			v = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
-			(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1] = -(1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]));
-			_i++;
-		}
-		cp.ReverseVertexOrder();
-	};
-	ConvexPolygon.prototype.FlipV = function() { return this.$val.FlipV(); };
-	ConvexPolygon.ptr.prototype.ReverseVertexOrder = function() {
-		var cp, i, verts, x, x$1;
-		cp = this;
-		verts = new sliceType$4([(x = cp.Points, (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0]))]);
-		i = cp.Points.$length - 1 >> 0;
-		while (true) {
-			if (!(i >= 1)) { break; }
-			verts = $append(verts, (x$1 = cp.Points, ((i < 0 || i >= x$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + i])));
-			i = i - (1) >> 0;
-		}
-		cp.Points = verts;
-	};
-	ConvexPolygon.prototype.ReverseVertexOrder = function() { return this.$val.ReverseVertexOrder(); };
 	NewRectangle = function(x, y, w, h) {
 		var h, w, x, y;
 		return NewConvexPolygon(new sliceType([x, y, x + w, y, x + w, y + h, x, y + h]));
@@ -4111,24 +4093,24 @@ $packages["resolv"] = (function() {
 	Circle.ptr.prototype.Intersection = function(dx, dy, other) {
 		var _i, _ref, _ref$1, circle, contactSet, dist, dx, dy, other, ox, oy, point, shape, shape$1, x, x$1, x$2, x$3;
 		circle = this;
-		contactSet = ptrType$6.nil;
+		contactSet = ptrType$7.nil;
 		ox = circle.X;
 		oy = circle.Y;
 		circle.X = circle.X + (dx);
 		circle.Y = circle.Y + (dy);
 		_ref = other;
-		if ($assertType(_ref, ptrType$5, true)[1]) {
+		if ($assertType(_ref, ptrType$6, true)[1]) {
 			shape = _ref.$val;
 			contactSet = shape.Intersection(-dx, -dy, circle);
-			if (!(contactSet === ptrType$6.nil)) {
+			if (!(contactSet === ptrType$7.nil)) {
 				contactSet.MTV = contactSet.MTV.Scale(-1);
 			}
-		} else if ($assertType(_ref, ptrType$4, true)[1]) {
+		} else if ($assertType(_ref, ptrType$5, true)[1]) {
 			shape$1 = _ref.$val;
 			contactSet = NewContactSet();
 			contactSet.Points = circle.IntersectionPointsCircle(shape$1);
 			if (contactSet.Points.$length === 0) {
-				return ptrType$6.nil;
+				return ptrType$7.nil;
 			}
 			contactSet.MTV = new Vector([circle.X - shape$1.X, circle.Y - shape$1.Y]);
 			dist = contactSet.MTV.Magnitude();
@@ -4641,6 +4623,7 @@ $packages["resolv"] = (function() {
 		if (obj.Space === ptrType$1.nil) {
 			return false;
 		}
+		cc.Clear();
 		cc.checkingObject = obj;
 		if (dx < 0) {
 			dx = math.Min(dx, -1);
@@ -4765,7 +4748,7 @@ $packages["resolv"] = (function() {
 		cc.Cells.Clear();
 	};
 	Collision.prototype.Clear = function() { return this.$val.Clear(); };
-	Collision.ptr.prototype.FirstCollidedObject = function() {
+	Collision.ptr.prototype.PopFirstCollidedObject = function() {
 		var cc;
 		cc = this;
 		if (0 >= cc.Objects.Cnt) {
@@ -4773,7 +4756,7 @@ $packages["resolv"] = (function() {
 		}
 		return $assertType(cc.Objects.Pop(), ptrType$2);
 	};
-	Collision.prototype.FirstCollidedObject = function() { return this.$val.FirstCollidedObject(); };
+	Collision.prototype.PopFirstCollidedObject = function() { return this.$val.PopFirstCollidedObject(); };
 	Collision.ptr.prototype.HasTags = function(tags) {
 		var cc, i, o, rb, tags;
 		cc = this;
@@ -4963,27 +4946,27 @@ $packages["resolv"] = (function() {
 	Cell.prototype.Occupied = function() { return this.$val.Occupied(); };
 	Vector.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Add", name: "Add", pkg: "", typ: $funcType([sliceType$4], [Vector], true)}, {prop: "Sub", name: "Sub", pkg: "", typ: $funcType([sliceType$4], [Vector], true)}, {prop: "Scale", name: "Scale", pkg: "", typ: $funcType([$Float64], [Vector], false)}, {prop: "Equal", name: "Equal", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "Magnitude", name: "Magnitude", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Magnitude2", name: "Magnitude2", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Unit", name: "Unit", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Dot", name: "Dot", pkg: "", typ: $funcType([Vector], [$Float64], false)}, {prop: "Cross", name: "Cross", pkg: "", typ: $funcType([Vector], [Vector], false)}, {prop: "Rotate", name: "Rotate", pkg: "", typ: $funcType([$Float64, sliceType$8], [Vector], true)}, {prop: "X", name: "X", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Y", name: "Y", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Z", name: "Z", pkg: "", typ: $funcType([], [$Float64], false)}];
 	ptrType$1.methods = [{prop: "AddSingle", name: "AddSingle", pkg: "", typ: $funcType([ptrType$2], [], false)}, {prop: "Add", name: "Add", pkg: "", typ: $funcType([sliceType$3], [], true)}, {prop: "RemoveSingle", name: "RemoveSingle", pkg: "", typ: $funcType([ptrType$2], [], false)}, {prop: "Remove", name: "Remove", pkg: "", typ: $funcType([sliceType$3], [], true)}, {prop: "Objects", name: "Objects", pkg: "", typ: $funcType([], [sliceType$3], false)}, {prop: "Resize", name: "Resize", pkg: "", typ: $funcType([$Int, $Int], [], false)}, {prop: "Cell", name: "Cell", pkg: "", typ: $funcType([$Int, $Int], [ptrType], false)}, {prop: "CheckCells", name: "CheckCells", pkg: "", typ: $funcType([$Int, $Int, $Int, $Int, sliceType$7], [ptrType$2], true)}, {prop: "CheckCellsWorld", name: "CheckCellsWorld", pkg: "", typ: $funcType([$Float64, $Float64, $Float64, $Float64, sliceType$7], [ptrType$2], true)}, {prop: "UnregisterAllObjects", name: "UnregisterAllObjects", pkg: "", typ: $funcType([], [], false)}, {prop: "WorldToSpace", name: "WorldToSpace", pkg: "", typ: $funcType([$Float64, $Float64], [$Int, $Int], false)}, {prop: "SpaceToWorld", name: "SpaceToWorld", pkg: "", typ: $funcType([$Int, $Int], [$Float64, $Float64], false)}, {prop: "Height", name: "Height", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "Width", name: "Width", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "CellsInLine", name: "CellsInLine", pkg: "", typ: $funcType([$Int, $Int, $Int, $Int], [sliceType$1], false)}];
-	ptrType$3.methods = [{prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Vector], false)}, {prop: "Normal", name: "Normal", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Vector", name: "Vector", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "IntersectionPointsLine", name: "IntersectionPointsLine", pkg: "", typ: $funcType([ptrType$3], [Vector], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$4], [sliceType$4], false)}];
-	ptrType$5.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "AddPointsVec", name: "AddPointsVec", pkg: "", typ: $funcType([sliceType$4], [], true)}, {prop: "AddPoints", name: "AddPoints", pkg: "", typ: $funcType([sliceType], [], true)}, {prop: "Lines", name: "Lines", pkg: "", typ: $funcType([], [sliceType$5], false)}, {prop: "Transformed", name: "Transformed", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Center", name: "Center", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Projection], false)}, {prop: "SATAxes", name: "SATAxes", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "GetPoints", name: "GetPoints", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "calculateMTV", name: "calculateMTV", pkg: "resolv", typ: $funcType([ptrType$6, Shape], [Vector], false)}, {prop: "ContainedBy", name: "ContainedBy", pkg: "", typ: $funcType([Shape], [$Bool], false)}, {prop: "FlipH", name: "FlipH", pkg: "", typ: $funcType([], [], false)}, {prop: "FlipV", name: "FlipV", pkg: "", typ: $funcType([], [], false)}, {prop: "ReverseVertexOrder", name: "ReverseVertexOrder", pkg: "", typ: $funcType([], [], false)}];
-	ptrType$6.methods = [{prop: "LeftmostPoint", name: "LeftmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "RightmostPoint", name: "RightmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "TopmostPoint", name: "TopmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "BottommostPoint", name: "BottommostPoint", pkg: "", typ: $funcType([], [Vector], false)}];
-	ptrType$4.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$4], [sliceType$4], false)}];
+	ptrType$4.methods = [{prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Vector], false)}, {prop: "Normal", name: "Normal", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Vector", name: "Vector", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "IntersectionPointsLine", name: "IntersectionPointsLine", pkg: "", typ: $funcType([ptrType$4], [Vector], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$5], [sliceType$4], false)}];
+	ptrType$6.methods = [{prop: "GetPointByOffset", name: "GetPointByOffset", pkg: "", typ: $funcType([$Int32], [Vector], false)}, {prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "AddPoints", name: "AddPoints", pkg: "", typ: $funcType([sliceType], [], true)}, {prop: "UpdateAsRectangle", name: "UpdateAsRectangle", pkg: "", typ: $funcType([$Float64, $Float64, $Float64, $Float64], [$Bool], false)}, {prop: "Lines", name: "Lines", pkg: "", typ: $funcType([], [sliceType$5], false)}, {prop: "Transformed", name: "Transformed", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Center", name: "Center", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "Project", name: "Project", pkg: "", typ: $funcType([Vector], [Projection], false)}, {prop: "SATAxes", name: "SATAxes", pkg: "", typ: $funcType([], [sliceType$4], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$7], false)}, {prop: "calculateMTV", name: "calculateMTV", pkg: "resolv", typ: $funcType([ptrType$7, Shape], [Vector], false)}, {prop: "ContainedBy", name: "ContainedBy", pkg: "", typ: $funcType([Shape], [$Bool], false)}];
+	ptrType$7.methods = [{prop: "LeftmostPoint", name: "LeftmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "RightmostPoint", name: "RightmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "TopmostPoint", name: "TopmostPoint", pkg: "", typ: $funcType([], [Vector], false)}, {prop: "BottommostPoint", name: "BottommostPoint", pkg: "", typ: $funcType([], [Vector], false)}];
+	ptrType$5.methods = [{prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$7], false)}, {prop: "Move", name: "Move", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "MoveVec", name: "MoveVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "SetPositionVec", name: "SetPositionVec", pkg: "", typ: $funcType([Vector], [], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "PointInside", name: "PointInside", pkg: "", typ: $funcType([Vector], [$Bool], false)}, {prop: "IntersectionPointsCircle", name: "IntersectionPointsCircle", pkg: "", typ: $funcType([ptrType$5], [sliceType$4], false)}];
 	Projection.methods = [{prop: "Overlapping", name: "Overlapping", pkg: "", typ: $funcType([Projection], [$Bool], false)}, {prop: "Overlap", name: "Overlap", pkg: "", typ: $funcType([Projection], [$Float64], false)}, {prop: "IsInside", name: "IsInside", pkg: "", typ: $funcType([Projection], [$Bool], false)}];
-	ptrType$7.methods = [{prop: "Put", name: "Put", pkg: "", typ: $funcType([$emptyInterface], [], false)}, {prop: "Pop", name: "Pop", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetArrIdxByOffset", name: "GetArrIdxByOffset", pkg: "", typ: $funcType([$Int32], [$Int32], false)}, {prop: "GetByOffset", name: "GetByOffset", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "GetByFrameId", name: "GetByFrameId", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "SetByFrameId", name: "SetByFrameId", pkg: "", typ: $funcType([$emptyInterface, $Int32], [$Int32, $Int32, $Int32], false)}, {prop: "Clear", name: "Clear", pkg: "", typ: $funcType([], [], false)}, {prop: "GetStFrameId", name: "GetStFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetEdFrameId", name: "GetEdFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetCnt", name: "GetCnt", pkg: "", typ: $funcType([], [$Int32], false)}];
+	ptrType$3.methods = [{prop: "Put", name: "Put", pkg: "", typ: $funcType([$emptyInterface], [], false)}, {prop: "Pop", name: "Pop", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetArrIdxByOffset", name: "GetArrIdxByOffset", pkg: "", typ: $funcType([$Int32], [$Int32], false)}, {prop: "GetByOffset", name: "GetByOffset", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "GetByFrameId", name: "GetByFrameId", pkg: "", typ: $funcType([$Int32], [$emptyInterface], false)}, {prop: "SetByFrameId", name: "SetByFrameId", pkg: "", typ: $funcType([$emptyInterface, $Int32], [$Int32, $Int32, $Int32], false)}, {prop: "Clear", name: "Clear", pkg: "", typ: $funcType([], [], false)}, {prop: "GetStFrameId", name: "GetStFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetEdFrameId", name: "GetEdFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetCnt", name: "GetCnt", pkg: "", typ: $funcType([], [$Int32], false)}];
 	ptrType$2.methods = [{prop: "GetData", name: "GetData", pkg: "", typ: $funcType([], [$emptyInterface], false)}, {prop: "GetShape", name: "GetShape", pkg: "", typ: $funcType([], [ptrType$8], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [ptrType$2], false)}, {prop: "Update", name: "Update", pkg: "", typ: $funcType([], [], false)}, {prop: "AddTags", name: "AddTags", pkg: "", typ: $funcType([sliceType$7], [], true)}, {prop: "RemoveTags", name: "RemoveTags", pkg: "", typ: $funcType([sliceType$7], [], true)}, {prop: "HasTags", name: "HasTags", pkg: "", typ: $funcType([sliceType$7], [$Bool], true)}, {prop: "Tags", name: "Tags", pkg: "", typ: $funcType([], [sliceType$7], false)}, {prop: "SetShape", name: "SetShape", pkg: "", typ: $funcType([Shape], [], false)}, {prop: "BoundsToSpace", name: "BoundsToSpace", pkg: "", typ: $funcType([$Float64, $Float64], [$Int, $Int, $Int, $Int], false)}, {prop: "SharesCells", name: "SharesCells", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "SharesCellsTags", name: "SharesCellsTags", pkg: "", typ: $funcType([sliceType$7], [$Bool], true)}, {prop: "Center", name: "Center", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetCenter", name: "SetCenter", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}, {prop: "CellPosition", name: "CellPosition", pkg: "", typ: $funcType([], [$Int, $Int], false)}, {prop: "SetRight", name: "SetRight", pkg: "", typ: $funcType([$Float64], [], false)}, {prop: "SetBottom", name: "SetBottom", pkg: "", typ: $funcType([$Float64], [], false)}, {prop: "Bottom", name: "Bottom", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "Right", name: "Right", pkg: "", typ: $funcType([], [$Float64], false)}, {prop: "SetBounds", name: "SetBounds", pkg: "", typ: $funcType([Vector, Vector], [], false)}, {prop: "CheckAllWithHolder", name: "CheckAllWithHolder", pkg: "", typ: $funcType([$Float64, $Float64, ptrType$9], [$Bool], false)}, {prop: "Overlaps", name: "Overlaps", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "AddToIgnoreList", name: "AddToIgnoreList", pkg: "", typ: $funcType([ptrType$2], [], false)}, {prop: "RemoveFromIgnoreList", name: "RemoveFromIgnoreList", pkg: "", typ: $funcType([ptrType$2], [], false)}];
-	ptrType$9.methods = [{prop: "Clear", name: "Clear", pkg: "", typ: $funcType([], [], false)}, {prop: "FirstCollidedObject", name: "FirstCollidedObject", pkg: "", typ: $funcType([], [ptrType$2], false)}, {prop: "HasTags", name: "HasTags", pkg: "", typ: $funcType([sliceType$7], [$Bool], true)}, {prop: "ObjectsByTags", name: "ObjectsByTags", pkg: "", typ: $funcType([sliceType$7], [sliceType$3], true)}, {prop: "ContactWithObject", name: "ContactWithObject", pkg: "", typ: $funcType([ptrType$2], [Vector], false)}, {prop: "ContactWithCell", name: "ContactWithCell", pkg: "", typ: $funcType([ptrType], [Vector], false)}, {prop: "SlideAgainstCell", name: "SlideAgainstCell", pkg: "", typ: $funcType([ptrType, sliceType$7], [Vector], true)}];
+	ptrType$9.methods = [{prop: "Clear", name: "Clear", pkg: "", typ: $funcType([], [], false)}, {prop: "PopFirstCollidedObject", name: "PopFirstCollidedObject", pkg: "", typ: $funcType([], [ptrType$2], false)}, {prop: "HasTags", name: "HasTags", pkg: "", typ: $funcType([sliceType$7], [$Bool], true)}, {prop: "ObjectsByTags", name: "ObjectsByTags", pkg: "", typ: $funcType([sliceType$7], [sliceType$3], true)}, {prop: "ContactWithObject", name: "ContactWithObject", pkg: "", typ: $funcType([ptrType$2], [Vector], false)}, {prop: "ContactWithCell", name: "ContactWithCell", pkg: "", typ: $funcType([ptrType], [Vector], false)}, {prop: "SlideAgainstCell", name: "SlideAgainstCell", pkg: "", typ: $funcType([ptrType, sliceType$7], [Vector], true)}];
 	ptrType.methods = [{prop: "register", name: "register", pkg: "resolv", typ: $funcType([ptrType$2], [], false)}, {prop: "unregister", name: "unregister", pkg: "resolv", typ: $funcType([ptrType$2], [], false)}, {prop: "Contains", name: "Contains", pkg: "", typ: $funcType([ptrType$2], [$Bool], false)}, {prop: "ContainsTags", name: "ContainsTags", pkg: "", typ: $funcType([sliceType$7], [$Bool], true)}, {prop: "Occupied", name: "Occupied", pkg: "", typ: $funcType([], [$Bool], false)}];
 	Vector.init($Float64);
 	Space.init("", [{prop: "Cells", name: "Cells", embedded: false, exported: true, typ: sliceType$2, tag: ""}, {prop: "CellWidth", name: "CellWidth", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "CellHeight", name: "CellHeight", embedded: false, exported: true, typ: $Int, tag: ""}]);
-	Shape.init([{prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$6], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}]);
+	Shape.init([{prop: "Bounds", name: "Bounds", pkg: "", typ: $funcType([], [Vector, Vector], false)}, {prop: "Clone", name: "Clone", pkg: "", typ: $funcType([], [Shape], false)}, {prop: "Intersection", name: "Intersection", pkg: "", typ: $funcType([$Float64, $Float64, Shape], [ptrType$7], false)}, {prop: "Position", name: "Position", pkg: "", typ: $funcType([], [$Float64, $Float64], false)}, {prop: "SetPosition", name: "SetPosition", pkg: "", typ: $funcType([$Float64, $Float64], [], false)}]);
 	Line.init("", [{prop: "Start", name: "Start", embedded: false, exported: true, typ: Vector, tag: ""}, {prop: "End", name: "End", embedded: false, exported: true, typ: Vector, tag: ""}]);
-	ConvexPolygon.init("", [{prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$4, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Closed", name: "Closed", embedded: false, exported: true, typ: $Bool, tag: ""}]);
+	ConvexPolygon.init("", [{prop: "Points", name: "Points", embedded: false, exported: true, typ: ptrType$3, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Closed", name: "Closed", embedded: false, exported: true, typ: $Bool, tag: ""}]);
 	ContactSet.init("", [{prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$4, tag: ""}, {prop: "MTV", name: "MTV", embedded: false, exported: true, typ: Vector, tag: ""}, {prop: "Center", name: "Center", embedded: false, exported: true, typ: Vector, tag: ""}]);
 	Circle.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Radius", name: "Radius", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	Projection.init("", [{prop: "Min", name: "Min", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Max", name: "Max", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	RingBuffer.init("", [{prop: "Ed", name: "Ed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "St", name: "St", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "EdFrameId", name: "EdFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "StFrameId", name: "StFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "N", name: "N", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Cnt", name: "Cnt", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Eles", name: "Eles", embedded: false, exported: true, typ: sliceType$6, tag: ""}]);
-	Object.init("resolv", [{prop: "Shape", name: "Shape", embedded: false, exported: true, typ: Shape, tag: ""}, {prop: "Space", name: "Space", embedded: false, exported: true, typ: ptrType$1, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "W", name: "W", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "H", name: "H", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "TouchingCells", name: "TouchingCells", embedded: false, exported: true, typ: ptrType$7, tag: ""}, {prop: "Data", name: "Data", embedded: false, exported: true, typ: $emptyInterface, tag: ""}, {prop: "ignoreList", name: "ignoreList", embedded: false, exported: false, typ: mapType, tag: ""}, {prop: "tags", name: "tags", embedded: false, exported: false, typ: sliceType$7, tag: ""}]);
-	Collision.init("resolv", [{prop: "checkingObject", name: "checkingObject", embedded: false, exported: false, typ: ptrType$2, tag: ""}, {prop: "dx", name: "dx", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "dy", name: "dy", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: ptrType$7, tag: ""}, {prop: "Cells", name: "Cells", embedded: false, exported: true, typ: ptrType$7, tag: ""}]);
-	Cell.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: ptrType$7, tag: ""}]);
+	Object.init("resolv", [{prop: "Shape", name: "Shape", embedded: false, exported: true, typ: Shape, tag: ""}, {prop: "Space", name: "Space", embedded: false, exported: true, typ: ptrType$1, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "W", name: "W", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "H", name: "H", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "TouchingCells", name: "TouchingCells", embedded: false, exported: true, typ: ptrType$3, tag: ""}, {prop: "Data", name: "Data", embedded: false, exported: true, typ: $emptyInterface, tag: ""}, {prop: "ignoreList", name: "ignoreList", embedded: false, exported: false, typ: mapType, tag: ""}, {prop: "tags", name: "tags", embedded: false, exported: false, typ: sliceType$7, tag: ""}]);
+	Collision.init("resolv", [{prop: "checkingObject", name: "checkingObject", embedded: false, exported: false, typ: ptrType$2, tag: ""}, {prop: "dx", name: "dx", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "dy", name: "dy", embedded: false, exported: false, typ: $Float64, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: ptrType$3, tag: ""}, {prop: "Cells", name: "Cells", embedded: false, exported: true, typ: ptrType$3, tag: ""}]);
+	Cell.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Int, tag: ""}, {prop: "Objects", name: "Objects", embedded: false, exported: true, typ: ptrType$3, tag: ""}]);
 	$init = function() {
 		$pkg.$init = function() {};
 		/* */ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
@@ -4994,7 +4977,7 @@ $packages["resolv"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport/battle"] = (function() {
-	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, BulletConfig, BulletBattleAttr, MeleeBullet, FireballBullet, Skill, RoomDownsyncFrame, InputFrameDownsync, NpcPatrolCue, SkillMapperType, CharacterConfig, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, ptrType$7, ptrType$8, ptrType$9, ptrType$10, sliceType$3, sliceType$4, sliceType$5, sliceType$6, ptrType$11, sliceType$7, sliceType$8, sliceType$9, sliceType$10, ptrType$12, mapType, ptrType$14, skills, inAirSet, noOpSet, invinsibleSet, nonAttackingSet, intAbs, ShouldGenerateInputFrameUpsync, ConvertToDelayedInputFrameId, ConvertToNoDelayInputFrameId, ConvertToFirstUsedRenderFrameId, ConvertToLastUsedRenderFrameId, decodeInput, calcPushbacks, isPolygonPairOverlapped, IsGeneralBulletActive, IsMeleeBulletActive, IsMeleeBulletAlive, IsFireballBulletActive, IsFireballBulletAlive, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox, NewMeleeBullet, NewFireballBullet, NewPlayerDownsync, NewPreallocatedRoomDownsyncFrame;
+	var $pkg = {}, $init, math, resolv, Vec2D, Polygon2D, PlayerDownsync, InputFrameDecoded, Barrier, BulletConfig, BulletBattleAttr, MeleeBullet, FireballBullet, Skill, RoomDownsyncFrame, InputFrameDownsync, NpcPatrolCue, SkillMapperType, CharacterConfig, SatResult, sliceType, sliceType$1, sliceType$2, ptrType, ptrType$1, ptrType$2, ptrType$3, ptrType$4, ptrType$5, ptrType$6, ptrType$7, ptrType$8, ptrType$9, ptrType$10, sliceType$3, sliceType$4, sliceType$5, ptrType$11, sliceType$6, sliceType$7, sliceType$8, sliceType$9, ptrType$12, mapType, ptrType$14, skills, inAirSet, noOpSet, invinsibleSet, nonAttackingSet, intAbs, ShouldGenerateInputFrameUpsync, ConvertToDelayedInputFrameId, ConvertToNoDelayInputFrameId, ConvertToFirstUsedRenderFrameId, ConvertToLastUsedRenderFrameId, decodeInput, calcPushbacks, isPolygonPairOverlapped, IsGeneralBulletActive, IsMeleeBulletActive, IsMeleeBulletAlive, IsFireballBulletActive, IsFireballBulletAlive, isPolygonPairSeparatedByDir, WorldToVirtualGridPos, VirtualGridToWorldPos, WorldToPolygonColliderBLPos, PolygonColliderBLToWorldPos, PolygonColliderBLToVirtualGridPos, calcHardPushbacksNorms, deriveOpPattern, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, GenerateRectCollider, generateRectColliderInCollisionSpace, UpdateRectCollider, GenerateConvexPolygonCollider, AlignPolygon2DToBoundingBox, NewMeleeBullet, NewFireballBullet, NewPlayerDownsync, NewPreallocatedRoomDownsyncFrame;
 	math = $packages["math"];
 	resolv = $packages["resolv"];
 	Vec2D = $pkg.Vec2D = $newType(0, $kindStruct, "battle.Vec2D", true, "jsexport/battle", true, function(X_, Y_) {
@@ -5011,7 +4994,7 @@ $packages["jsexport/battle"] = (function() {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.Anchor = ptrType$11.nil;
-			this.Points = sliceType$7.nil;
+			this.Points = sliceType$6.nil;
 			return;
 		}
 		this.Anchor = Anchor_;
@@ -5231,10 +5214,10 @@ $packages["jsexport/battle"] = (function() {
 		this.$val = this;
 		if (arguments.length === 0) {
 			this.Id = 0;
-			this.PlayersArr = sliceType$8.nil;
+			this.PlayersArr = sliceType$7.nil;
 			this.CountdownNanos = new $Int64(0, 0);
-			this.MeleeBullets = sliceType$9.nil;
-			this.FireballBullets = sliceType$10.nil;
+			this.MeleeBullets = sliceType$8.nil;
+			this.FireballBullets = sliceType$9.nil;
 			this.BackendUnconfirmedMask = new $Uint64(0, 0);
 			this.ShouldForceResync = false;
 			this.BulletLocalIdCounter = 0;
@@ -5353,14 +5336,13 @@ $packages["jsexport/battle"] = (function() {
 	ptrType$9 = $ptrType(resolv.ConvexPolygon);
 	ptrType$10 = $ptrType(InputFrameDownsync);
 	sliceType$3 = $sliceType($Uint64);
-	sliceType$4 = $sliceType(ptrType$6);
-	sliceType$5 = $sliceType($Float64);
-	sliceType$6 = $sliceType($String);
+	sliceType$4 = $sliceType($Float64);
+	sliceType$5 = $sliceType($String);
 	ptrType$11 = $ptrType(Vec2D);
-	sliceType$7 = $sliceType(ptrType$11);
-	sliceType$8 = $sliceType(ptrType$7);
-	sliceType$9 = $sliceType(ptrType$3);
-	sliceType$10 = $sliceType(ptrType$8);
+	sliceType$6 = $sliceType(ptrType$11);
+	sliceType$7 = $sliceType(ptrType$7);
+	sliceType$8 = $sliceType(ptrType$3);
+	sliceType$9 = $sliceType(ptrType$8);
 	ptrType$12 = $ptrType(Polygon2D);
 	mapType = $mapType($Int, $Int);
 	ptrType$14 = $ptrType(CharacterConfig);
@@ -5828,29 +5810,29 @@ $packages["jsexport/battle"] = (function() {
 		/* */ } return; } } catch(err) { $err = err; $s = -1; return [false, 0, 0, ptrType$5.nil]; } finally { $callDeferred($deferred, $err); if($curGoroutine.asleep) { var $f = {$blk: calcPushbacks, $c: true, $r, $24r, $24r$1, _tmp, _tmp$1, _tuple, barrierShape, oldDx, oldDy, origX, origY, overlapResult, overlapped, playerShape, pushbackX, pushbackY, $s, $deferred};return $f; } }
 	};
 	isPolygonPairOverlapped = function(a, b, result) {
-		var _i, _i$1, _ref, _ref$1, _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, a, aCnt, axis, axis$1, b, bCnt, dx, dx$1, dy, dy$1, i, i$1, result, u, u$1, v, v$1, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9;
-		_tmp = a.Points.$length;
-		_tmp$1 = b.Points.$length;
+		var _tmp, _tmp$1, _tmp$2, _tmp$3, _tmp$4, _tmp$5, a, aCnt, aPoint, axis, axis$1, b, bCnt, bPoint, dx, dx$1, dy, dy$1, i, i$1, result, u, u$1, v, v$1;
+		_tmp = a.Points.Cnt;
+		_tmp$1 = b.Points.Cnt;
 		aCnt = _tmp;
 		bCnt = _tmp$1;
 		if ((1 === aCnt) && (1 === bCnt)) {
 			if (!(ptrType$5.nil === result)) {
 				result.Overlap = 0;
 			}
-			return ((x = (x$1 = a.Points, (0 >= x$1.$length ? ($throwRuntimeError("index out of range"), undefined) : x$1.$array[x$1.$offset + 0])), (0 >= x.$length ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + 0])) === (x$2 = (x$3 = b.Points, (0 >= x$3.$length ? ($throwRuntimeError("index out of range"), undefined) : x$3.$array[x$3.$offset + 0])), (0 >= x$2.$length ? ($throwRuntimeError("index out of range"), undefined) : x$2.$array[x$2.$offset + 0]))) && ((x$4 = (x$5 = a.Points, (0 >= x$5.$length ? ($throwRuntimeError("index out of range"), undefined) : x$5.$array[x$5.$offset + 0])), (1 >= x$4.$length ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + 1])) === (x$6 = (x$7 = b.Points, (0 >= x$7.$length ? ($throwRuntimeError("index out of range"), undefined) : x$7.$array[x$7.$offset + 0])), (1 >= x$6.$length ? ($throwRuntimeError("index out of range"), undefined) : x$6.$array[x$6.$offset + 1])));
+			aPoint = a.GetPointByOffset(0);
+			bPoint = b.GetPointByOffset(0);
+			return ((0 >= aPoint.$length ? ($throwRuntimeError("index out of range"), undefined) : aPoint.$array[aPoint.$offset + 0]) === (0 >= bPoint.$length ? ($throwRuntimeError("index out of range"), undefined) : bPoint.$array[bPoint.$offset + 0])) && ((1 >= aPoint.$length ? ($throwRuntimeError("index out of range"), undefined) : aPoint.$array[aPoint.$offset + 1]) === (1 >= bPoint.$length ? ($throwRuntimeError("index out of range"), undefined) : bPoint.$array[bPoint.$offset + 1]));
 		}
 		if (1 < aCnt) {
-			_ref = a.Points;
-			_i = 0;
+			i = 0;
 			while (true) {
-				if (!(_i < _ref.$length)) { break; }
-				i = _i;
-				_tmp$2 = (x$8 = a.Points, ((i < 0 || i >= x$8.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$8.$array[x$8.$offset + i]));
-				_tmp$3 = (x$9 = a.Points, (0 >= x$9.$length ? ($throwRuntimeError("index out of range"), undefined) : x$9.$array[x$9.$offset + 0]));
+				if (!(i < a.Points.Cnt)) { break; }
+				_tmp$2 = a.GetPointByOffset(i);
+				_tmp$3 = a.GetPointByOffset(0);
 				u = _tmp$2;
 				v = _tmp$3;
-				if (!((i === (a.Points.$length - 1 >> 0)))) {
-					v = (x$10 = a.Points, x$11 = i + 1 >> 0, ((x$11 < 0 || x$11 >= x$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + x$11]));
+				if (!((i === (a.Points.Cnt - 1 >> 0)))) {
+					v = a.GetPointByOffset(i + 1 >> 0);
 				}
 				dy = (1 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 1]) - (1 >= u.$length ? ($throwRuntimeError("index out of range"), undefined) : u.$array[u.$offset + 1]);
 				dx = (0 >= v.$length ? ($throwRuntimeError("index out of range"), undefined) : v.$array[v.$offset + 0]) - (0 >= u.$length ? ($throwRuntimeError("index out of range"), undefined) : u.$array[u.$offset + 0]);
@@ -5858,21 +5840,19 @@ $packages["jsexport/battle"] = (function() {
 				if (isPolygonPairSeparatedByDir(a, b, axis, result)) {
 					return false;
 				}
-				_i++;
+				i = i + (1) >> 0;
 			}
 		}
 		if (1 < bCnt) {
-			_ref$1 = b.Points;
-			_i$1 = 0;
+			i$1 = 0;
 			while (true) {
-				if (!(_i$1 < _ref$1.$length)) { break; }
-				i$1 = _i$1;
-				_tmp$4 = (x$12 = b.Points, ((i$1 < 0 || i$1 >= x$12.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$12.$array[x$12.$offset + i$1]));
-				_tmp$5 = (x$13 = b.Points, (0 >= x$13.$length ? ($throwRuntimeError("index out of range"), undefined) : x$13.$array[x$13.$offset + 0]));
+				if (!(i$1 < b.Points.Cnt)) { break; }
+				_tmp$4 = b.GetPointByOffset(i$1);
+				_tmp$5 = b.GetPointByOffset(0);
 				u$1 = _tmp$4;
 				v$1 = _tmp$5;
-				if (!((i$1 === (b.Points.$length - 1 >> 0)))) {
-					v$1 = (x$14 = b.Points, x$15 = i$1 + 1 >> 0, ((x$15 < 0 || x$15 >= x$14.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$14.$array[x$14.$offset + x$15]));
+				if (!((i$1 === (b.Points.Cnt - 1 >> 0)))) {
+					v$1 = b.GetPointByOffset(i$1 + 1 >> 0);
 				}
 				dy$1 = (1 >= v$1.$length ? ($throwRuntimeError("index out of range"), undefined) : v$1.$array[v$1.$offset + 1]) - (1 >= u$1.$length ? ($throwRuntimeError("index out of range"), undefined) : u$1.$array[u$1.$offset + 1]);
 				dx$1 = (0 >= v$1.$length ? ($throwRuntimeError("index out of range"), undefined) : v$1.$array[v$1.$offset + 0]) - (0 >= u$1.$length ? ($throwRuntimeError("index out of range"), undefined) : u$1.$array[u$1.$offset + 0]);
@@ -5880,7 +5860,7 @@ $packages["jsexport/battle"] = (function() {
 				if (isPolygonPairSeparatedByDir(a, b, axis$1, result)) {
 					return false;
 				}
-				_i$1++;
+				i$1 = i$1 + (1) >> 0;
 			}
 		}
 		return true;
@@ -5920,7 +5900,7 @@ $packages["jsexport/battle"] = (function() {
 	};
 	$pkg.IsFireballBulletAlive = IsFireballBulletAlive;
 	isPolygonPairSeparatedByDir = function(a, b, e, result) {
-		var _i, _i$1, _ref, _ref$1, _tmp, _tmp$1, _tmp$2, _tmp$3, a, aEnd, aStart, absoluteOverlap, b, bEnd, bStart, currentOverlap, dot, dot$1, e, option1, option1$1, option2, option2$1, overlap, p, p$1, result, sign, x, x$1;
+		var _tmp, _tmp$1, _tmp$2, _tmp$3, a, aEnd, aStart, absoluteOverlap, b, bEnd, bStart, currentOverlap, dot, dot$1, e, i, i$1, option1, option1$1, option2, option2$1, overlap, p, p$1, result, sign, x, x$1;
 		_tmp = 1.7e+308;
 		_tmp$1 = -1.7e+308;
 		_tmp$2 = 1.7e+308;
@@ -5929,11 +5909,10 @@ $packages["jsexport/battle"] = (function() {
 		aEnd = _tmp$1;
 		bStart = _tmp$2;
 		bEnd = _tmp$3;
-		_ref = a.Points;
-		_i = 0;
+		i = 0;
 		while (true) {
-			if (!(_i < _ref.$length)) { break; }
-			p = ((_i < 0 || _i >= _ref.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref.$array[_ref.$offset + _i]);
+			if (!(i < a.Points.Cnt)) { break; }
+			p = a.GetPointByOffset(i);
 			dot = ((0 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 0]) + a.X) * (0 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 0]) + ((1 >= p.$length ? ($throwRuntimeError("index out of range"), undefined) : p.$array[p.$offset + 1]) + a.Y) * (1 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 1]);
 			if (aStart > dot) {
 				aStart = dot;
@@ -5941,13 +5920,12 @@ $packages["jsexport/battle"] = (function() {
 			if (aEnd < dot) {
 				aEnd = dot;
 			}
-			_i++;
+			i = i + (1) >> 0;
 		}
-		_ref$1 = b.Points;
-		_i$1 = 0;
+		i$1 = 0;
 		while (true) {
-			if (!(_i$1 < _ref$1.$length)) { break; }
-			p$1 = ((_i$1 < 0 || _i$1 >= _ref$1.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$1.$array[_ref$1.$offset + _i$1]);
+			if (!(i$1 < b.Points.Cnt)) { break; }
+			p$1 = b.GetPointByOffset(i$1);
 			dot$1 = ((0 >= p$1.$length ? ($throwRuntimeError("index out of range"), undefined) : p$1.$array[p$1.$offset + 0]) + b.X) * (0 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 0]) + ((1 >= p$1.$length ? ($throwRuntimeError("index out of range"), undefined) : p$1.$array[p$1.$offset + 1]) + b.Y) * (1 >= e.$length ? ($throwRuntimeError("index out of range"), undefined) : e.$array[e.$offset + 1]);
 			if (bStart > dot$1) {
 				bStart = dot$1;
@@ -5955,7 +5933,7 @@ $packages["jsexport/battle"] = (function() {
 			if (bEnd < dot$1) {
 				bEnd = dot$1;
 			}
-			_i$1++;
+			i$1 = i$1 + (1) >> 0;
 		}
 		if (aStart > bEnd || aEnd < bStart) {
 			return true;
@@ -6058,7 +6036,7 @@ $packages["jsexport/battle"] = (function() {
 			$s = -1; return retCnt;
 		}
 		/* while (true) { */ case 1:
-			obj = collision.FirstCollidedObject();
+			obj = collision.PopFirstCollidedObject();
 			if (ptrType$6.nil === obj) {
 				/* break; */ $s = 2; continue;
 			}
@@ -6170,8 +6148,8 @@ $packages["jsexport/battle"] = (function() {
 		}
 		return [patternId, jumpedOrNot, effDx, effDy];
 	};
-	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = function(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList) {
-		var {_1, _2, _3, _4, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _entry$6, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _r$6, _r$7, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, alignedWithInertia, atkedPlayerInNextFrame, bShape, bulletBattleAttr, bulletCollider, bulletColliders, bulletLocalId, bulletShape, bulletStaticAttr, bulletWx, bulletWx$1, bulletWy, bulletWy$1, candidate, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, collided, collided$1, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, currRenderFrameId, defenderShape, effDx, effDy, effPushbacks, exactTurningAround, existent, existent$1, existent$2, existent$3, existent$4, existent$5, existent$6, exploded, explodedOnAnotherPlayer, fallStopping, fireballBullet, fireballBulletCnt, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackCnt, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNormsArr, hasBeenOnWallChState, hasBeenOnWallCollisionResultForSameChState, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, i$5, i$6, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, isWallJumping, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, meleeBulletCnt, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameId, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, offender, offender$1, offender$2, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, prevCapturedByInertia, prevFireball, prevMelee, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, renderFrameBuffer, ret, roomCapacity, skillConfig, skillId, stoppingFromWalking, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, v$6, v$7, v$8, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList});
+	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = function(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders) {
+		var {_1, _2, _3, _4, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _entry$6, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _ref, _ref$1, _ref$10, _ref$11, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, alignedWithInertia, atkedPlayerInNextFrame, bShape, bulletBattleAttr, bulletCollider, bulletLocalId, bulletShape, bulletStaticAttr, bulletWx, bulletWx$1, bulletWy, bulletWy$1, candidate, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, collided, collided$1, colliderCnt, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, currRenderFrameId, defenderShape, dynamicCollider, dynamicRectangleColliders, effDx, effDy, effPushbacks, exactTurningAround, existent, existent$1, existent$2, existent$3, existent$4, existent$5, existent$6, exploded, explodedOnAnotherPlayer, fallStopping, fireballBullet, fireballBulletCnt, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackCnt, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNormsArr, hasBeenOnWallChState, hasBeenOnWallCollisionResultForSameChState, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, i$5, i$6, i$7, i$8, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, isWallJumping, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, meleeBulletCnt, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameId, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, offender, offender$1, offender$2, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerShape, prevCapturedByInertia, prevFireball, prevMelee, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, renderFrameBuffer, ret, roomCapacity, skillConfig, skillId, stoppingFromWalking, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, v$6, v$7, v$8, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
 		currRenderFrame = $assertType(renderFrameBuffer.GetByFrameId(currRenderFrameId), ptrType$4);
 		nextRenderFrameId = currRenderFrameId + 1 >> 0;
@@ -6365,7 +6343,7 @@ $packages["jsexport/battle"] = (function() {
 			_i$1++;
 		$s = 1; continue;
 		case 2:
-		playerColliders = $makeSlice(sliceType$4, currRenderFrame.PlayersArr.$length, currRenderFrame.PlayersArr.$length);
+		colliderCnt = 0;
 		_ref$3 = currRenderFrame.PlayersArr;
 		_i$2 = 0;
 		/* while (true) { */ case 4:
@@ -6442,10 +6420,10 @@ $packages["jsexport/battle"] = (function() {
 			_tuple$3 = VirtualGridToWorldPos(colliderWidth, colliderHeight);
 			colliderWorldWidth = _tuple$3[0];
 			colliderWorldHeight = _tuple$3[1];
-			_r$2 = GenerateRectCollider(wx, wy, colliderWorldWidth, colliderWorldHeight, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync$2, "Player"); /* */ $s = 6; case 6: if($c) { $c = false; _r$2 = _r$2.$blk(); } if (_r$2 && _r$2.$blk !== undefined) { break s; }
-			playerCollider = _r$2;
-			((i$2 < 0 || i$2 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$2] = playerCollider);
-			$r = collisionSys.AddSingle(playerCollider); /* */ $s = 7; case 7: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
+			playerCollider = ((colliderCnt < 0 || colliderCnt >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + colliderCnt]);
+			UpdateRectCollider(playerCollider, wx, wy, colliderWorldWidth, colliderWorldHeight, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync$2, "Player");
+			colliderCnt = colliderCnt + (1) >> 0;
+			$r = collisionSys.AddSingle(playerCollider); /* */ $s = 6; case 6: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 			if (currPlayerDownsync$2.InAir) {
 				if ((16 === currPlayerDownsync$2.CharacterState) && !((i$2 < 0 || i$2 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$2])) {
 					thatPlayerInNextFrame$1.VelX = thatPlayerInNextFrame$1.VelX + (0) >> 0;
@@ -6460,14 +6438,13 @@ $packages["jsexport/battle"] = (function() {
 			_i$2++;
 		$s = 4; continue;
 		case 5:
-		bulletColliders = $makeSlice(sliceType$4, 0, ((((currRenderFrame.MeleeBullets.$length + currRenderFrame.FireballBullets.$length >> 0)) << 1 >> 0)));
 		_ref$4 = currRenderFrame.FireballBullets;
 		_i$3 = 0;
-		/* while (true) { */ case 8:
-			/* if (!(_i$3 < _ref$4.$length)) { break; } */ if(!(_i$3 < _ref$4.$length)) { $s = 9; continue; }
+		/* while (true) { */ case 7:
+			/* if (!(_i$3 < _ref$4.$length)) { break; } */ if(!(_i$3 < _ref$4.$length)) { $s = 8; continue; }
 			prevFireball = ((_i$3 < 0 || _i$3 >= _ref$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$4.$array[_ref$4.$offset + _i$3]);
 			if (-1 === prevFireball.BattleAttr.BulletLocalId) {
-				/* break; */ $s = 9; continue;
+				/* break; */ $s = 8; continue;
 			}
 			fireballBullet = ((fireballBulletCnt < 0 || fireballBulletCnt >= nextRenderFrameFireballBullets.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFrameFireballBullets.$array[nextRenderFrameFireballBullets.$offset + fireballBulletCnt]);
 			fireballBullet.VirtualGridX = prevFireball.VirtualGridX;
@@ -6481,22 +6458,22 @@ $packages["jsexport/battle"] = (function() {
 			fireballBullet.BattleAttr = prevFireball.BattleAttr;
 			fireballBullet.FramesInBlState = prevFireball.FramesInBlState + 1 >> 0;
 			fireballBullet.BlState = prevFireball.BlState;
-			/* */ if (IsFireballBulletAlive(fireballBullet, currRenderFrame)) { $s = 10; continue; }
-			/* */ $s = 11; continue;
-			/* if (IsFireballBulletAlive(fireballBullet, currRenderFrame)) { */ case 10:
-				/* */ if (IsFireballBulletActive(fireballBullet, currRenderFrame)) { $s = 12; continue; }
-				/* */ $s = 13; continue;
-				/* if (IsFireballBulletActive(fireballBullet, currRenderFrame)) { */ case 12:
+			/* */ if (IsFireballBulletAlive(fireballBullet, currRenderFrame)) { $s = 9; continue; }
+			/* */ $s = 10; continue;
+			/* if (IsFireballBulletAlive(fireballBullet, currRenderFrame)) { */ case 9:
+				/* */ if (IsFireballBulletActive(fireballBullet, currRenderFrame)) { $s = 11; continue; }
+				/* */ $s = 12; continue;
+				/* if (IsFireballBulletActive(fireballBullet, currRenderFrame)) { */ case 11:
 					_tuple$4 = VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY);
 					bulletWx = _tuple$4[0];
 					bulletWy = _tuple$4[1];
 					_tuple$5 = VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY);
 					hitboxSizeWx = _tuple$5[0];
 					hitboxSizeWy = _tuple$5[1];
-					_r$3 = GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet"); /* */ $s = 15; case 15: if($c) { $c = false; _r$3 = _r$3.$blk(); } if (_r$3 && _r$3.$blk !== undefined) { break s; }
-					newBulletCollider = _r$3;
-					$r = collisionSys.AddSingle(newBulletCollider); /* */ $s = 16; case 16: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
-					bulletColliders = $append(bulletColliders, newBulletCollider);
+					newBulletCollider = ((colliderCnt < 0 || colliderCnt >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + colliderCnt]);
+					UpdateRectCollider(newBulletCollider, bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet");
+					colliderCnt = colliderCnt + (1) >> 0;
+					$r = collisionSys.AddSingle(newBulletCollider); /* */ $s = 14; case 14: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 					fireballBullet.BlState = 1;
 					if (!((fireballBullet.BlState === prevFireball.BlState))) {
 						fireballBullet.FramesInBlState = 0;
@@ -6505,47 +6482,47 @@ $packages["jsexport/battle"] = (function() {
 					_tmp$13 = fireballBullet.VirtualGridY + fireballBullet.VelY >> 0;
 					fireballBullet.VirtualGridX = _tmp$12;
 					fireballBullet.VirtualGridY = _tmp$13;
-					$s = 14; continue;
-				/* } else { */ case 13:
+					$s = 13; continue;
+				/* } else { */ case 12:
 					offender = (x$4 = currRenderFrame.PlayersArr, x$5 = fireballBullet.BattleAttr.OffenderJoinIndex - 1 >> 0, ((x$5 < 0 || x$5 >= x$4.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$4.$array[x$4.$offset + x$5]));
 					_tuple$6 = (_entry$1 = noOpSet[$Int32.keyFor(offender.CharacterState)], _entry$1 !== undefined ? [_entry$1.v, true] : [false, false]);
 					existent$1 = _tuple$6[1];
 					if (existent$1) {
 						_i$3++;
-						/* continue; */ $s = 8; continue;
+						/* continue; */ $s = 7; continue;
 					}
-				/* } */ case 14:
+				/* } */ case 13:
 				fireballBulletCnt = fireballBulletCnt + (1) >> 0;
-			/* } */ case 11:
+			/* } */ case 10:
 			_i$3++;
-		$s = 8; continue;
-		case 9:
+		$s = 7; continue;
+		case 8:
 		_ref$5 = currRenderFrame.MeleeBullets;
 		_i$4 = 0;
-		/* while (true) { */ case 17:
-			/* if (!(_i$4 < _ref$5.$length)) { break; } */ if(!(_i$4 < _ref$5.$length)) { $s = 18; continue; }
+		/* while (true) { */ case 15:
+			/* if (!(_i$4 < _ref$5.$length)) { break; } */ if(!(_i$4 < _ref$5.$length)) { $s = 16; continue; }
 			prevMelee = ((_i$4 < 0 || _i$4 >= _ref$5.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$5.$array[_ref$5.$offset + _i$4]);
 			if (-1 === prevMelee.BattleAttr.BulletLocalId) {
-				/* break; */ $s = 18; continue;
+				/* break; */ $s = 16; continue;
 			}
 			meleeBullet = ((meleeBulletCnt < 0 || meleeBulletCnt >= nextRenderFrameMeleeBullets.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFrameMeleeBullets.$array[nextRenderFrameMeleeBullets.$offset + meleeBulletCnt]);
 			meleeBullet.Bullet = prevMelee.Bullet;
 			meleeBullet.BattleAttr = prevMelee.BattleAttr;
 			meleeBullet.FramesInBlState = prevMelee.FramesInBlState + 1 >> 0;
 			meleeBullet.BlState = prevMelee.BlState;
-			/* */ if (IsMeleeBulletAlive(meleeBullet, currRenderFrame)) { $s = 19; continue; }
-			/* */ $s = 20; continue;
-			/* if (IsMeleeBulletAlive(meleeBullet, currRenderFrame)) { */ case 19:
+			/* */ if (IsMeleeBulletAlive(meleeBullet, currRenderFrame)) { $s = 17; continue; }
+			/* */ $s = 18; continue;
+			/* if (IsMeleeBulletAlive(meleeBullet, currRenderFrame)) { */ case 17:
 				offender$1 = (x$6 = currRenderFrame.PlayersArr, x$7 = meleeBullet.BattleAttr.OffenderJoinIndex - 1 >> 0, ((x$7 < 0 || x$7 >= x$6.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$6.$array[x$6.$offset + x$7]));
 				_tuple$7 = (_entry$2 = noOpSet[$Int32.keyFor(offender$1.CharacterState)], _entry$2 !== undefined ? [_entry$2.v, true] : [false, false]);
 				existent$2 = _tuple$7[1];
 				if (existent$2) {
 					_i$4++;
-					/* continue; */ $s = 17; continue;
+					/* continue; */ $s = 15; continue;
 				}
-				/* */ if (IsMeleeBulletActive(meleeBullet, currRenderFrame)) { $s = 21; continue; }
-				/* */ $s = 22; continue;
-				/* if (IsMeleeBulletActive(meleeBullet, currRenderFrame)) { */ case 21:
+				/* */ if (IsMeleeBulletActive(meleeBullet, currRenderFrame)) { $s = 19; continue; }
+				/* */ $s = 20; continue;
+				/* if (IsMeleeBulletActive(meleeBullet, currRenderFrame)) { */ case 19:
 					xfac$3 = 1;
 					if (0 > offender$1.DirX) {
 						xfac$3 = -xfac$3;
@@ -6556,42 +6533,42 @@ $packages["jsexport/battle"] = (function() {
 					_tuple$9 = VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY);
 					hitboxSizeWx$1 = _tuple$9[0];
 					hitboxSizeWy$1 = _tuple$9[1];
-					_r$4 = GenerateRectCollider(bulletWx$1, bulletWy$1, hitboxSizeWx$1, hitboxSizeWy$1, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet"); /* */ $s = 23; case 23: if($c) { $c = false; _r$4 = _r$4.$blk(); } if (_r$4 && _r$4.$blk !== undefined) { break s; }
-					newBulletCollider$1 = _r$4;
-					$r = collisionSys.AddSingle(newBulletCollider$1); /* */ $s = 24; case 24: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
-					bulletColliders = $append(bulletColliders, newBulletCollider$1);
+					newBulletCollider$1 = ((colliderCnt < 0 || colliderCnt >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + colliderCnt]);
+					UpdateRectCollider(newBulletCollider$1, bulletWx$1, bulletWy$1, hitboxSizeWx$1, hitboxSizeWy$1, 0.1, 0.1, 0.1, 0.1, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet");
+					colliderCnt = colliderCnt + (1) >> 0;
+					$r = collisionSys.AddSingle(newBulletCollider$1); /* */ $s = 21; case 21: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 					meleeBullet.BlState = 1;
 					if (!((meleeBullet.BlState === prevMelee.BlState))) {
 						meleeBullet.FramesInBlState = 0;
 					}
-				/* } */ case 22:
+				/* } */ case 20:
 				meleeBulletCnt = meleeBulletCnt + (1) >> 0;
-			/* } */ case 20:
+			/* } */ case 18:
 			_i$4++;
-		$s = 17; continue;
-		case 18:
+		$s = 15; continue;
+		case 16:
 		_ref$6 = currRenderFrame.PlayersArr;
 		_i$5 = 0;
-		/* while (true) { */ case 25:
-			/* if (!(_i$5 < _ref$6.$length)) { break; } */ if(!(_i$5 < _ref$6.$length)) { $s = 26; continue; }
+		/* while (true) { */ case 22:
+			/* if (!(_i$5 < _ref$6.$length)) { break; } */ if(!(_i$5 < _ref$6.$length)) { $s = 23; continue; }
 			i$3 = _i$5;
 			currPlayerDownsync$3 = ((_i$5 < 0 || _i$5 >= _ref$6.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$6.$array[_ref$6.$offset + _i$5]);
 			joinIndex$2 = currPlayerDownsync$3.JoinIndex;
-			playerCollider$1 = ((i$3 < 0 || i$3 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$3]);
+			playerCollider$1 = ((i$3 < 0 || i$3 >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + i$3]);
 			playerShape = $assertType(playerCollider$1.Shape, ptrType$9);
 			thatPlayerInNextFrame$2 = ((i$3 < 0 || i$3 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$3]);
-			_r$5 = calcHardPushbacksNorms(joinIndex$2, currPlayerDownsync$3, thatPlayerInNextFrame$2, playerCollider$1, playerShape, 0.1, (x$8 = joinIndex$2 - 1 >> 0, ((x$8 < 0 || x$8 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$8])), (x$9 = joinIndex$2 - 1 >> 0, ((x$9 < 0 || x$9 >= hardPushbackNormsArr.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNormsArr.$array[hardPushbackNormsArr.$offset + x$9])), collision); /* */ $s = 27; case 27: if($c) { $c = false; _r$5 = _r$5.$blk(); } if (_r$5 && _r$5.$blk !== undefined) { break s; }
-			hardPushbackCnt = _r$5;
+			_r$2 = calcHardPushbacksNorms(joinIndex$2, currPlayerDownsync$3, thatPlayerInNextFrame$2, playerCollider$1, playerShape, 0.1, (x$8 = joinIndex$2 - 1 >> 0, ((x$8 < 0 || x$8 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$8])), (x$9 = joinIndex$2 - 1 >> 0, ((x$9 < 0 || x$9 >= hardPushbackNormsArr.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNormsArr.$array[hardPushbackNormsArr.$offset + x$9])), collision); /* */ $s = 24; case 24: if($c) { $c = false; _r$2 = _r$2.$blk(); } if (_r$2 && _r$2.$blk !== undefined) { break s; }
+			hardPushbackCnt = _r$2;
 			chConfig$2 = ((i$3 < 0 || i$3 >= chConfigsOrderedByJoinIndex.$length) ? ($throwRuntimeError("index out of range"), undefined) : chConfigsOrderedByJoinIndex.$array[chConfigsOrderedByJoinIndex.$offset + i$3]);
 			landedOnGravityPushback = false;
 			collided = playerCollider$1.CheckAllWithHolder(0, 0, collision);
-			/* */ if (collided) { $s = 28; continue; }
-			/* */ $s = 29; continue;
-			/* if (collided) { */ case 28:
-				/* while (true) { */ case 30:
-					obj = collision.FirstCollidedObject();
+			/* */ if (collided) { $s = 25; continue; }
+			/* */ $s = 26; continue;
+			/* if (collided) { */ case 25:
+				/* while (true) { */ case 27:
+					obj = collision.PopFirstCollidedObject();
 					if (ptrType$6.nil === obj) {
-						/* break; */ $s = 31; continue;
+						/* break; */ $s = 28; continue;
 					}
 					_tmp$14 = false;
 					_tmp$15 = false;
@@ -6603,7 +6580,7 @@ $packages["jsexport/battle"] = (function() {
 					if ($assertType(_ref$7, ptrType$7, true)[1]) {
 						v$2 = _ref$7.$val;
 						if (18 === v$2.CharacterState) {
-							/* continue; */ $s = 30; continue;
+							/* continue; */ $s = 27; continue;
 						}
 						isAnotherPlayer = true;
 					} else if ($assertType(_ref$7, ptrType$3, true)[1] || $assertType(_ref$7, ptrType$8, true)[1]) {
@@ -6614,17 +6591,17 @@ $packages["jsexport/battle"] = (function() {
 						isBarrier = true;
 					}
 					if (isBullet) {
-						/* continue; */ $s = 30; continue;
+						/* continue; */ $s = 27; continue;
 					}
 					bShape = $assertType(obj.Shape, ptrType$9);
-					_r$6 = calcPushbacks(0, 0, playerShape, bShape); /* */ $s = 32; case 32: if($c) { $c = false; _r$6 = _r$6.$blk(); } if (_r$6 && _r$6.$blk !== undefined) { break s; }
-					_tuple$10 = _r$6;
+					_r$3 = calcPushbacks(0, 0, playerShape, bShape); /* */ $s = 29; case 29: if($c) { $c = false; _r$3 = _r$3.$blk(); } if (_r$3 && _r$3.$blk !== undefined) { break s; }
+					_tuple$10 = _r$3;
 					overlapped = _tuple$10[0];
 					pushbackX = _tuple$10[1];
 					pushbackY = _tuple$10[2];
 					overlapResult = _tuple$10[3];
 					if (!overlapped) {
-						/* continue; */ $s = 30; continue;
+						/* continue; */ $s = 27; continue;
 					}
 					normAlignmentWithGravity = overlapResult.OverlapX * 0 + overlapResult.OverlapY * -1;
 					if (isAnotherPlayer) {
@@ -6633,18 +6610,16 @@ $packages["jsexport/battle"] = (function() {
 						pushbackX = _tmp$17;
 						pushbackY = _tmp$18;
 					}
-					if (0 < hardPushbackCnt) {
-						i$4 = 0;
-						while (true) {
-							if (!(i$4 < hardPushbackCnt)) { break; }
-							hardPushbackNorm = (x$10 = (x$11 = joinIndex$2 - 1 >> 0, ((x$11 < 0 || x$11 >= hardPushbackNormsArr.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNormsArr.$array[hardPushbackNormsArr.$offset + x$11])), ((i$4 < 0 || i$4 >= x$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + i$4]));
-							projectedMagnitude = pushbackX * hardPushbackNorm.X + pushbackY * hardPushbackNorm.Y;
-							if (isBarrier || (isAnotherPlayer && 0 > projectedMagnitude)) {
-								pushbackX = pushbackX - (projectedMagnitude * hardPushbackNorm.X);
-								pushbackY = pushbackY - (projectedMagnitude * hardPushbackNorm.Y);
-							}
-							i$4 = i$4 + (1) >> 0;
+					i$4 = 0;
+					while (true) {
+						if (!(i$4 < hardPushbackCnt)) { break; }
+						hardPushbackNorm = (x$10 = (x$11 = joinIndex$2 - 1 >> 0, ((x$11 < 0 || x$11 >= hardPushbackNormsArr.$length) ? ($throwRuntimeError("index out of range"), undefined) : hardPushbackNormsArr.$array[hardPushbackNormsArr.$offset + x$11])), ((i$4 < 0 || i$4 >= x$10.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$10.$array[x$10.$offset + i$4]));
+						projectedMagnitude = pushbackX * hardPushbackNorm.X + pushbackY * hardPushbackNorm.Y;
+						if (isBarrier || (isAnotherPlayer && 0 > projectedMagnitude)) {
+							pushbackX = pushbackX - (projectedMagnitude * hardPushbackNorm.X);
+							pushbackY = pushbackY - (projectedMagnitude * hardPushbackNorm.Y);
 						}
+						i$4 = i$4 + (1) >> 0;
 					}
 					_index = joinIndex$2 - 1 >> 0;
 					((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X = ((_index < 0 || _index >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + _index]).X + (pushbackX);
@@ -6653,9 +6628,9 @@ $packages["jsexport/battle"] = (function() {
 					if (0.5 < normAlignmentWithGravity) {
 						landedOnGravityPushback = true;
 					}
-				$s = 30; continue;
-				case 31:
-			/* } */ case 29:
+				$s = 27; continue;
+				case 28:
+			/* } */ case 26:
 			if (landedOnGravityPushback) {
 				thatPlayerInNextFrame$2.InAir = false;
 				fallStopping = currPlayerDownsync$3.InAir && 0 >= currPlayerDownsync$3.VelY;
@@ -6704,7 +6679,7 @@ $packages["jsexport/battle"] = (function() {
 				if (thatPlayerInNextFrame$2.InAir) {
 					_tuple$13 = (_entry$4 = noOpSet[$Int32.keyFor(currPlayerDownsync$3.CharacterState)], _entry$4 !== undefined ? [_entry$4.v, true] : [false, false]);
 					existent$4 = _tuple$13[1];
-					if (!existent$4 && 0 < hardPushbackCnt) {
+					if (!existent$4) {
 						i$5 = 0;
 						while (true) {
 							if (!(i$5 < hardPushbackCnt)) { break; }
@@ -6739,62 +6714,60 @@ $packages["jsexport/battle"] = (function() {
 				}
 			}
 			_i$5++;
-		$s = 25; continue;
-		case 26:
-		_ref$8 = bulletColliders;
-		_i$6 = 0;
-		/* while (true) { */ case 33:
-			/* if (!(_i$6 < _ref$8.$length)) { break; } */ if(!(_i$6 < _ref$8.$length)) { $s = 34; continue; }
-			bulletCollider = ((_i$6 < 0 || _i$6 >= _ref$8.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$8.$array[_ref$8.$offset + _i$6]);
+		$s = 22; continue;
+		case 23:
+		i$6 = nextRenderFramePlayers.$length;
+		/* while (true) { */ case 30:
+			/* if (!(i$6 < colliderCnt)) { break; } */ if(!(i$6 < colliderCnt)) { $s = 31; continue; }
+			bulletCollider = ((i$6 < 0 || i$6 >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + i$6]);
 			collided$1 = bulletCollider.CheckAllWithHolder(0, 0, collision);
-			bulletCollider.Space.RemoveSingle(bulletCollider);
 			if (!collided$1) {
-				_i$6++;
-				/* continue; */ $s = 33; continue;
+				i$6 = i$6 + (1) >> 0;
+				/* continue; */ $s = 30; continue;
 			}
 			exploded = false;
 			explodedOnAnotherPlayer = false;
 			bulletStaticAttr = ptrType$1.nil;
 			bulletBattleAttr = ptrType.nil;
-			_ref$9 = bulletCollider.Data;
-			if ($assertType(_ref$9, ptrType$3, true)[1]) {
-				v$5 = _ref$9.$val;
+			_ref$8 = bulletCollider.Data;
+			if ($assertType(_ref$8, ptrType$3, true)[1]) {
+				v$5 = _ref$8.$val;
 				bulletStaticAttr = v$5.Bullet;
 				bulletBattleAttr = v$5.BattleAttr;
-			} else if ($assertType(_ref$9, ptrType$8, true)[1]) {
-				v$6 = _ref$9.$val;
+			} else if ($assertType(_ref$8, ptrType$8, true)[1]) {
+				v$6 = _ref$8.$val;
 				bulletStaticAttr = v$6.Bullet;
 				bulletBattleAttr = v$6.BattleAttr;
 			}
 			bulletShape = $assertType(bulletCollider.Shape, ptrType$9);
 			offender$2 = (x$14 = currRenderFrame.PlayersArr, x$15 = bulletBattleAttr.OffenderJoinIndex - 1 >> 0, ((x$15 < 0 || x$15 >= x$14.$length) ? ($throwRuntimeError("index out of range"), undefined) : x$14.$array[x$14.$offset + x$15]));
-			/* while (true) { */ case 35:
-				obj$1 = collision.FirstCollidedObject();
+			/* while (true) { */ case 32:
+				obj$1 = collision.PopFirstCollidedObject();
 				if (ptrType$6.nil === obj$1) {
-					/* break; */ $s = 36; continue;
+					/* break; */ $s = 33; continue;
 				}
 				defenderShape = $assertType(obj$1.Shape, ptrType$9);
-				_ref$10 = obj$1.Data;
-				/* */ if ($assertType(_ref$10, ptrType$7, true)[1]) { $s = 37; continue; }
-				/* */ $s = 38; continue;
-				/* if ($assertType(_ref$10, ptrType$7, true)[1]) { */ case 37:
-					t = _ref$10.$val;
+				_ref$9 = obj$1.Data;
+				/* */ if ($assertType(_ref$9, ptrType$7, true)[1]) { $s = 34; continue; }
+				/* */ $s = 35; continue;
+				/* if ($assertType(_ref$9, ptrType$7, true)[1]) { */ case 34:
+					t = _ref$9.$val;
 					if (bulletBattleAttr.OffenderJoinIndex === t.JoinIndex) {
-						/* continue; */ $s = 35; continue;
+						/* continue; */ $s = 32; continue;
 					}
-					_r$7 = calcPushbacks(0, 0, bulletShape, defenderShape); /* */ $s = 40; case 40: if($c) { $c = false; _r$7 = _r$7.$blk(); } if (_r$7 && _r$7.$blk !== undefined) { break s; }
-					_tuple$14 = _r$7;
+					_r$4 = calcPushbacks(0, 0, bulletShape, defenderShape); /* */ $s = 37; case 37: if($c) { $c = false; _r$4 = _r$4.$blk(); } if (_r$4 && _r$4.$blk !== undefined) { break s; }
+					_tuple$14 = _r$4;
 					overlapped$1 = _tuple$14[0];
 					if (!overlapped$1) {
-						/* continue; */ $s = 35; continue;
+						/* continue; */ $s = 32; continue;
 					}
 					_tuple$15 = (_entry$5 = invinsibleSet[$Int32.keyFor(t.CharacterState)], _entry$5 !== undefined ? [_entry$5.v, true] : [false, false]);
 					existent$5 = _tuple$15[1];
 					if (existent$5) {
-						/* continue; */ $s = 35; continue;
+						/* continue; */ $s = 32; continue;
 					}
 					if (0 < t.FramesInvinsible) {
-						/* continue; */ $s = 35; continue;
+						/* continue; */ $s = 32; continue;
 					}
 					exploded = true;
 					explodedOnAnotherPlayer = true;
@@ -6825,41 +6798,41 @@ $packages["jsexport/battle"] = (function() {
 							atkedPlayerInNextFrame.FramesToRecover = bulletStaticAttr.HitStunFrames;
 						}
 					}
-					$s = 39; continue;
-				/* } else { */ case 38:
-					t$1 = _ref$10;
+					$s = 36; continue;
+				/* } else { */ case 35:
+					t$1 = _ref$9;
 					exploded = true;
-				/* } */ case 39:
-			$s = 35; continue;
-			case 36:
+				/* } */ case 36:
+			$s = 32; continue;
+			case 33:
 			if (exploded) {
-				_ref$11 = bulletCollider.Data;
-				if ($assertType(_ref$11, ptrType$3, true)[1]) {
-					v$7 = _ref$11.$val;
+				_ref$10 = bulletCollider.Data;
+				if ($assertType(_ref$10, ptrType$3, true)[1]) {
+					v$7 = _ref$10.$val;
 					v$7.BlState = 2;
 					if (explodedOnAnotherPlayer) {
 						v$7.FramesInBlState = 0;
 					} else {
 						v$7.FramesInBlState = v$7.Bullet.ExplosionFrames + 1 >> 0;
 					}
-				} else if ($assertType(_ref$11, ptrType$8, true)[1]) {
-					v$8 = _ref$11.$val;
+				} else if ($assertType(_ref$10, ptrType$8, true)[1]) {
+					v$8 = _ref$10.$val;
 					v$8.BlState = 2;
 					v$8.FramesInBlState = 0;
 				}
 			}
-			_i$6++;
-		$s = 33; continue;
-		case 34:
-		_ref$12 = currRenderFrame.PlayersArr;
-		_i$7 = 0;
+			i$6 = i$6 + (1) >> 0;
+		$s = 30; continue;
+		case 31:
+		_ref$11 = currRenderFrame.PlayersArr;
+		_i$6 = 0;
 		while (true) {
-			if (!(_i$7 < _ref$12.$length)) { break; }
-			i$6 = _i$7;
-			currPlayerDownsync$4 = ((_i$7 < 0 || _i$7 >= _ref$12.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$12.$array[_ref$12.$offset + _i$7]);
+			if (!(_i$6 < _ref$11.$length)) { break; }
+			i$7 = _i$6;
+			currPlayerDownsync$4 = ((_i$6 < 0 || _i$6 >= _ref$11.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$11.$array[_ref$11.$offset + _i$6]);
 			joinIndex$3 = currPlayerDownsync$4.JoinIndex;
-			playerCollider$2 = ((i$6 < 0 || i$6 >= playerColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : playerColliders.$array[playerColliders.$offset + i$6]);
-			thatPlayerInNextFrame$3 = ((i$6 < 0 || i$6 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$6]);
+			playerCollider$2 = ((i$7 < 0 || i$7 >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + i$7]);
+			thatPlayerInNextFrame$3 = ((i$7 < 0 || i$7 >= nextRenderFramePlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : nextRenderFramePlayers.$array[nextRenderFramePlayers.$offset + i$7]);
 			_tuple$16 = PolygonColliderBLToVirtualGridPos(playerCollider$2.X - (x$18 = joinIndex$3 - 1 >> 0, ((x$18 < 0 || x$18 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$18])).X, playerCollider$2.Y - (x$19 = joinIndex$3 - 1 >> 0, ((x$19 < 0 || x$19 >= effPushbacks.$length) ? ($throwRuntimeError("index out of range"), undefined) : effPushbacks.$array[effPushbacks.$offset + x$19])).Y, playerCollider$2.W * 0.5, playerCollider$2.H * 0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY);
 			thatPlayerInNextFrame$3.VirtualGridX = _tuple$16[0];
 			thatPlayerInNextFrame$3.VirtualGridY = _tuple$16[1];
@@ -6867,7 +6840,7 @@ $packages["jsexport/battle"] = (function() {
 				oldNextCharacterState = thatPlayerInNextFrame$3.CharacterState;
 				_3 = oldNextCharacterState;
 				if ((_3 === (0)) || (_3 === (1)) || (_3 === (17))) {
-					if (((i$6 < 0 || i$6 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$6]) || (5 === currPlayerDownsync$4.CharacterState)) {
+					if (((i$7 < 0 || i$7 >= jumpedOrNotList.$length) ? ($throwRuntimeError("index out of range"), undefined) : jumpedOrNotList.$array[jumpedOrNotList.$offset + i$7]) || (5 === currPlayerDownsync$4.CharacterState)) {
 						thatPlayerInNextFrame$3.CharacterState = 5;
 					} else {
 						thatPlayerInNextFrame$3.CharacterState = 4;
@@ -6897,20 +6870,19 @@ $packages["jsexport/battle"] = (function() {
 				thatPlayerInNextFrame$3.ActiveSkillId = -1;
 				thatPlayerInNextFrame$3.ActiveSkillHit = -1;
 			}
-			_i$7++;
+			_i$6++;
 		}
-		_ref$13 = playerColliders;
-		_i$8 = 0;
+		i$8 = 0;
 		while (true) {
-			if (!(_i$8 < _ref$13.$length)) { break; }
-			playerCollider$3 = ((_i$8 < 0 || _i$8 >= _ref$13.$length) ? ($throwRuntimeError("index out of range"), undefined) : _ref$13.$array[_ref$13.$offset + _i$8]);
-			playerCollider$3.Space.RemoveSingle(playerCollider$3);
-			_i$8++;
+			if (!(i$8 < colliderCnt)) { break; }
+			dynamicCollider = ((i$8 < 0 || i$8 >= dynamicRectangleColliders.$length) ? ($throwRuntimeError("index out of range"), undefined) : dynamicRectangleColliders.$array[dynamicRectangleColliders.$offset + i$8]);
+			dynamicCollider.Space.RemoveSingle(dynamicCollider);
+			i$8 = i$8 + (1) >> 0;
 		}
 		ret.Id = nextRenderFrameId;
 		ret.BulletLocalIdCounter = bulletLocalId;
 		$s = -1; return true;
-		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _2, _3, _4, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _entry$6, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _i$7, _i$8, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _r$5, _r$6, _r$7, _ref, _ref$1, _ref$10, _ref$11, _ref$12, _ref$13, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, alignedWithInertia, atkedPlayerInNextFrame, bShape, bulletBattleAttr, bulletCollider, bulletColliders, bulletLocalId, bulletShape, bulletStaticAttr, bulletWx, bulletWx$1, bulletWy, bulletWy$1, candidate, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, collided, collided$1, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, currRenderFrameId, defenderShape, effDx, effDy, effPushbacks, exactTurningAround, existent, existent$1, existent$2, existent$3, existent$4, existent$5, existent$6, exploded, explodedOnAnotherPlayer, fallStopping, fireballBullet, fireballBulletCnt, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackCnt, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNormsArr, hasBeenOnWallChState, hasBeenOnWallCollisionResultForSameChState, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, i$5, i$6, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, isWallJumping, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, meleeBulletCnt, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameId, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, offender, offender$1, offender$2, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerCollider$3, playerColliders, playerShape, prevCapturedByInertia, prevFireball, prevMelee, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, renderFrameBuffer, ret, roomCapacity, skillConfig, skillId, stoppingFromWalking, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, v$6, v$7, v$8, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, $s};return $f;
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame, $c: true, $r, _1, _2, _3, _4, _entry, _entry$1, _entry$2, _entry$3, _entry$4, _entry$5, _entry$6, _i, _i$1, _i$2, _i$3, _i$4, _i$5, _i$6, _index, _index$1, _index$2, _r, _r$1, _r$2, _r$3, _r$4, _ref, _ref$1, _ref$10, _ref$11, _ref$2, _ref$3, _ref$4, _ref$5, _ref$6, _ref$7, _ref$8, _ref$9, _tmp, _tmp$1, _tmp$10, _tmp$11, _tmp$12, _tmp$13, _tmp$14, _tmp$15, _tmp$16, _tmp$17, _tmp$18, _tmp$19, _tmp$2, _tmp$20, _tmp$21, _tmp$22, _tmp$23, _tmp$24, _tmp$25, _tmp$26, _tmp$27, _tmp$28, _tmp$3, _tmp$4, _tmp$5, _tmp$6, _tmp$7, _tmp$8, _tmp$9, _tuple, _tuple$1, _tuple$10, _tuple$11, _tuple$12, _tuple$13, _tuple$14, _tuple$15, _tuple$16, _tuple$17, _tuple$2, _tuple$3, _tuple$4, _tuple$5, _tuple$6, _tuple$7, _tuple$8, _tuple$9, alignedWithInertia, atkedPlayerInNextFrame, bShape, bulletBattleAttr, bulletCollider, bulletLocalId, bulletShape, bulletStaticAttr, bulletWx, bulletWx$1, bulletWy, bulletWy$1, candidate, chConfig, chConfig$1, chConfig$2, chConfigsOrderedByJoinIndex, collided, collided$1, colliderCnt, colliderHeight, colliderWidth, colliderWorldHeight, colliderWorldWidth, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currPlayerDownsync, currPlayerDownsync$1, currPlayerDownsync$2, currPlayerDownsync$3, currPlayerDownsync$4, currRenderFrame, currRenderFrameId, defenderShape, dynamicCollider, dynamicRectangleColliders, effDx, effDy, effPushbacks, exactTurningAround, existent, existent$1, existent$2, existent$3, existent$4, existent$5, existent$6, exploded, explodedOnAnotherPlayer, fallStopping, fireballBullet, fireballBulletCnt, halfColliderHeightDiff, halfColliderWidthDiff, halfColliderWorldHeightDiff, hardPushbackCnt, hardPushbackNorm, hardPushbackNorm$1, hardPushbackNormsArr, hasBeenOnWallChState, hasBeenOnWallCollisionResultForSameChState, hasLockVel, hitboxSizeWx, hitboxSizeWx$1, hitboxSizeWy, hitboxSizeWy$1, i, i$1, i$2, i$3, i$4, i$5, i$6, i$7, i$8, inputsBuffer, isAnotherPlayer, isBarrier, isBullet, isWallJumping, joinIndex, joinIndex$1, joinIndex$2, joinIndex$3, jumpedOrNot, jumpedOrNotList, landedOnGravityPushback, meleeBullet, meleeBulletCnt, newBulletCollider, newBulletCollider$1, newVx, newVy, nextRenderFrameFireballBullets, nextRenderFrameId, nextRenderFrameMeleeBullets, nextRenderFramePlayers, normAlignmentWithGravity, normAlignmentWithHorizon1, normAlignmentWithHorizon2, obj, obj$1, offender, offender$1, offender$2, oldFramesToRecover, oldNextCharacterState, overlapResult, overlapped, overlapped$1, patternId, playerCollider, playerCollider$1, playerCollider$2, playerShape, prevCapturedByInertia, prevFireball, prevMelee, projectedMagnitude, pushbackVelX, pushbackVelY, pushbackX, pushbackY, renderFrameBuffer, ret, roomCapacity, skillConfig, skillId, stoppingFromWalking, t, t$1, thatPlayerInNextFrame, thatPlayerInNextFrame$1, thatPlayerInNextFrame$2, thatPlayerInNextFrame$3, v, v$1, v$2, v$3, v$4, v$5, v$6, v$7, v$8, wx, wy, x, x$1, x$10, x$11, x$12, x$13, x$14, x$15, x$16, x$17, x$18, x$19, x$2, x$3, x$4, x$5, x$6, x$7, x$8, x$9, xfac, xfac$1, xfac$2, xfac$3, xfac$4, $s};return $f;
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame;
 	GenerateRectCollider = function(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag) {
@@ -6935,6 +6907,24 @@ $packages["jsexport/battle"] = (function() {
 		$s = -1; return collider;
 		/* */ } return; } var $f = {$blk: generateRectColliderInCollisionSpace, $c: true, $r, blX, blY, collider, data, h, shape, tag, w, $s};return $f;
 	};
+	UpdateRectCollider = function(collider, wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY, data, tag) {
+		var _tmp, _tmp$1, _tmp$2, _tmp$3, _tuple, blX, blY, bottomPadding, collider, data, h, leftPadding, rectShape, rightPadding, spaceOffsetX, spaceOffsetY, tag, topPadding, w, wx, wy;
+		_tuple = WorldToPolygonColliderBLPos(wx, wy, w * 0.5, h * 0.5, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY);
+		blX = _tuple[0];
+		blY = _tuple[1];
+		_tmp = blX;
+		_tmp$1 = blY;
+		_tmp$2 = w;
+		_tmp$3 = h;
+		collider.X = _tmp;
+		collider.Y = _tmp$1;
+		collider.W = _tmp$2;
+		collider.H = _tmp$3;
+		rectShape = $assertType(collider.Shape, ptrType$9);
+		rectShape.UpdateAsRectangle(0, 0, w, h);
+		collider.Data = data;
+	};
+	$pkg.UpdateRectCollider = UpdateRectCollider;
 	GenerateConvexPolygonCollider = function(unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag) {
 		var {_i, _i$1, _ref, _ref$1, _tmp, _tmp$1, aligned, collider, data, h, i, i$1, j, p, pi, pj, shape, spaceOffsetX, spaceOffsetY, tag, unalignedSrc, w, x, $s, $r, $c} = $restore(this, {unalignedSrc, spaceOffsetX, spaceOffsetY, data, tag});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
@@ -6943,7 +6933,7 @@ $packages["jsexport/battle"] = (function() {
 		_tmp$1 = 0;
 		w = _tmp;
 		h = _tmp$1;
-		shape = resolv.NewConvexPolygon(sliceType$5.nil);
+		shape = resolv.NewConvexPolygon(sliceType$4.nil);
 		_ref = aligned.Points;
 		_i = 0;
 		while (true) {
@@ -6974,10 +6964,10 @@ $packages["jsexport/battle"] = (function() {
 		while (true) {
 			if (!(i$1 < aligned.Points.$length)) { break; }
 			p = (x = aligned.Points, ((i$1 < 0 || i$1 >= x.$length) ? ($throwRuntimeError("index out of range"), undefined) : x.$array[x.$offset + i$1]));
-			shape.AddPoints(new sliceType$5([p.X, p.Y]));
+			shape.AddPoints(new sliceType$4([p.X, p.Y]));
 			i$1 = i$1 + (1) >> 0;
 		}
-		collider = resolv.NewObject(aligned.Anchor.X + spaceOffsetX, aligned.Anchor.Y + spaceOffsetY, w, h, new sliceType$6([tag]));
+		collider = resolv.NewObject(aligned.Anchor.X + spaceOffsetX, aligned.Anchor.Y + spaceOffsetY, w, h, new sliceType$5([tag]));
 		$r = collider.SetShape(shape); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		collider.Data = data;
 		$s = -1; return collider;
@@ -7000,7 +6990,7 @@ $packages["jsexport/battle"] = (function() {
 			}
 			_i++;
 		}
-		output = new Polygon2D.ptr(new Vec2D.ptr(input.Anchor.X + boundingBoxBL.X, input.Anchor.Y + boundingBoxBL.Y), $makeSlice(sliceType$7, input.Points.$length));
+		output = new Polygon2D.ptr(new Vec2D.ptr(input.Anchor.X + boundingBoxBL.X, input.Anchor.Y + boundingBoxBL.Y), $makeSlice(sliceType$6, input.Points.$length));
 		_ref$1 = input.Points;
 		_i$1 = 0;
 		while (true) {
@@ -7030,7 +7020,7 @@ $packages["jsexport/battle"] = (function() {
 	$pkg.NewPlayerDownsync = NewPlayerDownsync;
 	NewPreallocatedRoomDownsyncFrame = function(roomCapacity, preallocMeleeBulletCount, preallocFireballBulletCount) {
 		var i, i$1, i$2, preallocFireballBulletCount, preallocMeleeBulletCount, preallocatedFireball, preallocatedFireballBullets, preallocatedMelee, preallocatedMeleeBullets, preallocatedPlayer, preallocatedPlayers, roomCapacity;
-		preallocatedPlayers = $makeSlice(sliceType$8, roomCapacity);
+		preallocatedPlayers = $makeSlice(sliceType$7, roomCapacity);
 		i = 0;
 		while (true) {
 			if (!(i < roomCapacity)) { break; }
@@ -7038,7 +7028,7 @@ $packages["jsexport/battle"] = (function() {
 			((i < 0 || i >= preallocatedPlayers.$length) ? ($throwRuntimeError("index out of range"), undefined) : preallocatedPlayers.$array[preallocatedPlayers.$offset + i] = preallocatedPlayer);
 			i = i + (1) >> 0;
 		}
-		preallocatedMeleeBullets = $makeSlice(sliceType$9, preallocMeleeBulletCount);
+		preallocatedMeleeBullets = $makeSlice(sliceType$8, preallocMeleeBulletCount);
 		i$1 = 0;
 		while (true) {
 			if (!(i$1 < preallocMeleeBulletCount)) { break; }
@@ -7046,7 +7036,7 @@ $packages["jsexport/battle"] = (function() {
 			((i$1 < 0 || i$1 >= preallocatedMeleeBullets.$length) ? ($throwRuntimeError("index out of range"), undefined) : preallocatedMeleeBullets.$array[preallocatedMeleeBullets.$offset + i$1] = preallocatedMelee);
 			i$1 = i$1 + (1) >> 0;
 		}
-		preallocatedFireballBullets = $makeSlice(sliceType$10, preallocFireballBulletCount);
+		preallocatedFireballBullets = $makeSlice(sliceType$9, preallocFireballBulletCount);
 		i$2 = 0;
 		while (true) {
 			if (!(i$2 < preallocFireballBulletCount)) { break; }
@@ -7060,11 +7050,11 @@ $packages["jsexport/battle"] = (function() {
 	ptrType$7.methods = [{prop: "GetId", name: "GetId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetJoinIndex", name: "GetJoinIndex", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVirtualGridX", name: "GetVirtualGridX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVirtualGridY", name: "GetVirtualGridY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetDirX", name: "GetDirX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetDirY", name: "GetDirY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVelX", name: "GetVelX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVelY", name: "GetVelY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetSpeed", name: "GetSpeed", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHp", name: "GetHp", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetMaxHp", name: "GetMaxHp", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetCharacterState", name: "GetCharacterState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetFramesToRecover", name: "GetFramesToRecover", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetFramesInChState", name: "GetFramesInChState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetInAir", name: "GetInAir", pkg: "", typ: $funcType([], [$Bool], false)}, {prop: "GetOnWall", name: "GetOnWall", pkg: "", typ: $funcType([], [$Bool], false)}, {prop: "GetOnWallNormX", name: "GetOnWallNormX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetColliderRadius", name: "GetColliderRadius", pkg: "", typ: $funcType([], [$Int32], false)}];
 	ptrType$3.methods = [{prop: "GetBlState", name: "GetBlState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetFramesInBlState", name: "GetFramesInBlState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetBulletLocalId", name: "GetBulletLocalId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetOffenderJoinIndex", name: "GetOffenderJoinIndex", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetOriginatedRenderFrameId", name: "GetOriginatedRenderFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetStartupFrames", name: "GetStartupFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetActiveFrames", name: "GetActiveFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxSizeX", name: "GetHitboxSizeX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxSizeY", name: "GetHitboxSizeY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxOffsetX", name: "GetHitboxOffsetX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxOffsetY", name: "GetHitboxOffsetY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetExplosionFrames", name: "GetExplosionFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetSpeciesId", name: "GetSpeciesId", pkg: "", typ: $funcType([], [$Int32], false)}];
 	ptrType$8.methods = [{prop: "GetVirtualGridX", name: "GetVirtualGridX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVirtualGridY", name: "GetVirtualGridY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetDirX", name: "GetDirX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetDirY", name: "GetDirY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVelX", name: "GetVelX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetVelY", name: "GetVelY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetSpeed", name: "GetSpeed", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetBlState", name: "GetBlState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetFramesInBlState", name: "GetFramesInBlState", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetBulletLocalId", name: "GetBulletLocalId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetOffenderJoinIndex", name: "GetOffenderJoinIndex", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetOriginatedRenderFrameId", name: "GetOriginatedRenderFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetStartupFrames", name: "GetStartupFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetActiveFrames", name: "GetActiveFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxSizeX", name: "GetHitboxSizeX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxSizeY", name: "GetHitboxSizeY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxOffsetX", name: "GetHitboxOffsetX", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetHitboxOffsetY", name: "GetHitboxOffsetY", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetExplosionFrames", name: "GetExplosionFrames", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetSpeciesId", name: "GetSpeciesId", pkg: "", typ: $funcType([], [$Int32], false)}];
-	ptrType$4.methods = [{prop: "GetId", name: "GetId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetCountdownNanos", name: "GetCountdownNanos", pkg: "", typ: $funcType([], [$Int64], false)}, {prop: "GetBackendUnconfirmedMask", name: "GetBackendUnconfirmedMask", pkg: "", typ: $funcType([], [$Uint64], false)}, {prop: "GetBulletLocalIdCounter", name: "GetBulletLocalIdCounter", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetShouldForceResync", name: "GetShouldForceResync", pkg: "", typ: $funcType([], [$Bool], false)}, {prop: "GetPlayersArr", name: "GetPlayersArr", pkg: "", typ: $funcType([], [sliceType$8], false)}, {prop: "GetMeleeBullets", name: "GetMeleeBullets", pkg: "", typ: $funcType([], [sliceType$9], false)}, {prop: "GetFireballBullets", name: "GetFireballBullets", pkg: "", typ: $funcType([], [sliceType$10], false)}];
+	ptrType$4.methods = [{prop: "GetId", name: "GetId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetCountdownNanos", name: "GetCountdownNanos", pkg: "", typ: $funcType([], [$Int64], false)}, {prop: "GetBackendUnconfirmedMask", name: "GetBackendUnconfirmedMask", pkg: "", typ: $funcType([], [$Uint64], false)}, {prop: "GetBulletLocalIdCounter", name: "GetBulletLocalIdCounter", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetShouldForceResync", name: "GetShouldForceResync", pkg: "", typ: $funcType([], [$Bool], false)}, {prop: "GetPlayersArr", name: "GetPlayersArr", pkg: "", typ: $funcType([], [sliceType$7], false)}, {prop: "GetMeleeBullets", name: "GetMeleeBullets", pkg: "", typ: $funcType([], [sliceType$8], false)}, {prop: "GetFireballBullets", name: "GetFireballBullets", pkg: "", typ: $funcType([], [sliceType$9], false)}];
 	ptrType$10.methods = [{prop: "GetInputFrameId", name: "GetInputFrameId", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetInputList", name: "GetInputList", pkg: "", typ: $funcType([], [sliceType$3], false)}, {prop: "GetConfirmedList", name: "GetConfirmedList", pkg: "", typ: $funcType([], [$Uint64], false)}];
 	ptrType$14.methods = [{prop: "GetSpeed", name: "GetSpeed", pkg: "", typ: $funcType([], [$Int32], false)}, {prop: "GetSpeciesId", name: "GetSpeciesId", pkg: "", typ: $funcType([], [$Int], false)}, {prop: "GetSpeciesName", name: "GetSpeciesName", pkg: "", typ: $funcType([], [$String], false)}];
 	Vec2D.init("", [{prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
-	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$11, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$7, tag: ""}]);
+	Polygon2D.init("", [{prop: "Anchor", name: "Anchor", embedded: false, exported: true, typ: ptrType$11, tag: ""}, {prop: "Points", name: "Points", embedded: false, exported: true, typ: sliceType$6, tag: ""}]);
 	PlayerDownsync.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleState", name: "BattleState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "JoinIndex", name: "JoinIndex", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ColliderRadius", name: "ColliderRadius", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Removed", name: "Removed", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "Score", name: "Score", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "LastMoveGmtMillis", name: "LastMoveGmtMillis", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesToRecover", name: "FramesToRecover", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInChState", name: "FramesInChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hp", name: "Hp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "MaxHp", name: "MaxHp", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CharacterState", name: "CharacterState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InAir", name: "InAir", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "OnWall", name: "OnWall", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "OnWallNormX", name: "OnWallNormX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "OnWallNormY", name: "OnWallNormY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "CapturedByInertia", name: "CapturedByInertia", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "ActiveSkillId", name: "ActiveSkillId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ActiveSkillHit", name: "ActiveSkillHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInvinsible", name: "FramesInvinsible", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BulletTeamId", name: "BulletTeamId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ChCollisionTeamId", name: "ChCollisionTeamId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RevivalVirtualGridX", name: "RevivalVirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RevivalVirtualGridY", name: "RevivalVirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	InputFrameDecoded.init("", [{prop: "Dx", name: "Dx", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Dy", name: "Dy", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnALevel", name: "BtnALevel", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BtnBLevel", name: "BtnBLevel", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	Barrier.init("", [{prop: "Boundary", name: "Boundary", embedded: false, exported: true, typ: ptrType$12, tag: ""}]);
@@ -7073,7 +7063,7 @@ $packages["jsexport/battle"] = (function() {
 	MeleeBullet.init("", [{prop: "BlState", name: "BlState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInBlState", name: "FramesInBlState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleAttr", name: "BattleAttr", embedded: false, exported: true, typ: ptrType, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: false, exported: true, typ: ptrType$1, tag: ""}]);
 	FireballBullet.init("", [{prop: "VirtualGridX", name: "VirtualGridX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VirtualGridY", name: "VirtualGridY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirX", name: "DirX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "DirY", name: "DirY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelX", name: "VelX", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "VelY", name: "VelY", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Speed", name: "Speed", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BlState", name: "BlState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "FramesInBlState", name: "FramesInBlState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BattleAttr", name: "BattleAttr", embedded: false, exported: true, typ: ptrType, tag: ""}, {prop: "Bullet", name: "Bullet", embedded: false, exported: true, typ: ptrType$1, tag: ""}]);
 	Skill.init("", [{prop: "BattleLocalId", name: "BattleLocalId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFrames", name: "RecoveryFrames", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnBlock", name: "RecoveryFramesOnBlock", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "RecoveryFramesOnHit", name: "RecoveryFramesOnHit", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "ReleaseTriggerType", name: "ReleaseTriggerType", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "BoundChState", name: "BoundChState", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "Hits", name: "Hits", embedded: false, exported: true, typ: sliceType$2, tag: ""}]);
-	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$8, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$9, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$10, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BulletLocalIdCounter", name: "BulletLocalIdCounter", embedded: false, exported: true, typ: $Int32, tag: ""}]);
+	RoomDownsyncFrame.init("", [{prop: "Id", name: "Id", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "PlayersArr", name: "PlayersArr", embedded: false, exported: true, typ: sliceType$7, tag: ""}, {prop: "CountdownNanos", name: "CountdownNanos", embedded: false, exported: true, typ: $Int64, tag: ""}, {prop: "MeleeBullets", name: "MeleeBullets", embedded: false, exported: true, typ: sliceType$8, tag: ""}, {prop: "FireballBullets", name: "FireballBullets", embedded: false, exported: true, typ: sliceType$9, tag: ""}, {prop: "BackendUnconfirmedMask", name: "BackendUnconfirmedMask", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "ShouldForceResync", name: "ShouldForceResync", embedded: false, exported: true, typ: $Bool, tag: ""}, {prop: "BulletLocalIdCounter", name: "BulletLocalIdCounter", embedded: false, exported: true, typ: $Int32, tag: ""}]);
 	InputFrameDownsync.init("", [{prop: "InputFrameId", name: "InputFrameId", embedded: false, exported: true, typ: $Int32, tag: ""}, {prop: "InputList", name: "InputList", embedded: false, exported: true, typ: sliceType$3, tag: ""}, {prop: "ConfirmedList", name: "ConfirmedList", embedded: false, exported: true, typ: $Uint64, tag: ""}]);
 	NpcPatrolCue.init("", [{prop: "FlAct", name: "FlAct", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "FrAct", name: "FrAct", embedded: false, exported: true, typ: $Uint64, tag: ""}, {prop: "X", name: "X", embedded: false, exported: true, typ: $Float64, tag: ""}, {prop: "Y", name: "Y", embedded: false, exported: true, typ: $Float64, tag: ""}]);
 	SkillMapperType.init([$Int, ptrType$7], [$Int], false);
@@ -7213,60 +7203,79 @@ $packages["jsexport/battle"] = (function() {
 	return $pkg;
 })();
 $packages["jsexport"] = (function() {
-	var $pkg = {}, $init, js, battle, resolv, sliceType, ptrType, sliceType$1, ptrType$1, ptrType$2, sliceType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, ptrType$6, ptrType$7, ptrType$8, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, funcType$11, funcType$12, ptrType$9, funcType$13, funcType$14, funcType$15, funcType$16, sliceType$6, funcType$17, ptrType$10, ptrType$11, mapType, sliceType$7, ptrType$12, sliceType$8, sliceType$9, funcType$18, funcType$19, funcType$20, funcType$21, funcType$22, funcType$23, funcType$24, mapType$1, NewCollisionHolder, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewFireballBulletJs, NewNpcPatrolCue, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateConvexPolygonColliderJs, GetCharacterConfigsOrderedByJoinIndex, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, GetRoomDownsyncFrame, GetInputFrameDownsync, GetInput, GetPlayer, GetMeleeBullet, GetFireballBullet, main;
+	var $pkg = {}, $init, js, battle, resolv, ptrType, sliceType, sliceType$1, ptrType$1, sliceType$2, ptrType$2, ptrType$3, sliceType$3, ptrType$4, sliceType$4, ptrType$5, sliceType$5, ptrType$6, ptrType$7, ptrType$8, funcType, funcType$1, funcType$2, funcType$3, funcType$4, funcType$5, funcType$6, funcType$7, funcType$8, funcType$9, funcType$10, funcType$11, funcType$12, ptrType$9, funcType$13, funcType$14, funcType$15, funcType$16, sliceType$6, funcType$17, ptrType$10, ptrType$11, mapType, sliceType$7, ptrType$12, sliceType$8, sliceType$9, sliceType$10, funcType$18, funcType$19, funcType$20, funcType$21, funcType$22, funcType$23, funcType$24, funcType$25, mapType$1, NewDynamicRectangleColliders, NewCollisionHolder, NewInputFrameDownsync, NewRingBufferJs, NewCollisionSpaceJs, NewVec2DJs, NewPolygon2DJs, NewBarrierJs, NewPlayerDownsyncJs, NewMeleeBulletJs, NewFireballBulletJs, NewNpcPatrolCue, NewRoomDownsyncFrameJs, GetCollisionSpaceObjsJs, GenerateConvexPolygonColliderJs, GetCharacterConfigsOrderedByJoinIndex, ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, GetRoomDownsyncFrame, GetInputFrameDownsync, GetInput, GetPlayer, GetMeleeBullet, GetFireballBullet, main;
 	js = $packages["github.com/gopherjs/gopherjs/js"];
 	battle = $packages["jsexport/battle"];
 	resolv = $packages["resolv"];
-	sliceType = $sliceType($Uint64);
-	ptrType = $ptrType(battle.Vec2D);
-	sliceType$1 = $sliceType(ptrType);
-	ptrType$1 = $ptrType(battle.Polygon2D);
-	ptrType$2 = $ptrType(battle.PlayerDownsync);
-	sliceType$2 = $sliceType(ptrType$2);
-	ptrType$3 = $ptrType(battle.MeleeBullet);
+	ptrType = $ptrType(js.Object);
+	sliceType = $sliceType(ptrType);
+	sliceType$1 = $sliceType($Uint64);
+	ptrType$1 = $ptrType(battle.Vec2D);
+	sliceType$2 = $sliceType(ptrType$1);
+	ptrType$2 = $ptrType(battle.Polygon2D);
+	ptrType$3 = $ptrType(battle.PlayerDownsync);
 	sliceType$3 = $sliceType(ptrType$3);
-	ptrType$4 = $ptrType(battle.FireballBullet);
+	ptrType$4 = $ptrType(battle.MeleeBullet);
 	sliceType$4 = $sliceType(ptrType$4);
-	ptrType$5 = $ptrType(js.Object);
+	ptrType$5 = $ptrType(battle.FireballBullet);
 	sliceType$5 = $sliceType(ptrType$5);
 	ptrType$6 = $ptrType(battle.CharacterConfig);
 	ptrType$7 = $ptrType(battle.RoomDownsyncFrame);
 	ptrType$8 = $ptrType(battle.InputFrameDownsync);
-	funcType = $funcType([$Float64, $Float64], [ptrType$5], false);
-	funcType$1 = $funcType([ptrType, sliceType$1], [ptrType$5], false);
-	funcType$2 = $funcType([ptrType$1], [ptrType$5], false);
-	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Bool, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32], [ptrType$5], false);
-	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32, $Int32], [ptrType$5], false);
-	funcType$5 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32], [ptrType$5], false);
-	funcType$6 = $funcType([$Uint64, $Uint64, $Float64, $Float64], [ptrType$5], false);
-	funcType$7 = $funcType([$Int32, sliceType$2, $Int32, sliceType$3, sliceType$4], [ptrType$5], false);
-	funcType$8 = $funcType([$Int, $Int, $Int, $Int], [ptrType$5], false);
-	funcType$9 = $funcType([], [ptrType$5], false);
-	funcType$10 = $funcType([$Int32, sliceType, $Uint64], [ptrType$5], false);
-	funcType$11 = $funcType([$Int32], [ptrType$5], false);
-	funcType$12 = $funcType([ptrType$1, $Float64, $Float64, $emptyInterface, $String], [ptrType$5], false);
+	funcType = $funcType([$Float64, $Float64], [ptrType], false);
+	funcType$1 = $funcType([ptrType$1, sliceType$2], [ptrType], false);
+	funcType$2 = $funcType([ptrType$2], [ptrType], false);
+	funcType$3 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Bool, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32], [ptrType], false);
+	funcType$4 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32, $Int32], [ptrType], false);
+	funcType$5 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Bool, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32, $Int32], [ptrType], false);
+	funcType$6 = $funcType([$Uint64, $Uint64, $Float64, $Float64], [ptrType], false);
+	funcType$7 = $funcType([$Int32, sliceType$3, $Int32, sliceType$4, sliceType$5], [ptrType], false);
+	funcType$8 = $funcType([$Int, $Int, $Int, $Int], [ptrType], false);
+	funcType$9 = $funcType([], [ptrType], false);
+	funcType$10 = $funcType([$Int32, sliceType$1, $Uint64], [ptrType], false);
+	funcType$11 = $funcType([$Int32], [ptrType], false);
+	funcType$12 = $funcType([ptrType$2, $Float64, $Float64, $emptyInterface, $String], [ptrType], false);
 	ptrType$9 = $ptrType(resolv.Space);
-	funcType$13 = $funcType([ptrType$9], [sliceType$5], false);
+	funcType$13 = $funcType([ptrType$9], [sliceType], false);
 	funcType$14 = $funcType([$Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64, $Float64], [$Float64, $Float64], false);
 	funcType$15 = $funcType([$Float64, $Float64], [$Int32, $Int32], false);
 	funcType$16 = $funcType([$Int32, $Int32], [$Float64, $Float64], false);
 	sliceType$6 = $sliceType($Int);
-	funcType$17 = $funcType([sliceType$6], [sliceType$5], false);
+	funcType$17 = $funcType([sliceType$6], [sliceType], false);
 	ptrType$10 = $ptrType(resolv.RingBuffer);
 	ptrType$11 = $ptrType(resolv.Object);
 	mapType = $mapType($Int32, ptrType$11);
 	sliceType$7 = $sliceType(ptrType$6);
 	ptrType$12 = $ptrType(resolv.Collision);
-	sliceType$8 = $sliceType(sliceType$1);
+	sliceType$8 = $sliceType(sliceType$2);
 	sliceType$9 = $sliceType($Bool);
-	funcType$18 = $funcType([ptrType$10, $Int32, ptrType$9, mapType, $Float64, $Float64, sliceType$7, ptrType$10, ptrType$12, sliceType$1, sliceType$8, sliceType$9], [$Bool], false);
+	sliceType$10 = $sliceType(ptrType$11);
+	funcType$18 = $funcType([ptrType$10, $Int32, ptrType$9, mapType, $Float64, $Float64, sliceType$7, ptrType$10, ptrType$12, sliceType$2, sliceType$8, sliceType$9, sliceType$10], [$Bool], false);
 	funcType$19 = $funcType([$Int32], [$Int32], false);
 	funcType$20 = $funcType([$Int32], [$Bool], false);
 	funcType$21 = $funcType([$Int32, $Int32, $Int32, $Int32, $Int32], [$Bool], false);
-	funcType$22 = $funcType([ptrType$10, $Int32], [ptrType$5], false);
-	funcType$23 = $funcType([ptrType$7, $Int], [ptrType$5], false);
+	funcType$22 = $funcType([ptrType$10, $Int32], [ptrType], false);
+	funcType$23 = $funcType([ptrType$7, $Int], [ptrType], false);
 	funcType$24 = $funcType([ptrType$8, $Int], [$Uint64], false);
+	funcType$25 = $funcType([$Int], [sliceType], false);
 	mapType$1 = $mapType($String, $emptyInterface);
+	NewDynamicRectangleColliders = function(cnt) {
+		var {_r, _r$1, cnt, i, ret, $s, $r, $c} = $restore(this, {cnt});
+		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
+		ret = $makeSlice(sliceType, cnt);
+		i = 0;
+		/* while (true) { */ case 1:
+			/* if (!(i < cnt)) { break; } */ if(!(i < cnt)) { $s = 2; continue; }
+			_r = battle.GenerateRectCollider(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, $ifaceNil, ""); /* */ $s = 3; case 3: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+			_r$1 = js.MakeWrapper(_r); /* */ $s = 4; case 4: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
+			((i < 0 || i >= ret.$length) ? ($throwRuntimeError("index out of range"), undefined) : ret.$array[ret.$offset + i] = _r$1);
+			i = i + (1) >> 0;
+		$s = 1; continue;
+		case 2:
+		$s = -1; return ret;
+		/* */ } return; } var $f = {$blk: NewDynamicRectangleColliders, $c: true, $r, _r, _r$1, cnt, i, ret, $s};return $f;
+	};
+	$pkg.NewDynamicRectangleColliders = NewDynamicRectangleColliders;
 	NewCollisionHolder = function() {
 		return js.MakeWrapper(resolv.NewCollision());
 	};
@@ -7329,7 +7338,7 @@ $packages["jsexport"] = (function() {
 	GetCollisionSpaceObjsJs = function(space) {
 		var _i, _ref, i, obj, objs, ret, space;
 		objs = space.Objects();
-		ret = $makeSlice(sliceType$5, objs.$length);
+		ret = $makeSlice(sliceType, objs.$length);
 		_ref = objs;
 		_i = 0;
 		while (true) {
@@ -7355,7 +7364,7 @@ $packages["jsexport"] = (function() {
 	GetCharacterConfigsOrderedByJoinIndex = function(speciesIdList) {
 		var {_entry, _i, _r, _ref, i, ret, speciesId, speciesIdList, $s, $r, $c} = $restore(this, {speciesIdList});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
-		ret = $makeSlice(sliceType$5, speciesIdList.$length, speciesIdList.$length);
+		ret = $makeSlice(sliceType, speciesIdList.$length, speciesIdList.$length);
 		_ref = speciesIdList;
 		_i = 0;
 		/* while (true) { */ case 1:
@@ -7371,13 +7380,13 @@ $packages["jsexport"] = (function() {
 		/* */ } return; } var $f = {$blk: GetCharacterConfigsOrderedByJoinIndex, $c: true, $r, _entry, _i, _r, _ref, i, ret, speciesId, speciesIdList, $s};return $f;
 	};
 	$pkg.GetCharacterConfigsOrderedByJoinIndex = GetCharacterConfigsOrderedByJoinIndex;
-	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = function(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList) {
-		var {$24r, _r, chConfigsOrderedByJoinIndex, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrameId, effPushbacks, hardPushbackNormsArr, inputsBuffer, jumpedOrNotList, renderFrameBuffer, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList});
+	ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = function(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders) {
+		var {$24r, _r, chConfigsOrderedByJoinIndex, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrameId, dynamicRectangleColliders, effPushbacks, hardPushbackNormsArr, inputsBuffer, jumpedOrNotList, renderFrameBuffer, $s, $r, $c} = $restore(this, {inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders});
 		/* */ $s = $s || 0; s: while (true) { switch ($s) { case 0:
-		_r = battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
+		_r = battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
 		$24r = _r;
 		$s = 2; case 2: return $24r;
-		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, $c: true, $r, $24r, _r, chConfigsOrderedByJoinIndex, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrameId, effPushbacks, hardPushbackNormsArr, inputsBuffer, jumpedOrNotList, renderFrameBuffer, $s};return $f;
+		/* */ } return; } var $f = {$blk: ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs, $c: true, $r, $24r, _r, chConfigsOrderedByJoinIndex, collision, collisionSpaceOffsetX, collisionSpaceOffsetY, collisionSys, collisionSysMap, currRenderFrameId, dynamicRectangleColliders, effPushbacks, hardPushbackNormsArr, inputsBuffer, jumpedOrNotList, renderFrameBuffer, $s};return $f;
 	};
 	$pkg.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs = ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs;
 	GetRoomDownsyncFrame = function(renderFrameBuffer, frameId) {
@@ -7425,7 +7434,7 @@ $packages["jsexport"] = (function() {
 	};
 	$pkg.GetFireballBullet = GetFireballBullet;
 	main = function() {
-		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewFireballBulletJs", v: new funcType$5(NewFireballBulletJs) }, { k: "NewNpcPatrolCue", v: new funcType$6(NewNpcPatrolCue) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$7(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$8(NewCollisionSpaceJs) }, { k: "NewCollisionHolder", v: new funcType$9(NewCollisionHolder) }, { k: "NewInputFrameDownsync", v: new funcType$10(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$11(NewRingBufferJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$12(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$13(GetCollisionSpaceObjsJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$14(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$14(battle.PolygonColliderBLToWorldPos) }, { k: "WorldToVirtualGridPos", v: new funcType$15(battle.WorldToVirtualGridPos) }, { k: "VirtualGridToWorldPos", v: new funcType$16(battle.VirtualGridToWorldPos) }, { k: "GetCharacterConfigsOrderedByJoinIndex", v: new funcType$17(GetCharacterConfigsOrderedByJoinIndex) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$18(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "ConvertToDelayedInputFrameId", v: new funcType$19(battle.ConvertToDelayedInputFrameId) }, { k: "ConvertToNoDelayInputFrameId", v: new funcType$19(battle.ConvertToNoDelayInputFrameId) }, { k: "ConvertToFirstUsedRenderFrameId", v: new funcType$19(battle.ConvertToFirstUsedRenderFrameId) }, { k: "ConvertToLastUsedRenderFrameId", v: new funcType$19(battle.ConvertToLastUsedRenderFrameId) }, { k: "ShouldGenerateInputFrameUpsync", v: new funcType$20(battle.ShouldGenerateInputFrameUpsync) }, { k: "IsGeneralBulletActive", v: new funcType$21(battle.IsGeneralBulletActive) }, { k: "GetRoomDownsyncFrame", v: new funcType$22(GetRoomDownsyncFrame) }, { k: "GetInputFrameDownsync", v: new funcType$22(GetInputFrameDownsync) }, { k: "GetPlayer", v: new funcType$23(GetPlayer) }, { k: "GetMeleeBullet", v: new funcType$23(GetMeleeBullet) }, { k: "GetFireballBullet", v: new funcType$23(GetFireballBullet) }, { k: "GetInput", v: new funcType$24(GetInput) }]), mapType$1);
+		$global.gopkgs = $externalize($makeMap($String.keyFor, [{ k: "NewVec2DJs", v: new funcType(NewVec2DJs) }, { k: "NewPolygon2DJs", v: new funcType$1(NewPolygon2DJs) }, { k: "NewBarrierJs", v: new funcType$2(NewBarrierJs) }, { k: "NewPlayerDownsyncJs", v: new funcType$3(NewPlayerDownsyncJs) }, { k: "NewMeleeBulletJs", v: new funcType$4(NewMeleeBulletJs) }, { k: "NewFireballBulletJs", v: new funcType$5(NewFireballBulletJs) }, { k: "NewNpcPatrolCue", v: new funcType$6(NewNpcPatrolCue) }, { k: "NewRoomDownsyncFrameJs", v: new funcType$7(NewRoomDownsyncFrameJs) }, { k: "NewCollisionSpaceJs", v: new funcType$8(NewCollisionSpaceJs) }, { k: "NewCollisionHolder", v: new funcType$9(NewCollisionHolder) }, { k: "NewInputFrameDownsync", v: new funcType$10(NewInputFrameDownsync) }, { k: "NewRingBufferJs", v: new funcType$11(NewRingBufferJs) }, { k: "GenerateConvexPolygonColliderJs", v: new funcType$12(GenerateConvexPolygonColliderJs) }, { k: "GetCollisionSpaceObjsJs", v: new funcType$13(GetCollisionSpaceObjsJs) }, { k: "WorldToPolygonColliderBLPos", v: new funcType$14(battle.WorldToPolygonColliderBLPos) }, { k: "PolygonColliderBLToWorldPos", v: new funcType$14(battle.PolygonColliderBLToWorldPos) }, { k: "WorldToVirtualGridPos", v: new funcType$15(battle.WorldToVirtualGridPos) }, { k: "VirtualGridToWorldPos", v: new funcType$16(battle.VirtualGridToWorldPos) }, { k: "GetCharacterConfigsOrderedByJoinIndex", v: new funcType$17(GetCharacterConfigsOrderedByJoinIndex) }, { k: "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", v: new funcType$18(ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs) }, { k: "ConvertToDelayedInputFrameId", v: new funcType$19(battle.ConvertToDelayedInputFrameId) }, { k: "ConvertToNoDelayInputFrameId", v: new funcType$19(battle.ConvertToNoDelayInputFrameId) }, { k: "ConvertToFirstUsedRenderFrameId", v: new funcType$19(battle.ConvertToFirstUsedRenderFrameId) }, { k: "ConvertToLastUsedRenderFrameId", v: new funcType$19(battle.ConvertToLastUsedRenderFrameId) }, { k: "ShouldGenerateInputFrameUpsync", v: new funcType$20(battle.ShouldGenerateInputFrameUpsync) }, { k: "IsGeneralBulletActive", v: new funcType$21(battle.IsGeneralBulletActive) }, { k: "GetRoomDownsyncFrame", v: new funcType$22(GetRoomDownsyncFrame) }, { k: "GetInputFrameDownsync", v: new funcType$22(GetInputFrameDownsync) }, { k: "GetPlayer", v: new funcType$23(GetPlayer) }, { k: "GetMeleeBullet", v: new funcType$23(GetMeleeBullet) }, { k: "GetFireballBullet", v: new funcType$23(GetFireballBullet) }, { k: "GetInput", v: new funcType$24(GetInput) }, { k: "NewDynamicRectangleColliders", v: new funcType$25(NewDynamicRectangleColliders) }]), mapType$1);
 	};
 	$init = function() {
 		$pkg.$init = function() {};

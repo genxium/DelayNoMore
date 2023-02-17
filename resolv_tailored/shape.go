@@ -125,7 +125,7 @@ func (line *Line) IntersectionPointsCircle(circle *Circle) []Vector {
 }
 
 type ConvexPolygon struct {
-	Points []Vector
+	Points *RingBuffer
 	X, Y   float64
 	Closed bool
 }
@@ -135,44 +135,70 @@ type ConvexPolygon struct {
 // polygon square, with the vertices at {0,0}, {10,0}, {10, 10}, and {0, 10}.
 func NewConvexPolygon(points ...float64) *ConvexPolygon {
 
-	// if len(points)/2 < 2 {
-	// 	return nil
-	// }
-
-	cp := &ConvexPolygon{Points: []Vector{}, Closed: true}
+	cp := &ConvexPolygon{
+		Points: NewRingBuffer(6), // I don't expected more points to be coped with in this particular game
+		Closed: true,
+	}
 
 	cp.AddPoints(points...)
 
 	return cp
 }
 
-func (cp *ConvexPolygon) Clone() Shape {
-
-	points := []Vector{}
-
-	for _, point := range cp.Points {
-		points = append(points, point.Clone())
+func (cp *ConvexPolygon) GetPointByOffset(offset int32) Vector {
+	if cp.Points.Cnt <= offset {
+		return nil
 	}
+	return cp.Points.GetByFrameId(cp.Points.StFrameId + offset).(Vector)
+}
+
+func (cp *ConvexPolygon) Clone() Shape {
 
 	newPoly := NewConvexPolygon()
 	newPoly.X = cp.X
 	newPoly.Y = cp.Y
-	newPoly.AddPointsVec(points...)
+	for i := int32(0); i < cp.Points.Cnt; i++ {
+		newPoly.Points.Put(cp.GetPointByOffset(i))
+	}
 	newPoly.Closed = cp.Closed
 	return newPoly
-}
-
-// AddPointsVec allows you to add points to the ConvexPolygon with a slice of Vectors, each indicating a point / vertex.
-func (cp *ConvexPolygon) AddPointsVec(points ...Vector) {
-	cp.Points = append(cp.Points, points...)
 }
 
 // AddPoints allows you to add points to the ConvexPolygon with a slice or selection of float64s, with each pair indicating an X or Y value for
 // a point / vertex (i.e. AddPoints(0, 1, 2, 3) would add two points - one at {0, 1}, and another at {2, 3}).
 func (cp *ConvexPolygon) AddPoints(vertexPositions ...float64) {
 	for v := 0; v < len(vertexPositions); v += 2 {
-		cp.Points = append(cp.Points, Vector{vertexPositions[v], vertexPositions[v+1]})
+		// "resolv.Vector" is an alias of "[]float64", thus already a pointer type
+		cp.Points.Put(Vector{vertexPositions[v], vertexPositions[v+1]})
 	}
+}
+
+func (cp *ConvexPolygon) UpdateAsRectangle(x, y, w, h float64) bool {
+	// This function might look ugly but it's a fast in-place update!
+	if 4 != cp.Points.Cnt {
+		panic("ConvexPolygon not having exactly 4 vertices to form a rectangle#1!")
+	}
+	for i := int32(0); i < cp.Points.Cnt; i++ {
+		thatVec := cp.GetPointByOffset(i)
+		if nil == thatVec {
+			panic("ConvexPolygon not having exactly 4 vertices to form a rectangle#2!")
+		}
+		switch i {
+		case 0:
+			thatVec[0] = x
+			thatVec[1] = y
+		case 1:
+			thatVec[0] = x + w
+			thatVec[1] = y
+		case 2:
+			thatVec[0] = x + w
+			thatVec[1] = y + h
+		case 3:
+			thatVec[0] = x
+			thatVec[1] = y + h
+		}
+	}
+	return true
 }
 
 // Lines returns a slice of transformed Lines composing the ConvexPolygon.
@@ -200,8 +226,9 @@ func (cp *ConvexPolygon) Lines() []*Line {
 
 // Transformed returns the ConvexPolygon's points / vertices, transformed according to the ConvexPolygon's position.
 func (cp *ConvexPolygon) Transformed() []Vector {
-	transformed := make([]Vector, len(cp.Points))
-	for i, point := range cp.Points {
+	transformed := make([]Vector, cp.Points.Cnt)
+	for i := int32(0); i < cp.Points.Cnt; i++ {
+		point := cp.GetPointByOffset(i)
 		transformed[i] = Vector{point[0] + cp.X, point[1] + cp.Y}
 	}
 	return transformed
@@ -329,10 +356,6 @@ func (polygon *ConvexPolygon) PointInside(point Vector) bool {
 	}
 
 	return contactCount == 1
-}
-
-func (polygon *ConvexPolygon) GetPoints() []Vector {
-	return polygon.Points
 }
 
 type ContactSet struct {
@@ -551,42 +574,6 @@ func (cp *ConvexPolygon) ContainedBy(otherShape Shape) bool {
 	}
 
 	return true
-}
-
-// FlipH flips the ConvexPolygon's vertices horizontally according to their initial offset when adding the points.
-func (cp *ConvexPolygon) FlipH() {
-
-	for _, v := range cp.Points {
-		v[0] = -v[0]
-	}
-	// We have to reverse vertex order after flipping the vertices to ensure the winding order is consistent between Objects (so that the normals are consistently outside or inside, which is important
-	// when doing Intersection tests). If we assume that the normal of a line, going from vertex A to vertex B, is one direction, then the normal would be inverted if the vertices were flipped in position,
-	// but not in order. This would make Intersection tests drive objects into each other, instead of giving the delta to move away.
-	cp.ReverseVertexOrder()
-
-}
-
-// FlipV flips the ConvexPolygon's vertices vertically according to their initial offset when adding the points.
-func (cp *ConvexPolygon) FlipV() {
-
-	for _, v := range cp.Points {
-		v[1] = -v[1]
-	}
-	cp.ReverseVertexOrder()
-
-}
-
-// ReverseVertexOrder reverses the vertex ordering of the ConvexPolygon.
-func (cp *ConvexPolygon) ReverseVertexOrder() {
-
-	verts := []Vector{cp.Points[0]}
-
-	for i := len(cp.Points) - 1; i >= 1; i-- {
-		verts = append(verts, cp.Points[i])
-	}
-
-	cp.Points = verts
-
 }
 
 // NewRectangle returns a rectangular ConvexPolygon with the vertices in clockwise order. In actuality, an AABBRectangle should be its own

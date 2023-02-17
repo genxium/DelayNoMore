@@ -9,6 +9,14 @@ import (
 /*
 [WARNING] Should avoid using "MakeFullWrapper" as much as possible, and completely remove its usage in 60fps calls like "update(dt)" on frontend!
 */
+func NewDynamicRectangleColliders(cnt int) []*js.Object {
+	ret := make([]*js.Object, cnt)
+	for i := 0; i < cnt; i++ {
+		ret[i] = js.MakeWrapper(GenerateRectCollider(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, nil, ""))
+	}
+	return ret
+}
+
 func NewCollisionHolder() *js.Object {
 	return js.MakeWrapper(resolv.NewCollision())
 }
@@ -103,9 +111,9 @@ func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool) bool {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object) bool {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList)
+	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders)
 }
 
 func GetRoomDownsyncFrame(renderFrameBuffer *resolv.RingBuffer, frameId int32) *js.Object {
@@ -183,5 +191,6 @@ func main() {
 		"GetMeleeBullet":                                       GetMeleeBullet,
 		"GetFireballBullet":                                    GetFireballBullet,
 		"GetInput":                                             GetInput,
+		"NewDynamicRectangleColliders":                         NewDynamicRectangleColliders,
 	})
 }

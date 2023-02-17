@@ -380,6 +380,8 @@ cc.Class({
     }
     self.pJumpedOrNotList = [];
     for (let i = 0; i < window.boundRoomCapacity; i++) self.pJumpedOrNotList.push(false);
+    self.dynamicRectangleColliders = gopkgs.NewDynamicRectangleColliders(64);
+
     self.recentRenderCache = gopkgs.NewRingBufferJs(self.renderCacheSize);
 
     self.recentInputCache = gopkgs.NewRingBufferJs((self.renderCacheSize >> 1) + 1);
@@ -1401,7 +1403,7 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(i, inputFrameDownsyncClone);
       }
-      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.pEffPushbacks, self.pHardPushbackNormsArr, self.pJumpedOrNotList);
+      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.pEffPushbacks, self.pHardPushbackNormsArr, self.pJumpedOrNotList, self.dynamicRectangleColliders);
       const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, self.renderFrameId + 1);
 
       if (true == isChasing) {

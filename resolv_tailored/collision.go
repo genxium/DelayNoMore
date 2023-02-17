@@ -24,7 +24,7 @@ func (cc *Collision) Clear() {
 	cc.Cells.Clear()
 }
 
-func (cc *Collision) FirstCollidedObject() *Object {
+func (cc *Collision) PopFirstCollidedObject() *Object {
 	if 0 >= cc.Objects.Cnt {
 		return nil
 	}

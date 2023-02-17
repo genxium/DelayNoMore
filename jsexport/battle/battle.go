@@ -217,21 +217,23 @@ func calcPushbacks(oldDx, oldDy float64, playerShape, barrierShape *resolv.Conve
 }
 
 func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool {
-	aCnt, bCnt := len(a.Points), len(b.Points)
+	aCnt, bCnt := a.Points.Cnt, b.Points.Cnt
 	// Single point case
 	if 1 == aCnt && 1 == bCnt {
 		if nil != result {
 			result.Overlap = 0
 		}
-		return a.Points[0][0] == b.Points[0][0] && a.Points[0][1] == b.Points[0][1]
+		aPoint := a.GetPointByOffset(0)
+		bPoint := b.GetPointByOffset(0)
+		return aPoint[0] == bPoint[0] && aPoint[1] == bPoint[1]
 	}
 
 	if 1 < aCnt {
 		// Deliberately using "Points" instead of "SATAxes" to avoid unnecessary heap memory alloc
-		for i, _ := range a.Points {
-			u, v := a.Points[i], a.Points[0]
-			if i != len(a.Points)-1 {
-				v = a.Points[i+1]
+		for i := int32(0); i < a.Points.Cnt; i++ {
+			u, v := a.GetPointByOffset(i), a.GetPointByOffset(0)
+			if i != a.Points.Cnt-1 {
+				v = a.GetPointByOffset(i + 1)
 			}
 			dy := v[1] - u[1]
 			dx := v[0] - u[0]
@@ -243,10 +245,10 @@ func isPolygonPairOverlapped(a, b *resolv.ConvexPolygon, result *SatResult) bool
 	}
 
 	if 1 < bCnt {
-		for i, _ := range b.Points {
-			u, v := b.Points[i], b.Points[0]
-			if i != len(b.Points)-1 {
-				v = b.Points[i+1]
+		for i := int32(0); i < b.Points.Cnt; i++ {
+			u, v := b.GetPointByOffset(i), b.GetPointByOffset(0)
+			if i != b.Points.Cnt-1 {
+				v = b.GetPointByOffset(i + 1)
 			}
 			dy := v[1] - u[1]
 			dx := v[0] - u[0]
@@ -307,7 +309,8 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, re
 	*/
 
 	var aStart, aEnd, bStart, bEnd float64 = MAX_FLOAT64, -MAX_FLOAT64, MAX_FLOAT64, -MAX_FLOAT64
-	for _, p := range a.Points {
+	for i := int32(0); i < a.Points.Cnt; i++ {
+		p := a.GetPointByOffset(i)
 		dot := (p[0]+a.X)*e[0] + (p[1]+a.Y)*e[1]
 
 		if aStart > dot {
@@ -319,7 +322,8 @@ func isPolygonPairSeparatedByDir(a, b *resolv.ConvexPolygon, e resolv.Vector, re
 		}
 	}
 
-	for _, p := range b.Points {
+	for i := int32(0); i < b.Points.Cnt; i++ {
+		p := b.GetPointByOffset(i)
 		dot := (p[0]+b.X)*e[0] + (p[1]+b.Y)*e[1]
 
 		if bStart > dot {
@@ -454,7 +458,7 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 	//playerColliderCenterX, playerColliderCenterY := playerCollider.Center()
 	//fmt.Printf("joinIndex=%d calcHardPushbacksNorms has non-empty collision;playerColliderPos=(%.2f,%.2f)\n", joinIndex, playerColliderCenterX, playerColliderCenterY)
 	for true {
-		obj := collision.FirstCollidedObject()
+		obj := collision.PopFirstCollidedObject()
 		if nil == obj {
 			break
 		}
@@ -558,11 +562,9 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 /*
 [LONG TERM PERFORMANCE ENHANCEMENT PLAN]
 
-The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & playerColliders & bulletColliders, which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
-
-It's not easy to remove all of the dynamic heap-memory blocks allocation/deallocation, but we can reduce them to some extent.
+The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & dynamicRectangleColliders("player" & "bullet"), which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
 */
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool) bool {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object) bool {
 	currRenderFrame := renderFrameBuffer.GetByFrameId(currRenderFrameId).(*RoomDownsyncFrame)
 	nextRenderFrameId := currRenderFrameId + 1
 	roomCapacity := len(currRenderFrame.PlayersArr)
@@ -759,8 +761,14 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		}
 	}
 
+	/*
+	    [WARNING]
+	   1. The dynamic colliders will all be removed from "Space" at the end of this function due to the need for being rollback-compatible.
+	   2. To achieve "zero gc" in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame", I deliberately chose a collision system that doesn't use dynamic tree node alloc.
+	*/
+	colliderCnt := 0
+
 	// 2. Process player movement
-	playerColliders := make([]*resolv.Object, len(currRenderFrame.PlayersArr), len(currRenderFrame.PlayersArr)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
 		effPushbacks[joinIndex-1].X, effPushbacks[joinIndex-1].Y = float64(0), float64(0)
@@ -819,8 +827,9 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 
 		colliderWorldWidth, colliderWorldHeight := VirtualGridToWorldPos(colliderWidth, colliderHeight)
 
-		playerCollider := GenerateRectCollider(wx, wy, colliderWorldWidth, colliderWorldHeight, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
-		playerColliders[i] = playerCollider
+		playerCollider := dynamicRectangleColliders[colliderCnt]
+		UpdateRectCollider(playerCollider, wx, wy, colliderWorldWidth, colliderWorldHeight, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, currPlayerDownsync, "Player") // the coords of all barrier boundaries are multiples of tileWidth(i.e. 16), by adding snapping y-padding when "landedOnGravityPushback" all "playerCollider.Y" would be a multiple of 1.0
+		colliderCnt++
 
 		// Add to collision system
 		collisionSys.AddSingle(playerCollider)
@@ -838,9 +847,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		}
 	}
 
-	// 3. Add bullet colliders into collision system
+	// 3. Add bullet colliders into collision system; [DIRTY TRICK] Players always precede bullets in "dynamicRectangleColliders".
 	// [WARNING] For rollback compatibility, static data of "BulletConfig" & "BattleAttr(static since instantiated)" can just be copies of the pointers in "RenderFrameBuffer", however, FireballBullets movement data as well as bullet animation data must be copies of instances for each RenderFrame!
-	bulletColliders := make([]*resolv.Object, 0, ((len(currRenderFrame.MeleeBullets) + len(currRenderFrame.FireballBullets)) << 1)) // Will all be removed at the end of this function due to the need for being rollback-compatible
 	for _, prevFireball := range currRenderFrame.FireballBullets {
 		if TERMINATING_BULLET_LOCAL_ID == prevFireball.BattleAttr.BulletLocalId {
 			break
@@ -862,9 +870,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			if IsFireballBulletActive(fireballBullet, currRenderFrame) {
 				bulletWx, bulletWy := VirtualGridToWorldPos(fireballBullet.VirtualGridX, fireballBullet.VirtualGridY)
 				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(fireballBullet.Bullet.HitboxSizeX, fireballBullet.Bullet.HitboxSizeY)
-				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
+
+				newBulletCollider := dynamicRectangleColliders[colliderCnt]
+				UpdateRectCollider(newBulletCollider, bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, fireballBullet, "FireballBullet")
+				colliderCnt++
+
 				collisionSys.AddSingle(newBulletCollider)
-				bulletColliders = append(bulletColliders, newBulletCollider)
 				fireballBullet.BlState = BULLET_ACTIVE
 				if fireballBullet.BlState != prevFireball.BlState {
 					fireballBullet.FramesInBlState = 0
@@ -906,9 +917,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				}
 				bulletWx, bulletWy := VirtualGridToWorldPos(offender.VirtualGridX+xfac*meleeBullet.Bullet.HitboxOffsetX, offender.VirtualGridY)
 				hitboxSizeWx, hitboxSizeWy := VirtualGridToWorldPos(meleeBullet.Bullet.HitboxSizeX, meleeBullet.Bullet.HitboxSizeY)
-				newBulletCollider := GenerateRectCollider(bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+
+				newBulletCollider := dynamicRectangleColliders[colliderCnt]
+				UpdateRectCollider(newBulletCollider, bulletWx, bulletWy, hitboxSizeWx, hitboxSizeWy, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, SNAP_INTO_PLATFORM_OVERLAP, collisionSpaceOffsetX, collisionSpaceOffsetY, meleeBullet, "MeleeBullet")
+				colliderCnt++
+
 				collisionSys.AddSingle(newBulletCollider)
-				bulletColliders = append(bulletColliders, newBulletCollider)
 				meleeBullet.BlState = BULLET_ACTIVE
 				if meleeBullet.BlState != prevMelee.BlState {
 					meleeBullet.FramesInBlState = 0
@@ -921,7 +935,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	// 4. Calc pushbacks for each player (after its movement) w/o bullets
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		playerCollider := playerColliders[i]
+		playerCollider := dynamicRectangleColliders[i]
 		playerShape := playerCollider.Shape.(*resolv.ConvexPolygon)
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		hardPushbackCnt := calcHardPushbacksNorms(joinIndex, currPlayerDownsync, thatPlayerInNextFrame, playerCollider, playerShape, SNAP_INTO_PLATFORM_OVERLAP, effPushbacks[joinIndex-1], hardPushbackNormsArr[joinIndex-1], collision)
@@ -930,7 +944,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 
 		if collided := playerCollider.CheckAllWithHolder(0, 0, collision); collided {
 			for true {
-				obj := collision.FirstCollidedObject()
+				obj := collision.PopFirstCollidedObject()
 				if nil == obj {
 					break
 				}
@@ -963,14 +977,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 					// [WARNING] The "zero overlap collision" might be randomly detected/missed on either frontend or backend, to have deterministic result we added paddings to all sides of a playerCollider. As each velocity component of (velX, velY) being a multiple of 0.5 at any renderFrame, each position component of (x, y) can only be a multiple of 0.5 too, thus whenever a 1-dimensional collision happens between players from [player#1: i*0.5, player#2: j*0.5, not collided yet] to [player#1: (i+k)*0.5, player#2: j*0.5, collided], the overlap becomes (i+k-j)*0.5+2*s, and after snapping subtraction the effPushback magnitude for each player is (i+k-j)*0.5, resulting in 0.5-multiples-position for the next renderFrame.
 					pushbackX, pushbackY = (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapX, (overlapResult.Overlap-SNAP_INTO_PLATFORM_OVERLAP*2)*overlapResult.OverlapY
 				}
-				if 0 < hardPushbackCnt {
-					for i := 0; i < hardPushbackCnt; i++ {
-						hardPushbackNorm := hardPushbackNormsArr[joinIndex-1][i]
-						projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
-						if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
-							pushbackX -= projectedMagnitude * hardPushbackNorm.X
-							pushbackY -= projectedMagnitude * hardPushbackNorm.Y
-						}
+				for i := 0; i < hardPushbackCnt; i++ {
+					hardPushbackNorm := hardPushbackNormsArr[joinIndex-1][i]
+					projectedMagnitude := pushbackX*hardPushbackNorm.X + pushbackY*hardPushbackNorm.Y
+					if isBarrier || (isAnotherPlayer && 0 > projectedMagnitude) {
+						pushbackX -= projectedMagnitude * hardPushbackNorm.X
+						pushbackY -= projectedMagnitude * hardPushbackNorm.Y
 					}
 				}
 				effPushbacks[joinIndex-1].X += pushbackX
@@ -1028,7 +1040,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		if chConfig.OnWallEnabled {
 			if thatPlayerInNextFrame.InAir {
 				// [WARNING] Sticking to wall MUST BE based on "InAir", otherwise we would get gravity reduction from ground up incorrectly!
-				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent && 0 < hardPushbackCnt {
+				if _, existent := noOpSet[currPlayerDownsync.CharacterState]; !existent {
 					// [WARNING] Sticking to wall could only be triggered by proactive player input
 					for i := 0; i < hardPushbackCnt; i++ {
 						hardPushbackNorm := hardPushbackNormsArr[joinIndex-1][i]
@@ -1051,13 +1063,12 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				thatPlayerInNextFrame.OnWallNormX, thatPlayerInNextFrame.OnWallNormY = 0, 0
 			}
 		}
-
 	}
 
 	// 5. Check bullet-anything collisions
-	for _, bulletCollider := range bulletColliders {
+	for i := len(nextRenderFramePlayers); i < colliderCnt; i++ {
+		bulletCollider := dynamicRectangleColliders[i]
 		collided := bulletCollider.CheckAllWithHolder(0, 0, collision)
-		bulletCollider.Space.RemoveSingle(bulletCollider) // Make sure that the bulletCollider is always removed for each renderFrame
 		if !collided {
 			continue
 		}
@@ -1079,7 +1090,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		bulletShape := bulletCollider.Shape.(*resolv.ConvexPolygon)
 		offender := currRenderFrame.PlayersArr[bulletBattleAttr.OffenderJoinIndex-1]
 		for true {
-			obj := collision.FirstCollidedObject()
+			obj := collision.PopFirstCollidedObject()
 			if nil == obj {
 				break
 			}
@@ -1153,7 +1164,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	// 6. Get players out of stuck barriers if there's any
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		joinIndex := currPlayerDownsync.JoinIndex
-		playerCollider := playerColliders[i]
+		playerCollider := dynamicRectangleColliders[i]
 		// Update "virtual grid position"
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
 		thatPlayerInNextFrame.VirtualGridX, thatPlayerInNextFrame.VirtualGridY = PolygonColliderBLToVirtualGridPos(playerCollider.X-effPushbacks[joinIndex-1].X, playerCollider.Y-effPushbacks[joinIndex-1].Y, playerCollider.W*0.5, playerCollider.H*0.5, 0, 0, 0, 0, collisionSpaceOffsetX, collisionSpaceOffsetY)
@@ -1199,9 +1210,10 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		}
 	}
 
-	for _, playerCollider := range playerColliders {
-		playerCollider.Space.RemoveSingle(playerCollider)
-	}
+    for i := 0; i < colliderCnt; i++ {
+        dynamicCollider := dynamicRectangleColliders[i]
+		dynamicCollider.Space.RemoveSingle(dynamicCollider)
+    }
 
 	ret.Id = nextRenderFrameId
 	ret.BulletLocalIdCounter = bulletLocalId
@@ -1220,6 +1232,15 @@ func generateRectColliderInCollisionSpace(blX, blY, w, h float64, data interface
 	collider.SetShape(shape)
 	collider.Data = data
 	return collider
+}
+
+func UpdateRectCollider(collider *resolv.Object, wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) {
+	blX, blY := WorldToPolygonColliderBLPos(wx, wy, w*0.5, h*0.5, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY)
+	collider.X, collider.Y, collider.W, collider.H = blX, blY, w, h
+	rectShape := collider.Shape.(*resolv.ConvexPolygon)
+	rectShape.UpdateAsRectangle(0, 0, w, h)
+	collider.Data = data
+	// Ignore "tag" for now
 }
 
 func GenerateConvexPolygonCollider(unalignedSrc *Polygon2D, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *resolv.Object {
