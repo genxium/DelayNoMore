@@ -16,8 +16,8 @@ cc.Class({
     cc.view.enableAutoFullScreen(true);
     const self = this;
     window.mapIns = self;
-    self.showCriticalCoordinateLabels = true;
-    self.showNetworkDoctorInfo = true;
+    self.showCriticalCoordinateLabels = false;
+    self.showNetworkDoctorInfo = false;
 
     const mapNode = self.node;
     const canvasNode = mapNode.parent;

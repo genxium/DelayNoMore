@@ -778,7 +778,7 @@ func (pR *Room) OnDismissed() {
 
 	// Always instantiates new HeapRAM blocks and let the old blocks die out due to not being retained by any root reference.
 	pR.BulletBattleLocalIdCounter = 0
-	pR.CollisionMinStep = 8 // the approx minimum distance a player can move per frame in world coordinate
+	pR.CollisionMinStep = 16 // the approx minimum distance a player can move per frame in world coordinate
 	pR.Players = make(map[int32]*Player)
 	pR.PlayersArr = make([]*Player, pR.Capacity)
 	pR.SpeciesIdList = make([]int32, pR.Capacity)
@@ -801,7 +801,7 @@ func (pR *Room) OnDismissed() {
 	pR.PlayerSignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.PlayerSecondarySignalToCloseDict = make(map[int32]SignalToCloseConnCbType)
 	pR.JoinIndexBooleanArr = make([]bool, pR.Capacity)
-	pR.RenderCacheSize = 1024
+	pR.RenderCacheSize = 256
 	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
