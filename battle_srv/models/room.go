@@ -426,11 +426,10 @@ func (pR *Room) StartBattle() {
 
 	// Initialize the "collisionSys" as well as "RenderFrameBuffer"
 	pR.CurDynamicsRenderFrameId = 0
-	kickoffFrameJs := &battle.RoomDownsyncFrame{
-		Id:             pR.RenderFrameId,
-		PlayersArr:     toJsPlayers(pR.Players),
-		CountdownNanos: pR.BattleDurationNanos,
-	}
+	kickoffFrameJs := battle.NewPreallocatedRoomDownsyncFrame(len(pR.Players), 64, 64)
+	battle.CloneRoomDownsyncFrame(pR.RenderFrameId, toJsPlayers(pR.Players), 0, make([]*battle.MeleeBullet, 0), make([]*battle.FireballBullet, 0), kickoffFrameJs)
+	kickoffFrameJs.CountdownNanos = pR.BattleDurationNanos
+
 	pR.RenderFrameBuffer.Put(kickoffFrameJs)
 
 	// Refresh "Colliders"

@@ -91,7 +91,7 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
     // Don't send too fast
     if (CC_DEBUG) {    
       // Printing of this message might induce a performance impact.
-      console.log(`Sending too fast, sendingFps=${sendingFps}`);
+      // console.log(`Sending too fast, sendingFps=${sendingFps}`);
     }
     return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
   } else {
@@ -109,7 +109,7 @@ NetworkDoctor.prototype.isTooFast = function(mapIns) {
         // first comparison condition is to avoid numeric overflow
         if (CC_DEBUG) {
             // Printing of this message might induce a performance impact.
-            console.log(`Game logic ticking too fast, selfInputFrameIdFront=${inputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
+            // console.log(`Game logic ticking too fast, selfInputFrameIdFront=${inputFrameIdFront}, minInputFrameIdFront=${minInputFrameIdFront}, inputFrameUpsyncDelayTolerance=${mapIns.inputFrameUpsyncDelayTolerance}`);
         }
         return [true, inputFrameIdFront, sendingFps, srvDownsyncFps, peerUpsyncFps, rollbackFrames, skippedRenderFrameCnt];
       }
