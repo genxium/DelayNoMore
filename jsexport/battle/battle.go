@@ -819,7 +819,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			break
 		}
 		fireballBullet := nextRenderFrameFireballBullets[fireballBulletCnt]
-		CloneFireballBullet(prevFireball.BlState, prevFireball.FramesInBlState, prevFireball.VirtualGridX, prevFireball.VirtualGridY, prevFireball.DirX, prevFireball.DirY, prevFireball.VelX, prevFireball.VelY, prevFireball.Speed, prevFireball.BattleAttr.BulletLocalId, prevFireball.BattleAttr.OriginatedRenderFrameId, prevFireball.BattleAttr.OffenderJoinIndex, prevFireball.BattleAttr.TeamId, prevFireball.Bullet, fireballBullet)
+		CloneFireballBullet(prevFireball.BlState, prevFireball.FramesInBlState+1, prevFireball.VirtualGridX, prevFireball.VirtualGridY, prevFireball.DirX, prevFireball.DirY, prevFireball.VelX, prevFireball.VelY, prevFireball.Speed, prevFireball.BattleAttr.BulletLocalId, prevFireball.BattleAttr.OriginatedRenderFrameId, prevFireball.BattleAttr.OffenderJoinIndex, prevFireball.BattleAttr.TeamId, prevFireball.Bullet, fireballBullet)
 
 		if IsFireballBulletAlive(fireballBullet, currRenderFrame) {
 			if IsFireballBulletActive(fireballBullet, currRenderFrame) {
@@ -856,10 +856,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			break
 		}
 		meleeBullet := nextRenderFrameMeleeBullets[meleeBulletCnt]
-		meleeBullet.Bullet = prevMelee.Bullet
-		meleeBullet.BattleAttr = prevMelee.BattleAttr
-		meleeBullet.FramesInBlState = prevMelee.FramesInBlState + 1
-		meleeBullet.BlState = prevMelee.BlState
+		CloneMeleeBullet(prevMelee.BlState, prevMelee.FramesInBlState+1, prevMelee.BattleAttr.BulletLocalId, prevMelee.BattleAttr.OriginatedRenderFrameId, prevMelee.BattleAttr.OffenderJoinIndex, prevMelee.BattleAttr.TeamId, prevMelee.Bullet, meleeBullet)
 
 		if IsMeleeBulletAlive(meleeBullet, currRenderFrame) {
 			offender := currRenderFrame.PlayersArr[meleeBullet.BattleAttr.OffenderJoinIndex-1]
