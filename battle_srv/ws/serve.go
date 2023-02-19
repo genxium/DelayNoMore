@@ -188,34 +188,33 @@ func Serve(c *gin.Context) {
 	}()
 	Logger.Debug("Acquired RoomHeapMux for player:", zap.Any("playerId", playerId))
 	// Logger.Info("The RoomHeapManagerIns has:", zap.Any("addr", fmt.Sprintf("%p", models.RoomHeapManagerIns)), zap.Any("size", len(*(models.RoomHeapManagerIns))))
-	playerSuccessfullyAddedToRoom := false
+	playerRoomRelation := Constants.RetCode.UnknownError
 	if 0 < boundRoomId {
 		if tmpPRoom, existent := (*models.RoomMapManagerIns)[int32(boundRoomId)]; existent {
 			pRoom = tmpPRoom
-			res := pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
-			if !res {
+			playerRoomRelation = pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
+			if Constants.RetCode.Ok != playerRoomRelation {
 				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forBoundRoomId", boundRoomId))
-			} else {
-				playerSuccessfullyAddedToRoom = true
 			}
 		}
 	} else if 0 < expectedRoomId {
 		if tmpRoom, existent := (*models.RoomMapManagerIns)[int32(expectedRoomId)]; existent {
 			pRoom = tmpRoom
-
-			if pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer) {
-				playerSuccessfullyAddedToRoom = true
-			} else if pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer) {
-				playerSuccessfullyAddedToRoom = true
-			} else {
-				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectedRoomId))
-				playerSuccessfullyAddedToRoom = false
+			playerRoomRelation = pRoom.ReAddPlayerIfPossible(pPlayer, conn, signalToCloseConnOfThisPlayer)
+			if Constants.RetCode.Ok != playerRoomRelation {
+				playerRoomRelation = pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer)
 			}
-
+			if Constants.RetCode.Ok != playerRoomRelation {
+				Logger.Warn("Failed to get:\n", zap.Any("roomId", pRoom.Id), zap.Any("playerId", playerId), zap.Any("forExpectedRoomId", expectedRoomId))
+			}
 		}
 	}
 
-	if false == playerSuccessfullyAddedToRoom {
+	if Constants.RetCode.SamePlayerAlreadyInSameRoom == playerRoomRelation {
+		signalToCloseConnOfThisPlayer(playerRoomRelation, fmt.Sprintf("playerId == %v is already in a room, this account is possibly stolen!", playerId))
+	}
+
+	if Constants.RetCode.Ok != playerRoomRelation {
 		defer func() {
 			if pRoom != nil {
 				heap.Push(models.RoomHeapManagerIns, pRoom)
@@ -229,9 +228,9 @@ func Serve(c *gin.Context) {
 		} else {
 			pRoom = tmpRoom
 			Logger.Info("Successfully popped:\n", zap.Any("roomId", pRoom.Id), zap.Any("forPlayerId", playerId))
-			res := pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer)
-			if !res {
-				signalToCloseConnOfThisPlayer(Constants.RetCode.PlayerNotAddableToRoom, fmt.Sprintf("AddPlayerIfPossible returns false for roomId == %v, playerId == %v!", pRoom.Id, playerId))
+			playerRoomRelation = pRoom.AddPlayerIfPossible(pPlayer, speciesId, conn, signalToCloseConnOfThisPlayer)
+			if Constants.RetCode.Ok != playerRoomRelation {
+				signalToCloseConnOfThisPlayer(playerRoomRelation, fmt.Sprintf("AddPlayerIfPossible returns false for roomId == %v, playerId == %v!", pRoom.Id, playerId))
 			}
 		}
 	}

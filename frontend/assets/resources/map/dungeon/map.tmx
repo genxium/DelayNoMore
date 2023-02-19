@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="40" tilewidth="16" tileheight="16" infinite="0" nextlayerid="8" nextobjectid="138">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="128" height="64" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="138">
  <tileset firstgid="1" source="tiles0.tsx"/>
  <tileset firstgid="65" source="tiles1.tsx"/>
  <tileset firstgid="129" source="tiles2.tsx"/>
- <layer id="7" name="Ground" width="128" height="40">
+ <layer id="8" name="Ground" width="128" height="64">
   <data encoding="base64" compression="zlib">
-   eJzt2k0OgjAQQGECccMOo+5JvIlx484LeP9jaAxNSEOhlMGZOG/xbfyl81rc2FRV1QAAAAAAAAAAAADAD9zxpd1Bs7/2NWjzPAPPa2cGvtfODHyvnRn4XjszKFv7KdOW6zoKvYb+9vpf6W+G5f5zfZeep7/82kM3qf6Hj25C3DhFYwb/pqT/VlKfQ///7z91f+g2fj/9y/tLWbqfp7rvsQ/ob0tue6l9YHEGlvv3Qq+hv77x2tuBdv/SPVC6P7z3v0XCc/HjQZ8p9X5rwgy0W2j1rwfh/L8+Hgm1gNQZlfjsku/2fv7j/uPfgPFjUv010T/d/xH1niLd47KDNfcc+s/3aRdml2Opv/R+ov+6/ufB3Ny2nP+5PbD3+c/Zn/RP95f8zaW/Pdr/u7ZCu4Nm/6dz9Pdtz/5vZSq2hg==
+   eJzt2j1uwkAQgFEESkNHlKRHyk2iNHRcIPc/RlCEJWSxtrHHmRX7itfw651v1zTsNpvNDgAAAAAAAOAffPMnu0Nm/+xryNbyDFpeuxm0vXYzaHvtZtD22s1g3trfJlpyXa9Br9G/vv6f+lej5v5Dfcee1z9+7V23qP4vF4c7+o1LMmbwbOb0Xyrqc/R//v737g+Hhd+v//z+Ucbu56Xua+wD/esytX3UPqhxBjX3Pwa9Rv98t2vfX2X3n7sH5u6P1vt/9XTP9R/vHCcqvb823QyyW2T131515//n4lSwDVA6oxGfPee7Wz///f63vwG3j0X1z6R/uf+p1/ue6B4fK3jknqP/cJ/9yOymGOsfvZ/0f6z/+9XQ3Jac/6E9sPb5n7I/9S/3j/zN1b8+2f+7rkV2h8z+58bp37Y1+x8qlz37WmR30F9//fXXX38AAAAAAAAAAAAg1y8jXMSV
   </data>
  </layer>
  <objectgroup id="1" name="PlayerStartingPos">

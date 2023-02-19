@@ -288,13 +288,21 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
 `);
         }
         break;
+      case constants.RET_CODE.SAME_PLAYER_ALREADY_IN_SAME_ROOM:
+        mapIns.popupSimplePressToGo("You just logged into a conflicting account, please use a different account to retry", false, () => {
+          window.clearLocalStorageAndBackToLoginScene(true);
+        });
+        break;
       case constants.RET_CODE.PLAYER_NOT_ADDABLE_TO_ROOM:
       case constants.RET_CODE.PLAYER_NOT_READDABLE_TO_ROOM:
-        window.clearBoundRoomIdInBothVolatileAndPersistentStorage(); // To favor the player to join other rooms
-        mapIns.onManualRejoinRequired("Couldn't join any room at the moment, please retry");
+        mapIns.popupSimplePressToGo("Couldn't join any room at the moment, please retry", false, () => {
+          window.clearLocalStorageAndBackToLoginScene(true);
+        });
         break;
       case constants.RET_CODE.ACTIVE_WATCHDOG:
-        mapIns.onManualRejoinRequired("Disconnected due to long-time inactivity, please rejoin");
+        mapIns.popupSimplePressToGo("Couldn't join any room at the moment, please retry", false, () => {
+          window.clearLocalStorageAndBackToLoginScene(true);
+        });
         break;
       case constants.RET_CODE.UNKNOWN_ERROR:
       case constants.RET_CODE.MYSQL_ERROR:
@@ -305,7 +313,9 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
           console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
 `);
         }
-        window.clearLocalStorageAndBackToLoginScene(true);
+        mapIns.popupSimplePressToGo("Disconnected unexpectedly, please retry", false, () => {
+          window.clearLocalStorageAndBackToLoginScene(true);
+        });
         break;
       default:
         break;

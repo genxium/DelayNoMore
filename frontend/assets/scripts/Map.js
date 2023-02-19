@@ -293,7 +293,7 @@ cc.Class({
     }
   },
 
-  popupSimplePressToGo(labelString, hideYesButton) {
+  popupSimplePressToGo(labelString, hideYesButton, additionalOnDismissalCb) {
     const self = this;
     self.state = ALL_MAP_STATES.SHOWING_MODAL_POPUP;
 
@@ -306,6 +306,9 @@ cc.Class({
     const postDismissalByYes = () => {
       self.transitToState(ALL_MAP_STATES.VISUAL);
       canvasNode.removeChild(simplePressToGoDialogNode);
+      if (additionalOnDismissalCb) {
+        additionalOnDismissalCb();
+      }
     }
     simplePressToGoDialogNode.getChildByName("Hint").getComponent(cc.Label).string = labelString;
     yesButton.once("click", simplePressToGoDialogScriptIns.dismissDialog.bind(simplePressToGoDialogScriptIns, postDismissalByYes));

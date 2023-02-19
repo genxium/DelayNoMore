@@ -3,6 +3,7 @@ module battle_srv
 go 1.18
 
 require (
+	dnmshared v0.0.0
 	github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gin-contrib/cors v0.0.0-20180514151808-6f0a820f94be
@@ -19,14 +20,12 @@ require (
 	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713
 	go.uber.org/zap v1.9.1
 	google.golang.org/protobuf v1.28.1
-
-    dnmshared v0.0.0
-    jsexport v0.0.0
-    resolv v0.0.0
+	jsexport v0.0.0
+	resolv v0.0.0
 )
 
 require (
-	github.com/ChimeraCoder/gojson v1.0.0 // indirect
+	github.com/ChimeraCoder/gojson v1.1.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/githubnemo/CompileDaemon v1.0.0 // indirect
@@ -44,11 +43,11 @@ require (
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
-	gopkg.in/yaml.v2 v2.2.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 replace (
 	dnmshared => ../dnmshared
-    jsexport => ../jsexport
-    resolv => ../resolv_tailored
+	jsexport => ../jsexport
+	resolv => ../resolv_tailored
 )

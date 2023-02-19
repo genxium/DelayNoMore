@@ -17,6 +17,7 @@ type constants struct {
 	RetCode struct {
 		ActiveWatchdog                                   int    `json:"ACTIVE_WATCHDOG"`
 		BattleStopped                                    int    `json:"BATTLE_STOPPED"`
+		ClientMismatchedRenderFrame                      int    `json:"CLIENT_MISMATCHED_RENDER_FRAME"`
 		Duplicated                                       int    `json:"DUPLICATED"`
 		FailedToCreate                                   int    `json:"FAILED_TO_CREATE"`
 		FailedToDelete                                   int    `json:"FAILED_TO_DELETE"`
@@ -51,6 +52,7 @@ type constants struct {
 		PlayerNotAddableToRoom                           int    `json:"PLAYER_NOT_ADDABLE_TO_ROOM"`
 		PlayerNotFound                                   int    `json:"PLAYER_NOT_FOUND"`
 		PlayerNotReaddableToRoom                         int    `json:"PLAYER_NOT_READDABLE_TO_ROOM"`
+		SamePlayerAlreadyInSameRoom                      int    `json:"SAME_PLAYER_ALREADY_IN_SAME_ROOM"`
 		SendEmailTimeout                                 int    `json:"SEND_EMAIL_TIMEOUT"`
 		SmsCaptchaNotMatch                               int    `json:"SMS_CAPTCHA_NOT_MATCH"`
 		SmsCaptchaRequestedTooFrequently                 int    `json:"SMS_CAPTCHA_REQUESTED_TOO_FREQUENTLY"`

@@ -174,16 +174,16 @@ func (pR *Room) updateScore() {
 	pR.Score = calRoomScore(pR.EffectivePlayerCount, pR.Capacity, pR.State)
 }
 
-func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, speciesId int, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) bool {
+func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, speciesId int, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) int {
 	playerId := pPlayerFromDbInit.Id
 	// TODO: Any thread-safety concern for accessing "pR" here?
 	if RoomBattleStateIns.IDLE != pR.State && RoomBattleStateIns.WAITING != pR.State {
 		Logger.Warn("AddPlayerIfPossible error, roomState:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		return false
+		return Constants.RetCode.PlayerNotAddableToRoom
 	}
 	if _, existent := pR.Players[playerId]; existent {
 		Logger.Warn("AddPlayerIfPossible error, existing in the room.PlayersDict:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		return false
+		return Constants.RetCode.SamePlayerAlreadyInSameRoom
 	}
 
 	defer pR.onPlayerAdded(playerId, speciesId)
@@ -210,19 +210,19 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, speciesId int, se
 	})
 	newWatchdog.Stop()
 	pR.PlayerActiveWatchdogDict[playerId] = newWatchdog
-	return true
+	return Constants.RetCode.Ok
 }
 
-func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) bool {
+func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *websocket.Conn, signalToCloseConnOfThisPlayer SignalToCloseConnCbType) int {
 	playerId := pTmpPlayerInstance.Id
 	// TODO: Any thread-safety concern for accessing "pR" and "pEffectiveInRoomPlayerInstance" here?
 	if RoomBattleStateIns.PREPARE != pR.State && RoomBattleStateIns.WAITING != pR.State && RoomBattleStateIns.IN_BATTLE != pR.State && RoomBattleStateIns.IN_SETTLEMENT != pR.State && RoomBattleStateIns.IN_DISMISSAL != pR.State {
 		Logger.Warn("ReAddPlayerIfPossible error due to roomState:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		return false
+		return Constants.RetCode.PlayerNotReaddableToRoom
 	}
 	if _, existent := pR.Players[playerId]; !existent {
 		Logger.Warn("ReAddPlayerIfPossible error due to player nonexistent for room:", zap.Any("playerId", playerId), zap.Any("roomId", pR.Id), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount))
-		return false
+		return Constants.RetCode.PlayerNotReaddableToRoom
 	}
 	/*
 	 * WARNING: The "pTmpPlayerInstance *Player" used here is a temporarily constructed
@@ -251,7 +251,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	}) // For ReAdded player the new watchdog starts immediately
 
 	Logger.Warn("ReAddPlayerIfPossible finished.", zap.Any("roomId", pR.Id), zap.Any("playerId", playerId), zap.Any("joinIndex", pEffectiveInRoomPlayerInstance.JoinIndex), zap.Any("playerBattleState", pEffectiveInRoomPlayerInstance.BattleState), zap.Any("roomState", pR.State), zap.Any("roomEffectivePlayerCount", pR.EffectivePlayerCount), zap.Any("AckingFrameId", pEffectiveInRoomPlayerInstance.AckingFrameId), zap.Any("AckingInputFrameId", pEffectiveInRoomPlayerInstance.AckingInputFrameId), zap.Any("LastSentInputFrameId", pEffectiveInRoomPlayerInstance.LastSentInputFrameId))
-	return true
+	return Constants.RetCode.Ok
 }
 
 func (pR *Room) ChooseStage() error {

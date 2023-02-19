@@ -22,6 +22,9 @@
       },
       {
         "__id__": 5
+      },
+      {
+        "__id__": 11
       }
     ],
     "_active": true,
@@ -194,100 +197,26 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "VerticalLayout",
-    "_objFlags": 0,
-    "_parent": {
-      "__id__": 1
-    },
-    "_children": [
-      {
-        "__id__": 6
-      },
-      {
-        "__id__": 12
-      }
-    ],
-    "_active": true,
-    "_components": [
-      {
-        "__id__": 53
-      },
-      {
-        "__id__": 54
-      }
-    ],
-    "_prefab": {
-      "__id__": 55
-    },
-    "_opacity": 255,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_contentSize": {
-      "__type__": "cc.Size",
-      "width": 960,
-      "height": 265
-    },
-    "_anchorPoint": {
-      "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
-    },
-    "_trs": {
-      "__type__": "TypedArray",
-      "ctor": "Float64Array",
-      "array": [
-        0,
-        -9.924,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1
-      ]
-    },
-    "_eulerAngles": {
-      "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "_skewX": 0,
-    "_skewY": 0,
-    "_is3DNode": false,
-    "_groupIndex": 0,
-    "groupIndex": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.Node",
     "_name": "exitButton",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 5
+      "__id__": 1
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
+        "__id__": 6
+      },
+      {
         "__id__": 7
       },
       {
-        "__id__": 8
-      },
-      {
-        "__id__": 10
+        "__id__": 9
       }
     ],
     "_prefab": {
-      "__id__": 11
+      "__id__": 10
     },
     "_opacity": 255,
     "_color": {
@@ -312,7 +241,7 @@
       "ctor": "Float64Array",
       "array": [
         -379.577,
-        100.5,
+        90.576,
         0,
         0,
         0,
@@ -341,7 +270,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 6
+      "__id__": 5
     },
     "_enabled": true,
     "_materials": [
@@ -375,7 +304,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 6
+      "__id__": 5
     },
     "_enabled": true,
     "_normalMaterial": null,
@@ -384,7 +313,7 @@
     "zoomScale": 1.2,
     "clickEvents": [
       {
-        "__id__": 9
+        "__id__": 8
       }
     ],
     "_N$interactable": true,
@@ -440,7 +369,7 @@
     "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
-      "__id__": 6
+      "__id__": 5
     },
     "_id": ""
   },
@@ -459,7 +388,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 6
+      "__id__": 5
     },
     "_enabled": true,
     "alignMode": 1,
@@ -489,15 +418,86 @@
     "asset": {
       "__uuid__": "dc804c5c-ff76-445e-ac69-52269055c3c5"
     },
-    "fileId": "1cUg34ZtdK9JfdGIG+lpdF",
+    "fileId": "3cdlb7LxhMzLDzxdQv8Z/x",
     "sync": false
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "VerticalLayout",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 1
+    },
+    "_children": [
+      {
+        "__id__": 12
+      }
+    ],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 53
+      },
+      {
+        "__id__": 54
+      }
+    ],
+    "_prefab": {
+      "__id__": 55
+    },
+    "_opacity": 255,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 960,
+      "height": 137
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        0,
+        -68.939,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": ""
   },
   {
     "__type__": "cc.Node",
     "_name": "HorizontalLayout",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 5
+      "__id__": 11
     },
     "_children": [
       {
@@ -545,7 +545,7 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        -64,
+        0,
         0,
         0,
         0,
@@ -1953,7 +1953,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 5
+      "__id__": 11
     },
     "_enabled": true,
     "_materials": [
@@ -1983,13 +1983,13 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 5
+      "__id__": 11
     },
     "_enabled": true,
     "_layoutSize": {
       "__type__": "cc.Size",
       "width": 960,
-      "height": 265
+      "height": 137
     },
     "_resize": 1,
     "_N$layoutType": 2,
@@ -2040,7 +2040,7 @@
       "__id__": 43
     },
     "exitBtnNode": {
-      "__id__": 6
+      "__id__": 5
     },
     "_id": ""
   },

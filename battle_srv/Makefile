@@ -4,9 +4,24 @@ ROOT_DIR=.
 GOPROXY=https://goproxy.io
 all: help
 
+# To install `gojson` executable
+# ```
+# go install github.com/ChimeraCoder/gojson/gojson@latest
+# ```
+# 
+# OS detection reference https://stackoverflow.com/a/12099167
 gen-constants:
 	gojson -pkg common -name constants -input common/constants.json  -o common/constants_struct.go
+ifeq ($(OS),Windows_NT)
 	sed -i 's/int64/int/g' common/constants_struct.go
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		sed -i '' -e 's/int64/int/g' common/constants_struct.go
+	else
+		sed -i 's/int64/int/g' common/constants_struct.go
+	endif
+endif
 
 run-test: build
 	ServerEnv=TEST ./$(PROJECTNAME)

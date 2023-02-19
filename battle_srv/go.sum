@@ -2,6 +2,8 @@ github.com/ByteArena/box2d v1.0.2 h1:f7f9KEQWhCs1n516DMLzi5w6u0MeeE78Mes4fWMcj9k
 github.com/ByteArena/box2d v1.0.2/go.mod h1:LzEuxY9iCz+tskfWCY3o0ywYBRafDDugdSj+/YGI6sE=
 github.com/ChimeraCoder/gojson v1.0.0 h1:gAYKGTV+xfQ4+l/4C/nazPbiQDUidG0G3ukAJnE7LNE=
 github.com/ChimeraCoder/gojson v1.0.0/go.mod h1:nYbTQlu6hv8PETM15J927yM0zGj3njIldp72UT1MqSw=
+github.com/ChimeraCoder/gojson v1.1.0 h1:/6S8djl/jColpJGTYniA3xrqJWuKeyEozzPtpr5L4Pw=
+github.com/ChimeraCoder/gojson v1.1.0/go.mod h1:nYbTQlu6hv8PETM15J927yM0zGj3njIldp72UT1MqSw=
 github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414 h1:VHdYPA0V0YgL97gdjHevN6IVPRX+fOoNMqcYvUAzwNU=
 github.com/Masterminds/squirrel v0.0.0-20180815162352-8a7e65843414/go.mod h1:xnKTFzjGUiZtiOagBsfnvomW+nJg2usB1ZpordQWqNM=
 github.com/Pallinder/go-randomdata v0.0.0-20180616180521-15df0648130a h1:0OnS8GR4uI3nau+f/juCZlAq+zCrsHXRJlENrUQ4eU8=
@@ -92,3 +94,5 @@ gopkg.in/go-playground/validator.v8 v8.18.2 h1:lFB4DoMU6B626w8ny76MV7VX6W2VHct2G
 gopkg.in/go-playground/validator.v8 v8.18.2/go.mod h1:RX2a/7Ha8BgOhfk7j780h4/u/RRjR0eouCJSH80/M2Y=
 gopkg.in/yaml.v2 v2.2.1 h1:mUhvW9EsL+naU5Q3cakzfE91YhliOondGd6ZrsDBHQE=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
+gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
