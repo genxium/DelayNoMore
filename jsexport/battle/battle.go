@@ -959,6 +959,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				thatPlayerInNextFrame.VelY = 0
 				thatPlayerInNextFrame.VelX = 0
 				if ATK_CHARACTER_STATE_DYING == thatPlayerInNextFrame.CharacterState {
+
+					// No update needed for Dying
 				} else if ATK_CHARACTER_STATE_BLOWN_UP1 == thatPlayerInNextFrame.CharacterState {
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_LAY_DOWN1
 					thatPlayerInNextFrame.FramesToRecover = chConfig.LayDownFramesToRecover
@@ -977,7 +979,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				// landedOnGravityPushback not fallStopping, could be in LayDown or GetUp or Dying
 				if _, existent := nonAttackingSet[thatPlayerInNextFrame.CharacterState]; existent {
 					if ATK_CHARACTER_STATE_DYING == thatPlayerInNextFrame.CharacterState {
-						// No update needed for Dying
+						thatPlayerInNextFrame.VelY = 0
+						thatPlayerInNextFrame.VelX = 0
 					} else if ATK_CHARACTER_STATE_LAY_DOWN1 == thatPlayerInNextFrame.CharacterState {
 						if 0 == thatPlayerInNextFrame.FramesToRecover {
 							thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
@@ -1074,15 +1077,15 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				}
 				atkedPlayerInNextFrame := nextRenderFramePlayers[t.JoinIndex-1]
 				atkedPlayerInNextFrame.Hp -= bulletStaticAttr.Damage
+				pushbackVelX, pushbackVelY := xfac*bulletStaticAttr.PushbackVelX, bulletStaticAttr.PushbackVelY
+				atkedPlayerInNextFrame.VelX = pushbackVelX
+				atkedPlayerInNextFrame.VelY = pushbackVelY
 				if 0 >= atkedPlayerInNextFrame.Hp {
 					// [WARNING] We don't have "dying in air" animation for now, and for better graphical recognition, play the same dying animation even in air
 					atkedPlayerInNextFrame.Hp = 0
 					atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_DYING
 					atkedPlayerInNextFrame.FramesToRecover = DYING_FRAMES_TO_RECOVER
 				} else {
-					pushbackVelX, pushbackVelY := xfac*bulletStaticAttr.PushbackVelX, bulletStaticAttr.PushbackVelY
-					atkedPlayerInNextFrame.VelX = pushbackVelX
-					atkedPlayerInNextFrame.VelY = pushbackVelY
 					if bulletStaticAttr.BlowUp {
 						atkedPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_BLOWN_UP1
 					} else {
