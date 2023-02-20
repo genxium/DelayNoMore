@@ -32,20 +32,38 @@ SendWork* SendRingBuff::pop() {
 }
 
 // Recving
+bool isFullWithLoadedVals(int n, int oldCnt, int oldSt, int oldEd) {
+    return (n <= oldCnt) || (n > oldCnt && 0 < oldCnt && oldEd == oldSt); 
+}
+
 void RecvRingBuff::put(char* newBytes, size_t newBytesLen) {
     RecvWork* slotEle = (&eles[ed.load()]); // Save for later update
 
+    // "RecvRingBuff.ed" is only accessed in "UvRecvThread", thus the order of it relative to the other two is not important.
+    int oldEd = ed.load();
+
+    // We want to increase the success rate of "pop()" if it's being executed by "GameThread/pollUdpRecvRingBuff", thus the below order of loading is IMPORTANT, i.e. load "cnt" first because it's decremented earlier than "st" being incremented.
     int oldCnt = cnt.load();
     int oldSt = st.load(); // Used to guard against "cnt decremented in pop(...), but st not yet incremented and thus return value not yet copied to avoid contamination"
     int tried = 0;
-    while (n <= oldCnt && !ed.compare_exchange_weak(oldSt, oldSt) && 3 > tried) {
+    /*
+    1. When "n <= oldCnt", it's implied that "oldEd == oldSt"; 
+    2. When "n > oldCnt", it might still be true that "oldEd == oldSt" if "pop()" hasn't successfully incremented "st" due to any reason; 
+    3. When "oldEd == oldSt", it doesn't imply anything useful, because any of the following could be true 
+        - a. "n <= oldCnt", i.e. the ringbuff is full 
+        - b. "n > oldCnt && 0 < oldCnt" during the execution of "pop()", i.e. the ringbuff is still effectively full
+        - c. "n > oldCnt && 0 == oldCnt", i.e. the ringbuff is empty
+    */
+    bool isFull = isFullWithLoadedVals(n, oldCnt, oldSt, oldEd); 
+    while (isFull && 3 > tried) {
         // Make room for the new element
         this->pop(NULL);
         oldCnt = cnt.load(); // If "pop()" above failed, it'd only be due to concurrent calls to "pop()", either way the updated "cnt" should be good to go
         oldSt = st.load();
+        isFull = isFullWithLoadedVals(n, oldCnt, oldSt, oldEd); 
         ++tried;
     }
-    if (n <= oldCnt && !ed.compare_exchange_weak(oldSt, oldSt) && 3 == tried) {
+    if (isFull && 3 == tried) {
         // Failed silently, UDP packet can be dropped.
         return;
     }
@@ -56,10 +74,12 @@ void RecvRingBuff::put(char* newBytes, size_t newBytesLen) {
     }
 
     // No need to compare-and-swap, only "UvRecvThread" will access "RecvRingBuff.ed".
-    ed++;
-    if (ed >= n) {
-        ed -= n; // Deliberately not using "%" operator for performance concern
+    int newEd = oldEd+1;
+    if (newEd >= n) {
+        newEd -= n; // Deliberately not using "%" operator for performance concern
     }
+
+    ed.compare_exchange_weak(oldEd, newEd); // Definitely succeeds because "RecvRingBuff.ed" is only accessed in "UvRecvThread" 
 
     // Only increment cnt when the putting of new element is fully done.
     cnt++;

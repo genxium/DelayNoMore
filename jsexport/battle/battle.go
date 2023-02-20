@@ -698,6 +698,8 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				} else if stoppingFromWalking {
 					thatPlayerInNextFrame.FramesToRecover = chConfig.InertiaFramesToRecover
 				} else {
+					// Updates CharacterState and thus the animation to make user see graphical feedback asap.
+					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
 					thatPlayerInNextFrame.FramesToRecover = ((chConfig.InertiaFramesToRecover >> 1) + (chConfig.InertiaFramesToRecover >> 2))
 				}
 			} else {

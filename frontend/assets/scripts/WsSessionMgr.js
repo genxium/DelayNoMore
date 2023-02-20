@@ -271,6 +271,13 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
   clientSession.onclose = function(evt) {
     // [WARNING] The callback "onclose" might be called AFTER the webpage is refreshed with "1001 == evt.code".
     console.warn(`The WS clientSession is closed: evt=${JSON.stringify(evt)}, evt.code=${evt.code}`);
+    if (cc.sys.isNative) {
+      if (mapIns.frameDataLoggingEnabled) {
+        console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
+`);
+      }
+      DelayNoMore.UdpSession.closeUdpSession();
+    }
     switch (evt.code) {
       case constants.RET_CODE.CLIENT_MISMATCHED_RENDER_FRAME:
         break;
@@ -312,14 +319,12 @@ window.initPersistentSessionClient = function(onopenCb, expectedRoomId) {
       default:
         if (cc.sys.isNative) {
           // [WARNING] This could be a BUG in CocosCreator JSB implementation of WebSocket client, the "evt.code" is always "undefined" in the "onclose" callback!
-          if (mapIns.frameDataLoggingEnabled) {
-            console.warn(`${mapIns._stringifyRdfIdToActuallyUsedInput()}
-`);
+          if (window.ALL_BATTLE_STATES.IN_SETTLEMENT != mapIns.battleState && window.ALL_BATTLE_STATES.IN_DISMISSAL != mapIns.battleState) {
+
+            mapIns.popupSimplePressToGo("Disconnected unexpectedly, please retry", false, () => {
+              window.clearLocalStorageAndBackToLoginScene(true);
+            });
           }
-          DelayNoMore.UdpSession.closeUdpSession();
-          mapIns.popupSimplePressToGo("Disconnected unexpectedly, please retry", false, () => {
-            window.clearLocalStorageAndBackToLoginScene(true);
-          });
         }
         break;
     }
