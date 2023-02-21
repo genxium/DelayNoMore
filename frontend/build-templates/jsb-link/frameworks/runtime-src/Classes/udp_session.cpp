@@ -160,7 +160,6 @@ void startRecvLoop(void* arg) {
 
     int uvCloseRet = uv_loop_close(l);
     CCLOG("UDP recv loop is closed in UvRecvThread, uvCloseRet=%d", uvCloseRet);
-    uv_mutex_destroy(&recvRingBuffLock);
 }
 
 void startSendLoop(void* arg) {
@@ -174,7 +173,6 @@ void startSendLoop(void* arg) {
 
     int uvCloseRet = uv_loop_close(l);
     CCLOG("UDP send loop is closed in UvSendThread, uvCloseRet=%d", uvCloseRet);
-    uv_mutex_destroy(&sendRingBuffLock);
 }
 
 int initSendLoop(struct sockaddr const* pUdpAddr) {
@@ -188,9 +186,6 @@ int initSendLoop(struct sockaddr const* pUdpAddr) {
     }
     uv_mutex_init(&sendRingBuffLock);
     sendRingBuff = new SendRingBuff(maxBuffedMsgs);
-
-    uv_mutex_init(&recvRingBuffLock);
-    recvRingBuff = new RecvRingBuff(maxBuffedMsgs);
 
     uv_async_init(sendLoop, &uvSendLoopStopSig, _onUvStopSig);
     uv_async_init(sendLoop, &uvSendLoopTriggerSig, _onUvSthNewToSend);
@@ -208,6 +203,9 @@ bool initRecvLoop(struct sockaddr const* pUdpAddr) {
         CCLOGERROR("Failed to bind recv; recvSockInitRes=%d, recvbindRes=%d, reason=%s", recvSockInitRes, recvbindRes, uv_strerror(recvbindRes));
         exit(-1);
     }
+    uv_mutex_init(&recvRingBuffLock);
+    recvRingBuff = new RecvRingBuff(maxBuffedMsgs);
+
     uv_udp_recv_start(udpRecvSocket, _allocBuffer, _onRead);
     uv_async_init(recvLoop, &uvRecvLoopStopSig, _onUvStopSig);
 
@@ -248,20 +246,41 @@ bool DelayNoMore::UdpSession::openUdpSession(int port) {
 
 bool DelayNoMore::UdpSession::closeUdpSession() {
     CCLOG("About to close udp session and dealloc all resources...");
+    
+    /*
+    [WARNING] It's possible that "closeUdpSession" is called when "openUdpSession" was NEVER CALLED, thus we have to avoid program crash in this case.  
 
-    uv_async_send(&uvSendLoopStopSig);
-    CCLOG("Signaling UvSendThread to end in GameThread...");
-    uv_thread_join(&sendTid);
-    free(udpSendSocket);
-    free(sendLoop);
-    delete sendRingBuff;
+    In general one shouldn't just check the state of "sendTid" by whether or not "NULL == sendLoop", but in this particular game, both "openUdpSession" and "closeUdpSession" are only called from "GameThread", no thread-safety concern here, i.e. if "openUdpSession" was ever called earlier, then "sendLoop" wouldn't be NULL when "closeUdpSession" is later called.
+    */
+    if (NULL != sendLoop) {
+        uv_async_send(&uvSendLoopStopSig);
+        CCLOG("Signaling UvSendThread to end in GameThread...");
+        uv_thread_join(&sendTid);
+        free(udpSendSocket);
+        free(sendLoop);
+        delete sendRingBuff;
+        
+        udpSendSocket = NULL;
+        sendLoop = NULL;
+        sendRingBuff = NULL;
 
-    uv_async_send(&uvRecvLoopStopSig); // The few if not only guaranteed thread safe utility of libuv :) See http://docs.libuv.org/en/v1.x/async.html#c.uv_async_send
-    CCLOG("Signaling UvRecvThread to end in GameThread...");
-    uv_thread_join(&recvTid);
-    free(udpRecvSocket);
-    free(recvLoop);
-    delete recvRingBuff;
+        uv_mutex_destroy(&sendRingBuffLock);
+    }
+
+    if (NULL != recvLoop) {
+        uv_async_send(&uvRecvLoopStopSig); // The few if not only guaranteed thread safe utility of libuv :) See http://docs.libuv.org/en/v1.x/async.html#c.uv_async_send
+        CCLOG("Signaling UvRecvThread to end in GameThread...");
+        uv_thread_join(&recvTid);
+        free(udpRecvSocket);
+        free(recvLoop);
+        delete recvRingBuff;
+
+        udpRecvSocket = NULL;
+        recvLoop = NULL;
+        recvRingBuff = NULL;
+
+        uv_mutex_destroy(&recvRingBuffLock);
+    }
 
     CCLOG("Closed udp session and dealloc all resources in GameThread...");
 
@@ -356,8 +375,10 @@ bool DelayNoMore::UdpSession::pollUdpRecvRingBuff() {
     while (true) {
         RecvWork f;
         bool res = recvRingBuff->pop(&f); 
-        if (!res) return false;
-
+        if (!res) {
+            // Deliberately returning "true" here to prevent "jswrapper" from printing "Failed to invoke Xxx..." too frequently
+            return true;
+        }
         // [WARNING] Declaring "AutoHandleScope" is critical here, otherwise "onUdpMessageCb.toObject()" wouldn't be recognized as a function of the ScriptEngine!
         se::AutoHandleScope hs;
         // [WARNING] Use of the "ScriptEngine" is only allowed in "GameThread a.k.a. CocosThread"!
