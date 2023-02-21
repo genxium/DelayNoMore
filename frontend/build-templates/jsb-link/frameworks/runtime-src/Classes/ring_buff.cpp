@@ -33,7 +33,7 @@ SendWork* SendRingBuff::pop() {
 
 // Recving
 bool isFullWithLoadedVals(int n, int oldCnt, int oldSt, int oldEd) {
-    return (n <= oldCnt) || (n > oldCnt && 0 < oldCnt && oldEd == oldSt); 
+    return (n <= oldCnt && oldEd == oldSt) || (n > oldCnt && 0 < oldCnt && oldEd == oldSt); 
 }
 
 void RecvRingBuff::put(char* newBytes, size_t newBytesLen) {
@@ -44,10 +44,15 @@ void RecvRingBuff::put(char* newBytes, size_t newBytesLen) {
 
     // We want to increase the success rate of "pop()" if it's being executed by "GameThread/pollUdpRecvRingBuff", thus the below order of loading is IMPORTANT, i.e. load "cnt" first because it's decremented earlier than "st" being incremented.
     int oldCnt = cnt.load();
+    /*
+    [WARNING]
+    
+    Note that "RecvRingBuff.st" might have decremented in "GameThread" by a successful "pop()" between "cnt.load()" and "st.load()" here in "UvRecvThread"! Therefore "n <= oldCnt" doesn't necessarily imply "oldEd == oldSt"!
+    */
     int oldSt = st.load(); // Used to guard against "cnt decremented in pop(...), but st not yet incremented and thus return value not yet copied to avoid contamination"
     int tried = 0;
     /*
-    1. When "n <= oldCnt", it's implied that "oldEd == oldSt"; 
+    1. When "n <= oldCnt", it might still be true "oldEd != oldSt" (see the note above); 
     2. When "n > oldCnt", it might still be true that "oldEd == oldSt" if "pop()" hasn't successfully incremented "st" due to any reason; 
     3. When "oldEd == oldSt", it doesn't imply anything useful, because any of the following could be true 
         - a. "n <= oldCnt", i.e. the ringbuff is full 
