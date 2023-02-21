@@ -25,9 +25,16 @@ import (
 	"go.uber.org/zap"
 
 	"net"
+	// _ "net/http/pprof"
 )
 
 func main() {
+	/*
+		        // Only used for profiling
+			go func() {
+				http.ListenAndServe("0.0.0.0:6060", nil)
+			}()
+	*/
 	MustParseConfig()
 	MustParseConstants()
 	storage.Init()

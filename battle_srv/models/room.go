@@ -483,7 +483,7 @@ func (pR *Room) StartBattle() {
 			*/
 			totalElapsedNanos := utils.UnixtimeNano() - battleStartedAt
 			nextRenderFrameId := int32((totalElapsedNanos + pR.dilutedRollbackEstimatedDtNanos - 1) / pR.dilutedRollbackEstimatedDtNanos) // fast ceiling
-			toSleepNanos := int64(0)
+			toSleepNanos := int64(pR.dilutedRollbackEstimatedDtNanos >> 1)                                                                // Sleep half-frame time by default
 			if nextRenderFrameId > pR.RenderFrameId {
 				if 0 == pR.RenderFrameId {
 					// It's important to send kickoff frame iff  "0 == pR.RenderFrameId && nextRenderFrameId > pR.RenderFrameId", otherwise it might send duplicate kickoff frames
@@ -515,7 +515,7 @@ func (pR *Room) StartBattle() {
 				pR.LastRenderFrameIdTriggeredAt = utils.UnixtimeNano()
 
 				elapsedInCalculation := (utils.UnixtimeNano() - stCalculation)
-				toSleepNanos = pR.dilutedRollbackEstimatedDtNanos - elapsedInCalculation // don't sleep if "nextRenderFrame == pR.RenderFrameId"
+				toSleepNanos = pR.dilutedRollbackEstimatedDtNanos - elapsedInCalculation
 				if elapsedInCalculation > pR.RollbackEstimatedDtNanos {
 					Logger.Warn(fmt.Sprintf("SLOW FRAME! Elapsed time statistics: roomId=%v, room.RenderFrameId=%v, elapsedInCalculation=%v ns, dynamicsDuration=%v ns, RollbackEstimatedDtNanos=%v, dilutedRollbackEstimatedDtNanos=%v", pR.Id, pR.RenderFrameId, elapsedInCalculation, dynamicsDuration, pR.RollbackEstimatedDtNanos, pR.dilutedRollbackEstimatedDtNanos))
 				}
@@ -544,13 +544,13 @@ func (pR *Room) StartBattle() {
 			}
 
 			select {
+			// [WARNING] DON'T put a "default" block here! Otherwise "for { select {... default: } }" pattern would NEVER block on empty channel and thus consume a lot of CPU time unnecessarily!
 			case inputsBufferSnapshot := <-playerDownsyncChan:
 				pR.downsyncToSinglePlayer(playerId, player, inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, inputsBufferSnapshot.ToSendInputFrameDownsyncs, inputsBufferSnapshot.ShouldForceResync)
 				//Logger.Info(fmt.Sprintf("Sent inputsBufferSnapshot(refRenderFrameId:%d, unconfirmedMask:%v) to for (roomId: %d, playerId:%d)#2", inputsBufferSnapshot.RefRenderFrameId, inputsBufferSnapshot.UnconfirmedMask, pR.Id, playerId))
 			case inputsBufferSnapshot2 := <-playerSecondaryDownsyncChan:
 				pR.downsyncPeerInputFrameUpsyncToSinglePlayer(playerId, player, inputsBufferSnapshot2.ToSendInputFrameDownsyncs, inputsBufferSnapshot2.PeerJoinIndex)
 				//Logger.Info(fmt.Sprintf("Sent secondary inputsBufferSnapshot to for (roomId: %d, playerId:%d)#2", pR.Id, playerId))
-			default:
 			}
 		}
 	}
