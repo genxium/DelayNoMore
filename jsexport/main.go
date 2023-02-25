@@ -106,9 +106,9 @@ func GetCharacterConfigsOrderedByJoinIndex(speciesIdList []int) []*js.Object {
 	return ret
 }
 
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object) bool {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64) bool {
 	// We need access to all fields of RoomDownsyncFrame for displaying in frontend
-	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders)
+	return ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer, currRenderFrameId, collisionSys, collisionSysMap, collisionSpaceOffsetX, collisionSpaceOffsetY, chConfigsOrderedByJoinIndex, renderFrameBuffer, collision, effPushbacks, hardPushbackNormsArr, jumpedOrNotList, dynamicRectangleColliders, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList)
 }
 
 func GetRoomDownsyncFrame(renderFrameBuffer *resolv.RingBuffer, frameId int32) *js.Object {

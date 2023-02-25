@@ -136,7 +136,7 @@ type Room struct {
 	EffectivePlayerCount                   int32
 	DismissalWaitGroup                     sync.WaitGroup
 	InputsBuffer                           *resolv.RingBuffer // Indices are STRICTLY consecutive
-	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputList, player.LastReceivedInputFrameId, player.LastUdpReceivedInputFrameId]
+	InputsBufferLock                       sync.Mutex         // Guards [InputsBuffer, LatestPlayerUpsyncedInputFrameId, LastAllConfirmedInputFrameId, LastAllConfirmedInputList, LastAllConfirmedInputFrameIdWithChange, LastIndividuallyConfirmedInputFrameId, LastIndividuallyConfirmedInputList, player.LastConsecutiveRecvInputFrameId]
 	RenderFrameBuffer                      *resolv.RingBuffer // Indices are STRICTLY consecutive
 	LatestPlayerUpsyncedInputFrameId       int32
 	LastAllConfirmedInputFrameId           int32
@@ -156,8 +156,9 @@ type Room struct {
 	TmxPointsMap   StrToVec2DListMap
 	TmxPolygonsMap StrToPolygon2DListMap
 
-	rdfIdToActuallyUsedInput           map[int32]*pb.InputFrameDownsync
-	LastIndividuallyConfirmedInputList []uint64
+	rdfIdToActuallyUsedInput              map[int32]*pb.InputFrameDownsync
+	LastIndividuallyConfirmedInputFrameId []int32
+	LastIndividuallyConfirmedInputList    []uint64
 
 	BattleUdpTunnelLock sync.Mutex
 	BattleUdpTunnelAddr *pb.PeerUdpAddr
@@ -194,8 +195,7 @@ func (pR *Room) AddPlayerIfPossible(pPlayerFromDbInit *Player, speciesId int, se
 	pPlayerFromDbInit.AckingFrameId = -1
 	pPlayerFromDbInit.AckingInputFrameId = -1
 	pPlayerFromDbInit.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
-	pPlayerFromDbInit.LastReceivedInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
-	pPlayerFromDbInit.LastUdpReceivedInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
+	pPlayerFromDbInit.LastConsecutiveRecvInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
 	pPlayerFromDbInit.BattleState = PlayerBattleStateIns.ADDED_PENDING_BATTLE_COLLIDER_ACK
 
 	pPlayerFromDbInit.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
@@ -237,7 +237,7 @@ func (pR *Room) ReAddPlayerIfPossible(pTmpPlayerInstance *Player, session *webso
 	pEffectiveInRoomPlayerInstance.AckingFrameId = -1
 	pEffectiveInRoomPlayerInstance.AckingInputFrameId = -1
 	pEffectiveInRoomPlayerInstance.LastSentInputFrameId = MAGIC_LAST_SENT_INPUT_FRAME_ID_READDED
-	// [WARNING] DON'T reset "player.LastReceivedInputFrameId" & "player.LastUdpReceivedInputFrameId" upon reconnection!
+	// [WARNING] DON'T reset "player.LastConsecutiveRecvInputFrameId" & "pR.LastIndividuallyConfirmedInputFrameId[...]" upon reconnection!
 	pEffectiveInRoomPlayerInstance.BattleState = PlayerBattleStateIns.READDED_PENDING_BATTLE_COLLIDER_ACK
 
 	pEffectiveInRoomPlayerInstance.ColliderRadius = DEFAULT_PLAYER_RADIUS // Hardcoded
@@ -804,6 +804,10 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
+	pR.LastIndividuallyConfirmedInputFrameId = make([]int32, pR.Capacity)
+	for i := 0; i < pR.Capacity; i++ {
+		pR.LastIndividuallyConfirmedInputFrameId[i] = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
+	}
 	pR.LastIndividuallyConfirmedInputList = make([]uint64, pR.Capacity)
 
 	pR.LatestPlayerUpsyncedInputFrameId = -1
@@ -817,7 +821,7 @@ func (pR *Room) OnDismissed() {
 
 	pR.collisionHolder = resolv.NewCollision()
 	pR.effPushbacks = make([]*battle.Vec2D, pR.Capacity)
-	for i := 0; i < len(pR.effPushbacks); i++ {
+	for i := 0; i < pR.Capacity; i++ {
 		pR.effPushbacks[i] = &battle.Vec2D{X: 0, Y: 0}
 	}
 	pR.hardPushbackNormsArr = make([][]*battle.Vec2D, pR.Capacity)
@@ -1190,9 +1194,9 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#1: roomId=%v, playerId=%v, clientInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
-		if clientInputFrameId < player.LastReceivedInputFrameId {
-			// [WARNING] It's important for correctness that we use "player.LastReceivedInputFrameId" instead of "player.LastUdpReceivedInputFrameId" here!
-			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastReceivedInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastReceivedInputFrameId, pR.InputsBufferString(false)))
+		if clientInputFrameId < player.LastConsecutiveRecvInputFrameId {
+			// [WARNING] It's important for correctness that we use "player.LastConsecutiveRecvInputFrameId" instead of "pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1]" here!
+			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastConsecutiveRecvInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastConsecutiveRecvInputFrameId, pR.InputsBufferString(false)))
 			continue
 		}
 		if clientInputFrameId > pR.InputsBuffer.EdFrameId {
@@ -1208,19 +1212,19 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 			/*
 							   [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
 
-							   Moreover, only ws session upsyncs should advance "player.LastReceivedInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
+							   Moreover, only ws session upsyncs should advance "player.LastConsecutiveRecvInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
 
-				               Kindly note that the updates of "player.LastReceivedInputFrameId" could be discrete before and after reconnection.
+				               Kindly note that the updates of "player.LastConsecutiveRecvInputFrameId" could be discrete before and after reconnection.
 			*/
-			player.LastReceivedInputFrameId = clientInputFrameId
+			player.LastConsecutiveRecvInputFrameId = clientInputFrameId
 			if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
 				pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
 			}
 		}
 
-		if clientInputFrameId > player.LastUdpReceivedInputFrameId {
-			// No need to update "player.LastUdpReceivedInputFrameId" only when "true == fromUDP", we should keep "player.LastUdpReceivedInputFrameId >= player.LastReceivedInputFrameId" at any moment.
-			player.LastUdpReceivedInputFrameId = clientInputFrameId
+		if clientInputFrameId > pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1] {
+			// No need to update "pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1]" only when "true == fromUDP", we should keep "pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1] >= player.LastConsecutiveRecvInputFrameId" at any moment.
+			pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1] = clientInputFrameId
 			// It's safe (in terms of getting an eventually correct "RenderFrameBuffer") to put the following update of "pR.LastIndividuallyConfirmedInputList" which is ONLY used for prediction in "InputsBuffer" out of "false == fromUDP" block.
 			pR.LastIndividuallyConfirmedInputList[player.JoinIndex-1] = inputFrameUpsync.Encoded
 		}
@@ -1379,7 +1383,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders)
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList)
 		pR.CurDynamicsRenderFrameId++
 	}
 }
