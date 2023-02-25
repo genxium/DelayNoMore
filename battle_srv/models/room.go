@@ -156,9 +156,10 @@ type Room struct {
 	TmxPointsMap   StrToVec2DListMap
 	TmxPolygonsMap StrToPolygon2DListMap
 
-	rdfIdToActuallyUsedInput              map[int32]*pb.InputFrameDownsync
-	LastIndividuallyConfirmedInputFrameId []int32
-	LastIndividuallyConfirmedInputList    []uint64
+	rdfIdToActuallyUsedInput                 map[int32]*pb.InputFrameDownsync
+	allowUpdateInputFrameInPlaceUponDynamics bool
+	LastIndividuallyConfirmedInputFrameId    []int32
+	LastIndividuallyConfirmedInputList       []uint64
 
 	BattleUdpTunnelLock sync.Mutex
 	BattleUdpTunnelAddr *pb.PeerUdpAddr
@@ -804,6 +805,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
+	pR.allowUpdateInputFrameInPlaceUponDynamics = true
 	pR.LastIndividuallyConfirmedInputFrameId = make([]int32, pR.Capacity)
 	for i := 0; i < pR.Capacity; i++ {
 		pR.LastIndividuallyConfirmedInputFrameId[i] = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -1303,6 +1305,9 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
 			}
 			inputFrameDownsync := tmp.(*battle.InputFrameDownsync)
+			if pR.allowUpdateInputFrameInPlaceUponDynamics {
+				battle.UpdateInputFrameInPlaceUponDynamics(j, pR.Capacity, inputFrameDownsync.ConfirmedList, inputFrameDownsync.InputList, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, int32(MAGIC_JOIN_INDEX_INVALID))
+			}
 			unconfirmedMask |= (allConfirmedMask ^ inputFrameDownsync.ConfirmedList)
 			inputFrameDownsync.ConfirmedList = allConfirmedMask
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
@@ -1383,7 +1388,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false)
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false, MAGIC_JOIN_INDEX_INVALID) // "allowUpdateInputFrameInPlaceUponDynamics" is instead used when "forceConfirmationIfApplicable"
 		pR.CurDynamicsRenderFrameId++
 	}
 }
