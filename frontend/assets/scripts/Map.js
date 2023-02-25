@@ -1427,7 +1427,8 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(i, inputFrameDownsyncClone);
       }
-      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList);
+      const allowUpdateInputFrameInPlaceUponDynamics = (false == isChasing);
+      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics);
       const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, i + 1);
 
       if (true == isChasing) {

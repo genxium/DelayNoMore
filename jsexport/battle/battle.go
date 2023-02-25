@@ -501,7 +501,7 @@ func updateInputFrameInPlaceUponDynamics(inputFrameId int32, roomCapacity int, c
 	}
 }
 
-func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *resolv.RingBuffer, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64) (int, bool, int32, int32) {
+func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *resolv.RingBuffer, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64, allowUpdateInputFrameInPlaceUponDynamics bool) (int, bool, int32, int32) {
 	// returns (patternId, jumpedOrNot, effectiveDx, effectiveDy)
 	delayedInputFrameId := ConvertToDelayedInputFrameId(currRenderFrame.Id)
 	delayedInputFrameIdForPrevRdf := ConvertToDelayedInputFrameId(currRenderFrame.Id - 1)
@@ -517,7 +517,9 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	delayedInputFrameDownsync := inputsBuffer.GetByFrameId(delayedInputFrameId).(*InputFrameDownsync)
 	delayedInputList := delayedInputFrameDownsync.InputList
 	roomCapacity := len(delayedInputList)
-	updateInputFrameInPlaceUponDynamics(delayedInputFrameId, roomCapacity, delayedInputFrameDownsync.ConfirmedList, delayedInputList, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList)
+	if allowUpdateInputFrameInPlaceUponDynamics {
+		updateInputFrameInPlaceUponDynamics(delayedInputFrameId, roomCapacity, delayedInputFrameDownsync.ConfirmedList, delayedInputList, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList)
+	}
 
 	var delayedInputListForPrevRdf []uint64 = nil
 	if 0 < delayedInputFrameIdForPrevRdf {
@@ -580,7 +582,7 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 
 The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & dynamicRectangleColliders("player" & "bullet"), which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
 */
-func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64) bool {
+func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64, allowUpdateInputFrameInPlaceUponDynamics bool) bool {
 	currRenderFrame := renderFrameBuffer.GetByFrameId(currRenderFrameId).(*RoomDownsyncFrame)
 	nextRenderFrameId := currRenderFrameId + 1
 	roomCapacity := len(currRenderFrame.PlayersArr)
@@ -629,7 +631,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	for i, currPlayerDownsync := range currRenderFrame.PlayersArr {
 		chConfig := chConfigsOrderedByJoinIndex[i]
 		thatPlayerInNextFrame := nextRenderFramePlayers[i]
-		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, chConfig, inputsBuffer, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList)
+		patternId, jumpedOrNot, effDx, effDy := deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame, currRenderFrame, chConfig, inputsBuffer, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics)
 
 		jumpedOrNotList[i] = jumpedOrNot
 		joinIndex := currPlayerDownsync.JoinIndex

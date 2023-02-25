@@ -1383,7 +1383,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList)
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false)
 		pR.CurDynamicsRenderFrameId++
 	}
 }
