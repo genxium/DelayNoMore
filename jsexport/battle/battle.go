@@ -523,8 +523,6 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 	if 0 < delayedInputFrameIdForPrevRdf {
 		delayedInputFrameDownsyncForPrevRdf := inputsBuffer.GetByFrameId(delayedInputFrameIdForPrevRdf).(*InputFrameDownsync)
 		delayedInputListForPrevRdf = delayedInputFrameDownsyncForPrevRdf.InputList
-
-		updateInputFrameInPlaceUponDynamics(delayedInputFrameIdForPrevRdf, roomCapacity, delayedInputFrameDownsyncForPrevRdf.ConfirmedList, delayedInputListForPrevRdf, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList)
 	}
 
 	jumpedOrNot := false
