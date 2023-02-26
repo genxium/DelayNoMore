@@ -89,10 +89,10 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 	var succRet int
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
 		player, err := models.GetPlayerByName(req.Num)
-		Logger.Info("A new SmsCaptcha record is needed for: ", zap.String("key", redisKey), zap.Any("player", player))
 		if nil == err && nil != player {
 			pass = true
 			succRet = Constants.RetCode.IsTestAcc
+			Logger.Info("A new SmsCaptcha record is needed for: ", zap.String("key", redisKey), zap.Any("player", player))
 		}
 	}
 

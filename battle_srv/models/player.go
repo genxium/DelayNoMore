@@ -77,13 +77,14 @@ func getPlayer(cond sq.Eq) (*Player, error) {
 		return nil, err
 	}
 	rows, err := storage.MySQLManagerIns.Queryx(query, args...)
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
 	cols, err := rows.Columns()
 	if nil != err {
 		panic(err)
 	}
+	cnt := 0
 	for rows.Next() {
 		// TODO: Do it more elegantly, but by now I don't have time to learn reflection of Golang
 		vals := rowValues(rows, cols)
@@ -105,9 +106,14 @@ func getPlayer(cond sq.Eq) (*Player, error) {
 			}
 		}
 		Logger.Debug("Queried player from db", zap.Any("cond", cond), zap.Any("p", p), zap.Any("pd", pd), zap.Any("cols", cols), zap.Any("rowValues", vals))
+		cnt++
 	}
-	p.PlayerDownsync = pd
-	return &p, nil
+	if 0 < cnt {
+		p.PlayerDownsync = pd
+		return &p, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (p *Player) Insert(tx *sqlx.Tx) error {
