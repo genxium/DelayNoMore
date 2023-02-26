@@ -31,6 +31,7 @@ func (v Vector) Clone() Vector {
 	return clone
 }
 
+/*
 // Add a vector with a vector or a set of vectors
 func Add(v1 Vector, vs ...Vector) Vector {
 	return v1.Clone().Add(vs...)
@@ -81,6 +82,7 @@ func (v Vector) Scale(size float64) Vector {
 	scalUnitaryTo(v, size, v)
 	return v
 }
+*/
 
 // Equal compares that two vectors are equal to each other
 func Equal(v1, v2 Vector) bool {

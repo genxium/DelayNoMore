@@ -33,18 +33,10 @@ func NewLine(x, y, x2, y2 float64) *Line {
 	}
 }
 
-func (line *Line) Project(axis Vector) Vector {
-	return line.Vector().Scale(axis.Dot(line.Start.Sub(line.End)))
-}
-
 func (line *Line) Normal() Vector {
 	dy := line.End[1] - line.Start[1]
 	dx := line.End[0] - line.Start[0]
 	return Vector{dy, -dx}.Unit()
-}
-
-func (line *Line) Vector() Vector {
-	return line.End.Clone().Sub(line.Start).Unit()
 }
 
 // IntersectionPointsLine returns the intersection point of a Line with another Line as a Vector. If no intersection is found, it will return nil.
@@ -76,51 +68,6 @@ func (line *Line) IntersectionPointsLine(other *Line) Vector {
 	}
 
 	return nil
-
-}
-
-// IntersectionPointsCircle returns a slice of Vectors, each indicating the intersection point. If no intersection is found, it will return an empty slice.
-func (line *Line) IntersectionPointsCircle(circle *Circle) []Vector {
-
-	points := []Vector{}
-
-	cp := Vector{circle.X, circle.Y}
-	lStart := line.Start.Sub(cp)
-	lEnd := line.End.Sub(cp)
-	diff := lEnd.Sub(lStart)
-
-	a := diff[0]*diff[0] + diff[1]*diff[1]
-	b := 2 * ((diff[0] * lStart[0]) + (diff[1] * lStart[1]))
-	c := (lStart[0] * lStart[0]) + (lStart[1] * lStart[1]) - (circle.Radius * circle.Radius)
-
-	det := b*b - (4 * a * c)
-
-	if det < 0 {
-		// Do nothing, no intersections
-	} else if det == 0 {
-
-		t := -b / (2 * a)
-
-		if t >= 0 && t <= 1 {
-			points = append(points, Vector{line.Start[0] + t*diff[0], line.Start[1] + t*diff[1]})
-		}
-
-	} else {
-
-		t := (-b + math.Sqrt(det)) / (2 * a)
-
-		// We have to ensure t is between 0 and 1; otherwise, the collision points are on the circle as though the lines were infinite in length.
-		if t >= 0 && t <= 1 {
-			points = append(points, Vector{line.Start[0] + t*diff[0], line.Start[1] + t*diff[1]})
-		}
-		t = (-b - math.Sqrt(det)) / (2 * a)
-		if t >= 0 && t <= 1 {
-			points = append(points, Vector{line.Start[0] + t*diff[0], line.Start[1] + t*diff[1]})
-		}
-
-	}
-
-	return points
 
 }
 
@@ -294,24 +241,6 @@ func (cp *ConvexPolygon) MoveVec(vec Vector) {
 	cp.Y += vec.Y()
 }
 
-// Center returns the transformed Center of the ConvexPolygon.
-func (cp *ConvexPolygon) Center() Vector {
-
-	pos := Vector{0, 0}
-
-	vertices := cp.Transformed()
-	for _, v := range vertices {
-		pos.Add(v)
-	}
-
-	denom := float64(len(vertices))
-	pos[0] /= denom
-	pos[1] /= denom
-
-	return pos
-
-}
-
 // Project projects (i.e. flattens) the ConvexPolygon onto the provided axis.
 func (cp *ConvexPolygon) Project(axis Vector) Projection {
 	axis = axis.Unit()
@@ -453,13 +382,7 @@ func (cp *ConvexPolygon) Intersection(dx, dy float64, other Shape) *ContactSet {
 	cp.X += dx
 	cp.Y += dy
 
-	if circle, isCircle := other.(*Circle); isCircle {
-
-		for _, line := range cp.Lines() {
-			contactSet.Points = append(contactSet.Points, line.IntersectionPointsCircle(circle)...)
-		}
-
-	} else if poly, isPoly := other.(*ConvexPolygon); isPoly {
+	if poly, isPoly := other.(*ConvexPolygon); isPoly {
 
 		for _, line := range cp.Lines() {
 
@@ -476,27 +399,9 @@ func (cp *ConvexPolygon) Intersection(dx, dy float64, other Shape) *ContactSet {
 	}
 
 	if len(contactSet.Points) > 0 {
-
-		for _, point := range contactSet.Points {
-			contactSet.Center = contactSet.Center.Add(point)
-		}
-
-		contactSet.Center[0] /= float64(len(contactSet.Points))
-		contactSet.Center[1] /= float64(len(contactSet.Points))
-
-		if mtv := cp.calculateMTV(contactSet, other); mtv != nil {
-			contactSet.MTV = mtv
-		}
-
+		// Do nothing
 	} else {
 		contactSet = nil
-	}
-
-	// If dx or dy aren't 0, then the MTV will be greater to compensate; this adjusts the vector back.
-	if contactSet != nil && (dx != 0 || dy != 0) {
-		deltaMagnitude := Vector{dx, dy}.Magnitude()
-		ogMagnitude := contactSet.MTV.Magnitude()
-		contactSet.MTV = contactSet.MTV.Unit().Scale(ogMagnitude - deltaMagnitude)
 	}
 
 	cp.X = ogX
@@ -504,76 +409,6 @@ func (cp *ConvexPolygon) Intersection(dx, dy float64, other Shape) *ContactSet {
 
 	return contactSet
 
-}
-
-// calculateMTV returns the MTV, if possible, and a bool indicating whether it was possible or not.
-func (cp *ConvexPolygon) calculateMTV(contactSet *ContactSet, otherShape Shape) Vector {
-
-	delta := Vector{0, 0}
-
-	smallest := Vector{math.MaxFloat64, 0}
-
-	switch other := otherShape.(type) {
-
-	case *ConvexPolygon:
-
-		for _, axis := range cp.SATAxes() {
-			if !cp.Project(axis).Overlapping(other.Project(axis)) {
-				return nil
-			}
-
-			overlap := cp.Project(axis).Overlap(other.Project(axis))
-
-			if smallest.Magnitude() > overlap {
-				smallest = axis.Scale(overlap)
-			}
-
-		}
-
-		for _, axis := range other.SATAxes() {
-
-			if !cp.Project(axis).Overlapping(other.Project(axis)) {
-				return nil
-			}
-
-			overlap := cp.Project(axis).Overlap(other.Project(axis))
-
-			if smallest.Magnitude() > overlap {
-				smallest = axis.Scale(overlap)
-			}
-
-		}
-		// Removed support of "Circle" to remove dependency of "sort" module
-	}
-
-	delta[0] = smallest[0]
-	delta[1] = smallest[1]
-
-	return delta
-}
-
-// ContainedBy returns if the ConvexPolygon is wholly contained by the other shape provided.
-func (cp *ConvexPolygon) ContainedBy(otherShape Shape) bool {
-
-	switch other := otherShape.(type) {
-
-	case *ConvexPolygon:
-
-		for _, axis := range cp.SATAxes() {
-			if !cp.Project(axis).IsInside(other.Project(axis)) {
-				return false
-			}
-		}
-
-		for _, axis := range other.SATAxes() {
-			if !cp.Project(axis).IsInside(other.Project(axis)) {
-				return false
-			}
-		}
-
-	}
-
-	return true
 }
 
 // NewRectangle returns a rectangular ConvexPolygon with the vertices in clockwise order. In actuality, an AABBRectangle should be its own
@@ -585,143 +420,6 @@ func NewRectangle(x, y, w, h float64) *ConvexPolygon {
 		x+w, y+h,
 		x, y+h,
 	)
-}
-
-type Circle struct {
-	X, Y, Radius float64
-}
-
-// NewCircle returns a new Circle, with its center at the X and Y position given, and with the defined radius.
-func NewCircle(x, y, radius float64) *Circle {
-	circle := &Circle{
-		X:      x,
-		Y:      y,
-		Radius: radius,
-	}
-	return circle
-}
-
-func (circle *Circle) Clone() Shape {
-	return NewCircle(circle.X, circle.Y, circle.Radius)
-}
-
-// Bounds returns the top-left and bottom-right corners of the Circle.
-func (circle *Circle) Bounds() (Vector, Vector) {
-	return Vector{circle.X - circle.Radius, circle.Y - circle.Radius}, Vector{circle.X + circle.Radius, circle.Y + circle.Radius}
-}
-
-// Intersection tests to see if a Circle intersects with the other given Shape. dx and dy are delta movement variables indicating
-// movement to be applied before the intersection check (thereby allowing you to see if a Shape would collide with another if it
-// were in a different relative location). If an Intersection is found, a ContactSet will be returned, giving information regarding
-// the intersection.
-func (circle *Circle) Intersection(dx, dy float64, other Shape) *ContactSet {
-
-	var contactSet *ContactSet
-
-	ox := circle.X
-	oy := circle.Y
-
-	circle.X += dx
-	circle.Y += dy
-
-	// here
-
-	switch shape := other.(type) {
-	case *ConvexPolygon:
-		// Maybe this would work?
-		contactSet = shape.Intersection(-dx, -dy, circle)
-		if contactSet != nil {
-			contactSet.MTV = contactSet.MTV.Scale(-1)
-		}
-	case *Circle:
-
-		contactSet = NewContactSet()
-
-		contactSet.Points = circle.IntersectionPointsCircle(shape)
-
-		if len(contactSet.Points) == 0 {
-			return nil
-		}
-
-		contactSet.MTV = Vector{circle.X - shape.X, circle.Y - shape.Y}
-		dist := contactSet.MTV.Magnitude()
-		contactSet.MTV = contactSet.MTV.Unit().Scale(circle.Radius + shape.Radius - dist)
-
-		for _, point := range contactSet.Points {
-			contactSet.Center = contactSet.Center.Add(point)
-		}
-
-		contactSet.Center[0] /= float64(len(contactSet.Points))
-		contactSet.Center[1] /= float64(len(contactSet.Points))
-
-		// if contactSet != nil {
-		// 	contactSet.MTV[0] -= dx
-		// 	contactSet.MTV[1] -= dy
-		// }
-
-		// contactSet.MTV = Vector{circle.X - shape.X, circle.Y - shape.Y}
-	}
-
-	circle.X = ox
-	circle.Y = oy
-
-	return contactSet
-}
-
-// Move translates the Circle by the designated X and Y values.
-func (circle *Circle) Move(x, y float64) {
-	circle.X += x
-	circle.Y += y
-}
-
-// MoveVec translates the Circle by the designated Vector.
-func (circle *Circle) MoveVec(vec Vector) {
-	circle.X += vec.X()
-	circle.Y += vec.Y()
-}
-
-// SetPosition sets the center position of the Circle using the X and Y values given.
-func (circle *Circle) SetPosition(x, y float64) {
-	circle.X = x
-	circle.Y = y
-}
-
-// SetPosition sets the center position of the Circle using the Vector given.
-func (circle *Circle) SetPositionVec(vec Vector) {
-	circle.X = vec.X()
-	circle.Y = vec.Y()
-}
-
-// Position() returns the X and Y position of the Circle.
-func (circle *Circle) Position() (float64, float64) {
-	return circle.X, circle.Y
-}
-
-// PointInside returns if the given Vector is inside of the circle.
-func (circle *Circle) PointInside(point Vector) bool {
-	return point.Sub(Vector{circle.X, circle.Y}).Magnitude() <= circle.Radius
-}
-
-// IntersectionPointsCircle returns the intersection points of the two circles provided.
-func (circle *Circle) IntersectionPointsCircle(other *Circle) []Vector {
-
-	d := math.Sqrt(math.Pow(other.X-circle.X, 2) + math.Pow(other.Y-circle.Y, 2))
-
-	if d > circle.Radius+other.Radius || d < math.Abs(circle.Radius-other.Radius) || d == 0 && circle.Radius == other.Radius {
-		return nil
-	}
-
-	a := (math.Pow(circle.Radius, 2) - math.Pow(other.Radius, 2) + math.Pow(d, 2)) / (2 * d)
-	h := math.Sqrt(math.Pow(circle.Radius, 2) - math.Pow(a, 2))
-
-	x2 := circle.X + a*(other.X-circle.X)/d
-	y2 := circle.Y + a*(other.Y-circle.Y)/d
-
-	return []Vector{
-		{x2 + h*(other.Y-circle.Y)/d, y2 - h*(other.X-circle.X)/d},
-		{x2 - h*(other.Y-circle.Y)/d, y2 + h*(other.X-circle.X)/d},
-	}
-
 }
 
 type Projection struct {
