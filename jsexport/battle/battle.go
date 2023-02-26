@@ -22,7 +22,7 @@ const (
 	GRAVITY_X = int32(0)
 	GRAVITY_Y = -int32(float64(0.5) * WORLD_TO_VIRTUAL_GRID_RATIO) // makes all "playerCollider.Y" a multiple of 0.5 in all cases
 
-	INPUT_DELAY_FRAMES = int32(6) // in the count of render frames
+	INPUT_DELAY_FRAMES = int32(4) // in the count of render frames
 
 	/*
 	   [WARNING]
@@ -731,7 +731,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 				} else {
 					// Updates CharacterState and thus the animation to make user see graphical feedback asap.
 					thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_WALKING
-					thatPlayerInNextFrame.FramesToRecover = ((chConfig.InertiaFramesToRecover >> 1) + (chConfig.InertiaFramesToRecover >> 2))
+					thatPlayerInNextFrame.FramesToRecover = (chConfig.InertiaFramesToRecover >> 1)
 				}
 			} else {
 				thatPlayerInNextFrame.CapturedByInertia = false
