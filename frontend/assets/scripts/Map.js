@@ -865,12 +865,19 @@ cc.Class({
   _markConfirmationIfApplicable() {
     const self = this;
     let newAllConfirmedCnt = 0;
-    while (self.recentInputCache.GetStFrameId() <= self.lastAllConfirmedInputFrameId && self.lastAllConfirmedInputFrameId < self.recentInputCache.GetEdFrameId()) {
-      const inputFrameDownsync = self.recentInputCache.GetByFrameId(self.lastAllConfirmedInputFrameId);
+    let candidateInputFrameId = (self.lastAllConfirmedInputFrameId + 1);
+    if (candidateInputFrameId < self.recentInputCache.GetStFrameId()) {
+      candidateInputFrameId = self.recentInputCache.GetStFrameId();
+    }
+    while (self.recentInputCache.GetStFrameId() <= candidateInputFrameId && candidateInputFrameId < self.recentInputCache.GetEdFrameId()) {
+      const inputFrameDownsync = gopkgs.GetInputFrameDownsync(self.recentInputCache, candidateInputFrameId);
       if (null == inputFrameDownsync) break;
-      if (self._allConfirmed(inputFrameDownsync.ConfirmedList)) break;
-      ++self.lastAllConfirmedInputFrameId;
+      if (self._allConfirmed(inputFrameDownsync.GetConfirmedList())) break;
+      ++candidateInputFrameId;
       ++newAllConfirmedCnt;
+    }
+    if (0 < newAllConfirmedCnt) {
+      self.lastAllConfirmedInputFrameId = candidateInputFrameId;
     }
     return newAllConfirmedCnt;
   },
@@ -897,19 +904,17 @@ cc.Class({
         continue;
       }
       // [WARNING] Now that "inputFrameDownsyncId > self.lastAllConfirmedInputFrameId", we should make an update immediately because unlike its backend counterpart "Room.LastAllConfirmedInputFrameId", the frontend "mapIns.lastAllConfirmedInputFrameId" might inevitably get gaps among discrete values due to "either type#1 or type#2 forceConfirmation" -- and only "onInputFrameDownsyncBatch" can catch this! 
-      self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
-
-      const localInputFrame = self.recentInputCache.GetByFrameId(inputFrameDownsyncId);
+      const localInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, inputFrameDownsyncId);
       if (null != localInputFrame
         &&
         null == firstPredictedYetIncorrectInputFrameId
         &&
-        !self.equalInputLists(localInputFrame.InputList, inputFrameDownsync.inputList)
+        !self.equalInputLists(localInputFrame.GetInputList(), inputFrameDownsync.inputList)
       ) {
         firstPredictedYetIncorrectInputFrameId = inputFrameDownsyncId;
       }
       // [WARNING] Take all "inputFrameDownsync" from backend as all-confirmed, it'll be later checked by "rollbackAndChase". 
-      inputFrameDownsync.confirmedList = (1 << self.playerRichInfoDict.size) - 1;
+      inputFrameDownsync.confirmedList = (1 << window.boundRoomCapacity) - 1;
       const inputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameDownsync.inputFrameId, inputFrameDownsync.inputList, inputFrameDownsync.confirmedList); // "battle.InputFrameDownsync" in "jsexport"
       for (let j in self.playerRichInfoArr) {
         const jj = parseInt(j);
@@ -1007,7 +1012,7 @@ fromUDP=${fromUDP}`);
       // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
       let newInputList = existingInputFrame.InputList.slice();
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
-      let newConfirmedList = (existingInputFrame.ConfirmedList | peerJoinIndex);
+      let newConfirmedList = (existingInputFrame.ConfirmedList | peerJoinIndexMask);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);

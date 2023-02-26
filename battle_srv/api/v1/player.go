@@ -85,40 +85,35 @@ func (p *playerController) SMSCaptchaGet(c *gin.Context) {
 		c.Set(api.RET, Constants.RetCode.SmsCaptchaRequestedTooFrequently)
 		return
 	}
-	Logger.Info("A new SmsCaptcha record is needed for: ", zap.String("key", redisKey))
 	pass := false
 	var succRet int
 	if Conf.General.ServerEnv == SERVER_ENV_TEST {
 		player, err := models.GetPlayerByName(req.Num)
+		Logger.Info("A new SmsCaptcha record is needed for: ", zap.String("key", redisKey), zap.Any("player", player))
 		if nil == err && nil != player {
 			pass = true
 			succRet = Constants.RetCode.IsTestAcc
 		}
 	}
 
-	if !pass {
-		player, err := models.GetPlayerByName(req.Num)
-		if nil == err && nil != player {
-			pass = true
-			succRet = Constants.RetCode.IsBotAcc
-		}
-	}
-
-	if !pass {
-		if RE_PHONE_NUM.MatchString(req.Num) {
-			succRet = Constants.RetCode.Ok
-			pass = true
-		}
-		if req.CountryCode == "86" {
-			if RE_CHINA_PHONE_NUM.MatchString(req.Num) {
-				succRet = Constants.RetCode.Ok
-				pass = true
-			} else {
-				succRet = Constants.RetCode.InvalidRequestParam
-				pass = false
+	/*
+		    // Real phonenum is not supported yet!
+			if !pass {
+				if RE_PHONE_NUM.MatchString(req.Num) {
+					succRet = Constants.RetCode.Ok
+					pass = true
+				}
+				if req.CountryCode == "86" {
+					if RE_CHINA_PHONE_NUM.MatchString(req.Num) {
+						succRet = Constants.RetCode.Ok
+						pass = true
+					} else {
+						succRet = Constants.RetCode.InvalidRequestParam
+						pass = false
+					}
+				}
 			}
-		}
-	}
+	*/
 	if !pass {
 		c.Set(api.RET, Constants.RetCode.InvalidRequestParam)
 		return
@@ -480,16 +475,6 @@ func (p *playerController) maybeCreateNewPlayer(req smsCaptchaReq) (*models.Play
 		if player != nil {
 			Logger.Info("Got a test env player:", zap.Any("phonenum", req.Num), zap.Any("playerId", player.Id))
 			return player, nil
-		}
-	} else {
-		botPlayer, err := models.GetPlayerByName(req.Num)
-		if err != nil {
-			Logger.Error("Seeking bot player error:", zap.Error(err))
-			return nil, err
-		}
-		if botPlayer != nil {
-			Logger.Info("Got a bot player:", zap.Any("phonenum", req.Num), zap.Any("playerId", botPlayer.Id))
-			return botPlayer, nil
 		}
 	}
 

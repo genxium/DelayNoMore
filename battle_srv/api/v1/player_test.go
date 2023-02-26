@@ -74,7 +74,7 @@ func Test_SMSCaptchaGet_illegalPhone(t *testing.T) {
 
 func Test_SMSCaptchaGet_testAcc(t *testing.T) {
 	player, err := getTestPlayer()
-	if err == nil && player != nil {
+	if nil == err && nil != player {
 		resp := mustDoSmsCaptchaGetReq(fakeSMSCaptchReq(player.Name), t)
 		if resp.Ret != Constants.RetCode.IsTestAcc {
 			t.Fail()
