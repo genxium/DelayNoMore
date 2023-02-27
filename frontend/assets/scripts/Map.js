@@ -1012,7 +1012,8 @@ fromUDP=${fromUDP}`);
       const peerJoinIndexMask = (1 << (peerJoinIndex - 1));
       self.getOrPrefabInputFrameUpsync(inputFrameId, false); // Make sure that inputFrame exists locally
       const existingInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, inputFrameId);
-      if (0 < (existingInputFrame.GetConfirmedList() & peerJoinIndexMask)) {
+      const existingConfirmedList = existingInputFrame.GetConfirmedList();
+      if (0 < (existingConfirmedList & peerJoinIndexMask)) {
         continue;
       }
       if (inputFrameId > self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1]) {
@@ -1021,9 +1022,10 @@ fromUDP=${fromUDP}`);
       }
       effCnt += 1;
       // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
+      const existingInputList = existingInputFrame.GetInputList();
       let newInputList = existingInputFrame.GetInputList().slice();
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
-      let newConfirmedList = (existingInputFrame.GetConfirmedList() | peerJoinIndexMask);
+      let newConfirmedList = (existingConfirmedList | peerJoinIndexMask);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
@@ -1034,7 +1036,7 @@ fromUDP=${fromUDP}`);
         if (
           null == firstPredictedYetIncorrectInputFrameId
           &&
-          existingInputFrame.InputList[peerJoinIndex - 1] != peerEncodedInput
+          existingInputList[peerJoinIndex - 1] != peerEncodedInput
         ) {
           firstPredictedYetIncorrectInputFrameId = inputFrameId;
         }
