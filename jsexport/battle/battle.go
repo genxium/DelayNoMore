@@ -490,7 +490,8 @@ func calcHardPushbacksNorms(joinIndex int32, currPlayerDownsync, thatPlayerInNex
 	return retCnt
 }
 
-func UpdateInputFrameInPlaceUponDynamics(inputFrameId int32, roomCapacity int, confirmedList uint64, inputList []uint64, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64, toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics int32) {
+func UpdateInputFrameInPlaceUponDynamics(inputFrameId int32, roomCapacity int, confirmedList uint64, inputList []uint64, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64, toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics int32) bool {
+	hasInputFrameUpdatedOnDynamics := false
 	for i := 0; i < roomCapacity; i++ {
 		if int32(i+1) == toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics {
 			// On frontend, a "self input" is only confirmed by websocket downsync, which is quite late and might get the "self input" incorrectly overwritten if not excluded here
@@ -503,8 +504,13 @@ func UpdateInputFrameInPlaceUponDynamics(inputFrameId int32, roomCapacity int, c
 		if lastIndividuallyConfirmedInputFrameId[i] >= inputFrameId {
 			continue
 		}
-		inputList[i] = (lastIndividuallyConfirmedInputList[i] & uint64(15))
+		newVal := (lastIndividuallyConfirmedInputList[i] & uint64(15))
+		if newVal != inputList[i] {
+			inputList[i] = newVal
+			hasInputFrameUpdatedOnDynamics = true
+		}
 	}
+	return hasInputFrameUpdatedOnDynamics
 }
 
 func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, currRenderFrame *RoomDownsyncFrame, chConfig *CharacterConfig, inputsBuffer *resolv.RingBuffer) (int, bool, int32, int32) {
@@ -585,6 +591,7 @@ func deriveOpPattern(currPlayerDownsync, thatPlayerInNextFrame *PlayerDownsync, 
 The function "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame" is creating new heap-memory blocks at 60fps, e.g. nextRenderFramePlayers & nextRenderFrameMeleeBullets & nextRenderFrameFireballBullets & effPushbacks & hardPushbackNorms & jumpedOrNotList & dynamicRectangleColliders("player" & "bullet"), which would induce "possibly performance impacting garbage collections" when many rooms are running simultaneously.
 */
 func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.RingBuffer, currRenderFrameId int32, collisionSys *resolv.Space, collisionSysMap map[int32]*resolv.Object, collisionSpaceOffsetX, collisionSpaceOffsetY float64, chConfigsOrderedByJoinIndex []*CharacterConfig, renderFrameBuffer *resolv.RingBuffer, collision *resolv.Collision, effPushbacks []*Vec2D, hardPushbackNormsArr [][]*Vec2D, jumpedOrNotList []bool, dynamicRectangleColliders []*resolv.Object, lastIndividuallyConfirmedInputFrameId []int32, lastIndividuallyConfirmedInputList []uint64, allowUpdateInputFrameInPlaceUponDynamics bool, toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics int32) bool {
+	hasInputFrameUpdatedOnDynamics := false
 	currRenderFrame := renderFrameBuffer.GetByFrameId(currRenderFrameId).(*RoomDownsyncFrame)
 	nextRenderFrameId := currRenderFrameId + 1
 	roomCapacity := len(currRenderFrame.PlayersArr)
@@ -637,7 +644,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 		delayedInputList := delayedInputFrameDownsync.InputList
 		roomCapacity := len(delayedInputList)
 		if allowUpdateInputFrameInPlaceUponDynamics {
-			UpdateInputFrameInPlaceUponDynamics(delayedInputFrameId, roomCapacity, delayedInputFrameDownsync.ConfirmedList, delayedInputList, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList, toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics)
+			hasInputFrameUpdatedOnDynamics = UpdateInputFrameInPlaceUponDynamics(delayedInputFrameId, roomCapacity, delayedInputFrameDownsync.ConfirmedList, delayedInputList, lastIndividuallyConfirmedInputFrameId, lastIndividuallyConfirmedInputList, toExcludeJoinIndexUpdateInputFrameInPlaceUponDynamics)
 		}
 	}
 
@@ -1210,7 +1217,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 	ret.Id = nextRenderFrameId
 	ret.BulletLocalIdCounter = bulletLocalId
 
-	return true
+	return hasInputFrameUpdatedOnDynamics
 }
 
 func GenerateRectCollider(wx, wy, w, h, topPadding, bottomPadding, leftPadding, rightPadding, spaceOffsetX, spaceOffsetY float64, data interface{}, tag string) *resolv.Object {

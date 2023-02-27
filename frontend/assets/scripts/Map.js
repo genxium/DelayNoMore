@@ -968,7 +968,7 @@ accompaniedInputFrameDownsyncBatchRange=[${accompaniedInputFrameDownsyncBatch[0]
 firstPredictedYetIncorrectInputFrameId: ${firstPredictedYetIncorrectInputFrameId}
 lastAllConfirmedInputFrameId=${self.lastAllConfirmedInputFrameId}
 recentInputCache=${self._stringifyRecentInputCache(false)}
-batchInputFrameIdRange=[${batch[0].inputFrameId}, ${batch[batch.length - 1].inputFrameId}]
+batchInputFrameIdRange=[${null == batch ? null : batch[0].inputFrameId}, ${null == batch ? null : batch[batch.length - 1].inputFrameId}]
 fromUDP=${fromUDP}`);
     }
     self.chaserRenderFrameId = renderFrameId1;
@@ -1439,7 +1439,18 @@ othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(oth
       const delayedInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, j);
 
       const allowUpdateInputFrameInPlaceUponDynamics = (!isChasing);
-      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics, self.selfPlayerInfo.joinIndex);
+      const hasInputFrameUpdatedOnDynamics = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics, self.selfPlayerInfo.joinIndex);
+      if (hasInputFrameUpdatedOnDynamics) {
+        const ii = gopkgs.ConvertToFirstUsedRenderFrameId(j);
+        if (ii < i) {
+          /*
+          The backend counterpart doesn't need this rollback because 
+          1. Backend only applies all-confirmed inputFrames to calc dynamics.
+          2. Backend applies an all-confirmed inputFrame to all applicable render frames at once.
+          */
+          self._handleIncorrectlyRenderedPrediction(j, null, false);
+        }
+      }
       if (self.frameDataLoggingEnabled) {
         // [WARNING] The "inputList" of "delayedInputFrame" could be mutated in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", thus should clone after dynamics is applied!  
         const actuallyUsedInputClone = delayedInputFrame.GetInputList().slice();
