@@ -714,6 +714,11 @@ cc.Class({
       shouldForceDumping2 = false;
       shouldForceResync = false;
       self.othersForcedDownsyncRenderFrameDict.set(rdfId, rdf);
+      if (CC_DEBUG) {
+        console.warn(`Someone else is forced to resync! renderFrameId=${rdf.GetId()}
+backendUnconfirmedMask=${pbRdf.backendUnconfirmedMask}
+accompaniedInputFrameDownsyncBatchRange=[${null == accompaniedInputFrameDownsyncBatch ? null : accompaniedInputFrameDownsyncBatch[0].inputFrameId}, ${null == accompaniedInputFrameDownsyncBatch ? null : accompaniedInputFrameDownsyncBatch[accompaniedInputFrameDownsyncBatch.length - 1].inputFrameId}]`);
+      }
     }
     /*
     TODO
@@ -744,10 +749,15 @@ cc.Class({
       // In fact, not having "window.RING_BUFF_CONSECUTIVE_SET == dumpRenderCacheRet" should already imply that "self.renderFrameId <= rdfId", but here we double check and log the anomaly  
 
       if (window.MAGIC_ROOM_DOWNSYNC_FRAME_ID.BATTLE_START == rdfId) {
-        console.log('On battle started! renderFrameId=', rdfId);
+        console.log(`On battle started! renderFrameId=${rdfId}`);
       } else {
         self.hideFindingPlayersGUI();
-        console.warn('On battle resynced! renderFrameId=', rdf.GetId());
+        if (CC_DEBUG) {
+          console.warn(`On battle resynced! renderFrameId=${rdf.GetId()}
+accompaniedInputFrameDownsyncBatchRange=[${accompaniedInputFrameDownsyncBatch[0].inputFrameId}, ${accompaniedInputFrameDownsyncBatch[accompaniedInputFrameDownsyncBatch.length - 1].inputFrameId}]`);
+        } else {
+          console.warn(`On battle resynced! renderFrameId=${rdf.GetId()}`);
+        }
       }
 
       self.renderFrameId = rdfId;
@@ -872,12 +882,12 @@ cc.Class({
     while (self.recentInputCache.GetStFrameId() <= candidateInputFrameId && candidateInputFrameId < self.recentInputCache.GetEdFrameId()) {
       const inputFrameDownsync = gopkgs.GetInputFrameDownsync(self.recentInputCache, candidateInputFrameId);
       if (null == inputFrameDownsync) break;
-      if (self._allConfirmed(inputFrameDownsync.GetConfirmedList())) break;
+      if (false == self._allConfirmed(inputFrameDownsync.GetConfirmedList())) break;
       ++candidateInputFrameId;
       ++newAllConfirmedCnt;
     }
     if (0 < newAllConfirmedCnt) {
-      self.lastAllConfirmedInputFrameId = candidateInputFrameId;
+      self.lastAllConfirmedInputFrameId = candidateInputFrameId - 1;
     }
     return newAllConfirmedCnt;
   },
@@ -904,6 +914,7 @@ cc.Class({
         continue;
       }
       // [WARNING] Now that "inputFrameDownsyncId > self.lastAllConfirmedInputFrameId", we should make an update immediately because unlike its backend counterpart "Room.LastAllConfirmedInputFrameId", the frontend "mapIns.lastAllConfirmedInputFrameId" might inevitably get gaps among discrete values due to "either type#1 or type#2 forceConfirmation" -- and only "onInputFrameDownsyncBatch" can catch this! 
+      self.lastAllConfirmedInputFrameId = inputFrameDownsyncId;
       const localInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, inputFrameDownsyncId);
       if (null != localInputFrame
         &&
@@ -1000,8 +1011,8 @@ fromUDP=${fromUDP}`);
       }
       const peerJoinIndexMask = (1 << (peerJoinIndex - 1));
       self.getOrPrefabInputFrameUpsync(inputFrameId, false); // Make sure that inputFrame exists locally
-      const existingInputFrame = self.recentInputCache.GetByFrameId(inputFrameId);
-      if (0 < (existingInputFrame.ConfirmedList & peerJoinIndexMask)) {
+      const existingInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, inputFrameId);
+      if (0 < (existingInputFrame.GetConfirmedList() & peerJoinIndexMask)) {
         continue;
       }
       if (inputFrameId > self.lastIndividuallyConfirmedInputFrameId[peerJoinIndex - 1]) {
@@ -1010,9 +1021,9 @@ fromUDP=${fromUDP}`);
       }
       effCnt += 1;
       // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
-      let newInputList = existingInputFrame.InputList.slice();
+      let newInputList = existingInputFrame.GetInputList().slice();
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
-      let newConfirmedList = (existingInputFrame.ConfirmedList | peerJoinIndexMask);
+      let newConfirmedList = (existingInputFrame.GetConfirmedList() | peerJoinIndexMask);
       const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
@@ -1164,9 +1175,11 @@ fromUDP=${fromUDP}`);
           const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.GetId());
           const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.GetId());
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
-            console.warn(`Mismatched render frame@rdf.id=${rdf.GetId()} w/ inputFrameId=${delayedInputFrameId}:
-rdf=${JSON.stringify(rdf)}
-othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame)}`);
+            if (CC_DEBUG) {
+              console.warn(`Mismatched render frame@rdf.id=${rdf.GetId()} w/ inputFrameId=${delayedInputFrameId}:
+rdf=${self._stringifyGopkgRdfForFrameDataLogging(rdf)}
+othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(othersForcedDownsyncRenderFrame)}`);
+            }
             rdf = othersForcedDownsyncRenderFrame;
             self.othersForcedDownsyncRenderFrameDict.delete(rdf.GetId());
           }
@@ -1423,8 +1436,11 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
       const delayedInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, j);
 
+      const allowUpdateInputFrameInPlaceUponDynamics = (!isChasing);
+      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics, self.selfPlayerInfo.joinIndex);
       if (self.frameDataLoggingEnabled) {
-        const actuallyUsedInputClone = delayedInputFrame.GetInputList();
+        // [WARNING] The "inputList" of "delayedInputFrame" could be mutated in "ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs", thus should clone after dynamics is applied!  
+        const actuallyUsedInputClone = delayedInputFrame.GetInputList().slice();
         const inputFrameDownsyncClone = {
           inputFrameId: j,
           inputList: actuallyUsedInputClone,
@@ -1432,8 +1448,6 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
         };
         self.rdfIdToActuallyUsedInput.set(i, inputFrameDownsyncClone);
       }
-      const allowUpdateInputFrameInPlaceUponDynamics = (!isChasing);
-      const renderRes = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics, self.selfPlayerInfo.joinIndex);
       const nextRdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, i + 1);
 
       if (true == isChasing) {
@@ -1549,15 +1563,31 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     if (null == inputFrameDownsync) return "{}";
     const self = this;
     let s = [];
-    s.push(`InputFrameId:${inputFrameDownsync.InputFrameId}`);
+    s.push(`InputFrameId:${inputFrameDownsync.GetInputFrameId()}`);
     let ss = [];
     for (let k = 0; k < window.boundRoomCapacity; ++k) {
-      ss.push(`"${inputFrameDownsync.InputList[k]}"`);
+      ss.push(`"${inputFrameDownsync.GetInputList()[k]}"`);
     }
     s.push(`InputList:[${ss.join(',')}]`);
-    s.push(`ConfirmedList:${inputFrameDownsync.ConfirmedList}`);
+    s.push(`ConfirmedList:${inputFrameDownsync.GetConfirmedList()}`);
 
     return `{${s.join(',')}}`;
+  },
+
+  _stringifyGopkgRdfForFrameDataLogging(rdf) {
+    const playersStrBldr = [];
+    for (let k = 0; k < window.boundRoomCapacity; k++) {
+      playersStrBldr.push(this.playerDownsyncStr(gopkgs.GetPlayer(rdf, k)));
+    }
+    const fireballsStrBldr = [];
+    for (let k = 0;; k++) {
+      const fireball = gopkgs.GetFireballBullet(rdf, k);
+      if (null == fireball) break;
+      fireballsStrBldr.push(this.fireballDownsyncStr(fireball));
+    }
+    return `rdfId:${rdf.GetId()}
+players:[${playersStrBldr.join(',')}]
+fireballs:[${fireballsStrBldr.join(',')}]`;
   },
 
   _stringifyRdfIdToActuallyUsedInput() {
@@ -1565,18 +1595,9 @@ othersForcedDownsyncRenderFrame=${JSON.stringify(othersForcedDownsyncRenderFrame
     let s = [];
     for (let i = self.recentRenderCache.GetStFrameId(); i < self.recentRenderCache.GetEdFrameId(); i++) {
       const actuallyUsedInputClone = self.rdfIdToActuallyUsedInput.get(i);
-      const rdf = self.recentRenderCache.GetByFrameId(i);
-      const playersStrBldr = [];
-      for (let k in rdf.GetPlayersArr()) {
-        playersStrBldr.push(self.playerDownsyncStr(rdf.GetPlayersArr()[k]));
-      }
-      const fireballsStrBldr = [];
-      for (let k in rdf.FireballBullets) {
-        fireballsStrBldr.push(self.fireballDownsyncStr(rdf.FireballBullets[k]));
-      }
-      s.push(`rdfId:${i}
-players:[${playersStrBldr.join(',')}]
-fireballs:[${fireballsStrBldr.join(',')}]
+      const rdf = gopkgs.GetRoomDownsyncFrame(self.recentRenderCache, i);
+      const rdfStr = self._stringifyGopkgRdfForFrameDataLogging(rdf);
+      s.push(`${rdfStr}
 actuallyUsedinputList:{${self.inputFrameDownsyncStr(actuallyUsedInputClone)}}`);
     }
 

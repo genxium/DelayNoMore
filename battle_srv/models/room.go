@@ -407,6 +407,9 @@ func (pR *Room) rdfIdToActuallyUsedInputString() string {
 		}
 		fireballsStrBldr := make([]string, 0, len(rdf.FireballBullets))
 		for _, fireball := range rdf.FireballBullets {
+			if 0 > fireball.BattleAttr.BulletLocalId {
+				break
+			}
 			fireballsStrBldr = append(fireballsStrBldr, pR.fireballDownsyncStr(fireball))
 		}
 		s = append(s, fmt.Sprintf("rdfId:%d\nplayers:[%v]\nfireballs:[%v]\nactuallyUsedinputList:{%v}", rdfId, strings.Join(playersStrBldr, ","), strings.Join(fireballsStrBldr, ","), pR.inputFrameDownsyncStr(pR.rdfIdToActuallyUsedInput[rdfId])))
@@ -805,7 +808,7 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
-	pR.allowUpdateInputFrameInPlaceUponDynamics = true
+	pR.allowUpdateInputFrameInPlaceUponDynamics = false
 	pR.LastIndividuallyConfirmedInputFrameId = make([]int32, pR.Capacity)
 	for i := 0; i < pR.Capacity; i++ {
 		pR.LastIndividuallyConfirmedInputFrameId[i] = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -1305,15 +1308,18 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
 			}
 			inputFrameDownsync := tmp.(*battle.InputFrameDownsync)
-			if pR.allowUpdateInputFrameInPlaceUponDynamics {
-				battle.UpdateInputFrameInPlaceUponDynamics(j, pR.Capacity, inputFrameDownsync.ConfirmedList, inputFrameDownsync.InputList, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, int32(MAGIC_JOIN_INDEX_INVALID))
-			}
+			/*
+			            // [WARN] Frame logging showed that using "battle.UpdateInputFrameInPlaceUponDynamics" here would CONTAMINATE "all-confirmed inputs already sent & recognized by the frontends", root cause remains to be invesitgated!
+						if pR.allowUpdateInputFrameInPlaceUponDynamics {
+							battle.UpdateInputFrameInPlaceUponDynamics(j, pR.Capacity, inputFrameDownsync.ConfirmedList, inputFrameDownsync.InputList, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, int32(MAGIC_JOIN_INDEX_INVALID))
+						}
+			*/
 			unconfirmedMask |= (allConfirmedMask ^ inputFrameDownsync.ConfirmedList)
 			inputFrameDownsync.ConfirmedList = allConfirmedMask
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
 		}
 		if 0 < unconfirmedMask {
-			Logger.Info(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, oldLastAllConfirmedInputFrameId:%d, newLastAllConfirmedInputFrameId:%d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameId, pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
+			Logger.Info(fmt.Sprintf("[type#1 forceConfirmation] For roomId=%d@renderFrameId=%d, curDynamicsRenderFrameId=%d, LatestPlayerUpsyncedInputFrameId:%d, LastAllConfirmedInputFrameId:%d -> %d, InputFrameUpsyncDelayTolerance:%d, unconfirmedMask=%d; there's a slow ticker suspect, forcing all-confirmation", pR.Id, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, pR.LatestPlayerUpsyncedInputFrameId, oldLastAllConfirmedInputFrameId, pR.LastAllConfirmedInputFrameId, pR.InputFrameUpsyncDelayTolerance, unconfirmedMask))
 		}
 	} else {
 		// Type#2 helps resolve the edge case when all players are disconnected temporarily
@@ -1602,9 +1608,10 @@ func (pR *Room) downsyncToSinglePlayer(playerId int32, player *Player, refRender
 		pbRefRenderFrame := toPbRoomDownsyncFrame(refRenderFrame)
 		pbRefRenderFrame.SpeciesIdList = pR.SpeciesIdList
 		pR.sendSafely(pbRefRenderFrame, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_FORCED_RESYNC, playerId, false, MAGIC_JOIN_INDEX_DEFAULT)
-		//Logger.Warn(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: InputsBuffer=%v", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, pR.InputsBufferString(false)))
 		if shouldResync1 || shouldResync3 {
-			Logger.Debug(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: shouldResync1=%v, shouldResync2=%v, shouldResync3=%v, playerBattleState=%d", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, shouldResync1, shouldResync2, shouldResync3, playerBattleState))
+			Logger.Info(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: shouldResync1=%v, shouldResync2=%v, shouldResync3=%v, playerBattleState=%d", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, shouldResync1, shouldResync2, shouldResync3, playerBattleState))
+		} else {
+			Logger.Debug(fmt.Sprintf("Sent refRenderFrameId=%v & inputFrameIds [%d, %d), for roomId=%v, playerId=%d, playerJoinIndex=%d, renderFrameId=%d, curDynamicsRenderFrameId=%d, playerLastSentInputFrameId=%d: InputsBuffer=%v", refRenderFrameId, toSendInputFrameIdSt, toSendInputFrameIdEd, pR.Id, playerId, player.JoinIndex, pR.RenderFrameId, pR.CurDynamicsRenderFrameId, player.LastSentInputFrameId, pR.InputsBufferString(false)))
 		}
 	} else {
 		pR.sendSafely(nil, toSendInputFrameDownsyncsSnapshot, DOWNSYNC_MSG_ACT_INPUT_BATCH, playerId, false, MAGIC_JOIN_INDEX_DEFAULT)
