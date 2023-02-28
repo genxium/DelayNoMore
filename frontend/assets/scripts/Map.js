@@ -1444,6 +1444,9 @@ othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(oth
         const ii = gopkgs.ConvertToFirstUsedRenderFrameId(j);
         if (ii < i) {
           /*
+          [WARNING] 
+          If we don't rollback at this spot, when the mutated "delayedInputFrame.inputList" a.k.a. "inputFrame#j" matches the later downsynced version, rollback WOULDN'T be triggered for the incorrectly rendered "renderFrame#(ii+1)", and it would STAY IN HISTORY FOREVER -- as the history becomes incorrect, EVERY LATEST renderFrame since "inputFrame#j" was mutated would be ALWAYS incorrectly rendering too!
+
           The backend counterpart doesn't need this rollback because 
           1. Backend only applies all-confirmed inputFrames to calc dynamics.
           2. Backend applies an all-confirmed inputFrame to all applicable render frames at once.

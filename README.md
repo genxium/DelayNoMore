@@ -10,6 +10,11 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 
 ![Phone4g_battle_spedup](./charts/Phone4g_battle_spedup.gif)
 
+**Since v1.0.12, smoothness in worst cases (e.g. turn-around on ground, in air and after dashing) is drastically improved due to update of prediction approach. The gifs and corresponding screenrecordings above are not updated because there's no big difference when network is good -- however, `input delay` is now set to `4 frames` -- while `input delay = 6 frames` was used in the screenrecordings -- and smoothness is even better now.** Key changes are listed below.
+- [change#1](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/jsexport/battle/battle.go#L647)
+- [change#2](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/frontend/assets/scripts/Map.js#L1451)
+- [change#3](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/battle_srv/models/room.go#L1312)
+
 As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- **since v0.9.25, the project is actually equipped with UDP capabilities as follows**.
 - When using the so called `native apps` on `Android` and `Windows` (I'm working casually hard to support `iOS` next), the frontends will try to use UDP hole-punching w/ the help of backend as a registry. If UDP hole-punching is working, the rollback is often less than `turn-around frames to recover` and thus not noticeable, being much better than using websocket alone. This video shows how the UDP holepunched p2p performs for [Phone-Wifi v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1K6704bJKlrSBTVqGcXhajA?pwd=l7ok).
 - If UDP hole-punching is not working, e.g. for Symmetric NAT like in 4G/5G cellular network, the frontends will use backend as a UDP tunnel (or relay, whatever you like to call it). This video shows how the UDP tunnel performs for [Phone-4G v.s. PC-Wifi (merged view@v0.9.34, excellent synchronization)](https://pan.baidu.com/s/1yeIrN5TSf6_av_8-N3vdVg?pwd=7tzw). 

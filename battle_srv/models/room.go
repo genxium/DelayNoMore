@@ -1201,7 +1201,8 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		}
 		if clientInputFrameId < player.LastConsecutiveRecvInputFrameId {
 			// [WARNING] It's important for correctness that we use "player.LastConsecutiveRecvInputFrameId" instead of "pR.LastIndividuallyConfirmedInputFrameId[player.JoinIndex-1]" here!
-			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastConsecutiveRecvInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastConsecutiveRecvInputFrameId, pR.InputsBufferString(false)))
+			//Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastConsecutiveRecvInputFrameId=%v, InputsBuffer=%v", pR.Id, playerId, clientInputFrameId, player.LastConsecutiveRecvInputFrameId, pR.InputsBufferString(false)))
+			Logger.Debug(fmt.Sprintf("Omitting obsolete inputFrameUpsync#2: roomId=%v, playerId=%v, clientInputFrameId=%v, playerLastConsecutiveRecvInputFrameId=%v", pR.Id, playerId, clientInputFrameId, player.LastConsecutiveRecvInputFrameId))
 			continue
 		}
 		if clientInputFrameId > pR.InputsBuffer.EdFrameId {
@@ -1259,7 +1260,7 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 					shouldBreakConfirmation = true // Could be an `ACTIVE SLOW TICKER` here, but no action needed for now
 					break
 				}
-				Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v, skipping UNCONFIRMED BUT INACTIVE player(id:%v, joinIndex:%v) while checking inputFrameId=[%v, %v): InputsBuffer=%v", pR.Id, player.Id, player.JoinIndex, inputFrameId1, pR.InputsBuffer.EdFrameId, pR.InputsBufferString(false)))
+				//Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v, skipping UNCONFIRMED BUT INACTIVE player(id:%v, joinIndex:%v) while checking inputFrameId=[%v, %v): InputsBuffer=%v", pR.Id, player.Id, player.JoinIndex, inputFrameId1, pR.InputsBuffer.EdFrameId, pR.InputsBufferString(false)))
 			}
 		}
 
@@ -1391,7 +1392,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false, MAGIC_JOIN_INDEX_INVALID) // "allowUpdateInputFrameInPlaceUponDynamics" is instead used when "forceConfirmationIfApplicable"
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false, MAGIC_JOIN_INDEX_INVALID) // "allowUpdateInputFrameInPlaceUponDynamics" is instead used in "forceConfirmationIfApplicable"
 		pR.CurDynamicsRenderFrameId++
 	}
 }
