@@ -10,7 +10,7 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 
 ![Phone4g_battle_spedup](./charts/Phone4g_battle_spedup.gif)
 
-**Since v1.0.12, smoothness in worst cases (e.g. turn-around on ground, in air and after dashing) is drastically improved due to update of prediction approach. The gifs and corresponding screenrecordings above are not updated because there's no big difference when network is good -- however, `input delay` is now set to `4 frames` -- while `input delay = 6 frames` was used in the screenrecordings -- and smoothness is even better now.** Key changes are listed below.
+**Since v1.0.12, smoothness in worst cases (e.g. turn-around on ground, in air and after dashing) is drastically improved due to update of prediction approach. The gifs and corresponding screenrecordings above are not updated because there's no big difference when network is good -- however, `input delay` is now set to `4 frames` -- while `input delay = 6 frames` was used in the screenrecordings -- and smoothness is even better now (well there's [a new screenrecording for PcWifi vs Android4g here](https://pan.baidu.com/s/1iNrQ2l_wqbWkURMIfyG88w?pwd=fe2f)).** Key changes are listed below.
 - [change#1](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/jsexport/battle/battle.go#L647)
 - [change#2](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/frontend/assets/scripts/Map.js#L1451)
 - [change#3](https://github.com/genxium/DelayNoMore/blob/de9f3c90902bc6da98359be996887a55964e011e/battle_srv/models/room.go#L1312)
