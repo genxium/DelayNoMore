@@ -1,6 +1,6 @@
 package battle
 
-type SkillMapperType func(patternId int, currPlayerDownsync *PlayerDownsync) int
+type SkillMapperType = func(patternId int, currPlayerDownsync *PlayerDownsync, speciesId int) int
 
 type CharacterConfig struct {
 	SpeciesId   int
@@ -31,6 +31,118 @@ type CharacterConfig struct {
 	SkillMapper SkillMapperType
 }
 
+func defaultSkillMapper(patternId int, currPlayerDownsync *PlayerDownsync, speciesId int) int {
+	switch speciesId {
+	case 0:
+		if 1 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover {
+				if currPlayerDownsync.InAir {
+					return 255
+				} else {
+					return 1
+				}
+			} else {
+				// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
+				if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
+					switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
+					case *MeleeBullet:
+						if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+							if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
+								return nextSkillId
+							}
+						}
+					}
+				}
+			}
+		} else if 3 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+				return 15
+			}
+		} else if 5 == patternId {
+			// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
+			if !currPlayerDownsync.InAir {
+				return 12
+			}
+		}
+
+		// By default no skill can be fired
+		return NO_SKILL
+	case 1:
+		if 1 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover {
+				if currPlayerDownsync.InAir {
+					return 256
+				} else {
+					return 4
+				}
+			} else {
+				// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
+				if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
+					switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
+					case *MeleeBullet:
+						if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+							if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
+								return nextSkillId
+							}
+						}
+					}
+				}
+			}
+		} else if 3 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+				return 16
+			}
+		} else if 5 == patternId {
+			// Air dash allowed for this character
+			// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
+			return 13
+		}
+
+		// By default no skill can be fired
+		return NO_SKILL
+	case 4096:
+		if 1 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover {
+				if currPlayerDownsync.InAir {
+					return 257
+				} else {
+					return 7
+				}
+			} else {
+				// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
+				if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
+					switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
+					case *MeleeBullet:
+						if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
+							if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
+								return nextSkillId
+							}
+						}
+					}
+				}
+			}
+		} else if 2 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+				return 11
+			}
+		} else if 3 == patternId {
+			if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
+				return 10
+			}
+		} else if 5 == patternId {
+			// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
+			if !currPlayerDownsync.InAir {
+				return 14
+			}
+		}
+
+		// By default no skill can be fired
+		return NO_SKILL
+	}
+
+	return NO_SKILL
+}
+
 var Characters = map[int]*CharacterConfig{
 	0: &CharacterConfig{
 		SpeciesId:   0,
@@ -58,41 +170,7 @@ var Characters = map[int]*CharacterConfig{
 		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
-		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
-			if 1 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover {
-					if currPlayerDownsync.InAir {
-						return 255
-					} else {
-						return 1
-					}
-				} else {
-					// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
-					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
-						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
-						case *MeleeBullet:
-							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
-								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
-									return nextSkillId
-								}
-							}
-						}
-					}
-				}
-			} else if 3 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
-					return 15
-				}
-			} else if 5 == patternId {
-				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
-				if !currPlayerDownsync.InAir {
-					return 12
-				}
-			}
-
-			// By default no skill can be fired
-			return NO_SKILL
-		},
+		SkillMapper: defaultSkillMapper,
 	},
 	1: &CharacterConfig{
 		SpeciesId:   1,
@@ -120,40 +198,7 @@ var Characters = map[int]*CharacterConfig{
 		WallJumpingInitVelY:        int32(float64(7) * WORLD_TO_VIRTUAL_GRID_RATIO),
 		WallSlidingVelY:            int32(float64(-1) * WORLD_TO_VIRTUAL_GRID_RATIO),
 
-		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
-			if 1 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover {
-					if currPlayerDownsync.InAir {
-						return 256
-					} else {
-						return 4
-					}
-				} else {
-					// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
-					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
-						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
-						case *MeleeBullet:
-							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
-								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
-									return nextSkillId
-								}
-							}
-						}
-					}
-				}
-			} else if 3 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
-					return 16
-				}
-			} else if 5 == patternId {
-				// Air dash allowed for this character
-				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
-				return 13
-			}
-
-			// By default no skill can be fired
-			return NO_SKILL
-		},
+		SkillMapper: defaultSkillMapper,
 	},
 	4096: &CharacterConfig{
 		SpeciesId:   4096,
@@ -177,45 +222,7 @@ var Characters = map[int]*CharacterConfig{
 		DashingEnabled: true,
 		OnWallEnabled:  false,
 
-		SkillMapper: func(patternId int, currPlayerDownsync *PlayerDownsync) int {
-			if 1 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover {
-					if currPlayerDownsync.InAir {
-						return 257
-					} else {
-						return 7
-					}
-				} else {
-					// Now that "0 < FramesToRecover", we're only able to fire any skill if it's a cancellation
-					if skillConfig, existent1 := skills[int(currPlayerDownsync.ActiveSkillId)]; existent1 {
-						switch v := skillConfig.Hits[currPlayerDownsync.ActiveSkillHit].(type) {
-						case *MeleeBullet:
-							if v.Bullet.CancellableStFrame <= currPlayerDownsync.FramesInChState && currPlayerDownsync.FramesInChState < v.Bullet.CancellableEdFrame {
-								if nextSkillId, existent2 := v.Bullet.CancelTransit[patternId]; existent2 {
-									return nextSkillId
-								}
-							}
-						}
-					}
-				}
-			} else if 2 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
-					return 11
-				}
-			} else if 3 == patternId {
-				if 0 == currPlayerDownsync.FramesToRecover && !currPlayerDownsync.InAir {
-					return 10
-				}
-			} else if 5 == patternId {
-				// Dashing is already constrained by "FramesToRecover & CapturedByInertia" in "deriveOpPattern"
-				if !currPlayerDownsync.InAir {
-					return 14
-				}
-			}
-
-			// By default no skill can be fired
-			return NO_SKILL
-		},
+		SkillMapper: defaultSkillMapper,
 	},
 }
 
@@ -226,7 +233,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
@@ -261,7 +268,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(36),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
@@ -295,7 +302,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(50),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(8),
@@ -324,7 +331,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
@@ -359,7 +366,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(36),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
@@ -393,7 +400,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(45),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(8),
@@ -422,7 +429,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(7),
@@ -457,7 +464,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(36),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK2,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:      int32(18),
@@ -491,7 +498,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(40),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK3,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(7),
@@ -520,7 +527,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(38),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK4,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&FireballBullet{
 				Speed: int32(float64(6) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: &BulletConfig{
@@ -550,7 +557,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(60),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK5,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
@@ -579,7 +586,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(10),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_DASHING,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
@@ -606,7 +613,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(12),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_DASHING,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
@@ -633,7 +640,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(8),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_DASHING,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(4),
@@ -660,7 +667,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(48),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK4,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&FireballBullet{
 				Speed: int32(float64(4) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: &BulletConfig{
@@ -690,7 +697,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(60),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_ATK4,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&FireballBullet{
 				Speed: int32(float64(4) * WORLD_TO_VIRTUAL_GRID_RATIO),
 				Bullet: &BulletConfig{
@@ -720,7 +727,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
@@ -749,7 +756,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(20),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(3),
@@ -778,7 +785,7 @@ var skills = map[int]*Skill{
 		RecoveryFramesOnHit:   int32(30),
 		ReleaseTriggerType:    int32(1),
 		BoundChState:          ATK_CHARACTER_STATE_INAIR_ATK1,
-		Hits: []interface{}{
+		Hits: []AnyBullet{
 			&MeleeBullet{
 				Bullet: &BulletConfig{
 					StartupFrames:   int32(4),

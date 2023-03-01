@@ -6,6 +6,8 @@ const (
 	RING_BUFF_FAILED_TO_SET       = int32(2)
 )
 
+type AnyObj interface{}
+
 type RingBuffer struct {
 	Ed        int32 // write index, open index
 	St        int32 // read index, closed index
@@ -13,19 +15,19 @@ type RingBuffer struct {
 	StFrameId int32
 	N         int32
 	Cnt       int32 // the count of valid elements in the buffer, used mainly to distinguish what "st == ed" means for "Pop" and "Get" methods
-	Eles      []interface{}
+	Eles      []AnyObj
 }
 
 func NewRingBuffer(n int32) *RingBuffer {
-	return &RingBuffer{
-		Ed:        0,
-		St:        0,
-		EdFrameId: 0,
-		StFrameId: 0,
-		N:         n,
-		Cnt:       0,
-		Eles:      make([]interface{}, n),
-	}
+	ret := &RingBuffer{}
+	ret.Ed = 0
+	ret.St = 0
+	ret.EdFrameId = 0
+	ret.StFrameId = 0
+	ret.N = n
+	ret.Cnt = 0
+	ret.Eles = make([]AnyObj, n)
+	return ret
 }
 
 func (rb *RingBuffer) DryPut() {
@@ -41,7 +43,7 @@ func (rb *RingBuffer) DryPut() {
 	}
 }
 
-func (rb *RingBuffer) Put(pItem interface{}) {
+func (rb *RingBuffer) Put(pItem AnyObj) {
 	for 0 < rb.Cnt && rb.Cnt >= rb.N {
 		// Make room for the new element
 		rb.Pop()
@@ -55,7 +57,7 @@ func (rb *RingBuffer) Put(pItem interface{}) {
 	}
 }
 
-func (rb *RingBuffer) Pop() interface{} {
+func (rb *RingBuffer) Pop() AnyObj {
 	if 0 == rb.Cnt {
 		return nil
 	}
@@ -93,7 +95,7 @@ func (rb *RingBuffer) GetArrIdxByOffset(offsetFromSt int32) int32 {
 	return -1
 }
 
-func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
+func (rb *RingBuffer) GetByOffset(offsetFromSt int32) AnyObj {
 	arrIdx := rb.GetArrIdxByOffset(offsetFromSt)
 	if -1 == arrIdx {
 		return nil
@@ -101,7 +103,7 @@ func (rb *RingBuffer) GetByOffset(offsetFromSt int32) interface{} {
 	return rb.Eles[arrIdx]
 }
 
-func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
+func (rb *RingBuffer) GetByFrameId(frameId int32) AnyObj {
 	if frameId >= rb.EdFrameId || frameId < rb.StFrameId {
 		return nil
 	}
@@ -109,7 +111,7 @@ func (rb *RingBuffer) GetByFrameId(frameId int32) interface{} {
 }
 
 // [WARNING] During a battle, frontend could receive non-consecutive frames (either renderFrame or inputFrame) due to resync, the buffer should handle these frames properly.
-func (rb *RingBuffer) SetByFrameId(pItem interface{}, frameId int32) (int32, int32, int32) {
+func (rb *RingBuffer) SetByFrameId(pItem AnyObj, frameId int32) (int32, int32, int32) {
 	oldStFrameId, oldEdFrameId := rb.StFrameId, rb.EdFrameId
 	if frameId < oldStFrameId {
 		return RING_BUFF_FAILED_TO_SET, oldStFrameId, oldEdFrameId

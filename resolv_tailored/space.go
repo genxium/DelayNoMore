@@ -16,15 +16,11 @@ type Space struct {
 // speed of one cell size per collision check to avoid missing any possible collisions.
 func NewSpace(spaceWidth, spaceHeight, cellWidth, cellHeight int) *Space {
 
-	sp := &Space{
-		CellWidth:  cellWidth,
-		CellHeight: cellHeight,
-	}
+	sp := &Space{}
+	sp.CellWidth = cellWidth
+	sp.CellHeight = cellHeight
 
 	sp.Resize(spaceWidth/cellWidth, spaceHeight/cellHeight)
-
-	// sp.Resize(int(math.Ceil(float64(spaceWidth)/float64(cellWidth))),
-	// 	int(math.Ceil(float64(spaceHeight)/float64(cellHeight))))
 
 	return sp
 
@@ -101,10 +97,10 @@ func (sp *Space) Objects() []*Object {
 
 	objectsAdded := map[*Object]bool{}
 	objects := []*Object{}
-
-	for cy := range sp.Cells {
-
-		for cx := range sp.Cells[cy] {
+	cyUpper := len(sp.Cells)
+	for cy := 0; cy < cyUpper; cy++ {
+		cxUpper := len(sp.Cells[cy])
+		for cx := 0; cx < cxUpper; cx++ {
 			rb := sp.Cells[cy][cx].Objects
 			for i := rb.StFrameId; i < rb.EdFrameId; i++ {
 				o := rb.GetByFrameId(i).(*Object)
@@ -208,8 +204,9 @@ func (sp *Space) UnregisterAllObjects() {
 
 // WorldToSpace converts from a world position (x, y) to a position in the Space (a grid-based position).
 func (sp *Space) WorldToSpace(x, y float64) (int, int) {
-	fx := int(math.Floor(x / float64(sp.CellWidth)))
-	fy := int(math.Floor(y / float64(sp.CellHeight)))
+	// [WARNING] DON'T use "int(...)" syntax to convert float to int, it's not supported by go2cs!
+	var fx int = (int)(math.Floor(x / float64(sp.CellWidth)))
+	var fy int = (int)(math.Floor(y / float64(sp.CellHeight)))
 	return fx, fy
 }
 

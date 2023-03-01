@@ -17,29 +17,27 @@ type Object struct {
 
 // NewObject returns a new Object of the specified position and size.
 func NewObjectSingleTag(x, y, w, h float64, tag string) *Object {
-	o := &Object{
-		X:             x,
-		Y:             y,
-		W:             w,
-		H:             h,
-		TouchingCells: NewRingBuffer(512), // [WARNING] Should make N large enough to cover all "TouchingCells", otherwise some cells would fail to unregister an object, resulting in memory corruption and incorrect detection result!
-		tags:          []string{tag},
-		ignoreList:    map[*Object]bool{},
-	}
+	o := &Object{}
+	o.X = x
+	o.Y = y
+	o.W = w
+	o.H = h
+	o.TouchingCells = NewRingBuffer(512) // [WARNING] Should make N large enough to cover all "TouchingCells", otherwise some cells would fail to unregister an object, resulting in memory corruption and incorrect detection result!
+	o.tags = []string{tag}
+	o.ignoreList = make(map[*Object]bool)
 
 	return o
 }
 
 func NewObject(x, y, w, h float64, tags ...string) *Object {
-	o := &Object{
-		X:             x,
-		Y:             y,
-		W:             w,
-		H:             h,
-		TouchingCells: NewRingBuffer(512),
-		tags:          []string{},
-		ignoreList:    map[*Object]bool{},
-	}
+	o := &Object{}
+	o.X = x
+	o.Y = y
+	o.W = w
+	o.H = h
+	o.TouchingCells = NewRingBuffer(512)
+	o.tags = []string{}
+	o.ignoreList = make(map[*Object]bool)
 
 	if len(tags) > 0 {
 		o.AddTags(tags...)
@@ -67,7 +65,7 @@ func (obj *Object) Clone() *Object {
 	if obj.Shape != nil {
 		newObj.SetShape(obj.Shape.Clone())
 	}
-	for k := range obj.ignoreList {
+	for k, _ := range obj.ignoreList {
 		newObj.AddToIgnoreList(k)
 	}
 	return newObj

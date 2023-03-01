@@ -8,11 +8,11 @@ type Cell struct {
 
 // newCell creates a new cell at the specified X and Y position. Should not be used directly.
 func newCell(x, y int) *Cell {
-	return &Cell{
-		X:       x,
-		Y:       y,
-		Objects: NewRingBuffer(16), // A single cell is so small thus wouldn't have many touching objects simultaneously
-	}
+	c := &Cell{}
+	c.X = x
+	c.Y = y
+	c.Objects = NewRingBuffer(16) // A single cell is so small thus wouldn't have many touching objects simultaneously
+	return c
 }
 
 // register registers an object with a Cell. Should not be used directly.

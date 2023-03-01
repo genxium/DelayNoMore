@@ -2,6 +2,8 @@ package battle
 
 // TODO: Replace all "int32", "int64", "uint32" and "uint64" with just "int" for better performance in JavaScript! Reference https://github.com/gopherjs/gopherjs#performance-tips
 
+type AnyBullet interface{}
+
 type Vec2D struct {
 	X float64
 	Y float64
@@ -132,7 +134,7 @@ type Skill struct {
 	RecoveryFramesOnHit   int32
 	ReleaseTriggerType    int32 // 1: rising-edge, 2: falling-edge
 	BoundChState          int32
-	Hits                  []interface{} // Hits within a "Skill" are automatically triggered
+	Hits                  []AnyBullet // Hits within a "Skill" are automatically triggered
 	// [WARN] Multihit of a fireball is more difficult to handle than that of melee, because we have to count from the fireball's first hit; the situation becomes even more complicated when a multihit fireball is in a crowd -- remains to be designed
 }
 

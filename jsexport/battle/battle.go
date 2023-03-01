@@ -655,7 +655,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 
 		jumpedOrNotList[i] = jumpedOrNot
 		joinIndex := currPlayerDownsync.JoinIndex
-		skillId := chConfig.SkillMapper(patternId, currPlayerDownsync)
+		skillId := chConfig.SkillMapper(patternId, currPlayerDownsync, chConfig.SpeciesId)
 		if skillConfig, existent := skills[skillId]; existent {
 			thatPlayerInNextFrame.ActiveSkillId = int32(skillId)
 			thatPlayerInNextFrame.ActiveSkillHit = 0

@@ -27,10 +27,10 @@ type Line struct {
 }
 
 func NewLine(x, y, x2, y2 float64) *Line {
-	return &Line{
-		Start: Vector{x, y},
-		End:   Vector{x2, y2},
-	}
+	l := &Line{}
+	l.Start = Vector{x, y}
+	l.End = Vector{x2, y2}
+	return l
 }
 
 func (line *Line) Normal() Vector {
@@ -82,10 +82,9 @@ type ConvexPolygon struct {
 // polygon square, with the vertices at {0,0}, {10,0}, {10, 10}, and {0, 10}.
 func NewConvexPolygon(points ...float64) *ConvexPolygon {
 
-	cp := &ConvexPolygon{
-		Points: NewRingBuffer(6), // I don't expected more points to be coped with in this particular game
-		Closed: true,
-	}
+	cp := &ConvexPolygon{}
+	cp.Points = NewRingBuffer(6) // I don't expected more points to be coped with in this particular game
+	cp.Closed = true
 
 	cp.AddPoints(points...)
 
@@ -241,23 +240,6 @@ func (cp *ConvexPolygon) MoveVec(vec Vector) {
 	cp.Y += vec.Y()
 }
 
-// Project projects (i.e. flattens) the ConvexPolygon onto the provided axis.
-func (cp *ConvexPolygon) Project(axis Vector) Projection {
-	axis = axis.Unit()
-	vertices := cp.Transformed()
-	min := axis.Dot(Vector{vertices[0][0], vertices[0][1]})
-	max := min
-	for i := 1; i < len(vertices); i++ {
-		p := axis.Dot(Vector{vertices[i][0], vertices[i][1]})
-		if p < min {
-			min = p
-		} else if p > max {
-			max = p
-		}
-	}
-	return Projection{min, max}
-}
-
 // SATAxes returns the axes of the ConvexPolygon for SAT intersection testing.
 func (cp *ConvexPolygon) SATAxes() []Vector {
 	lines := cp.Lines()
@@ -294,11 +276,11 @@ type ContactSet struct {
 }
 
 func NewContactSet() *ContactSet {
-	return &ContactSet{
-		Points: []Vector{},
-		MTV:    Vector{0, 0},
-		Center: Vector{0, 0},
-	}
+	cs := &ContactSet{}
+	cs.Points = []Vector{}
+	cs.MTV = Vector{0, 0}
+	cs.Center = Vector{}
+	return cs
 }
 
 // LeftmostPoint returns the left-most point out of the ContactSet's Points slice. If the Points slice is empty somehow, this returns nil.

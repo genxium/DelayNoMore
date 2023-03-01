@@ -10,10 +10,10 @@ type Collision struct {
 }
 
 func NewCollision() *Collision {
-	return &Collision{
-		Objects: NewRingBuffer(16), // I don't expect it to exceed 10 actually
-		Cells:   NewRingBuffer(16),
-	}
+	c := &Collision{}
+	c.Objects = NewRingBuffer(16) // I don't expect it to exceed 10 actually
+	c.Cells = NewRingBuffer(16)
+	return c
 }
 
 func (cc *Collision) Clear() {
@@ -52,7 +52,7 @@ func (cc *Collision) HasTags(tags ...string) bool {
 // This slice does not contain the Object that called Check().
 func (cc *Collision) ObjectsByTags(tags ...string) []*Object {
 
-	objects := []*Object{}
+	objs := []*Object{}
 
 	rb := cc.Objects
 	for i := rb.StFrameId; i < rb.EdFrameId; i++ {
@@ -61,30 +61,30 @@ func (cc *Collision) ObjectsByTags(tags ...string) []*Object {
 			continue
 		}
 		if o.HasTags(tags...) {
-			objects = append(objects, o)
+			objs = append(objs, o)
 		}
 
 	}
 
-	return objects
+	return objs
 
 }
 
 // ContactWithObject returns the delta to move to come into contact with the specified Object.
-func (cc *Collision) ContactWithObject(object *Object) Vector {
+func (cc *Collision) ContactWithObject(obj *Object) Vector {
 
 	delta := Vector{0, 0}
 
 	if cc.dx < 0 {
-		delta[0] = object.X + object.W - cc.checkingObject.X
+		delta[0] = obj.X + obj.W - cc.checkingObject.X
 	} else if cc.dx > 0 {
-		delta[0] = object.X - cc.checkingObject.W - cc.checkingObject.X
+		delta[0] = obj.X - cc.checkingObject.W - cc.checkingObject.X
 	}
 
 	if cc.dy < 0 {
-		delta[1] = object.Y + object.H - cc.checkingObject.Y
+		delta[1] = obj.Y + obj.H - cc.checkingObject.Y
 	} else if cc.dy > 0 {
-		delta[1] = object.Y - cc.checkingObject.H - cc.checkingObject.Y
+		delta[1] = obj.Y - cc.checkingObject.H - cc.checkingObject.Y
 	}
 
 	return delta
