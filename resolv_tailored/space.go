@@ -1,9 +1,5 @@
 package resolv
 
-import (
-	"math"
-)
-
 // Space represents a collision space. Internally, each Space contains a 2D array of Cells, with each Cell being the same size. Cells contain information on which
 // Objects occupy those spaces.
 type Space struct {
@@ -128,9 +124,7 @@ func (sp *Space) Resize(width, height int) {
 	}
 }
 
-// Cell returns the Cell at the given cellular / spatial (not world) X and Y position in the Space. If the X and Y position are
-// out of bounds, Cell() will return nil.
-func (sp *Space) Cell(x, y int) *Cell {
+func (sp *Space) GetCell(x, y int) *Cell {
 
 	if y >= 0 && y < len(sp.Cells) && x >= 0 && x < len(sp.Cells[y]) {
 		return sp.Cells[y][x]
@@ -147,7 +141,7 @@ func (sp *Space) CheckCells(x, y, w, h int, tags ...string) *Object {
 
 		for iy := y; iy < y+h; iy++ {
 
-			cell := sp.Cell(ix, iy)
+			cell := sp.GetCell(ix, iy)
 
 			if cell != nil {
 				rb := cell.Objects
@@ -205,8 +199,8 @@ func (sp *Space) UnregisterAllObjects() {
 // WorldToSpace converts from a world position (x, y) to a position in the Space (a grid-based position).
 func (sp *Space) WorldToSpace(x, y float64) (int, int) {
 	// [WARNING] DON'T use "int(...)" syntax to convert float to int, it's not supported by go2cs!
-	var fx int = (int)(math.Floor(x / float64(sp.CellWidth)))
-	var fy int = (int)(math.Floor(y / float64(sp.CellHeight)))
+	var fx int = (int)(Floor(x / float64(sp.CellWidth)))
+	var fy int = (int)(Floor(y / float64(sp.CellHeight)))
 	return fx, fy
 }
 
@@ -233,8 +227,8 @@ func (sp *Space) Width() int {
 func (sp *Space) CellsInLine(startX, startY, endX, endY int) []*Cell {
 
 	cells := []*Cell{}
-	cell := sp.Cell(startX, startY)
-	endCell := sp.Cell(endX, endY)
+	cell := sp.GetCell(startX, startY)
+	endCell := sp.GetCell(endX, endY)
 
 	if cell != nil && endCell != nil {
 
@@ -263,7 +257,7 @@ func (sp *Space) CellsInLine(startX, startY, endX, endY int) []*Cell {
 			}
 
 			cx, cy := sp.WorldToSpace(p[0], p[1])
-			c := sp.Cell(cx, cy)
+			c := sp.GetCell(cx, cy)
 			if c != cell {
 				cell = c
 			}

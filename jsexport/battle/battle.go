@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	MAX_FLOAT64                    = 1.7e+308
+	MAX_FLOAT64                    = resolv.MaxFloat64
 	MAX_INT32                      = int32(999999999)
 	COLLISION_PLAYER_INDEX_PREFIX  = (1 << 17)
 	COLLISION_BARRIER_INDEX_PREFIX = (1 << 16)

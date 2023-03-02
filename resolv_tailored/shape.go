@@ -1,9 +1,5 @@
 package resolv
 
-import (
-	"math"
-)
-
 type Shape interface {
 	// Intersection tests to see if a Shape intersects with the other given Shape. dx and dy are delta movement variables indicating
 	// movement to be applied before the intersection check (thereby allowing you to see if a Shape would collide with another if it
@@ -187,7 +183,7 @@ func (cp *ConvexPolygon) Bounds() (Vector, Vector) {
 	transformed := cp.Transformed()
 
 	topLeft := Vector{transformed[0][0], transformed[0][1]}
-	bottomRight := topLeft.Clone()
+	bottomRight := Vector{transformed[0][0], transformed[0][1]}
 
 	for i := 0; i < len(transformed); i++ {
 
@@ -224,8 +220,8 @@ func (cp *ConvexPolygon) SetPosition(x, y float64) {
 // SetPositionVec allows you to set the position of the ConvexPolygon using a Vector. The offset of the vertices compared to the X and Y
 // position is relative to however you initially defined the polygon and added the vertices.
 func (cp *ConvexPolygon) SetPositionVec(vec Vector) {
-	cp.X = vec.X()
-	cp.Y = vec.Y()
+	cp.X = vec.GetX()
+	cp.Y = vec.GetY()
 }
 
 // Move translates the ConvexPolygon by the designated X and Y values.
@@ -236,8 +232,8 @@ func (cp *ConvexPolygon) Move(x, y float64) {
 
 // MoveVec translates the ConvexPolygon by the designated Vector.
 func (cp *ConvexPolygon) MoveVec(vec Vector) {
-	cp.X += vec.X()
-	cp.Y += vec.Y()
+	cp.X += vec.GetX()
+	cp.Y += vec.GetY()
 }
 
 // SATAxes returns the axes of the ConvexPolygon for SAT intersection testing.
@@ -402,23 +398,4 @@ func NewRectangle(x, y, w, h float64) *ConvexPolygon {
 		x+w, y+h,
 		x, y+h,
 	)
-}
-
-type Projection struct {
-	Min, Max float64
-}
-
-// Overlapping returns whether a Projection is overlapping with the other, provided Projection. Credit to https://www.sevenson.com.au/programming/sat/
-func (projection Projection) Overlapping(other Projection) bool {
-	return projection.Overlap(other) > 0
-}
-
-// Overlap returns the amount that a Projection is overlapping with the other, provided Projection. Credit to https://dyn4j.org/2010/01/sat/#sat-nointer
-func (projection Projection) Overlap(other Projection) float64 {
-	return math.Min(projection.Max, other.Max) - math.Max(projection.Min, other.Min)
-}
-
-// IsInside returns whether the Projection is wholly inside of the other, provided Projection.
-func (projection Projection) IsInside(other Projection) bool {
-	return projection.Min >= other.Min && projection.Max <= other.Max
 }

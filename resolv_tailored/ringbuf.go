@@ -1,9 +1,10 @@
 package resolv
 
 const (
-	RING_BUFF_CONSECUTIVE_SET     = int32(0)
-	RING_BUFF_NON_CONSECUTIVE_SET = int32(1)
-	RING_BUFF_FAILED_TO_SET       = int32(2)
+	// Declare type "int32" explicitly to prevent go2cs from transpiling them to "var"
+	RING_BUFF_CONSECUTIVE_SET     int32 = 0
+	RING_BUFF_NON_CONSECUTIVE_SET int32 = 1
+	RING_BUFF_FAILED_TO_SET       int32 = 2
 )
 
 type AnyObj interface{}

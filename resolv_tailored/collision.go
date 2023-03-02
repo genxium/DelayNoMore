@@ -135,10 +135,10 @@ func (cc *Collision) SlideAgainstCell(cell *Cell, avoidTags ...string) Vector {
 	diffX := oX - ccX
 	diffY := oY - ccY
 
-	left := sp.Cell(collidingCell.X-1, collidingCell.Y)
-	right := sp.Cell(collidingCell.X+1, collidingCell.Y)
-	up := sp.Cell(collidingCell.X, collidingCell.Y-1)
-	down := sp.Cell(collidingCell.X, collidingCell.Y+1)
+	left := sp.GetCell(collidingCell.X-1, collidingCell.Y)
+	right := sp.GetCell(collidingCell.X+1, collidingCell.Y)
+	up := sp.GetCell(collidingCell.X, collidingCell.Y-1)
+	down := sp.GetCell(collidingCell.X, collidingCell.Y+1)
 
 	slide := Vector{0, 0}
 

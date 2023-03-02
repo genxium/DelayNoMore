@@ -1,9 +1,5 @@
 package resolv
 
-import (
-	"math"
-)
-
 // Object represents an object that can be spread across one or more Cells in a Space. An Object is essentially an AABB (Axis-Aligned Bounding Box) Rectangle.
 type Object struct {
 	Shape         Shape            // A shape for more specific collision-checking.
@@ -93,7 +89,7 @@ func (obj *Object) Update() {
 
 			for x := cx; x <= ex; x++ {
 
-				c := obj.Space.Cell(x, y)
+				c := obj.Space.GetCell(x, y)
 
 				if c != nil {
 					c.register(obj)
@@ -256,15 +252,15 @@ func (obj *Object) CheckAllWithHolder(dx, dy float64, cc *Collision) bool {
 	cc.checkingObject = obj
 
 	if dx < 0 {
-		dx = math.Min(dx, -1)
+		dx = Min(dx, -1)
 	} else if dx > 0 {
-		dx = math.Max(dx, 1)
+		dx = Max(dx, 1)
 	}
 
 	if dy < 0 {
-		dy = math.Min(dy, -1)
+		dy = Min(dy, -1)
 	} else if dy > 0 {
-		dy = math.Max(dy, 1)
+		dy = Max(dy, 1)
 	}
 
 	cc.dx = dx
@@ -279,7 +275,7 @@ func (obj *Object) CheckAllWithHolder(dx, dy float64, cc *Collision) bool {
 
 		for x := cx; x <= ex; x++ {
 
-			if c := obj.Space.Cell(x, y); c != nil {
+			if c := obj.Space.GetCell(x, y); c != nil {
 
 				rb := c.Objects
 				for i := rb.StFrameId; i < rb.EdFrameId; i++ {

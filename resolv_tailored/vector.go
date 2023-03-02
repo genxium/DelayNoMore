@@ -1,8 +1,6 @@
 package resolv
 
-import (
-	"math"
-)
+import "math"
 
 // Vector is the definition of a row vector that contains scalars as
 // 64 bit floats
@@ -14,35 +12,13 @@ type Axis int
 const (
 	// the consts below are used to represent vector axis, they are useful
 	// to lookup values within the vector.
-	X Axis = iota
-	Y
-	Z
+	X Axis = 0
+	Y Axis = 1
+	Z Axis = 2
 )
 
-// Clone a vector
-func Clone(v Vector) Vector {
-	return v.Clone()
-}
-
-// Clone a vector
-func (v Vector) Clone() Vector {
-	clone := make(Vector, len(v))
-	copy(clone, v)
-	return clone
-}
-
-// Magnitude of a vector
-func Magnitude(v Vector) float64 {
-	return v.Magnitude()
-}
-
-// Magnitude of a vector
-func (v Vector) Magnitude() float64 {
-	return math.Sqrt(v.Magnitude2())
-}
-
 func (v Vector) Magnitude2() float64 {
-	var result float64
+	var result float64 = 0.
 
 	for _, scalar := range v {
 		result += scalar * scalar
@@ -52,20 +28,18 @@ func (v Vector) Magnitude2() float64 {
 }
 
 // Unit returns a direction vector with the length of one.
-func Unit(v Vector) Vector {
-	return v.Clone().Unit()
-}
-
-// Unit returns a direction vector with the length of one.
 func (v Vector) Unit() Vector {
-	l := v.Magnitude()
-
-	if l < 1e-8 {
+	l2 := v.Magnitude2()
+	if l2 < 1e-16 {
 		return v
 	}
 
+	l := math.Sqrt(l2)
+	//inv := FastInvSqrt64(l2) // "Fast Inverse Square Root" is arch dependent, it's by far non-trivial to use it in Golang as well as make it feasible in the transpiled JavaScript.
+
 	for i := 0; i < len(v); i++ {
 		v[i] = v[i] / l
+		//v[i] = v[i] * inv
 	}
 
 	return v
@@ -73,7 +47,7 @@ func (v Vector) Unit() Vector {
 
 // X is corresponding to doing a v[0] lookup, if index 0 does not exist yet, a
 // 0 will be returned instead
-func (v Vector) X() float64 {
+func (v Vector) GetX() float64 {
 	if len(v) < 1 {
 		return 0.
 	}
@@ -83,7 +57,7 @@ func (v Vector) X() float64 {
 
 // Y is corresponding to doing a v[1] lookup, if index 1 does not exist yet, a
 // 0 will be returned instead
-func (v Vector) Y() float64 {
+func (v Vector) GetY() float64 {
 	if len(v) < 2 {
 		return 0.
 	}
@@ -93,7 +67,7 @@ func (v Vector) Y() float64 {
 
 // Z is corresponding to doing a v[2] lookup, if index 2 does not exist yet, a
 // 0 will be returned instead
-func (v Vector) Z() float64 {
+func (v Vector) GetZ() float64 {
 	if len(v) < 3 {
 		return 0.
 	}
