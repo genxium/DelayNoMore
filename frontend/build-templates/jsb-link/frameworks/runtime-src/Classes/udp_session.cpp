@@ -372,7 +372,7 @@ bool DelayNoMore::UdpSession::pollUdpRecvRingBuff() {
     // This function is called by GameThread 60 fps.
 
     //uv_mutex_lock(&recvRingBuffLock);
-    while (true) {
+    while (true && NULL != recvLoop) {
         RecvWork f;
         bool res = recvRingBuff->pop(&f); 
         if (!res) {

@@ -713,9 +713,9 @@ cc.Class({
     if (notSelfUnconfirmed) {
       shouldForceDumping2 = false;
       shouldForceResync = false;
-      self.othersForcedDownsyncRenderFrameDict.set(rdfId, rdf);
+      self.othersForcedDownsyncRenderFrameDict.set(rdfId, [pbRdf, rdf]);
       if (CC_DEBUG) {
-        console.warn(`Someone else is forced to resync! renderFrameId=${rdf.GetId()}
+        console.warn(`Someone else is forced to resync! renderFrameId=${rdfId}
 backendUnconfirmedMask=${pbRdf.backendUnconfirmedMask}
 accompaniedInputFrameDownsyncBatchRange=[${null == accompaniedInputFrameDownsyncBatch ? null : accompaniedInputFrameDownsyncBatch[0].inputFrameId}, ${null == accompaniedInputFrameDownsyncBatch ? null : accompaniedInputFrameDownsyncBatch[accompaniedInputFrameDownsyncBatch.length - 1].inputFrameId}]`);
       }
@@ -947,7 +947,7 @@ accompaniedInputFrameDownsyncBatchRange=[${accompaniedInputFrameDownsyncBatch[0]
   _handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP) {
     if (null == firstPredictedYetIncorrectInputFrameId) return;
     const self = this;
-    const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId) - 1;
+    const renderFrameId1 = gopkgs.ConvertToFirstUsedRenderFrameId(firstPredictedYetIncorrectInputFrameId);
     if (renderFrameId1 >= self.chaserRenderFrameId) return;
 
     /*
@@ -1164,25 +1164,25 @@ fromUDP=${fromUDP}`);
           rollbackFrames = 0;
         }
         self.networkDoctor.logRollbackFrames(rollbackFrames);
-        let prevRdf = latestRdfResults[0],
-          rdf = latestRdfResults[1];
+        let prevRdf = latestRdfResults[0], // Having "prevRdf.Id == self.renderFrameId"
+          rdf = latestRdfResults[1]; // Having "rdf.Id == self.renderFrameId+1"
         /*
         const nonTrivialChaseEnded = (prevChaserRenderFrameId < nextChaserRenderFrameId && nextChaserRenderFrameId == self.renderFrameId); 
         if (nonTrivialChaseEnded) {
             console.debug("Non-trivial chase ended, prevChaserRenderFrameId=" + prevChaserRenderFrameId + ", nextChaserRenderFrameId=" + nextChaserRenderFrameId);
         }  
         */
-        // [WARNING] Don't try to get "prevRdf(i.e. renderFrameId == latest-1)" by "self.recentRenderCache.GetByFrameId(...)" here, as the cache might have been updated by asynchronous "onRoomDownsyncFrame(...)" calls!
         if (self.othersForcedDownsyncRenderFrameDict.has(rdf.GetId())) {
-          const delayedInputFrameId = gopkgs.ConvertToDelayedInputFrameId(rdf.GetId());
-          const othersForcedDownsyncRenderFrame = self.othersForcedDownsyncRenderFrameDict.get(rdf.GetId());
+          const [pbOthersForcedDownsyncRenderFrame, othersForcedDownsyncRenderFrame] = self.othersForcedDownsyncRenderFrameDict.get(rdf.GetId());
           if (self.lastAllConfirmedInputFrameId >= delayedInputFrameId && !self.equalRoomDownsyncFrames(othersForcedDownsyncRenderFrame, rdf)) {
             if (CC_DEBUG) {
               console.warn(`Mismatched render frame@rdf.id=${rdf.GetId()} w/ inputFrameId=${delayedInputFrameId}:
 rdf=${self._stringifyGopkgRdfForFrameDataLogging(rdf)}
 othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(othersForcedDownsyncRenderFrame)}`);
             }
-            rdf = othersForcedDownsyncRenderFrame;
+            // [WARNING] When this happens, something is intrinsically wrong -- to avoid having an inconsistent history in the "recentRenderCache", thus a wrong prediction all the way from here on, clear the history!
+            pbOthersForcedDownsyncRenderFrame.backendUnconfirmedMask = ((1 << window.boundRoomCapacity) - 1);
+            self.onRoomDownsyncFrame(pbOthersForcedDownsyncRenderFrame, null);
             self.othersForcedDownsyncRenderFrameDict.delete(rdf.GetId());
           }
         }
@@ -1438,19 +1438,11 @@ othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(oth
       const j = gopkgs.ConvertToDelayedInputFrameId(i);
       const delayedInputFrame = gopkgs.GetInputFrameDownsync(self.recentInputCache, j);
 
-      const allowUpdateInputFrameInPlaceUponDynamics = (!isChasing);
+      const allowUpdateInputFrameInPlaceUponDynamics = (!isChasing); // [WARNING] Input mutation could trigger chasing on frontend, thus don't trigger mutation when chasing to avoid confusing recursion.
       const hasInputFrameUpdatedOnDynamics = gopkgs.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrameJs(self.recentInputCache, i, collisionSys, collisionSysMap, self.spaceOffsetX, self.spaceOffsetY, self.chConfigsOrderedByJoinIndex, self.recentRenderCache, self.collisionHolder, self.effPushbacks, self.hardPushbackNormsArr, self.jumpedOrNotList, self.dynamicRectangleColliders, self.lastIndividuallyConfirmedInputFrameId, self.lastIndividuallyConfirmedInputList, allowUpdateInputFrameInPlaceUponDynamics, self.selfPlayerInfo.joinIndex);
       if (hasInputFrameUpdatedOnDynamics) {
         const ii = gopkgs.ConvertToFirstUsedRenderFrameId(j);
         if (ii < i) {
-          /*
-          [WARNING] 
-          If we don't rollback at this spot, when the mutated "delayedInputFrame.inputList" a.k.a. "inputFrame#j" matches the later downsynced version, rollback WOULDN'T be triggered for the incorrectly rendered "renderFrame#(ii+1)", and it would STAY IN HISTORY FOREVER -- as the history becomes incorrect, EVERY LATEST renderFrame since "inputFrame#j" was mutated would be ALWAYS incorrectly rendering too!
-
-          The backend counterpart doesn't need this rollback because 
-          1. Backend only applies all-confirmed inputFrames to calc dynamics.
-          2. Backend applies an all-confirmed inputFrame to all applicable render frames at once.
-          */
           self._handleIncorrectlyRenderedPrediction(j, null, false);
         }
       }

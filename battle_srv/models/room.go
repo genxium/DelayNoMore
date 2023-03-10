@@ -156,10 +156,9 @@ type Room struct {
 	TmxPointsMap   StrToVec2DListMap
 	TmxPolygonsMap StrToPolygon2DListMap
 
-	rdfIdToActuallyUsedInput                 map[int32]*pb.InputFrameDownsync
-	allowUpdateInputFrameInPlaceUponDynamics bool
-	LastIndividuallyConfirmedInputFrameId    []int32
-	LastIndividuallyConfirmedInputList       []uint64
+	rdfIdToActuallyUsedInput              map[int32]*pb.InputFrameDownsync
+	LastIndividuallyConfirmedInputFrameId []int32
+	LastIndividuallyConfirmedInputList    []uint64
 
 	BattleUdpTunnelLock sync.Mutex
 	BattleUdpTunnelAddr *pb.PeerUdpAddr
@@ -808,7 +807,6 @@ func (pR *Room) OnDismissed() {
 	pR.RenderFrameBuffer = resolv.NewRingBuffer(pR.RenderCacheSize)
 	pR.InputsBuffer = resolv.NewRingBuffer((pR.RenderCacheSize >> 1) + 1)
 	pR.rdfIdToActuallyUsedInput = make(map[int32]*pb.InputFrameDownsync)
-	pR.allowUpdateInputFrameInPlaceUponDynamics = true
 	pR.LastIndividuallyConfirmedInputFrameId = make([]int32, pR.Capacity)
 	for i := 0; i < pR.Capacity; i++ {
 		pR.LastIndividuallyConfirmedInputFrameId[i] = MAGIC_LAST_SENT_INPUT_FRAME_ID_NORMAL_ADDED
@@ -847,7 +845,7 @@ func (pR *Room) OnDismissed() {
 	pR.RollbackEstimatedDtNanos = 16666666 // A little smaller than the actual per frame time, just for logging FAST FRAME
 	dilutedServerFps := float64(58.0)      // Don't set this value too small, otherwise we might miss force confirmation needs for slow tickers!
 	pR.dilutedRollbackEstimatedDtNanos = int64(float64(pR.RollbackEstimatedDtNanos) * float64(serverFps) / dilutedServerFps)
-	pR.BattleDurationFrames = int32(60 * serverFps)
+	pR.BattleDurationFrames = int32(20 * serverFps)
 	//pR.BattleDurationFrames = int32(20 * serverFps)
 	pR.BattleDurationNanos = int64(pR.BattleDurationFrames) * (pR.RollbackEstimatedDtNanos + 1)
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
@@ -856,7 +854,7 @@ func (pR *Room) OnDismissed() {
 	pR.BackendDynamicsEnabled = true              // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
 
-	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
+	pR.FrameDataLoggingEnabled = true // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
 	pR.BattleUdpTunnelLock.Lock()
 	pR.BattleUdpTunnel = nil
 	pR.BattleUdpTunnelAddr = nil
@@ -1309,9 +1307,6 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 				panic(fmt.Sprintf("inputFrameId=%v doesn't exist for roomId=%v! InputsBuffer=%v", j, pR.Id, pR.InputsBufferString(false)))
 			}
 			inputFrameDownsync := tmp.(*battle.InputFrameDownsync)
-			if pR.allowUpdateInputFrameInPlaceUponDynamics {
-				battle.UpdateInputFrameInPlaceUponDynamics(j, pR.Capacity, inputFrameDownsync.ConfirmedList, inputFrameDownsync.InputList, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, int32(MAGIC_JOIN_INDEX_INVALID))
-			}
 			unconfirmedMask |= (allConfirmedMask ^ inputFrameDownsync.ConfirmedList)
 			inputFrameDownsync.ConfirmedList = allConfirmedMask
 			pR.onInputFrameDownsyncAllConfirmed(inputFrameDownsync, -1)
@@ -1392,7 +1387,7 @@ func (pR *Room) applyInputFrameDownsyncDynamics(fromRenderFrameId int32, toRende
 			}
 		}
 
-		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false, MAGIC_JOIN_INDEX_INVALID) // "allowUpdateInputFrameInPlaceUponDynamics" is instead used in "forceConfirmationIfApplicable"
+		battle.ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(pR.InputsBuffer, currRenderFrame.Id, pR.Space, pR.CollisionSysMap, pR.SpaceOffsetX, pR.SpaceOffsetY, pR.CharacterConfigsArr, pR.RenderFrameBuffer, pR.collisionHolder, pR.effPushbacks, pR.hardPushbackNormsArr, pR.jumpedOrNotList, pR.dynamicRectangleColliders, pR.LastIndividuallyConfirmedInputFrameId, pR.LastIndividuallyConfirmedInputList, false, MAGIC_JOIN_INDEX_INVALID) // DON'T mutate inputs upon dynamics on backend to avoid complicating the edge cases
 		pR.CurDynamicsRenderFrameId++
 	}
 }
