@@ -512,7 +512,8 @@ cc.Class({
       window.clearBoundRoomIdInBothVolatileAndPersistentStorage();
       window.initPersistentSessionClient(self.initAfterWSConnected, null /* Deliberately NOT passing in any `expectedRoomId`. -- YFLu */ );
     };
-    resultPanelScriptIns.onCloseDelegate = () => {};
+    resultPanelScriptIns.onCloseDelegate = () => {
+    };
 
     self.gameRuleNode = cc.instantiate(self.gameRulePrefab);
     self.gameRuleNode.width = self.canvasNode.width;
@@ -1443,6 +1444,10 @@ othersForcedDownsyncRenderFrame=${self._stringifyGopkgRdfForFrameDataLogging(oth
       if (hasInputFrameUpdatedOnDynamics) {
         const ii = gopkgs.ConvertToFirstUsedRenderFrameId(j);
         if (ii < i) {
+          /*
+             [WARNING] 
+             If we don't rollback at this spot, when the mutated "delayedInputFrame.inputList" a.k.a. "inputFrame#j" matches the later downsynced version, rollback WOULDN'T be triggered for the incorrectly rendered "renderFrame#(ii+1)", and it would STAY IN HISTORY FOREVER -- as the history becomes incorrect, EVERY LATEST renderFrame since "inputFrame#j" was mutated would be ALWAYS incorrectly rendering too!
+           */
           self._handleIncorrectlyRenderedPrediction(j, null, false);
         }
       }
