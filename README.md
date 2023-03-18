@@ -6,7 +6,7 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 
 ![Merged_cut_annotated_spedup](./charts/Merged_cut_annotated_spedup.gif)
 
-(battle between 2 celluar 4G users using Android phones, [original video here](https://pan.baidu.com/s/1RL-9M-cK8cFS_Q8afMTrJA?pwd=ryzv))
+(battle between 2 celluar 4G users using Android phones, [original video here](https://pan.baidu.com/s/1m50d-VZxEGT3IgeZtww49g?pwd=eqx1))
 
 ![Phone4g_battle_spedup](./charts/Phone4g_battle_spedup.gif)
 
@@ -96,7 +96,14 @@ The easy way is to try out 2 players with test accounts on a same machine.
 - Open one browser instance, visit _http://localhost:7456?expectedRoomId=1_, input `add`on the username box and click to request a captcha, this is a test account so a captcha would be returned by the backend and filled automatically (as shown in the figure below), then click and click to proceed to a matching scene.
 - Open another browser instance, visit _http://localhost:7456?expectedRoomId=1_, input `bdd`on the username box and click to request a captcha, this is another test account so a captcha would be returned by the backend and filled automatically, then click and click to proceed, when matched a `battle`(but no competition rule yet) would start.
 - Try out the onscreen virtual joysticks to move the cars and see if their movements are in-sync.
-![screenshot-2](./charts/screenshot-2.png)
+
+![How-to-play-1](./charts/How-to-play-1.png)
+
+![How-to-play-2](./charts/How-to-play-2.png)
+
+![How-to-play-3](./charts/How-to-play-3.png)
+
+![How-to-play-4](./charts/How-to-play-4.png)
 
 ## 2 Troubleshooting
 
