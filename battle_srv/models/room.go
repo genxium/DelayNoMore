@@ -851,7 +851,7 @@ func (pR *Room) OnDismissed() {
 	pR.InputFrameUpsyncDelayTolerance = battle.ConvertToNoDelayInputFrameId(pR.NstDelayFrames) - 1 // this value should be strictly smaller than (NstDelayFrames >> InputScaleFrames), otherwise "type#1 forceConfirmation" might become a lag avalanche
 	pR.MaxChasingRenderFramesPerUpdate = 9                                                         // Don't set this value too high to avoid exhausting frontend CPU within a single frame, roughly as the "turn-around frames to recover" is empirically OK
 
-	pR.BackendDynamicsEnabled = true              // [WARNING] When "false", recovery upon reconnection wouldn't work!
+	pR.BackendDynamicsEnabled = false              // [WARNING] When "false", recovery upon reconnection wouldn't work!
 	pR.ForceAllResyncOnAnyActiveSlowTicker = true // See tradeoff discussion in "downsyncToAllPlayers"
 
 	pR.FrameDataLoggingEnabled = false // [WARNING] DON'T ENABLE ON LONG BATTLE DURATION! It consumes A LOT OF MEMORY!
@@ -1213,13 +1213,13 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		targetInputFrameDownsync.ConfirmedList |= uint64(1 << uint32(player.JoinIndex-1))
 
 		if false == fromUDP {
-			/*
-							   [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
+            /**
+              [WARNING] We have to distinguish whether or not the incoming batch is from UDP here, otherwise "pR.LatestPlayerUpsyncedInputFrameId - pR.LastAllConfirmedInputFrameId" might become unexpectedly large in case of "UDP packet loss + slow ws session"!
 
-							   Moreover, only ws session upsyncs should advance "player.LastConsecutiveRecvInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
+              Moreover, only ws session upsyncs should advance "player.LastConsecutiveRecvInputFrameId" & "pR.LatestPlayerUpsyncedInputFrameId".
 
-				               Kindly note that the updates of "player.LastConsecutiveRecvInputFrameId" could be discrete before and after reconnection.
-			*/
+              Kindly note that the updates of "player.LastConsecutiveRecvInputFrameId" could be discrete before and after reconnection.
+             */
 			player.LastConsecutiveRecvInputFrameId = clientInputFrameId
 			if clientInputFrameId > pR.LatestPlayerUpsyncedInputFrameId {
 				pR.LatestPlayerUpsyncedInputFrameId = clientInputFrameId
@@ -1282,7 +1282,7 @@ func (pR *Room) markConfirmationIfApplicable(inputFrameUpsyncBatch []*pb.InputFr
 		snapshotStFrameId := (pR.LastAllConfirmedInputFrameId - newAllConfirmedCount)
 		refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
 		refSnapshotStFrameId := battle.ConvertToDelayedInputFrameId(refRenderFrameIdIfNeeded)
-		if refSnapshotStFrameId < snapshotStFrameId {
+		if pR.BackendDynamicsEnabled && refSnapshotStFrameId < snapshotStFrameId {
 			snapshotStFrameId = refSnapshotStFrameId
 		}
 		Logger.Debug(fmt.Sprintf("markConfirmationIfApplicable for roomId=%v returning newAllConfirmedCount=%d: InputsBuffer=%v", pR.Id, newAllConfirmedCount, pR.InputsBufferString(false)))
@@ -1336,7 +1336,7 @@ func (pR *Room) forceConfirmationIfApplicable(prevRenderFrameId int32) uint64 {
 func (pR *Room) produceInputsBufferSnapshotWithCurDynamicsRenderFrameAsRef(unconfirmedMask uint64, snapshotStFrameId, snapshotEdFrameId int32) *pb.InputsBufferSnapshot {
 	// [WARNING] This function MUST BE called while "pR.InputsBufferLock" is locked!
 	refRenderFrameIdIfNeeded := pR.CurDynamicsRenderFrameId - 1
-	if 0 > refRenderFrameIdIfNeeded {
+	if pR.BackendDynamicsEnabled && 0 > refRenderFrameIdIfNeeded {
 		return nil
 	}
 	// Duplicate downsynced inputFrameIds will be filtered out by frontend.

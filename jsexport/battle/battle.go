@@ -786,7 +786,7 @@ func ApplyInputFrameDownsyncDynamicsOnSingleRenderFrame(inputsBuffer *resolv.Rin
 			// Revive from Dying
 			newVx, newVy = currPlayerDownsync.RevivalVirtualGridX, currPlayerDownsync.RevivalVirtualGridY
 			thatPlayerInNextFrame.CharacterState = ATK_CHARACTER_STATE_GET_UP1
-			thatPlayerInNextFrame.FramesInChState = ATK_CHARACTER_STATE_GET_UP1
+			thatPlayerInNextFrame.FramesInChState = 0
 			thatPlayerInNextFrame.FramesToRecover = chConfig.GetUpFramesToRecover
 			thatPlayerInNextFrame.FramesInvinsible = chConfig.GetUpInvinsibleFrames
 			thatPlayerInNextFrame.Hp = currPlayerDownsync.MaxHp
