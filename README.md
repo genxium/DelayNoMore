@@ -11,8 +11,8 @@ This project is a demo for a websocket-based rollback netcode inspired by [GGPO]
 ![Phone4g_battle_spedup](./charts/Phone4g_battle_spedup.gif)
 
 **Since v1.0.13, smoothness in worst cases (e.g. turn-around on ground, in air and after dashing) is drastically improved due to update of prediction approach. The gifs and corresponding screenrecordings above are not updated because there's no big difference when network is good -- however, `input delay` is now set to `4 frames` -- while `input delay = 6 frames` was used in the screenrecordings -- and smoothness is even better now (well there's [a new screenrecording for PcWifi vs Android4g here](https://pan.baidu.com/s/1iNrQ2l_wqbWkURMIfyG88w?pwd=fe2f)).** Key changes are listed below.
-- [change#1](https://github.com/genxium/DelayNoMore/blob/ea14ced958415dbf4ec1bef89088a3c7607fd8b3/jsexport/battle/battle.go#L647)
-- [change#2](https://github.com/genxium/DelayNoMore/blob/ea14ced958415dbf4ec1bef89088a3c7607fd8b3/frontend/assets/scripts/Map.js#L1446)
+- [change#1](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/jsexport/battle/battle.go#L647)
+- [change#2](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/frontend/assets/scripts/Map.js#L1446)
 
 As lots of feedbacks ask for a discussion on using UDP instead, I tried to summarize my personal opinion about it in [ConcerningEdgeCases](./ConcerningEdgeCases.md) -- **since v0.9.25, the project is actually equipped with UDP capabilities as follows**.
 - When using the so called `native apps` on `Android` and `Windows` (I'm working casually hard to support `iOS` next), the frontends will try to use UDP hole-punching w/ the help of backend as a registry. If UDP hole-punching is working, the rollback is often less than `turn-around frames to recover` and thus not noticeable, being much better than using websocket alone. This video shows how the UDP holepunched p2p performs for [Phone-Wifi v.s. PC-Wifi (viewed by PC side)](https://pan.baidu.com/s/1K6704bJKlrSBTVqGcXhajA?pwd=l7ok).
@@ -21,7 +21,7 @@ As lots of feedbacks ask for a discussion on using UDP instead, I tried to summa
 
 
 # Notable Features
-- Backend dynamics toggle via [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/v0.9.14/battle_srv/models/room.go#L786)
+- Backend dynamics toggle via [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/battle_srv/models/room.go#L147)
 - Recovery upon reconnection (only if backend dynamics is ON)
 - Automatically correction for "slow ticker", especially "active slow ticker" which is well-known to be a headache for input synchronization
 - Frame data logging toggle for both frontend & backend, useful for debugging out of sync entities when developing new features
@@ -118,9 +118,9 @@ Just restart your `redis-server` process.
 The most important reason for not showing "PING value" is simple: in most games the "PING value" is collected by a dedicated kernel thread which doesn't interfere the UI thread or the primary networking thread. As this demo primarily runs on browser by far, I don't have this capability easily.
 
 Moreover, in practice I found that to spot sync anomalies, the following tools are much more useful than the "PING VALUE".  
-- Detection of [prediction mismatch on the frontend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/frontend/assets/scripts/Map.js#L842).
-- Detection of [type#1 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1246).
-- Detection of [type#2 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/v0.9.19/battle_srv/models/room.go#L1259).
+- Detection of [prediction mismatch on the frontend](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/frontend/assets/scripts/Map.js#L968).
+- Detection of [type#1 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/battle_srv/models/room.go#L1315).
+- Detection of [type#2 forceConfirmation on the backend](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/battle_srv/models/room.go#L1328).
 
 There's also some useful information displayed on the frontend when `true == Map.showNetworkDoctorInfo`.
 ![networkstats](./charts/networkstats.png)
