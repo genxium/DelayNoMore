@@ -100,7 +100,7 @@ bool RecvRingBuff::pop(RecvWork* out) {
     2. If "0 >= oldCnt", we need guard against another "pop" to avoid over-popping. 
     */
     if (0 >= oldCnt) {
-        // "pop" could be accessed by either "GameThread/pollUdpRecvRingBuff" or "UvRecvThread/put", thus we should be proactively guard against concurrent popping while "1 == cnt"
+        // "pop" could be accessed by either "GameThread/pollUdpRecvRingBuff" or "UvRecvThread/put", thus we should be proactively guarding against concurrent popping while "1 == cnt"
         ++cnt;
         return false;
     }
