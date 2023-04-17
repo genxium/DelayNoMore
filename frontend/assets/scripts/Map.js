@@ -1003,7 +1003,7 @@ fromUDP=${fromUDP}`);
       const inputFrameId = inputFrame.inputFrameId;
       const peerEncodedInput = (true == fromUDP ? inputFrame.encoded : inputFrame.inputList[peerJoinIndex - 1]);
       if (false == self.allowRollbackOnPeerUpsync && inputFrameId <= renderedInputFrameIdUpper) {
-        // [WARNING] Avoid obfuscating already rendered history, even at "inputFrameId == renderedInputFrameIdUpper", due to the use of "INPUT_SCALE_FRAMES" some previous render frames might already be rendered with "inputFrameId"!   
+        // [WARNING] Avoid obfuscating already rendered history, even at "inputFrameId == renderedInputFrameIdUpper", due to the use of "INPUT_SCALE_FRAMES" some previous render frames might've already been rendered with "inputFrameId"!   
         continue;
       }
       if (inputFrameId <= self.lastAllConfirmedInputFrameId) {
@@ -1022,12 +1022,11 @@ fromUDP=${fromUDP}`);
         self.lastIndividuallyConfirmedInputList[peerJoinIndex - 1] = peerEncodedInput;
       }
       effCnt += 1;
-      // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the values in "newInputList" and "newConfirmedList"!
+      // the returned "gopkgs.NewInputFrameDownsync.InputList" is immutable, thus we can only modify the value in "newInputList"!
       const existingInputList = existingInputFrame.GetInputList();
       let newInputList = existingInputFrame.GetInputList().slice();
       newInputList[peerJoinIndex - 1] = peerEncodedInput;
-      let newConfirmedList = (existingConfirmedList | peerJoinIndexMask);
-      const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, newConfirmedList);
+      const newInputFrameDownsyncLocal = gopkgs.NewInputFrameDownsync(inputFrameId, newInputList, existingConfirmedList);
       //console.log(`Updated encoded input of peerJoinIndex=${peerJoinIndex} to ${peerEncodedInput} for inputFrameId=${inputFrameId}/renderedInputFrameIdUpper=${renderedInputFrameIdUpper} from ${JSON.stringify(inputFrame)}; newInputFrameDownsyncLocal=${self.gopkgsInputFrameDownsyncStr(newInputFrameDownsyncLocal)}; existingInputFrame=${self.gopkgsInputFrameDownsyncStr(existingInputFrame)}`);
       self.recentInputCache.SetByFrameId(newInputFrameDownsyncLocal, inputFrameId);
 
@@ -1048,6 +1047,15 @@ fromUDP=${fromUDP}`);
       self.networkDoctor.logPeerInputFrameUpsync(batch[0].inputFrameId, batch[batch.length - 1].inputFrameId);
     }
     if (true == self.allowRollbackOnPeerUpsync) {
+      /*
+      [WARNING] 
+
+      Deliberately NOT setting "existingInputFrame.ConfirmedList = (existingConfirmedList | peerJoinIndexMask)", thus NOT helping the move of "lastAllConfirmedInputFrameId" in "_markConfirmationIfApplicable()". 
+
+      The edge case of concern here is "type#1 forceConfirmation". Assume that there is a battle among [P_u, P_v, P_x, P_y] where [P_x] is being an "ActiveSlowerTicker", then for [P_u, P_v, P_y] there might've been some "inputFrameUpsync"s received from [P_x] by UDP peer-to-peer transmission EARLIER THAN BUT CONFLICTING WITH the "accompaniedInputFrameDownsyncBatch of type#1 forceConfirmation" -- in such case the latter should be respected -- by "conflicting", the backend actually ignores those "inputFrameUpsync"s from [P_x] by "forceConfirmation".
+    
+      However, we should still call "_handleIncorrectlyRenderedPrediction(...)" here to break rollbacks into smaller chunks, because even if not used for "inputFrameDownsync.ConfirmedList", a "UDP inputFrameUpsync" is still more accurate than the locally predicted inputs.
+      */
       self._handleIncorrectlyRenderedPrediction(firstPredictedYetIncorrectInputFrameId, batch, fromUDP);
     }
   },
