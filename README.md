@@ -25,7 +25,7 @@ As lots of feedbacks ask for a discussion on using UDP instead, I tried to summa
 # Notable Features
 - Backend dynamics toggle via [Room.BackendDynamicsEnabled](https://github.com/genxium/DelayNoMore/blob/c582071f4f2e3dd7e83d65562c7c99981252c358/battle_srv/models/room.go#L147)
 - Recovery upon reconnection (only if backend dynamics is ON)
-- Automatically correction for "slow ticker", especially "active slow ticker" which is well-known to be a headache for input synchronization
+- Automatic correction for "slow ticker", especially "active slow ticker" which is well-known to be a headache for input synchronization
 - Frame data logging toggle for both frontend & backend, useful for debugging out of sync entities when developing new features
 
 _(how input delay roughly works)_
